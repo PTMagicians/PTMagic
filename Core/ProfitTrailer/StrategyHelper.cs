@@ -13,12 +13,16 @@ using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
 using Newtonsoft.Json;
 
-namespace Core.ProfitTrailer {
-  public static class StrategyHelper {
-    public static string GetStrategyShortcut(string strategyName, bool onlyValidStrategies) {
+namespace Core.ProfitTrailer
+{
+  public static class StrategyHelper
+  {
+    public static string GetStrategyShortcut(string strategyName, bool onlyValidStrategies)
+    {
       string result = strategyName;
 
-      switch (strategyName.ToLower()) {
+      switch (strategyName.ToLower())
+      {
         case "lowbb":
           result = "LBB";
           break;
@@ -122,8 +126,10 @@ namespace Core.ProfitTrailer {
           break;
       }
 
-      if (onlyValidStrategies) {
-        if (strategyName.IndexOf("SOM") > -1 || strategyName.IndexOf("MAX") > -1 || strategyName.IndexOf("MIN") > -1 || strategyName.IndexOf("PRICE") > -1 || strategyName.IndexOf("BLACK") > -1 || strategyName.IndexOf("INSUFFICIENT") > -1 || strategyName.IndexOf("COST") > -1 || strategyName.IndexOf("TIMEOUT") > -1) {
+      if (onlyValidStrategies)
+      {
+        if (strategyName.IndexOf("SOM") > -1 || strategyName.IndexOf("MAX") > -1 || strategyName.IndexOf("MIN") > -1 || strategyName.IndexOf("PRICE") > -1 || strategyName.IndexOf("BLACK") > -1 || strategyName.IndexOf("INSUFFICIENT") > -1 || strategyName.IndexOf("COST") > -1 || strategyName.IndexOf("TIMEOUT") > -1)
+        {
           result = "";
         }
       }
@@ -131,15 +137,19 @@ namespace Core.ProfitTrailer {
       return result;
     }
 
-    public static bool IsValidStrategy(string strategyName) {
+    public static bool IsValidStrategy(string strategyName)
+    {
       return StrategyHelper.IsValidStrategy(strategyName, false);
     }
 
-    public static bool IsValidStrategy(string strategyName, bool checkForAnyInvalid) {
+    public static bool IsValidStrategy(string strategyName, bool checkForAnyInvalid)
+    {
       bool result = false;
 
-      if (!checkForAnyInvalid) {
-        switch (strategyName.ToLower()) {
+      if (!checkForAnyInvalid)
+      {
+        switch (strategyName.ToLower())
+        {
           case "lowbb":
           case "highbb":
           case "gain":
@@ -165,7 +175,9 @@ namespace Core.ProfitTrailer {
           default:
             break;
         }
-      } else {
+      }
+      else
+      {
         if (strategyName.IndexOf("max", StringComparison.InvariantCultureIgnoreCase) == -1
           && strategyName.IndexOf("min", StringComparison.InvariantCultureIgnoreCase) == -1
           && strategyName.IndexOf("som", StringComparison.InvariantCultureIgnoreCase) == -1
@@ -175,7 +187,8 @@ namespace Core.ProfitTrailer {
           && strategyName.IndexOf("insufficient", StringComparison.InvariantCultureIgnoreCase) == -1
           && strategyName.IndexOf("timeout", StringComparison.InvariantCultureIgnoreCase) == -1
           && strategyName.IndexOf("spread", StringComparison.InvariantCultureIgnoreCase) == -1
-          && strategyName.IndexOf("pairs", StringComparison.InvariantCultureIgnoreCase) == -1) {
+          && strategyName.IndexOf("pairs", StringComparison.InvariantCultureIgnoreCase) == -1)
+        {
           result = true;
         }
       }
@@ -183,10 +196,12 @@ namespace Core.ProfitTrailer {
       return result;
     }
 
-    public static int GetStrategyValueDecimals(string strategyName) {
+    public static int GetStrategyValueDecimals(string strategyName)
+    {
       int result = 0;
 
-      switch (strategyName.ToLower()) {
+      switch (strategyName.ToLower())
+      {
         case "lowbb":
         case "highbb":
           result = 8;
@@ -220,34 +235,52 @@ namespace Core.ProfitTrailer {
       return result;
     }
 
-    public static string GetStrategyText(Summary summary, List<Strategy> strategies, string strategyText, bool isTrue, bool isTrailingBuyActive) {
-      if (strategies.Count > 0) {
-        foreach (Strategy strategy in strategies) {
+    public static string GetStrategyText(Summary summary, List<Strategy> strategies, string strategyText, bool isTrue, bool isTrailingBuyActive)
+    {
+      if (strategies.Count > 0)
+      {
+        foreach (Strategy strategy in strategies)
+        {
           string textClass = (strategy.IsTrue) ? "label-success" : "label-danger";
-          if (!StrategyHelper.IsValidStrategy(strategy.Name)) {
+          if (!StrategyHelper.IsValidStrategy(strategy.Name))
+          {
             strategyText += "<span class=\"label label-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategy.Name + "\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, false) + "</span> ";
-          } else {
+          }
+          else
+          {
             strategyText += "<span class=\"label " + textClass + "\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategy.Name + "\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, false) + "</span> ";
           }
         }
 
-        if (isTrailingBuyActive) {
+        if (isTrailingBuyActive)
+        {
           strategyText += " <i class=\"fa fa-flag text-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Trailing active!\"></i>";
         }
-      } else {
-        if (isTrue) {
+      }
+      else
+      {
+        if (isTrue)
+        {
           strategyText = "<span class=\"label label-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategyText + "\">" + StrategyHelper.GetStrategyShortcut(strategyText, true) + "</span>";
 
-          if (isTrailingBuyActive) {
+          if (isTrailingBuyActive)
+          {
             strategyText += " <i class=\"fa fa-flag text-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Trailing active!\"></i>";
           }
-        } else {
-          if (StrategyHelper.IsValidStrategy(strategyText)) {
+        }
+        else
+        {
+          if (StrategyHelper.IsValidStrategy(strategyText))
+          {
             strategyText = "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategyText + "\">" + StrategyHelper.GetStrategyShortcut(strategyText, true) + "</span>";
-          } else if (strategyText.Equals("")) {
+          }
+          else if (strategyText.Equals(""))
+          {
             strategyText = summary.DCABuyStrategy;
             strategyText = "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategyText + "\">" + StrategyHelper.GetStrategyShortcut(strategyText, true) + "</span>";
-          } else {
+          }
+          else
+          {
             strategyText = "<span class=\"label label-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategyText + "\">" + StrategyHelper.GetStrategyShortcut(strategyText, false) + "</span> ";
           }
         }
@@ -256,43 +289,63 @@ namespace Core.ProfitTrailer {
       return strategyText;
     }
 
-    public static string GetCurrentValueText(List<Strategy> strategies, string strategyText, double bbValue, double simpleValue, bool includeShortcut) {
+    public static string GetCurrentValueText(List<Strategy> strategies, string strategyText, double bbValue, double simpleValue, bool includeShortcut)
+    {
       string result = "";
 
-      if (strategies.Count > 0) {
-        foreach (Strategy strategy in strategies) {
-          if (StrategyHelper.IsValidStrategy(strategy.Name)) {
+      if (strategies.Count > 0)
+      {
+        foreach (Strategy strategy in strategies)
+        {
+          if (StrategyHelper.IsValidStrategy(strategy.Name))
+          {
             if (!result.Equals("")) result += "<br />";
 
             string decimalFormat = "";
             int decimals = StrategyHelper.GetStrategyValueDecimals(strategy.Name);
-            for (int d = 1; d <= decimals; d++) {
+            for (int d = 1; d <= decimals; d++)
+            {
               decimalFormat += "0";
             }
 
-            if (includeShortcut) {
+            if (includeShortcut)
+            {
               result += "<span class=\"text-muted\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, true) + "</span> ";
             }
 
-            if (StrategyHelper.GetStrategyShortcut(strategy.Name, true).IndexOf("and", StringComparison.InvariantCultureIgnoreCase) > -1) {
+            if (StrategyHelper.GetStrategyShortcut(strategy.Name, true).IndexOf("and", StringComparison.InvariantCultureIgnoreCase) > -1)
+            {
               result += simpleValue.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
-            } else {
-              if (decimals == 0) {
-                if (!SystemHelper.IsInteger(strategy.CurrentValue)) {
+            }
+            else
+            {
+              if (decimals == 0)
+              {
+                if (!SystemHelper.IsInteger(strategy.CurrentValue))
+                {
                   result += strategy.CurrentValue.ToString("#,#", new System.Globalization.CultureInfo("en-US"));
-                } else {
+                }
+                else
+                {
                   result += strategy.CurrentValue.ToString("#,#0", new System.Globalization.CultureInfo("en-US"));
                 }
-              } else {
+              }
+              else
+              {
                 result += strategy.CurrentValue.ToString("#,#0." + decimalFormat, new System.Globalization.CultureInfo("en-US"));
               }
             }
           }
         }
-      } else {
-        if (StrategyHelper.GetStrategyShortcut(strategyText, true).IndexOf("bb", StringComparison.InvariantCultureIgnoreCase) > -1) {
+      }
+      else
+      {
+        if (StrategyHelper.GetStrategyShortcut(strategyText, true).IndexOf("bb", StringComparison.InvariantCultureIgnoreCase) > -1)
+        {
           result = bbValue.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
-        } else {
+        }
+        else
+        {
           result = simpleValue.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
         }
       }
@@ -300,45 +353,67 @@ namespace Core.ProfitTrailer {
       return result;
     }
 
-    public static string GetTriggerValueText(Summary summary, List<Strategy> strategies, string strategyText, double bbValue, double simpleValue, int buyLevel, bool includeShortcut) {
+    public static string GetTriggerValueText(Summary summary, List<Strategy> strategies, string strategyText, double bbValue, double simpleValue, int buyLevel, bool includeShortcut)
+    {
       string result = "";
 
-      if (strategies.Count > 0) {
-        foreach (Strategy strategy in strategies) {
-          if (StrategyHelper.IsValidStrategy(strategy.Name)) {
+      if (strategies.Count > 0)
+      {
+        foreach (Strategy strategy in strategies)
+        {
+          if (StrategyHelper.IsValidStrategy(strategy.Name))
+          {
             if (!result.Equals("")) result += "<br />";
 
             string decimalFormat = "";
             int decimals = StrategyHelper.GetStrategyValueDecimals(strategy.Name);
-            for (int d = 1; d <= decimals; d++) {
+            for (int d = 1; d <= decimals; d++)
+            {
               decimalFormat += "0";
             }
 
-            if (includeShortcut) {
+            if (includeShortcut)
+            {
               result += "<span class=\"text-muted\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, true) + "</span> ";
             }
 
-            if (StrategyHelper.GetStrategyShortcut(strategy.Name, true).IndexOf("and", StringComparison.InvariantCultureIgnoreCase) > -1) {
+            if (StrategyHelper.GetStrategyShortcut(strategy.Name, true).IndexOf("and", StringComparison.InvariantCultureIgnoreCase) > -1)
+            {
               result += strategy.TriggerValue.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
-            } else {
-              if (decimals == 0) {
-                if (!SystemHelper.IsInteger(strategy.EntryValue)) {
+            }
+            else
+            {
+              if (decimals == 0)
+              {
+                if (!SystemHelper.IsInteger(strategy.EntryValue))
+                {
                   result += strategy.EntryValue.ToString(new System.Globalization.CultureInfo("en-US"));
-                } else {
+                }
+                else
+                {
                   result += strategy.EntryValue.ToString("#,#0", new System.Globalization.CultureInfo("en-US"));
                 }
-              } else {
+              }
+              else
+              {
                 result += strategy.EntryValue.ToString("#,#0." + decimalFormat, new System.Globalization.CultureInfo("en-US"));
               }
             }
           }
         }
-      } else {
-        if (StrategyHelper.GetStrategyShortcut(strategyText, true).IndexOf("bb", StringComparison.InvariantCultureIgnoreCase) > -1) {
+      }
+      else
+      {
+        if (StrategyHelper.GetStrategyShortcut(strategyText, true).IndexOf("bb", StringComparison.InvariantCultureIgnoreCase) > -1)
+        {
           result = bbValue.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
-        } else {
-          if (simpleValue == Constants.MinTrendChange) {
-            if (summary.DCATriggers.ContainsKey(buyLevel + 1)) {
+        }
+        else
+        {
+          if (simpleValue == Constants.MinTrendChange)
+          {
+            if (summary.DCATriggers.ContainsKey(buyLevel + 1))
+            {
               simpleValue = summary.DCATriggers[buyLevel + 1];
             }
           }

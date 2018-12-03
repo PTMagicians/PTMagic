@@ -1,7 +1,10 @@
-﻿namespace Monitor.Pages {
-  public class IndexModel : _Internal.BasePageModelSecure {
+﻿namespace Monitor.Pages
+{
+  public class IndexModel : _Internal.BasePageModelSecure
+  {
 
-    public void OnGet() {
+    public void OnGet()
+    {
       base.Init();
     }
   }

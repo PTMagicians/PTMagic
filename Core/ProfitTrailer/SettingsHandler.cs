@@ -13,13 +13,18 @@ using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
 using Newtonsoft.Json;
 
-namespace Core.ProfitTrailer {
-  public static class SettingsHandler {
-    public static string GetMainMarket(PTMagicConfiguration systemConfiguration, List<string> pairsLines, LogHelper log) {
+namespace Core.ProfitTrailer
+{
+  public static class SettingsHandler
+  {
+    public static string GetMainMarket(PTMagicConfiguration systemConfiguration, List<string> pairsLines, LogHelper log)
+    {
       string result = "";
 
-      foreach (string line in pairsLines) {
-        if (line.Replace(" ", "").StartsWith("MARKET", StringComparison.InvariantCultureIgnoreCase)) {
+      foreach (string line in pairsLines)
+      {
+        if (line.Replace(" ", "").StartsWith("MARKET", StringComparison.InvariantCultureIgnoreCase))
+        {
           result = line.Replace("MARKET", "", StringComparison.InvariantCultureIgnoreCase);
           result = result.Replace("#", "");
           result = result.Replace("=", "").Trim();
@@ -30,11 +35,14 @@ namespace Core.ProfitTrailer {
       return result;
     }
 
-    public static string GetMarketPairs(PTMagicConfiguration systemConfiguration, List<string> pairsLines, LogHelper log) {
+    public static string GetMarketPairs(PTMagicConfiguration systemConfiguration, List<string> pairsLines, LogHelper log)
+    {
       string result = "";
 
-      foreach (string line in pairsLines) {
-        if (line.Replace(" ", "").StartsWith("ALL_enabled_pairs", StringComparison.InvariantCultureIgnoreCase) || line.Replace(" ", "").StartsWith("enabled_pairs", StringComparison.InvariantCultureIgnoreCase)) {
+      foreach (string line in pairsLines)
+      {
+        if (line.Replace(" ", "").StartsWith("ALL_enabled_pairs", StringComparison.InvariantCultureIgnoreCase) || line.Replace(" ", "").StartsWith("enabled_pairs", StringComparison.InvariantCultureIgnoreCase))
+        {
           result = line.Replace("ALL_enabled_pairs", "", StringComparison.InvariantCultureIgnoreCase);
           result = result.Replace("enabled_pairs", "", StringComparison.InvariantCultureIgnoreCase);
           result = result.Replace("#", "");
@@ -46,11 +54,14 @@ namespace Core.ProfitTrailer {
       return result;
     }
 
-    public static string GetActiveSetting(PTMagic ptmagicInstance, ref bool headerLinesAdded) {
+    public static string GetActiveSetting(PTMagic ptmagicInstance, ref bool headerLinesAdded)
+    {
       string result = "";
 
-      foreach (string line in ptmagicInstance.PairsLines) {
-        if (line.IndexOf("PTMagic_ActiveSetting", StringComparison.InvariantCultureIgnoreCase) > -1) {
+      foreach (string line in ptmagicInstance.PairsLines)
+      {
+        if (line.IndexOf("PTMagic_ActiveSetting", StringComparison.InvariantCultureIgnoreCase) > -1)
+        {
           result = line.Replace("PTMagic_ActiveSetting", "", StringComparison.InvariantCultureIgnoreCase);
           result = result.Replace("#", "");
           result = result.Replace("=", "").Trim();
@@ -59,7 +70,8 @@ namespace Core.ProfitTrailer {
         }
       }
 
-      if (result.Equals("")) {
+      if (result.Equals(""))
+      {
         SettingsHandler.WriteHeaderLines("Pairs", ptmagicInstance);
         SettingsHandler.WriteHeaderLines("DCA", ptmagicInstance);
         SettingsHandler.WriteHeaderLines("Indicators", ptmagicInstance);
@@ -69,7 +81,8 @@ namespace Core.ProfitTrailer {
       return result;
     }
 
-    public static void WriteHeaderLines(string fileType, PTMagic ptmagicInstance) {
+    public static void WriteHeaderLines(string fileType, PTMagic ptmagicInstance)
+    {
       List<string> fileLines = (List<string>)ptmagicInstance.GetType().GetProperty(fileType + "Lines").GetValue(ptmagicInstance, null);
 
       // Writing Header lines
@@ -83,16 +96,23 @@ namespace Core.ProfitTrailer {
       ptmagicInstance.GetType().GetProperty(fileType + "Lines").SetValue(ptmagicInstance, fileLines);
     }
 
-    public static Dictionary<string, string> GetPropertiesAsDictionary(List<string> propertyLines) {
+    public static Dictionary<string, string> GetPropertiesAsDictionary(List<string> propertyLines)
+    {
       Dictionary<string, string> result = new Dictionary<string, string>();
 
-      foreach (string line in propertyLines) {
-        if (!line.StartsWith("#", StringComparison.InvariantCultureIgnoreCase)) {
+      foreach (string line in propertyLines)
+      {
+        if (!line.StartsWith("#", StringComparison.InvariantCultureIgnoreCase))
+        {
           string[] lineContentArray = line.Split("=");
-          if (lineContentArray.Length == 2) {
-            if (!result.ContainsKey(lineContentArray[0].Trim())) {
+          if (lineContentArray.Length == 2)
+          {
+            if (!result.ContainsKey(lineContentArray[0].Trim()))
+            {
               result.Add(lineContentArray[0].Trim(), lineContentArray[1].Trim());
-            } else {
+            }
+            else
+            {
               result[lineContentArray[0].Trim()] = lineContentArray[1].Trim();
             }
           }
@@ -102,41 +122,51 @@ namespace Core.ProfitTrailer {
       return result;
     }
 
-    public static string GetCurrentPropertyValue(Dictionary<string, string> properties, string propertyKey, string fallbackPropertyKey) {
+    public static string GetCurrentPropertyValue(Dictionary<string, string> properties, string propertyKey, string fallbackPropertyKey)
+    {
       string result = "";
 
-      if (properties.ContainsKey(propertyKey)) {
+      if (properties.ContainsKey(propertyKey))
+      {
         result = properties[propertyKey];
-      } else if (!fallbackPropertyKey.Equals("") && properties.ContainsKey(fallbackPropertyKey)) {
+      }
+      else if (!fallbackPropertyKey.Equals("") && properties.ContainsKey(fallbackPropertyKey))
+      {
         result = properties[fallbackPropertyKey];
       }
 
       return result;
     }
 
-    public static void CompileProperties(PTMagic ptmagicInstance, GlobalSetting setting) {
+    public static void CompileProperties(PTMagic ptmagicInstance, GlobalSetting setting)
+    {
       SettingsHandler.BuildPropertyLines("Pairs", ptmagicInstance, setting);
       SettingsHandler.BuildPropertyLines("DCA", ptmagicInstance, setting);
       SettingsHandler.BuildPropertyLines("Indicators", ptmagicInstance, setting);
     }
 
-    public static void BuildPropertyLines(string fileType, PTMagic ptmagicInstance, GlobalSetting setting) {
+    public static void BuildPropertyLines(string fileType, PTMagic ptmagicInstance, GlobalSetting setting)
+    {
       List<string> result = new List<string>();
 
       List<string> fileLines = (List<string>)ptmagicInstance.GetType().GetProperty(fileType + "Lines").GetValue(ptmagicInstance, null);
 
       Dictionary<string, object> properties = (Dictionary<string, object>)setting.GetType().GetProperty(fileType + "Properties").GetValue(setting, null);
-      if (properties != null) {
+      if (properties != null)
+      {
 
         // Building Properties
-        if (!setting.SettingName.Equals(ptmagicInstance.DefaultSettingName, StringComparison.InvariantCultureIgnoreCase) && ptmagicInstance.PTMagicConfiguration.GeneralSettings.Application.AlwaysLoadDefaultBeforeSwitch && !properties.ContainsKey("File")) {
+        if (!setting.SettingName.Equals(ptmagicInstance.DefaultSettingName, StringComparison.InvariantCultureIgnoreCase) && ptmagicInstance.PTMagicConfiguration.GeneralSettings.Application.AlwaysLoadDefaultBeforeSwitch && !properties.ContainsKey("File"))
+        {
 
           // Load default settings as basis for the switch
           GlobalSetting defaultSetting = ptmagicInstance.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Find(a => a.SettingName.Equals(ptmagicInstance.DefaultSettingName, StringComparison.InvariantCultureIgnoreCase));
-          if (defaultSetting != null) {
+          if (defaultSetting != null)
+          {
 
             Dictionary<string, object> defaultProperties = new Dictionary<string, object>();
-            switch (fileType.ToLower()) {
+            switch (fileType.ToLower())
+            {
               case "pairs":
                 defaultProperties = defaultSetting.PairsProperties;
                 break;
@@ -148,39 +178,53 @@ namespace Core.ProfitTrailer {
                 break;
             }
 
-            if (defaultProperties.ContainsKey("File")) {
+            if (defaultProperties.ContainsKey("File"))
+            {
               fileLines = SettingsFiles.GetPresetFileLinesAsList(defaultSetting.SettingName, defaultProperties["File"].ToString(), ptmagicInstance.PTMagicConfiguration);
             }
           }
-        } else {
+        }
+        else
+        {
 
           // Check if settings are configured in a seperate file
-          if (properties.ContainsKey("File")) {
+          if (properties.ContainsKey("File"))
+          {
             fileLines = SettingsFiles.GetPresetFileLinesAsList(setting.SettingName, properties["File"].ToString(), ptmagicInstance.PTMagicConfiguration);
           }
         }
 
-        foreach (string line in fileLines) {
-          if (line.IndexOf("PTMagic_ActiveSetting", StringComparison.InvariantCultureIgnoreCase) > -1) {
+        foreach (string line in fileLines)
+        {
+          if (line.IndexOf("PTMagic_ActiveSetting", StringComparison.InvariantCultureIgnoreCase) > -1)
+          {
 
             // Setting current active setting
             result.Add("# PTMagic_ActiveSetting = " + setting.SettingName);
 
-          } else if (line.IndexOf("PTMagic_LastChanged", StringComparison.InvariantCultureIgnoreCase) > -1) {
+          }
+          else if (line.IndexOf("PTMagic_LastChanged", StringComparison.InvariantCultureIgnoreCase) > -1)
+          {
 
             // Setting last change datetime
             result.Add("# PTMagic_LastChanged = " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString());
 
-          } else if (line.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1) {
+          }
+          else if (line.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
+          {
 
             // Single Market Settings will get overwritten every single run => crop the lines
             break;
-          } else {
+          }
+          else
+          {
 
             // Writing property items
             int oldResultCount = result.Count;
-            if (properties != null) {
-              foreach (string settingProperty in properties.Keys) {
+            if (properties != null)
+            {
+              foreach (string settingProperty in properties.Keys)
+              {
                 result = SettingsHandler.BuildPropertyLine(result, setting.SettingName, line, properties, settingProperty);
               }
             }
@@ -192,32 +236,40 @@ namespace Core.ProfitTrailer {
       ptmagicInstance.GetType().GetProperty(fileType + "Lines").SetValue(ptmagicInstance, result);
     }
 
-    public static List<string> BuildPropertyLine(List<string> result, string settingName, string line, Dictionary<string, object> properties, string settingProperty) {
+    public static List<string> BuildPropertyLine(List<string> result, string settingName, string line, Dictionary<string, object> properties, string settingProperty)
+    {
       int valueMode = Constants.ValueModeDefault;
       string propertyKey = settingProperty;
 
       // Check for offset values
-      if (propertyKey.IndexOf("_OFFSETPERCENT") > -1) {
+      if (propertyKey.IndexOf("_OFFSETPERCENT") > -1)
+      {
         valueMode = Constants.ValueModeOffsetPercent;
         propertyKey = propertyKey.Replace("_OFFSETPERCENT", "");
-      } else if (propertyKey.IndexOf("_OFFSET") > -1) {
+      }
+      else if (propertyKey.IndexOf("_OFFSET") > -1)
+      {
         valueMode = Constants.ValueModeOffset;
         propertyKey = propertyKey.Replace("_OFFSET", "");
       }
 
-      if (line.StartsWith(propertyKey + " ", StringComparison.InvariantCultureIgnoreCase) || line.StartsWith(propertyKey + "=", StringComparison.InvariantCultureIgnoreCase)) {
+      if (line.StartsWith(propertyKey + " ", StringComparison.InvariantCultureIgnoreCase) || line.StartsWith(propertyKey + "=", StringComparison.InvariantCultureIgnoreCase))
+      {
         string newValueString = SystemHelper.PropertyToString(properties[settingProperty]);
-        if (newValueString.ToLower().Equals("true") || newValueString.ToLower().Equals("false")) {
+        if (newValueString.ToLower().Equals("true") || newValueString.ToLower().Equals("false"))
+        {
           newValueString = newValueString.ToLower();
         }
 
         string oldValueString = line.Replace(propertyKey, "").Replace("=", "").Trim();
 
-        switch (valueMode) {
+        switch (valueMode)
+        {
           case Constants.ValueModeOffset:
             // Offset value by a fixed amount
             double offsetValue = SystemHelper.TextToDouble(newValueString, 0, "en-US");
-            if (offsetValue != 0) {
+            if (offsetValue != 0)
+            {
               double oldValue = SystemHelper.TextToDouble(oldValueString, 0, "en-US");
               newValueString = Math.Round((oldValue + offsetValue), 8).ToString(new System.Globalization.CultureInfo("en-US"));
             }
@@ -225,7 +277,8 @@ namespace Core.ProfitTrailer {
           case Constants.ValueModeOffsetPercent:
             // Offset value by percentage
             double offsetValuePercent = SystemHelper.TextToDouble(newValueString, 0, "en-US");
-            if (offsetValuePercent != 0) {
+            if (offsetValuePercent != 0)
+            {
               double oldValue = SystemHelper.TextToDouble(oldValueString, 0, "en-US");
               if (oldValue < 0) offsetValuePercent = offsetValuePercent * -1;
               double oldValueOffset = (oldValue * (offsetValuePercent / 100));
@@ -239,12 +292,15 @@ namespace Core.ProfitTrailer {
         line = propertyKey + " = " + newValueString;
 
         string previousLine = result.Last();
-        if (previousLine.IndexOf("PTMagic Changed Line", StringComparison.InvariantCultureIgnoreCase) > -1) {
+        if (previousLine.IndexOf("PTMagic Changed Line", StringComparison.InvariantCultureIgnoreCase) > -1)
+        {
           previousLine = "# PTMagic changed line for setting '" + settingName + "' on " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString();
 
           result.RemoveAt(result.Count - 1);
           result.Add(previousLine);
-        } else {
+        }
+        else
+        {
           string editLine = "# PTMagic changed line for setting '" + settingName + "' on " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString();
           result.Add(editLine);
         }
@@ -254,8 +310,10 @@ namespace Core.ProfitTrailer {
       return result;
     }
 
-    public static void CompileSingleMarketProperties(PTMagic ptmagicInstance, Dictionary<string, List<string>> matchedTriggers) {
-      try {
+    public static void CompileSingleMarketProperties(PTMagic ptmagicInstance, Dictionary<string, List<string>> matchedTriggers)
+    {
+      try
+      {
         List<string> globalPairsLines = new List<string>();
         List<string> globalDCALines = new List<string>();
         List<string> globalIndicatorsLines = new List<string>();
@@ -264,12 +322,16 @@ namespace Core.ProfitTrailer {
         List<string> newDCALines = new List<string>();
         List<string> newIndicatorsLines = new List<string>();
 
-        foreach (string pairsLine in ptmagicInstance.PairsLines) {
-          if (pairsLine.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1) {
+        foreach (string pairsLine in ptmagicInstance.PairsLines)
+        {
+          if (pairsLine.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
+          {
 
             // Single Market Settings will get overwritten every single run => crop the lines
             break;
-          } else {
+          }
+          else
+          {
             string globalPairsLine = pairsLine;
 
             globalPairsLines.Add(globalPairsLine);
@@ -280,12 +342,16 @@ namespace Core.ProfitTrailer {
         newPairsLines.Add("# ########################################################################");
         newPairsLines.Add("");
 
-        foreach (string dcaLine in ptmagicInstance.DCALines) {
-          if (dcaLine.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1) {
+        foreach (string dcaLine in ptmagicInstance.DCALines)
+        {
+          if (dcaLine.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
+          {
 
             // Single Market Settings will get overwritten every single run => crop the lines
             break;
-          } else {
+          }
+          else
+          {
             string globalDCALine = dcaLine;
 
             globalDCALines.Add(globalDCALine);
@@ -296,12 +362,16 @@ namespace Core.ProfitTrailer {
         newDCALines.Add("# ########################################################################");
         newDCALines.Add("");
 
-        foreach (string indicatorsLine in ptmagicInstance.IndicatorsLines) {
-          if (indicatorsLine.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1) {
+        foreach (string indicatorsLine in ptmagicInstance.IndicatorsLines)
+        {
+          if (indicatorsLine.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
+          {
 
             // Single Market Settings will get overwritten every single run => crop the lines
             break;
-          } else {
+          }
+          else
+          {
             string globalIndicatorsLine = indicatorsLine;
 
             globalIndicatorsLines.Add(globalIndicatorsLine);
@@ -316,35 +386,49 @@ namespace Core.ProfitTrailer {
         newIndicatorsLines.Add("# ########################################################################");
         newIndicatorsLines.Add("");
 
-        foreach (string marketPair in ptmagicInstance.TriggeredSingleMarketSettings.Keys.OrderBy(k => k)) {
+        foreach (string marketPair in ptmagicInstance.TriggeredSingleMarketSettings.Keys.OrderBy(k => k))
+        {
           Dictionary<string, object> pairsPropertiesToApply = new Dictionary<string, object>();
           Dictionary<string, object> dcaPropertiesToApply = new Dictionary<string, object>();
           Dictionary<string, object> indicatorsPropertiesToApply = new Dictionary<string, object>();
 
           // Build Properties as a whole list so that a single coin also has only one block with single market settings applied to it
-          foreach (SingleMarketSetting setting in ptmagicInstance.TriggeredSingleMarketSettings[marketPair]) {
+          foreach (SingleMarketSetting setting in ptmagicInstance.TriggeredSingleMarketSettings[marketPair])
+          {
             ptmagicInstance.Log.DoLogInfo("Building single market settings '" + setting.SettingName + "' for '" + marketPair + "'...");
 
-            foreach (string settingPairsProperty in setting.PairsProperties.Keys) {
-              if (!pairsPropertiesToApply.ContainsKey(settingPairsProperty)) {
+            foreach (string settingPairsProperty in setting.PairsProperties.Keys)
+            {
+              if (!pairsPropertiesToApply.ContainsKey(settingPairsProperty))
+              {
                 pairsPropertiesToApply.Add(settingPairsProperty, setting.PairsProperties[settingPairsProperty]);
-              } else {
+              }
+              else
+              {
                 pairsPropertiesToApply[settingPairsProperty] = setting.PairsProperties[settingPairsProperty];
               }
             }
 
-            foreach (string settingDCAProperty in setting.DCAProperties.Keys) {
-              if (!dcaPropertiesToApply.ContainsKey(settingDCAProperty)) {
+            foreach (string settingDCAProperty in setting.DCAProperties.Keys)
+            {
+              if (!dcaPropertiesToApply.ContainsKey(settingDCAProperty))
+              {
                 dcaPropertiesToApply.Add(settingDCAProperty, setting.DCAProperties[settingDCAProperty]);
-              } else {
+              }
+              else
+              {
                 dcaPropertiesToApply[settingDCAProperty] = setting.DCAProperties[settingDCAProperty];
               }
             }
 
-            foreach (string settingIndicatorsProperty in setting.IndicatorsProperties.Keys) {
-              if (!indicatorsPropertiesToApply.ContainsKey(settingIndicatorsProperty)) {
+            foreach (string settingIndicatorsProperty in setting.IndicatorsProperties.Keys)
+            {
+              if (!indicatorsPropertiesToApply.ContainsKey(settingIndicatorsProperty))
+              {
                 indicatorsPropertiesToApply.Add(settingIndicatorsProperty, setting.IndicatorsProperties[settingIndicatorsProperty]);
-              } else {
+              }
+              else
+              {
                 indicatorsPropertiesToApply[settingIndicatorsProperty] = setting.IndicatorsProperties[settingIndicatorsProperty];
               }
             }
@@ -365,68 +449,90 @@ namespace Core.ProfitTrailer {
         ptmagicInstance.PairsLines = globalPairsLines;
         ptmagicInstance.DCALines = globalDCALines;
         ptmagicInstance.IndicatorsLines = globalIndicatorsLines;
-      } catch (Exception ex) {
+      }
+      catch (Exception ex)
+      {
         ptmagicInstance.Log.DoLogCritical("Critical error while writing settings!", ex);
         throw (ex);
       }
     }
 
-    public static List<string> BuildPropertyLinesForSingleMarketSetting(int ptMajorVersion, string mainMarket, string marketPair, List<SingleMarketSetting> appliedSettings, Dictionary<string, object> properties, Dictionary<string, List<string>> matchedTriggers, Dictionary<string, string> fullProperties, List<string> newPropertyLines, PTMagicConfiguration systemConfiguration, LogHelper log) {
-      if (properties.Keys.Count > 0) {
+    public static List<string> BuildPropertyLinesForSingleMarketSetting(int ptMajorVersion, string mainMarket, string marketPair, List<SingleMarketSetting> appliedSettings, Dictionary<string, object> properties, Dictionary<string, List<string>> matchedTriggers, Dictionary<string, string> fullProperties, List<string> newPropertyLines, PTMagicConfiguration systemConfiguration, LogHelper log)
+    {
+      if (properties.Keys.Count > 0)
+      {
         string appliedSettingsStringList = "";
-        foreach (SingleMarketSetting sms in appliedSettings) {
+        foreach (SingleMarketSetting sms in appliedSettings)
+        {
           if (!appliedSettingsStringList.Equals("")) appliedSettingsStringList += ", ";
           appliedSettingsStringList += sms.SettingName;
         }
 
         newPropertyLines.Add("# " + marketPair + " - Current active settings: " + appliedSettingsStringList);
         newPropertyLines.Add("# Matching triggers:");
-        foreach (string matchingTrigger in matchedTriggers[marketPair]) {
+        foreach (string matchingTrigger in matchedTriggers[marketPair])
+        {
           newPropertyLines.Add("# " + matchingTrigger);
         }
 
-        foreach (string settingProperty in properties.Keys) {
+        foreach (string settingProperty in properties.Keys)
+        {
           int valueMode = Constants.ValueModeDefault;
           string propertyKey = settingProperty;
 
           // Check for offset values
-          if (propertyKey.IndexOf("_OFFSETPERCENT") > -1) {
+          if (propertyKey.IndexOf("_OFFSETPERCENT") > -1)
+          {
             valueMode = Constants.ValueModeOffsetPercent;
             propertyKey = propertyKey.Replace("_OFFSETPERCENT", "");
-          } else if (propertyKey.IndexOf("_OFFSET") > -1) {
+          }
+          else if (propertyKey.IndexOf("_OFFSET") > -1)
+          {
             valueMode = Constants.ValueModeOffset;
             propertyKey = propertyKey.Replace("_OFFSET", "");
           }
 
           string newValueString = SystemHelper.PropertyToString(properties[settingProperty]);
-          if (newValueString.ToLower().Equals("true") || newValueString.ToLower().Equals("false")) {
+          if (newValueString.ToLower().Equals("true") || newValueString.ToLower().Equals("false"))
+          {
             newValueString = newValueString.ToLower();
           }
 
           string propertyMarketName = marketPair;
-          if (ptMajorVersion > 1) {
+          if (ptMajorVersion > 1)
+          {
             // Adjust market pair name for PT 2.0 and above
             propertyMarketName = propertyMarketName.Replace(mainMarket, "").Replace("_", "").Replace("-", "");
           }
 
           string propertyKeyString = "";
-          if (propertyKey.StartsWith("ALL", StringComparison.InvariantCultureIgnoreCase)) {
+          if (propertyKey.StartsWith("ALL", StringComparison.InvariantCultureIgnoreCase))
+          {
             propertyKeyString = propertyKey.Replace("ALL", propertyMarketName, StringComparison.InvariantCultureIgnoreCase);
-          } else if (propertyKey.StartsWith("DEFAULT", StringComparison.InvariantCultureIgnoreCase)) {
+          }
+          else if (propertyKey.StartsWith("DEFAULT", StringComparison.InvariantCultureIgnoreCase))
+          {
             propertyKeyString = propertyKey.Replace("DEFAULT", propertyMarketName, StringComparison.InvariantCultureIgnoreCase);
-          } else {
-            if (propertyKey.StartsWith("_", StringComparison.InvariantCultureIgnoreCase)) {
+          }
+          else
+          {
+            if (propertyKey.StartsWith("_", StringComparison.InvariantCultureIgnoreCase))
+            {
               propertyKeyString = propertyMarketName + propertyKey;
-            } else {
+            }
+            else
+            {
               propertyKeyString = propertyMarketName + "_" + propertyKey;
             }
           }
 
-          switch (valueMode) {
+          switch (valueMode)
+          {
             case Constants.ValueModeOffset:
               // Offset value by a fixed amount
               double offsetValue = SystemHelper.TextToDouble(newValueString, 0, "en-US");
-              if (offsetValue != 0) {
+              if (offsetValue != 0)
+              {
                 double oldValue = SystemHelper.TextToDouble(SettingsHandler.GetCurrentPropertyValue(fullProperties, propertyKey, propertyKey.Replace("ALL_", "DEFAULT_")), 0, "en-US");
                 newValueString = Math.Round((oldValue + offsetValue), 8).ToString(new System.Globalization.CultureInfo("en-US"));
               }
@@ -434,7 +540,8 @@ namespace Core.ProfitTrailer {
             case Constants.ValueModeOffsetPercent:
               // Offset value by percentage
               double offsetValuePercent = SystemHelper.TextToDouble(newValueString, 0, "en-US");
-              if (offsetValuePercent != 0) {
+              if (offsetValuePercent != 0)
+              {
                 double oldValue = SystemHelper.TextToDouble(SettingsHandler.GetCurrentPropertyValue(fullProperties, propertyKey, propertyKey.Replace("ALL_", "DEFAULT_")), 0, "en-US");
                 if (oldValue < 0) offsetValuePercent = offsetValuePercent * -1;
                 double oldValueOffset = (oldValue * (offsetValuePercent / 100));
@@ -453,21 +560,27 @@ namespace Core.ProfitTrailer {
       return newPropertyLines;
     }
 
-    public static bool RemoveSingleMarketSettings(PTMagic ptmagicInstance) {
+    public static bool RemoveSingleMarketSettings(PTMagic ptmagicInstance)
+    {
       bool result = false;
-      try {
+      try
+      {
         List<string> cleanedUpPairsLines = new List<string>();
         List<string> cleanedUpDCALines = new List<string>();
         List<string> cleanedUpIndicatorsLines = new List<string>();
 
         bool removedPairsSingleMarketSettings = false;
-        foreach (string pairsLine in ptmagicInstance.PairsLines) {
-          if (pairsLine.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1) {
+        foreach (string pairsLine in ptmagicInstance.PairsLines)
+        {
+          if (pairsLine.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
+          {
 
             // Single Market Settings will get overwritten every single run => crop the lines
             removedPairsSingleMarketSettings = true;
             break;
-          } else {
+          }
+          else
+          {
             string newPairsLine = pairsLine;
 
             cleanedUpPairsLines.Add(newPairsLine);
@@ -475,13 +588,17 @@ namespace Core.ProfitTrailer {
         }
 
         bool removedDCASingleMarketSettings = false;
-        foreach (string dcaLine in ptmagicInstance.DCALines) {
-          if (dcaLine.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1) {
+        foreach (string dcaLine in ptmagicInstance.DCALines)
+        {
+          if (dcaLine.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
+          {
 
             // Single Market Settings will get overwritten every single run => crop the lines
             removedDCASingleMarketSettings = true;
             break;
-          } else {
+          }
+          else
+          {
             string newDCALine = dcaLine;
 
             cleanedUpDCALines.Add(newDCALine);
@@ -489,13 +606,17 @@ namespace Core.ProfitTrailer {
         }
 
         bool removedIndicatorsSingleMarketSettings = false;
-        foreach (string indicatorsLine in ptmagicInstance.IndicatorsLines) {
-          if (indicatorsLine.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1) {
+        foreach (string indicatorsLine in ptmagicInstance.IndicatorsLines)
+        {
+          if (indicatorsLine.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
+          {
 
             // Single Market Settings will get overwritten every single run => crop the lines
             removedIndicatorsSingleMarketSettings = true;
             break;
-          } else {
+          }
+          else
+          {
             string newIndicatorsLine = indicatorsLine;
 
             cleanedUpIndicatorsLines.Add(newIndicatorsLine);
@@ -507,13 +628,15 @@ namespace Core.ProfitTrailer {
         ptmagicInstance.IndicatorsLines = cleanedUpIndicatorsLines;
 
         result = removedPairsSingleMarketSettings && removedDCASingleMarketSettings && removedIndicatorsSingleMarketSettings;
-      } catch (Exception ex) {
+      }
+      catch (Exception ex)
+      {
         ptmagicInstance.Log.DoLogCritical("Critical error while writing settings!", ex);
       }
 
       return result;
     }
 
-    
+
   }
 }

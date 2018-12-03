@@ -14,9 +14,11 @@ using Core.ProfitTrailer;
 using Microsoft.Extensions.Primitives;
 using System.Diagnostics;
 
-namespace Monitor._Internal {
+namespace Monitor._Internal
+{
 
-  public class BasePageModel : PageModel {
+  public class BasePageModel : PageModel
+  {
     public string PTMagicBasePath = "";
     public string PTMagicMonitorBasePath = "";
     public PTMagicConfiguration PTMagicConfiguration = null;
@@ -31,13 +33,16 @@ namespace Monitor._Internal {
 
     public string MainFiatCurrencySymbol = "$";
 
-    public void PreInit() {
+    public void PreInit()
+    {
       PTMagicMonitorBasePath = Directory.GetCurrentDirectory();
-      if (!System.IO.File.Exists(PTMagicMonitorBasePath + Path.DirectorySeparatorChar + "appsettings.json")) {
+      if (!System.IO.File.Exists(PTMagicMonitorBasePath + Path.DirectorySeparatorChar + "appsettings.json"))
+      {
         PTMagicMonitorBasePath += Path.DirectorySeparatorChar + "Monitor";
       }
 
-      if (!PTMagicMonitorBasePath.EndsWith(Path.DirectorySeparatorChar)) {
+      if (!PTMagicMonitorBasePath.EndsWith(Path.DirectorySeparatorChar))
+      {
         PTMagicMonitorBasePath += Path.DirectorySeparatorChar;
       }
 
@@ -48,14 +53,18 @@ namespace Monitor._Internal {
 
       PTMagicBasePath = config.GetValue<string>("PTMagicBasePath");
 
-      if (!PTMagicBasePath.EndsWith(Path.DirectorySeparatorChar)) {
+      if (!PTMagicBasePath.EndsWith(Path.DirectorySeparatorChar))
+      {
         PTMagicBasePath += Path.DirectorySeparatorChar;
       }
 
 
-      try {
+      try
+      {
         PTMagicConfiguration = new PTMagicConfiguration(PTMagicBasePath);
-      } catch (Exception ex) {
+      }
+      catch (Exception ex)
+      {
         throw ex;
       }
 
@@ -67,44 +76,62 @@ namespace Monitor._Internal {
 
       MainFiatCurrencySymbol = SystemHelper.GetCurrencySymbol(Summary.MainFiatCurrency);
 
-      try {
+      try
+      {
         // Get latest release from GitHub
-        if (!String.IsNullOrEmpty(HttpContext.Session.GetString("LatestVersion"))) {
+        if (!String.IsNullOrEmpty(HttpContext.Session.GetString("LatestVersion")))
+        {
           LatestVersion = HttpContext.Session.GetString("LatestVersion");
-        } else {
+        }
+        else
+        {
           LatestVersion = BaseAnalyzer.GetLatestGitHubRelease(Log, Summary.Version);
           HttpContext.Session.SetString("LatestVersion", LatestVersion);
         }
-        
-      } catch { }
 
-      try {
+      }
+      catch { }
+
+      try
+      {
         // Get current bot version
-        if (!String.IsNullOrEmpty(HttpContext.Session.GetString("CurrentBotVersion"))) {
+        if (!String.IsNullOrEmpty(HttpContext.Session.GetString("CurrentBotVersion")))
+        {
           CurrentBotVersion = HttpContext.Session.GetString("CurrentBotVersion");
-        } else {
+        }
+        else
+        {
           string ptMagicBotDllPath = PTMagicBasePath + "PTMagic.dll";
-          if (System.IO.File.Exists(ptMagicBotDllPath)) {
+          if (System.IO.File.Exists(ptMagicBotDllPath))
+          {
             FileVersionInfo ptMagicDllInfo = FileVersionInfo.GetVersionInfo(ptMagicBotDllPath);
 
             CurrentBotVersion = ptMagicDllInfo.ProductVersion.Substring(0, ptMagicDllInfo.ProductVersion.LastIndexOf("."));
             HttpContext.Session.SetString("CurrentBotVersion", CurrentBotVersion);
-          } else {
+          }
+          else
+          {
             CurrentBotVersion = Summary.Version;
           }
         }
 
-      } catch {
+      }
+      catch
+      {
         CurrentBotVersion = Summary.Version;
       }
     }
 
-    protected string GetStringParameter(string paramName, string defaultValue) {
+    protected string GetStringParameter(string paramName, string defaultValue)
+    {
       string result = defaultValue;
 
-      if (HttpContext.Request.Query.ContainsKey(paramName)) {
+      if (HttpContext.Request.Query.ContainsKey(paramName))
+      {
         result = HttpContext.Request.Query[paramName];
-      } else if (HttpContext.Request.Method.Equals("POST") && HttpContext.Request.Form.ContainsKey(paramName)) {
+      }
+      else if (HttpContext.Request.Method.Equals("POST") && HttpContext.Request.Form.ContainsKey(paramName))
+      {
         result = HttpContext.Request.Form[paramName];
       }
 
@@ -117,19 +144,29 @@ namespace Monitor._Internal {
     /// <param name="paramName">Name des Parameters</param>
     /// <param name="defaultValue">Defaultvalue, wenn Parameter nicht vorhanden ist.</param>
     /// <returns>Der Wert des Parameters als Integer.</returns>
-    protected int GetIntParameter(string paramName, int defaultValue) {
+    protected int GetIntParameter(string paramName, int defaultValue)
+    {
       int result = defaultValue;
 
-      if (HttpContext.Request.Query.ContainsKey(paramName)) {
-        try {
+      if (HttpContext.Request.Query.ContainsKey(paramName))
+      {
+        try
+        {
           result = Int32.Parse(HttpContext.Request.Query[paramName]);
-        } catch {
+        }
+        catch
+        {
           result = defaultValue;
         }
-      } else if (HttpContext.Request.Method.Equals("POST") && HttpContext.Request.Form.ContainsKey(paramName)) {
-        try {
+      }
+      else if (HttpContext.Request.Method.Equals("POST") && HttpContext.Request.Form.ContainsKey(paramName))
+      {
+        try
+        {
           result = Int32.Parse(HttpContext.Request.Form[paramName]);
-        } catch {
+        }
+        catch
+        {
           result = defaultValue;
         }
       }
