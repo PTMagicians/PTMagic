@@ -7,8 +7,10 @@ using Core.Helper;
 using Core.Main.DataObjects;
 using Core.Main.DataObjects.PTMagicData;
 
-namespace Monitor.Pages {
-  public class SalesAnalyzer : _Internal.BasePageModelSecure {
+namespace Monitor.Pages
+{
+  public class SalesAnalyzer : _Internal.BasePageModelSecure
+  {
     public ProfitTrailerData PTData = null;
     public string TradesChartDataJSON = "";
     public string ProfitChartDataJSON = "";
@@ -18,13 +20,15 @@ namespace Monitor.Pages {
     public Dictionary<DateTime, double> MonthlyGains = new Dictionary<DateTime, double>();
     public DateTimeOffset DateTimeNow = Constants.confMinDate;
 
-    public void OnGet() {
+    public void OnGet()
+    {
       base.Init();
-      
+
       BindData();
     }
 
-    private void BindData() {
+    private void BindData()
+    {
       PTData = new ProfitTrailerData(PTMagicBasePath, PTMagicConfiguration);
 
       // Convert local offset time to UTC
@@ -35,10 +39,12 @@ namespace Monitor.Pages {
       BuildSalesChartData();
     }
 
-    private void BuildTopMarkets() {
+    private void BuildTopMarkets()
+    {
       var markets = PTData.SellLog.GroupBy(m => m.Market);
       Dictionary<string, double> topMarketsDic = new Dictionary<string, double>();
-      foreach (var market in markets) {
+      foreach (var market in markets)
+      {
         double totalProfit = PTData.SellLog.FindAll(m => m.Market == market.Key).Sum(m => m.Profit);
 
         topMarketsDic.Add(market.Key, totalProfit);
@@ -46,8 +52,10 @@ namespace Monitor.Pages {
       TopMarkets = new SortedDictionary<string, double>(topMarketsDic).OrderByDescending(m => m.Value).Take(PTMagicConfiguration.GeneralSettings.Monitor.MaxTopMarkets);
     }
 
-    private void BuildSalesChartData() {
-      if (PTData.SellLog.Count > 0) {
+    private void BuildSalesChartData()
+    {
+      if (PTData.SellLog.Count > 0)
+      {
         MinSellLogDate = PTData.SellLog.OrderBy(sl => sl.SoldDate).First().SoldDate.Date;
         DateTime graphStartDate = DateTimeNow.DateTime.Date.AddDays(-30);
         if (MinSellLogDate > graphStartDate) graphStartDate = MinSellLogDate;
@@ -55,8 +63,10 @@ namespace Monitor.Pages {
         int tradeDayIndex = 0;
         string tradesPerDayJSON = "";
         string profitPerDayJSON = "";
-        for (DateTime salesDate = graphStartDate; salesDate <= DateTimeNow.DateTime.Date; salesDate = salesDate.AddDays(1)) {
-          if (tradeDayIndex > 0) {
+        for (DateTime salesDate = graphStartDate; salesDate <= DateTimeNow.DateTime.Date; salesDate = salesDate.AddDays(1))
+        {
+          if (tradeDayIndex > 0)
+          {
             tradesPerDayJSON += ",\n";
             profitPerDayJSON += ",\n";
           }
@@ -87,7 +97,8 @@ namespace Monitor.Pages {
         ProfitChartDataJSON += "}";
         ProfitChartDataJSON += "]";
 
-        for (DateTime salesDate = DateTimeNow.DateTime.Date; salesDate >= MinSellLogDate; salesDate = salesDate.AddDays(-1)) {
+        for (DateTime salesDate = DateTimeNow.DateTime.Date; salesDate >= MinSellLogDate; salesDate = salesDate.AddDays(-1))
+        {
           List<SellLogData> salesDateSales = PTData.SellLog.FindAll(sl => sl.SoldDate.Date == salesDate);
           double salesDateProfit = salesDateSales.Sum(sl => sl.Profit);
           double salesDateStartBalance = PTData.GetSnapshotBalance(salesDate);
@@ -98,7 +109,8 @@ namespace Monitor.Pages {
 
         DateTime minSellLogMonthDate = new DateTime(MinSellLogDate.Year, MinSellLogDate.Month, 1).Date;
         DateTime salesMonthStartDate = new DateTime(DateTimeNow.DateTime.Year, DateTimeNow.DateTime.Month, 1).Date;
-        for (DateTime salesMonthDate = salesMonthStartDate.Date; salesMonthDate >= minSellLogMonthDate; salesMonthDate = salesMonthDate.AddMonths(-1)) {
+        for (DateTime salesMonthDate = salesMonthStartDate.Date; salesMonthDate >= minSellLogMonthDate; salesMonthDate = salesMonthDate.AddMonths(-1))
+        {
           List<Core.Main.DataObjects.PTMagicData.SellLogData> salesMonthSales = PTData.SellLog.FindAll(sl => sl.SoldDate.Date.Month == salesMonthDate.Month && sl.SoldDate.Date.Year == salesMonthDate.Year);
           double salesDateProfit = salesMonthSales.Sum(sl => sl.Profit);
           double salesDateStartBalance = PTData.GetSnapshotBalance(salesMonthDate);

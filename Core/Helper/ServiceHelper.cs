@@ -3,14 +3,18 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
 
-namespace Core.Helper {
-  public static class ServiceHelper {
+namespace Core.Helper
+{
+  public static class ServiceHelper
+  {
 
-    public static IServiceProvider BuildLoggerService() {
+    public static IServiceProvider BuildLoggerService()
+    {
       return ServiceHelper.BuildLoggerService("");
     }
 
-    public static IServiceProvider BuildLoggerService(string basePath) {
+    public static IServiceProvider BuildLoggerService(string basePath)
+    {
       ServiceCollection services = new ServiceCollection();
 
       services.AddTransient<LogHelper>();

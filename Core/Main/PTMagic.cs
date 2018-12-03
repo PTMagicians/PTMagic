@@ -13,10 +13,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
-namespace Core.Main {
-  public class PTMagic {
+namespace Core.Main
+{
+  public class PTMagic
+  {
 
-    public PTMagic(LogHelper log) {
+    public PTMagic(LogHelper log)
+    {
       this.Log = log;
     }
 
@@ -62,351 +65,466 @@ namespace Core.Main {
     private Dictionary<string, int> _singleMarketSettingsCount = new Dictionary<string, int>();
     Dictionary<string, List<SingleMarketSetting>> _triggeredSingleMarketSettings = new Dictionary<string, List<SingleMarketSetting>>();
 
-    public LogHelper Log {
-      get {
+    public LogHelper Log
+    {
+      get
+      {
         return _log;
       }
-      set {
+      set
+      {
         _log = value;
       }
     }
 
-    public PTMagicConfiguration PTMagicConfiguration {
-      get {
+    public PTMagicConfiguration PTMagicConfiguration
+    {
+      get
+      {
         return _systemConfiguration;
       }
-      set {
+      set
+      {
         _systemConfiguration = value;
       }
     }
 
-    public System.Timers.Timer Timer {
-      get {
+    public System.Timers.Timer Timer
+    {
+      get
+      {
         return _timer;
       }
-      set {
+      set
+      {
         _timer = value;
       }
     }
 
-    public Summary LastRuntimeSummary {
-      get {
+    public Summary LastRuntimeSummary
+    {
+      get
+      {
         return _lastRuntimeSummary;
       }
-      set {
+      set
+      {
         _lastRuntimeSummary = value;
       }
     }
 
-    public int State {
-      get {
+    public int State
+    {
+      get
+      {
         return _state;
       }
-      set {
+      set
+      {
         _state = value;
       }
     }
 
-    public int RunCount {
-      get {
+    public int RunCount
+    {
+      get
+      {
         return _runCount;
       }
-      set {
+      set
+      {
         _runCount = value;
       }
     }
 
-    public int TotalElapsedSeconds {
-      get {
+    public int TotalElapsedSeconds
+    {
+      get
+      {
         return _totalElapsedSeconds;
       }
-      set {
+      set
+      {
         _totalElapsedSeconds = value;
       }
     }
 
-    public int ProfitTrailerMajorVersion {
-      get {
+    public int ProfitTrailerMajorVersion
+    {
+      get
+      {
         return _profitTrailerMajorVersion;
       }
-      set {
+      set
+      {
         _profitTrailerMajorVersion = value;
       }
     }
 
-    public bool GlobalSettingWritten {
-      get {
+    public bool GlobalSettingWritten
+    {
+      get
+      {
         return _globalSettingWritten;
       }
-      set {
+      set
+      {
         _globalSettingWritten = value;
       }
     }
 
-    public bool SingleMarketSettingWritten {
-      get {
+    public bool SingleMarketSettingWritten
+    {
+      get
+      {
         return _singleMarketSettingWritten;
       }
-      set {
+      set
+      {
         _singleMarketSettingWritten = value;
       }
     }
 
-    public bool EnforceSettingsReapply {
-      get {
+    public bool EnforceSettingsReapply
+    {
+      get
+      {
         return _enforceSettingsReapply;
       }
-      set {
+      set
+      {
         _enforceSettingsReapply = value;
       }
     }
 
-    public DateTime LastSettingsChange {
-      get {
+    public DateTime LastSettingsChange
+    {
+      get
+      {
         return _lastSettingsChange;
       }
-      set {
+      set
+      {
         _lastSettingsChange = value;
       }
     }
 
-    public DateTime LastVersionCheck {
-      get {
+    public DateTime LastVersionCheck
+    {
+      get
+      {
         return _lastVersionCheck;
       }
-      set {
+      set
+      {
         _lastVersionCheck = value;
       }
     }
 
-    public DateTime LastFiatCurrencyCheck {
-      get {
+    public DateTime LastFiatCurrencyCheck
+    {
+      get
+      {
         return _lastFiatCurrencyCheck;
       }
-      set {
+      set
+      {
         _lastFiatCurrencyCheck = value;
       }
     }
 
-    public DateTime LastSettingFileCheck {
-      get {
+    public DateTime LastSettingFileCheck
+    {
+      get
+      {
         return _lastSettingFileCheck;
       }
-      set {
+      set
+      {
         _lastSettingFileCheck = value;
       }
     }
 
-    public DateTime LastRuntime {
-      get {
+    public DateTime LastRuntime
+    {
+      get
+      {
         return _lastRuntime;
       }
-      set {
+      set
+      {
         _lastRuntime = value;
       }
     }
 
-    public string DefaultSettingName {
-      get {
+    public string DefaultSettingName
+    {
+      get
+      {
         return _defaultSettingName;
       }
-      set {
+      set
+      {
         _defaultSettingName = value;
       }
     }
 
-    public string LastSetting {
-      get {
+    public string LastSetting
+    {
+      get
+      {
         return _lastSetting;
       }
-      set {
+      set
+      {
         _lastSetting = value;
       }
     }
 
-    public string ActiveSetting {
-      get {
+    public string ActiveSetting
+    {
+      get
+      {
         return _activeSetting;
       }
-      set {
+      set
+      {
         _activeSetting = value;
       }
     }
 
-    public string PairsFileName {
-      get {
+    public string PairsFileName
+    {
+      get
+      {
         return _pairsFileName;
       }
-      set {
+      set
+      {
         _pairsFileName = value;
       }
     }
 
-    public string DCAFileName {
-      get {
+    public string DCAFileName
+    {
+      get
+      {
         return _dcaFileName;
       }
-      set {
+      set
+      {
         _dcaFileName = value;
       }
     }
 
-    public string IndicatorsFileName {
-      get {
+    public string IndicatorsFileName
+    {
+      get
+      {
         return _indicatorsFileName;
       }
-      set {
+      set
+      {
         _indicatorsFileName = value;
       }
     }
 
-    public Version CurrentVersion {
-      get {
+    public Version CurrentVersion
+    {
+      get
+      {
         return _currentVersion;
       }
-      set {
+      set
+      {
         _currentVersion = value;
       }
     }
 
-    public string LatestVersion {
-      get {
+    public string LatestVersion
+    {
+      get
+      {
         return _latestVersion;
       }
-      set {
+      set
+      {
         _latestVersion = value;
       }
     }
 
-    public string LastMainFiatCurrency {
-      get {
+    public string LastMainFiatCurrency
+    {
+      get
+      {
         return _lastMainFiatCurrency;
       }
-      set {
+      set
+      {
         _lastMainFiatCurrency = value;
       }
     }
 
-    public double LastMainFiatCurrencyExchangeRate {
-      get {
+    public double LastMainFiatCurrencyExchangeRate
+    {
+      get
+      {
         return _lastMainFiatCurrencyExchangeRate;
       }
-      set {
+      set
+      {
         _lastMainFiatCurrencyExchangeRate = value;
       }
     }
 
-    public List<SingleMarketSettingSummary> SingleMarketSettingSummaries {
-      get {
+    public List<SingleMarketSettingSummary> SingleMarketSettingSummaries
+    {
+      get
+      {
         return _singleMarketSettingSummaries;
       }
-      set {
+      set
+      {
         _singleMarketSettingSummaries = value;
       }
     }
 
-    public List<string> PairsLines {
-      get {
+    public List<string> PairsLines
+    {
+      get
+      {
         return _pairsLines;
       }
-      set {
+      set
+      {
         _pairsLines = value;
       }
     }
 
-    public List<string> DCALines {
-      get {
+    public List<string> DCALines
+    {
+      get
+      {
         return _dcaLines;
       }
-      set {
+      set
+      {
         _dcaLines = value;
       }
     }
 
-    public List<string> IndicatorsLines {
-      get {
+    public List<string> IndicatorsLines
+    {
+      get
+      {
         return _indicatorsLines;
       }
-      set {
+      set
+      {
         _indicatorsLines = value;
       }
     }
 
-    public List<string> ExchangeMarketList {
-      get {
+    public List<string> ExchangeMarketList
+    {
+      get
+      {
         return _exchangeMarketList;
       }
-      set {
+      set
+      {
         _exchangeMarketList = value;
       }
     }
 
-    public List<string> MarketList {
-      get {
+    public List<string> MarketList
+    {
+      get
+      {
         return _marketList;
       }
-      set {
+      set
+      {
         _marketList = value;
       }
     }
 
-    public Dictionary<string, MarketInfo> MarketInfos {
-      get {
+    public Dictionary<string, MarketInfo> MarketInfos
+    {
+      get
+      {
         return _marketInfos;
       }
-      set {
+      set
+      {
         _marketInfos = value;
       }
     }
 
-    public Dictionary<string, List<MarketTrendChange>> SingleMarketTrendChanges {
-      get {
+    public Dictionary<string, List<MarketTrendChange>> SingleMarketTrendChanges
+    {
+      get
+      {
         return _singleMarketTrendChanges;
       }
-      set {
+      set
+      {
         _singleMarketTrendChanges = value;
       }
     }
 
-    public Dictionary<string, List<MarketTrendChange>> GlobalMarketTrendChanges {
-      get {
+    public Dictionary<string, List<MarketTrendChange>> GlobalMarketTrendChanges
+    {
+      get
+      {
         return _globalMarketTrendChanges;
       }
-      set {
+      set
+      {
         _globalMarketTrendChanges = value;
       }
     }
 
-    public Dictionary<string, double> AverageMarketTrendChanges {
-      get {
+    public Dictionary<string, double> AverageMarketTrendChanges
+    {
+      get
+      {
         return _averageMarketTrendChanges;
       }
-      set {
+      set
+      {
         _averageMarketTrendChanges = value;
       }
     }
 
-    public Dictionary<string, int> SingleMarketSettingsCount {
-      get {
+    public Dictionary<string, int> SingleMarketSettingsCount
+    {
+      get
+      {
         return _singleMarketSettingsCount;
       }
-      set {
+      set
+      {
         _singleMarketSettingsCount = value;
       }
     }
 
-    public Dictionary<string, List<SingleMarketSetting>> TriggeredSingleMarketSettings {
-      get {
+    public Dictionary<string, List<SingleMarketSetting>> TriggeredSingleMarketSettings
+    {
+      get
+      {
         return _triggeredSingleMarketSettings;
       }
-      set {
+      set
+      {
         _triggeredSingleMarketSettings = value;
       }
     }
     #endregion
 
     #region PTMagic Startup  Methods
-    public bool StartProcess() {
+    public bool StartProcess()
+    {
       bool result = true;
 
       this.Log.DoLogInfo("");
@@ -421,27 +539,32 @@ namespace Core.Main {
       this.Log.DoLogInfo("Starting PTMagic in " + Directory.GetCurrentDirectory());
       this.Log.DoLogInfo("with .NET Core: " + Path.GetDirectoryName(typeof(object).Assembly.Location));
 
-      if (!this.RunStartupChecks()) {
+      if (!this.RunStartupChecks())
+      {
         return false;
       }
-      if (!this.InitializeConfiguration()) {
+      if (!this.InitializeConfiguration())
+      {
         return false;
       }
 
       _configCheckResult = this.RunConfigurationChecks();
-      if (!_configCheckResult) {
+      if (!_configCheckResult)
+      {
         this.Log.DoLogInfo("Starting configuration check retry in 5 seconds...");
         System.Timers.Timer configCheckTimer = new System.Timers.Timer(5000);
         configCheckTimer.Enabled = true;
         configCheckTimer.Elapsed += new System.Timers.ElapsedEventHandler(this.ConfigCheckTimer_Elapsed);
 
-        while (!_configCheckResult && _configCheckRetryCount < 10) {
+        while (!_configCheckResult && _configCheckRetryCount < 10)
+        {
           Thread.Sleep(100);
         }
         configCheckTimer.Stop();
       }
 
-      if (!_configCheckResult) {
+      if (!_configCheckResult)
+      {
         return false;
       }
 
@@ -454,16 +577,19 @@ namespace Core.Main {
       return result;
     }
 
-    public bool RunStartupChecks() {
+    public bool RunStartupChecks()
+    {
       bool result = true;
 
       // Startup checks
-      if (!File.Exists(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "settings.general.json")) {
+      if (!File.Exists(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "settings.general.json"))
+      {
         this.Log.DoLogError("File 'settings.general.json' not found! Please review the setup steps on the wiki and double check every step that involves copying files!");
         result = false;
       }
 
-      if (!File.Exists(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "settings.analyzer.json")) {
+      if (!File.Exists(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "settings.analyzer.json"))
+      {
         this.Log.DoLogError("File 'settings.analyzer.json' not found! Please review the setup steps on the wiki and double check every step that involves copying files!");
         result = false;
       }
@@ -471,15 +597,19 @@ namespace Core.Main {
       return result;
     }
 
-    public bool InitializeConfiguration() {
+    public bool InitializeConfiguration()
+    {
       bool result = true;
 
-      try {
+      try
+      {
         this.PTMagicConfiguration = new PTMagicConfiguration();
 
         this.Log.DoLogInfo("Configuration loaded. Found " + this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends.Count.ToString() + " Market Trends, " + this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Count.ToString() + " Global Settings and " + this.PTMagicConfiguration.AnalyzerSettings.SingleMarketSettings.Count.ToString() + " Single Market Settings.");
 
-      } catch (Exception ex) {
+      }
+      catch (Exception ex)
+      {
         result = false;
         this.Log.DoLogCritical("Error loading configuration!", ex);
         throw (ex);
@@ -488,63 +618,81 @@ namespace Core.Main {
       return result;
     }
 
-    public bool RunConfigurationChecks() {
+    public bool RunConfigurationChecks()
+    {
       bool result = true;
 
       // Check for valid default setting
       GlobalSetting defaultSetting = this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Find(s => s.SettingName.Equals("default", StringComparison.InvariantCultureIgnoreCase));
-      if (defaultSetting == null) {
+      if (defaultSetting == null)
+      {
         defaultSetting = this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Find(s => s.SettingName.IndexOf("default", StringComparison.InvariantCultureIgnoreCase) > -1);
-        if (defaultSetting != null) {
+        if (defaultSetting != null)
+        {
           this.Log.DoLogDebug("No setting named 'default' found, taking '" + defaultSetting.SettingName + "' as default.");
           this.DefaultSettingName = defaultSetting.SettingName;
-        } else {
+        }
+        else
+        {
           this.Log.DoLogError("No 'default' setting found! Terminating process...");
           result = false;
         }
-      } else {
+      }
+      else
+      {
         this.DefaultSettingName = defaultSetting.SettingName;
       }
 
       // Check if exchange is valid
       if (!this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Binance", StringComparison.InvariantCultureIgnoreCase)
         && !this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Bittrex", StringComparison.InvariantCultureIgnoreCase)
-        && !this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Poloniex", StringComparison.InvariantCultureIgnoreCase)) {
+        && !this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Poloniex", StringComparison.InvariantCultureIgnoreCase))
+      {
         this.Log.DoLogError("Exchange '" + this.PTMagicConfiguration.GeneralSettings.Application.Exchange + "' specified in settings.general.json is invalid! Terminating process...");
         result = false;
       }
 
       // Check if the program is enabled
-      if (this.PTMagicConfiguration.GeneralSettings.Application.IsEnabled) {
+      if (this.PTMagicConfiguration.GeneralSettings.Application.IsEnabled)
+      {
         if (this.PTMagicConfiguration.GeneralSettings.Application.TestMode) this.Log.DoLogInfo("TESTMODE ENABLED - No files will be changed!");
 
         // Check for PT Directory
         DirectoryInfo ptRoot = new DirectoryInfo(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath);
-        if (ptRoot.Exists) {
+        if (ptRoot.Exists)
+        {
           this.Log.DoLogInfo("Profit Trailer directory found");
 
           // Run checks dependant on PT version
           this.ProfitTrailerMajorVersion = this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMajorVersion;
-          if (this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMajorVersion < 2) {
+          if (this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMajorVersion < 2)
+          {
             result = RunProfitTrailerTradingFilesChecks();
-          } else {
+          }
+          else
+          {
             result = RunProfitTrailerSettingsAPIChecks();
           }
-        } else {
+        }
+        else
+        {
           this.Log.DoLogError("Profit Trailer directory not found (" + this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + ")");
           result = false;
         }
 
         // Check for CoinMarketCap API Key
-        if (!this.PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey.Equals("")) {
-        this.Log.DoLogInfo("CoinMarketCap API KEY found");
-        } 
-        else {
-        this.Log.DoLogInfo("No CoinMarketCap API KEY specified! You can't use CoinMarketCap in your settings.analyzer.json");
+        if (!this.PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey.Equals(""))
+        {
+          this.Log.DoLogInfo("CoinMarketCap API KEY found");
         }
-      } 
-      
-      else {
+        else
+        {
+          this.Log.DoLogInfo("No CoinMarketCap API KEY specified! You can't use CoinMarketCap in your settings.analyzer.json");
+        }
+      }
+
+      else
+      {
         this.Log.DoLogWarn("PTMagic disabled, shutting down...");
         result = false;
       }
@@ -552,7 +700,8 @@ namespace Core.Main {
       return result;
     }
 
-    private bool RunProfitTrailerTradingFilesChecks() {
+    private bool RunProfitTrailerTradingFilesChecks()
+    {
       bool result = true;
 
       this.Log.DoLogInfo("========== STARTING CHECKS FOR Profit Trailer 1.x ==========");
@@ -560,110 +709,151 @@ namespace Core.Main {
       // Check for settings directory "trading"
       string ptTradingPath = this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar;
       DirectoryInfo ptTrading = new DirectoryInfo(ptTradingPath);
-      if (ptTrading.Exists) {
+      if (ptTrading.Exists)
+      {
         this.Log.DoLogInfo("Profit Trailer 1.x check: Trading directory found");
 
         #region File Checks
         this.Log.DoLogInfo("Profit Trailer 1.x check: Checking for Pairs Properties file");
-        if (File.Exists(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.PairsFileName)) {
+        if (File.Exists(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.PairsFileName))
+        {
           this.Log.DoLogInfo("Profit Trailer 1.x check: PAIRS.PROPERTIES found!");
-        } else {
+        }
+        else
+        {
           this.PairsFileName = "PAIRS.properties";
-          if (File.Exists(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.PairsFileName)) {
+          if (File.Exists(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.PairsFileName))
+          {
             this.Log.DoLogInfo("Profit Trailer 1.x check: PAIRS.properties found!");
-          } else {
+          }
+          else
+          {
             this.Log.DoLogError("Profit Trailer 1.x check: No 'PAIRS.properties' found in " + this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar);
             result = false;
           }
         }
 
         this.Log.DoLogInfo("Profit Trailer 1.x check: Checking for DCA Properties file");
-        if (File.Exists(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.DCAFileName)) {
+        if (File.Exists(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.DCAFileName))
+        {
           this.Log.DoLogInfo("Profit Trailer 1.x check: DCA.PROPERTIES found!");
-        } else {
+        }
+        else
+        {
           this.DCAFileName = "DCA.properties";
-          if (File.Exists(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.DCAFileName)) {
+          if (File.Exists(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.DCAFileName))
+          {
             this.Log.DoLogInfo("Profit Trailer 1.x check: DCA.properties found!");
-          } else {
+          }
+          else
+          {
             this.Log.DoLogError("Profit Trailer 1.x check: No 'DCA.properties' found in " + this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar);
             result = false;
           }
         }
 
         this.Log.DoLogInfo("Profit Trailer 1.x check: Checking for Indicators Properties file");
-        if (File.Exists(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.IndicatorsFileName)) {
+        if (File.Exists(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.IndicatorsFileName))
+        {
           this.Log.DoLogInfo("Profit Trailer 1.x check: INDICATORS.PROPERTIES found!");
-        } else {
+        }
+        else
+        {
           this.IndicatorsFileName = "INDICATORS.properties";
-          if (File.Exists(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.IndicatorsFileName)) {
+          if (File.Exists(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.IndicatorsFileName))
+          {
             this.Log.DoLogInfo("Profit Trailer 1.x check: INDICATORS.properties found!");
-          } else {
+          }
+          else
+          {
             this.Log.DoLogError("Profit Trailer 1.x check: No 'INDICATORS.properties' found in " + this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar);
             result = false;
           }
         }
         #endregion
-      } else {
+      }
+      else
+      {
         this.Log.DoLogError("Profit Trailer 1.x check: Trading settings directory not found (" + ptTradingPath + ")");
         result = false;
       }
-      
-      if (result) {
+
+      if (result)
+      {
         this.Log.DoLogInfo("========== CHECKS FOR Profit Trailer 1.x COMPLETED! ==========");
-      } else {
-         this.Log.DoLogInfo("========== CHECKS FOR Profit Trailer 1.x FAILED! ==========");
+      }
+      else
+      {
+        this.Log.DoLogInfo("========== CHECKS FOR Profit Trailer 1.x FAILED! ==========");
       }
 
       return result;
     }
 
-    private bool RunProfitTrailerSettingsAPIChecks() {
+    private bool RunProfitTrailerSettingsAPIChecks()
+    {
       bool result = true;
 
       this.Log.DoLogInfo("========== STARTING CHECKS FOR Profit Trailer 2.x ==========");
 
       // Check for PT license key
-      if (!this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerLicense.Equals("")) {
+      if (!this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerLicense.Equals(""))
+      {
         this.Log.DoLogInfo("Profit Trailer 2.x check: Profit Trailer license found");
-      } else {
+      }
+      else
+      {
         this.Log.DoLogError("Profit Trailer 2.x check: No Profit Trailer license key specified! The license key is necessary to adjust your Profit Trailer settings since 2.0");
         result = false;
       }
 
       // Check for PT default setting key
-      if (!this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName.Equals("")) {
+      if (!this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName.Equals(""))
+      {
         this.Log.DoLogInfo("Profit Trailer 2.x check: Profit Trailer default setting name specified");
-      } else {
+      }
+      else
+      {
         this.Log.DoLogError("Profit Trailer 2.x check: No Profit Trailer default setting name specified! The default setting name is necessary to adjust your Profit Trailer settings since 2.0");
         result = false;
       }
 
       // Check for PT monitor
-      if (!this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL.Equals("")) {
+      if (!this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL.Equals(""))
+      {
         this.Log.DoLogInfo("Profit Trailer 2.x check: Profit Trailer monitor URL found");
-      } else {
+      }
+      else
+      {
         this.Log.DoLogError("Profit Trailer 2.x check: No Profit Trailer monitor URL specified! The monitor URL is necessary to adjust your Profit Trailer settings since 2.0");
         result = false;
       }
 
       // Check if PT monitor is reachable
-      if (SystemHelper.UrlIsReachable(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL)) {
+      if (SystemHelper.UrlIsReachable(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL))
+      {
         this.Log.DoLogInfo("Profit Trailer 2.x check: Profit Trailer monitor connection test succeeded");
-      } else {
+      }
+      else
+      {
         this.Log.DoLogError("Profit Trailer 2.x check: Your Profit Trailer monitor (" + this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL + ") is not available! Make sure your Profit Trailer bot is up and running and your monitor is accessible.");
         result = false;
       }
 
-      if (result) {
+      if (result)
+      {
         this.Log.DoLogInfo("========== CHECKS FOR Profit Trailer 2.x COMPLETED! ==========");
-      } else {
-         this.Log.DoLogInfo("========== CHECKS FOR Profit Trailer 2.x FAILED! ==========");
+      }
+      else
+      {
+        this.Log.DoLogInfo("========== CHECKS FOR Profit Trailer 2.x FAILED! ==========");
       }
 
       return result;
     }
 
-    public void StartPTMagicIntervalTimer() {
+    public void StartPTMagicIntervalTimer()
+    {
       this.Timer = new System.Timers.Timer(this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 60 * 1000);
       this.Timer.Enabled = true;
       this.Timer.Elapsed += new System.Timers.ElapsedEventHandler(this.PTMagicIntervalTimer_Elapsed);
@@ -676,25 +866,30 @@ namespace Core.Main {
     #endregion
 
     #region PTMagic Interval Methods
-    public void ConfigCheckTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e) {
+    public void ConfigCheckTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+    {
       // Reinit config in case the user changed something
       this.InitializeConfiguration();
       _configCheckResult = this.RunConfigurationChecks();
       _configCheckRetryCount++;
-      if (!_configCheckResult) {
+      if (!_configCheckResult)
+      {
         this.Log.DoLogError("Configuration check retry " + _configCheckRetryCount + "/10 failed, starting next retry in 5 seconds...");
       }
     }
 
-    public void PTMagicIntervalTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e) {
+    public void PTMagicIntervalTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+    {
       // Check if the bot is idle
-      if (this.State == Constants.PTMagicBotState_Idle) {
+      if (this.State == Constants.PTMagicBotState_Idle)
+      {
         this.RunCount++;
 
         bool headerLinesAdded = false;
         this.EnforceSettingsReapply = this.HaveSettingsChanged();
 
-        if (PTMagicConfiguration.GeneralSettings.Application.IsEnabled) {
+        if (PTMagicConfiguration.GeneralSettings.Application.IsEnabled)
+        {
 
           // Validate settings
           this.ValidateSettings();
@@ -768,22 +963,31 @@ namespace Core.Main {
 
           // Change state to Finished / Stopped
           this.State = Constants.PTMagicBotState_Idle;
-        } else {
+        }
+        else
+        {
           this.State = Constants.PTMagicBotState_Idle;
           Log.DoLogWarn("PTMagic disabled, shutting down until next raid...");
         }
-      } else {
-        if (this.RunCount > 1) {
+      }
+      else
+      {
+        if (this.RunCount > 1)
+        {
           Log.DoLogWarn("PTMagic already raiding since " + this.LastRuntime.ToString() + " - Process frozen? Checking things...");
 
-          if (File.Exists(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "LastRuntimeSummary.json")) {
+          if (File.Exists(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "LastRuntimeSummary.json"))
+          {
             FileInfo fiLastSummary = new FileInfo(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "LastRuntimeSummary.json");
-            if (fiLastSummary.LastWriteTime < DateTime.Now.AddMinutes(-(this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 2))) {
+            if (fiLastSummary.LastWriteTime < DateTime.Now.AddMinutes(-(this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 2)))
+            {
               Log.DoLogWarn("PTMagic seems to have frozen after raid " + this.RunCount.ToString() + ", but don't worry I will sacrifice some Magicbots to get this running again...");
               this.State = Constants.PTMagicBotState_Idle;
               Log.DoLogInfo("PTMagic status resetted, waiting for the next raid to be good to go again.");
             }
-          } else {
+          }
+          else
+          {
             Log.DoLogWarn("No LastRuntimeSummary.json found after raid " + this.RunCount.ToString() + ", trying to reset PT Magic status...");
             this.State = Constants.PTMagicBotState_Idle;
             Log.DoLogInfo("PTMagic status resetted, waiting for the next raid to be good to go again.");
@@ -792,30 +996,39 @@ namespace Core.Main {
       }
     }
 
-    private bool HaveSettingsChanged() {
+    private bool HaveSettingsChanged()
+    {
       bool result = false;
 
       FileInfo generalSettingsFile = new FileInfo(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "settings.general.json");
       FileInfo analyzerSettingsFile = new FileInfo(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "settings.analyzer.json");
-      if (generalSettingsFile.LastWriteTime > this.LastSettingFileCheck || analyzerSettingsFile.LastWriteTime > this.LastSettingFileCheck) {
+      if (generalSettingsFile.LastWriteTime > this.LastSettingFileCheck || analyzerSettingsFile.LastWriteTime > this.LastSettingFileCheck)
+      {
         Log.DoLogInfo("Detected configuration changes. Reloading settings...");
 
-        try {
+        try
+        {
           PTMagicConfiguration = new PTMagicConfiguration();
 
           GlobalSetting defaultSetting = this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Find(s => s.SettingName.Equals("default", StringComparison.InvariantCultureIgnoreCase));
-          if (defaultSetting == null) {
+          if (defaultSetting == null)
+          {
             defaultSetting = this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Find(s => s.SettingName.IndexOf("default", StringComparison.InvariantCultureIgnoreCase) > -1);
-            if (defaultSetting != null) {
+            if (defaultSetting != null)
+            {
               Log.DoLogDebug("No setting named 'default' found, taking '" + defaultSetting.SettingName + "' as default.");
               this.DefaultSettingName = defaultSetting.SettingName;
-            } else {
+            }
+            else
+            {
               Log.DoLogError("No 'default' setting found! Terminating process...");
               this.Timer.Stop();
               Exception ex = new Exception("No 'default' setting found!Terminating process...");
               throw ex;
             }
-          } else {
+          }
+          else
+          {
             this.DefaultSettingName = defaultSetting.SettingName;
           }
 
@@ -823,7 +1036,8 @@ namespace Core.Main {
           this.LastSettingFileCheck = DateTime.Now;
           result = true;
 
-          if (this.Timer.Interval != this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 60 * 1000) {
+          if (this.Timer.Interval != this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 60 * 1000)
+          {
             Log.DoLogInfo("Setting for 'IntervalMinutes' changed in MarketAnalyzer, setting new timer...");
             this.Timer.Stop();
             this.Timer.Interval = this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 60 * 1000;
@@ -832,31 +1046,43 @@ namespace Core.Main {
           }
 
           SettingsFiles.CheckPresets(this.PTMagicConfiguration, this.Log, true);
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
           Log.DoLogCritical("Error loading new configuration!", ex);
         }
-      } else {
+      }
+      else
+      {
         result = SettingsFiles.CheckPresets(this.PTMagicConfiguration, this.Log, false);
       }
 
       return result;
     }
 
-    private void ValidateSettings() {
+    private void ValidateSettings()
+    {
       // Check for a valid exchange
-      if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange == null) {
+      if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange == null)
+      {
         Log.DoLogError("Your setting for Application.Exchange in settings.general.json is invalid (null)! Terminating process.");
         this.Timer.Stop();
         Exception ex = new Exception("Your setting for Application.Exchange in settings.general.json is invalid (null)! Terminating process.");
         throw ex;
-      } else {
-        if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("")) {
+      }
+      else
+      {
+        if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals(""))
+        {
           Log.DoLogError("Your setting for Application.Exchange in settings.general.json is invalid (empty)! Terminating process.");
           this.Timer.Stop();
           Exception ex = new Exception("Your setting for Application.Exchange in settings.general.json is invalid (empty)! Terminating process.");
           throw ex;
-        } else {
-          if (!this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Binance", StringComparison.InvariantCultureIgnoreCase) && !this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Bittrex", StringComparison.InvariantCultureIgnoreCase) && !this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Poloniex", StringComparison.InvariantCultureIgnoreCase)) {
+        }
+        else
+        {
+          if (!this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Binance", StringComparison.InvariantCultureIgnoreCase) && !this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Bittrex", StringComparison.InvariantCultureIgnoreCase) && !this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Poloniex", StringComparison.InvariantCultureIgnoreCase))
+          {
             Log.DoLogError("Your setting for Application.Exchange in settings.general.json is invalid (" + this.PTMagicConfiguration.GeneralSettings.Application.Exchange + ")! Terminating process.");
             this.Timer.Stop();
             Exception ex = new Exception("Your setting for Application.Exchange in settings.general.json is invalid (" + this.PTMagicConfiguration.GeneralSettings.Application.Exchange + ")! Terminating process.");
@@ -866,30 +1092,38 @@ namespace Core.Main {
       }
     }
 
-    private void CheckLatestGitHubVersion(string currentVersion) {
+    private void CheckLatestGitHubVersion(string currentVersion)
+    {
       // Get latest version number
-      if (this.LastVersionCheck < DateTime.Now.AddMinutes(-30)) {
+      if (this.LastVersionCheck < DateTime.Now.AddMinutes(-30))
+      {
         this.LatestVersion = BaseAnalyzer.GetLatestGitHubRelease(this.Log, currentVersion);
         this.LastVersionCheck = DateTime.Now;
-        if (!SystemHelper.IsRecentVersion(currentVersion, this.LatestVersion)) {
+        if (!SystemHelper.IsRecentVersion(currentVersion, this.LatestVersion))
+        {
           this.Log.DoLogWarn("Your bot is out of date! The most recent version of PTMagic is " + this.LatestVersion);
         }
       }
     }
 
-    private void GetMainFiatCurrencyDetails() {
+    private void GetMainFiatCurrencyDetails()
+    {
       this.LastRuntimeSummary.MainFiatCurrency = this.LastMainFiatCurrency;
       this.LastRuntimeSummary.MainFiatCurrencyExchangeRate = this.LastMainFiatCurrencyExchangeRate;
 
-      if (this.LastFiatCurrencyCheck < DateTime.Now.AddHours(-12) && !this.PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency.Equals("USD", StringComparison.InvariantCultureIgnoreCase)) {
-        try {
+      if (this.LastFiatCurrencyCheck < DateTime.Now.AddHours(-12) && !this.PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency.Equals("USD", StringComparison.InvariantCultureIgnoreCase))
+      {
+        try
+        {
           this.LastRuntimeSummary.MainFiatCurrency = this.PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency;
           this.LastRuntimeSummary.MainFiatCurrencyExchangeRate = BaseAnalyzer.GetMainFiatCurrencyRate(this.PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency, this.Log);
           this.LastMainFiatCurrency = this.LastRuntimeSummary.MainFiatCurrency;
           this.LastMainFiatCurrencyExchangeRate = this.LastRuntimeSummary.MainFiatCurrencyExchangeRate;
 
           this.LastFiatCurrencyCheck = DateTime.Now;
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
 
           // Fallback to USD in case something went wrong
           this.Log.DoLogError("Fixer.io exchange rate check error: " + ex.Message);
@@ -901,15 +1135,19 @@ namespace Core.Main {
       }
     }
 
-    private void LoadCurrentProfitTrailerProperties(string pairsPropertiesPath, string dcaPropertiesPath, string indicatorsPropertiesPath) {
-      if (this.ProfitTrailerMajorVersion == 1) {
+    private void LoadCurrentProfitTrailerProperties(string pairsPropertiesPath, string dcaPropertiesPath, string indicatorsPropertiesPath)
+    {
+      if (this.ProfitTrailerMajorVersion == 1)
+      {
         // Load current PT properties from files (Valid for PT 1.x)
         this.Log.DoLogInfo("Loading current Profit Trailer properties from files...");
 
         this.PairsLines = File.ReadLines(pairsPropertiesPath).ToList();
         this.DCALines = File.ReadLines(dcaPropertiesPath).ToList();
         this.IndicatorsLines = File.ReadLines(indicatorsPropertiesPath).ToList();
-      } else {
+      }
+      else
+      {
         // Load current PT properties from API (Valid for PT 2.x and above)
         this.Log.DoLogInfo("Loading current Profit Trailer properties from API...");
 
@@ -918,9 +1156,12 @@ namespace Core.Main {
         this.IndicatorsLines = SettingsAPI.GetPropertyLinesFromAPI("INDICATORS", this.PTMagicConfiguration, this.Log);
       }
 
-      if (this.PairsLines != null && this.DCALines != null && this.IndicatorsLines != null) {
+      if (this.PairsLines != null && this.DCALines != null && this.IndicatorsLines != null)
+      {
         this.Log.DoLogInfo("Properties loaded - P (" + this.PairsLines.Count.ToString() + " lines) - D (" + this.DCALines.Count.ToString() + " lines) - I (" + this.IndicatorsLines.Count.ToString() + " lines).");
-      } else {
+      }
+      else
+      {
         this.Log.DoLogError("Unable to load all Profit Trailer properties! Waiting for the next interval to retry...");
         Exception ex = new Exception("Unable to load all Profit Trailer properties! Waiting for the next interval to retry...");
         this.State = 0;
@@ -933,61 +1174,81 @@ namespace Core.Main {
       this.LastRuntimeSummary.ProfitTrailerMajorVersion = this.ProfitTrailerMajorVersion;
     }
 
-    private void LoadSMSSummaries() {
+    private void LoadSMSSummaries()
+    {
       this.Log.DoLogInfo("Loading Single Market Setting Summaries...");
       this.SingleMarketSettingSummaries = new List<SingleMarketSettingSummary>();
-      if (File.Exists(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "SingleMarketSettingSummary.json")) {
-        try {
+      if (File.Exists(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "SingleMarketSettingSummary.json"))
+      {
+        try
+        {
           Dictionary<string, bool> smsVerificationResult = new Dictionary<string, bool>();
           // Cleanup SMS Summaries in case a SMS got removed
-          foreach (SingleMarketSettingSummary smsSummary in JsonConvert.DeserializeObject<List<SingleMarketSettingSummary>>(System.IO.File.ReadAllText(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "SingleMarketSettingSummary.json"))) {
+          foreach (SingleMarketSettingSummary smsSummary in JsonConvert.DeserializeObject<List<SingleMarketSettingSummary>>(System.IO.File.ReadAllText(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "SingleMarketSettingSummary.json")))
+          {
             string smsName = smsSummary.SingleMarketSetting.SettingName;
             bool smsIsValid = false;
-            if (smsVerificationResult.ContainsKey(smsName)) {
+            if (smsVerificationResult.ContainsKey(smsName))
+            {
               smsIsValid = smsVerificationResult[smsName];
-            } else {
+            }
+            else
+            {
               SingleMarketSetting sms = this.PTMagicConfiguration.AnalyzerSettings.SingleMarketSettings.Find(s => s.SettingName.Equals(smsName));
-              if (sms != null) {
+              if (sms != null)
+              {
                 smsIsValid = true;
                 smsVerificationResult.Add(smsName, true);
-              } else {
+              }
+              else
+              {
                 smsVerificationResult.Add(smsName, false);
               }
             }
 
-            if (smsIsValid) {
+            if (smsIsValid)
+            {
               this.SingleMarketSettingSummaries.Add(smsSummary);
             }
           }
 
           this.Log.DoLogInfo("Single Market Setting Summaries loaded.");
-        } catch { }
+        }
+        catch { }
       }
     }
 
-    private void BuildMarketData() {
+    private void BuildMarketData()
+    {
 
-      if (!this.PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey.Equals("")) {
-      // Get most recent market data from CMC
-      string cmcMarketDataResult = CoinMarketCap.GetMarketData(this.PTMagicConfiguration, this.Log);
+      if (!this.PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey.Equals(""))
+      {
+        // Get most recent market data from CMC
+        string cmcMarketDataResult = CoinMarketCap.GetMarketData(this.PTMagicConfiguration, this.Log);
       }
 
-      if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Bittrex", StringComparison.InvariantCultureIgnoreCase)) {
+      if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Bittrex", StringComparison.InvariantCultureIgnoreCase))
+      {
 
         // Get most recent market data from Bittrex
         this.ExchangeMarketList = Bittrex.GetMarketData(this.LastRuntimeSummary.MainMarket, this.MarketInfos, this.PTMagicConfiguration, this.Log);
-      } else if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Binance", StringComparison.InvariantCultureIgnoreCase)) {
+      }
+      else if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Binance", StringComparison.InvariantCultureIgnoreCase))
+      {
 
         // Get most recent market data from Binance
         this.ExchangeMarketList = Binance.GetMarketData(this.LastRuntimeSummary.MainMarket, this.MarketInfos, this.PTMagicConfiguration, this.Log);
-      } else if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Poloniex", StringComparison.InvariantCultureIgnoreCase)) {
+      }
+      else if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Poloniex", StringComparison.InvariantCultureIgnoreCase))
+      {
 
         // Get most recent market data from Poloniex
         this.ExchangeMarketList = Poloniex.GetMarketData(this.LastRuntimeSummary.MainMarket, this.MarketInfos, this.PTMagicConfiguration, this.Log);
       }
 
       // Check if problems occured during the Exchange contact
-      if (this.ExchangeMarketList == null) {
+      if (this.ExchangeMarketList == null)
+      {
         Exception ex = new Exception("Unable to contact " + this.PTMagicConfiguration.GeneralSettings.Application.Exchange + " for fresh market data. Trying again in " + this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes + " minute(s).");
         Log.DoLogError(ex.Message);
         this.State = Constants.PTMagicBotState_Idle;
@@ -995,27 +1256,37 @@ namespace Core.Main {
       }
     }
 
-    private void BuildMarketList() {
+    private void BuildMarketList()
+    {
       string marketPairs = SettingsHandler.GetMarketPairs(this.PTMagicConfiguration, this.PairsLines, this.Log);
-      if (marketPairs.ToLower().Equals("all") || marketPairs.ToLower().Equals("false") || marketPairs.ToLower().Equals("true") || marketPairs.Equals("")) {
+      if (marketPairs.ToLower().Equals("all") || marketPairs.ToLower().Equals("false") || marketPairs.ToLower().Equals("true") || marketPairs.Equals(""))
+      {
         this.MarketList = this.ExchangeMarketList;
-      } else {
-        if (this.ProfitTrailerMajorVersion == 1) {
+      }
+      else
+      {
+        if (this.ProfitTrailerMajorVersion == 1)
+        {
           this.MarketList = SystemHelper.ConvertTokenStringToList(marketPairs, ",");
-        } else {
+        }
+        else
+        {
           // Since PT 2.0 the main market is no longer included in the market list so we need to rebuild the list
           List<string> originalMarketList = SystemHelper.ConvertTokenStringToList(marketPairs, ",");
-          foreach (string market in originalMarketList) {
+          foreach (string market in originalMarketList)
+          {
             this.MarketList.Add(SystemHelper.GetFullMarketName(this.LastRuntimeSummary.MainMarket, market, this.PTMagicConfiguration.GeneralSettings.Application.Exchange));
           }
         }
       }
     }
 
-    private void ValidateMarketList() {
+    private void ValidateMarketList()
+    {
       // Check if markets are valid for the selected main market
       List<string> validMarkets = this.MarketList.FindAll(m => m.IndexOf(this.LastRuntimeSummary.MainMarket, StringComparison.InvariantCultureIgnoreCase) > -1);
-      if (validMarkets.Count == 0) {
+      if (validMarkets.Count == 0)
+      {
         Exception ex = new Exception("No valid pairs found for main market '" + this.LastRuntimeSummary.MainMarket + "' in configured pars list (" + SystemHelper.ConvertListToTokenString(this.MarketList, ",", true) + ")! Terminating process...");
         Log.DoLogError(ex.Message);
         this.State = Constants.PTMagicBotState_Idle;
@@ -1024,7 +1295,8 @@ namespace Core.Main {
       }
     }
 
-    private void BuildGlobalMarketTrends() {
+    private void BuildGlobalMarketTrends()
+    {
       this.Log.DoLogInfo("Build global market trends...");
       this.SingleMarketTrendChanges = BaseAnalyzer.BuildMarketTrends("Exchange", this.LastRuntimeSummary.MainMarket, this.MarketList, "Volume", false, new Dictionary<string, List<MarketTrendChange>>(), this.PTMagicConfiguration, this.Log);
       this.GlobalMarketTrendChanges = new Dictionary<string, List<MarketTrendChange>>();
@@ -1033,10 +1305,13 @@ namespace Core.Main {
       this.GlobalMarketTrendChanges = BaseAnalyzer.BuildMarketTrends("CoinMarketCap", this.LastRuntimeSummary.MainMarket, new List<string>(), "", true, this.GlobalMarketTrendChanges, this.PTMagicConfiguration, this.Log);
 
       // Bittrex
-      foreach (MarketTrend marketTrend in this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends.FindAll(mt => mt.Platform.Equals("Exchange", StringComparison.InvariantCultureIgnoreCase))) {
-        if (this.SingleMarketTrendChanges.ContainsKey(marketTrend.Name)) {
+      foreach (MarketTrend marketTrend in this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends.FindAll(mt => mt.Platform.Equals("Exchange", StringComparison.InvariantCultureIgnoreCase)))
+      {
+        if (this.SingleMarketTrendChanges.ContainsKey(marketTrend.Name))
+        {
           int maxMarkets = this.SingleMarketTrendChanges[marketTrend.Name].Count;
-          if (marketTrend.MaxMarkets > 0 && marketTrend.MaxMarkets <= this.SingleMarketTrendChanges[marketTrend.Name].Count) {
+          if (marketTrend.MaxMarkets > 0 && marketTrend.MaxMarkets <= this.SingleMarketTrendChanges[marketTrend.Name].Count)
+          {
             maxMarkets = marketTrend.MaxMarkets;
           }
 
@@ -1049,48 +1324,63 @@ namespace Core.Main {
       this.Log.DoLogInfo("Global market trends built.");
     }
 
-    private void CheckGlobalSettingsTriggers(ref GlobalSetting triggeredSetting, ref List<string> matchedTriggers) {
+    private void CheckGlobalSettingsTriggers(ref GlobalSetting triggeredSetting, ref List<string> matchedTriggers)
+    {
       this.Log.DoLogInfo("Checking global settings triggers...");
-      foreach (GlobalSetting globalSetting in this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings) {
+      foreach (GlobalSetting globalSetting in this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings)
+      {
         // Reset triggers for each setting
         matchedTriggers = new List<string>();
 
-        if (globalSetting.Triggers.Count > 0) {
+        if (globalSetting.Triggers.Count > 0)
+        {
           this.Log.DoLogInfo("Checking triggers for '" + globalSetting.SettingName + "'...");
           List<bool> triggerResults = new List<bool>();
-          foreach (Trigger trigger in globalSetting.Triggers) {
+          foreach (Trigger trigger in globalSetting.Triggers)
+          {
             MarketTrend marketTrend = this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends.Find(mt => mt.Name == trigger.MarketTrendName);
-            if (marketTrend != null) {
+            if (marketTrend != null)
+            {
 
               // Get market trend change for trigger
-              if (this.AverageMarketTrendChanges.ContainsKey(marketTrend.Name)) {
+              if (this.AverageMarketTrendChanges.ContainsKey(marketTrend.Name))
+              {
                 double averageMarketTrendChange = this.AverageMarketTrendChanges[marketTrend.Name];
-                if (averageMarketTrendChange >= trigger.MinChange && averageMarketTrendChange < trigger.MaxChange) {
+                if (averageMarketTrendChange >= trigger.MinChange && averageMarketTrendChange < trigger.MaxChange)
+                {
 
                   // Trigger met!
                   this.Log.DoLogInfo("Trigger '" + trigger.MarketTrendName + "' triggered! TrendChange = " + averageMarketTrendChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%");
 
                   string triggerContent = trigger.MarketTrendName + " - ";
-                  if (trigger.MinChange != Constants.MinTrendChange) {
+                  if (trigger.MinChange != Constants.MinTrendChange)
+                  {
                     triggerContent += " - Min: " + trigger.MinChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
                   }
 
-                  if (trigger.MaxChange != Constants.MaxTrendChange) {
+                  if (trigger.MaxChange != Constants.MaxTrendChange)
+                  {
                     triggerContent += " - Max: " + trigger.MaxChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
                   }
 
                   matchedTriggers.Add(triggerContent);
 
                   triggerResults.Add(true);
-                } else {
+                }
+                else
+                {
                   this.Log.DoLogDebug("Trigger '" + trigger.MarketTrendName + "' not triggered. TrendChange = " + averageMarketTrendChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%");
                   triggerResults.Add(false);
                 }
-              } else {
+              }
+              else
+              {
                 this.Log.DoLogError("Trigger '" + trigger.MarketTrendName + "' not found in this.AverageMarketTrendChanges[] (" + SystemHelper.ConvertListToTokenString(this.AverageMarketTrendChanges.Keys.ToList(), ",", true) + "). Unable to load recent trends?");
                 triggerResults.Add(false);
               }
-            } else {
+            }
+            else
+            {
               this.Log.DoLogWarn("Market Trend '" + trigger.MarketTrendName + "' not found! Trigger ignored!");
               triggerResults.Add(false);
             }
@@ -1098,7 +1388,8 @@ namespace Core.Main {
 
           // Check if all triggers have to get triggered or just one
           bool settingTriggered = false;
-          switch (globalSetting.TriggerConnection.ToLower()) {
+          switch (globalSetting.TriggerConnection.ToLower())
+          {
             case "and":
               settingTriggered = triggerResults.FindAll(tr => tr == false).Count == 0;
               break;
@@ -1108,7 +1399,8 @@ namespace Core.Main {
           }
 
           // Setting got triggered -> Activate it!
-          if (settingTriggered) {
+          if (settingTriggered)
+          {
             triggeredSetting = globalSetting;
             break;
           }
@@ -1116,27 +1408,33 @@ namespace Core.Main {
       }
     }
 
-    private void ActivateSetting(ref bool headerLinesAdded, ref GlobalSetting triggeredSetting, ref List<string> matchedTriggers) {
+    private void ActivateSetting(ref bool headerLinesAdded, ref GlobalSetting triggeredSetting, ref List<string> matchedTriggers)
+    {
       string activeSettingName = SettingsHandler.GetActiveSetting(this, ref headerLinesAdded);
-      if (activeSettingName.Equals("") && this.PTMagicConfiguration.GeneralSettings.Application.TestMode) {
+      if (activeSettingName.Equals("") && this.PTMagicConfiguration.GeneralSettings.Application.TestMode)
+      {
         activeSettingName = this.ActiveSetting;
       }
 
-      if (this.EnforceSettingsReapply) {
+      if (this.EnforceSettingsReapply)
+      {
         this.Log.DoLogInfo("Reapply '" + activeSettingName + "' as the settings.analyzer.json or a preset file got changed.");
       }
 
       GlobalSetting activeSetting = this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Find(s => s.SettingName.Equals(activeSettingName, StringComparison.InvariantCultureIgnoreCase));
-      if (this.EnforceSettingsReapply || !activeSettingName.Equals(triggeredSetting.SettingName, StringComparison.InvariantCultureIgnoreCase)) {
+      if (this.EnforceSettingsReapply || !activeSettingName.Equals(triggeredSetting.SettingName, StringComparison.InvariantCultureIgnoreCase))
+      {
         this.Log.DoLogInfo("Setting '" + activeSettingName + "' currently active. Checking for flood protection...");
 
         // If the setting we are about to activate is the default one, do not list matched triggers
-        if (triggeredSetting.SettingName.Equals(this.DefaultSettingName, StringComparison.InvariantCultureIgnoreCase)) {
+        if (triggeredSetting.SettingName.Equals(this.DefaultSettingName, StringComparison.InvariantCultureIgnoreCase))
+        {
           matchedTriggers = new List<string>();
         }
 
         // Check if flood protection is active
-        if (this.EnforceSettingsReapply || !this.LastSetting.Equals(triggeredSetting.SettingName, StringComparison.InvariantCultureIgnoreCase) || this.LastSettingsChange <= DateTime.UtcNow.AddMinutes(-PTMagicConfiguration.GeneralSettings.Application.FloodProtectionMinutes)) {
+        if (this.EnforceSettingsReapply || !this.LastSetting.Equals(triggeredSetting.SettingName, StringComparison.InvariantCultureIgnoreCase) || this.LastSettingsChange <= DateTime.UtcNow.AddMinutes(-PTMagicConfiguration.GeneralSettings.Application.FloodProtectionMinutes))
+        {
 
           // Setting not set => Change setting
           this.Log.DoLogInfo("Switching global settings to '" + triggeredSetting.SettingName + "'...");
@@ -1150,16 +1448,20 @@ namespace Core.Main {
           // Build Telegram message
           string telegramMessage = this.PTMagicConfiguration.GeneralSettings.Application.InstanceName + ": Setting switched to '*" + SystemHelper.SplitCamelCase(triggeredSetting.SettingName) + "*'.";
 
-          if (matchedTriggers.Count > 0) {
+          if (matchedTriggers.Count > 0)
+          {
             telegramMessage += "\n\n*Matching Triggers:*";
-            foreach (string triggerResult in matchedTriggers) {
+            foreach (string triggerResult in matchedTriggers)
+            {
               telegramMessage += "\n" + triggerResult;
             }
           }
 
-          if (this.AverageMarketTrendChanges.Keys.Count > 0) {
+          if (this.AverageMarketTrendChanges.Keys.Count > 0)
+          {
             telegramMessage += "\n\n*Market Trends:*";
-            foreach (string key in this.AverageMarketTrendChanges.Keys) {
+            foreach (string key in this.AverageMarketTrendChanges.Keys)
+            {
               telegramMessage += "\n" + key + ": " + this.AverageMarketTrendChanges[key].ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
             }
           }
@@ -1170,13 +1472,17 @@ namespace Core.Main {
           this.LastSetting = activeSettingName;
           this.LastSettingsChange = DateTime.UtcNow;
 
-        } else {
+        }
+        else
+        {
           this.Log.DoLogInfo("Flood protection active until " + this.LastSettingsChange.AddMinutes(PTMagicConfiguration.GeneralSettings.Application.FloodProtectionMinutes).ToString() + " (UTC). Not switching settings to '" + triggeredSetting.SettingName + "'!");
 
           this.LastRuntimeSummary.FloodProtectedSetting = triggeredSetting;
           this.LastRuntimeSummary.CurrentGlobalSetting = activeSetting;
         }
-      } else {
+      }
+      else
+      {
         matchedTriggers = new List<string>();
 
         // Setting already set => Do nothing
@@ -1188,67 +1494,83 @@ namespace Core.Main {
       this.ActiveSetting = this.LastRuntimeSummary.CurrentGlobalSetting.SettingName;
     }
 
-    private void ApplySingleMarketSettings() {
-      if (this.PTMagicConfiguration.AnalyzerSettings.SingleMarketSettings.Count > 0) {
+    private void ApplySingleMarketSettings()
+    {
+      if (this.PTMagicConfiguration.AnalyzerSettings.SingleMarketSettings.Count > 0)
+      {
         this.Log.DoLogInfo("Checking single market settings triggers for " + this.MarketList.Count.ToString() + " markets...");
 
         int marketPairProcess = 1;
         Dictionary<string, List<string>> matchedMarketTriggers = new Dictionary<string, List<string>>();
-        foreach (string marketPair in this.MarketList) {
+        foreach (string marketPair in this.MarketList)
+        {
           this.Log.DoLogDebug("'" + marketPair + "' - Checking triggers (" + marketPairProcess.ToString() + "/" + this.MarketList.Count.ToString() + ")...");
 
           bool stopTriggers = false;
-          foreach (SingleMarketSetting marketSetting in this.PTMagicConfiguration.AnalyzerSettings.SingleMarketSettings) {
+          foreach (SingleMarketSetting marketSetting in this.PTMagicConfiguration.AnalyzerSettings.SingleMarketSettings)
+          {
             List<string> matchedSingleMarketTriggers = new List<string>();
 
             // Check ignore markets
             List<string> ignoredMarkets = SystemHelper.ConvertTokenStringToList(marketSetting.IgnoredMarkets, ",");
-            if (ignoredMarkets.Contains(marketPair)) {
+            if (ignoredMarkets.Contains(marketPair))
+            {
               this.Log.DoLogDebug("'" + marketPair + "' - Is ignored in '" + marketSetting.SettingName + "'.");
               continue;
             }
 
             // Check allowed markets
             List<string> allowedMarkets = SystemHelper.ConvertTokenStringToList(marketSetting.AllowedMarkets, ",");
-            if (allowedMarkets.Count > 0 && !allowedMarkets.Contains(marketPair)) {
+            if (allowedMarkets.Count > 0 && !allowedMarkets.Contains(marketPair))
+            {
               this.Log.DoLogDebug("'" + marketPair + "' - Is not allowed in '" + marketSetting.SettingName + "'.");
               continue;
             }
 
             // Check ignore global settings
             List<string> ignoredGlobalSettings = SystemHelper.ConvertTokenStringToList(marketSetting.IgnoredGlobalSettings, ",");
-            if (ignoredGlobalSettings.Contains(this.ActiveSetting)) {
+            if (ignoredGlobalSettings.Contains(this.ActiveSetting))
+            {
               this.Log.DoLogDebug("'" + marketPair + "' - '" + this.ActiveSetting + "' - Is ignored in '" + marketSetting.SettingName + "'.");
               continue;
             }
 
             // Check allowed global settings
             List<string> allowedGlobalSettings = SystemHelper.ConvertTokenStringToList(marketSetting.AllowedGlobalSettings, ",");
-            if (allowedGlobalSettings.Count > 0 && !allowedGlobalSettings.Contains(this.ActiveSetting)) {
+            if (allowedGlobalSettings.Count > 0 && !allowedGlobalSettings.Contains(this.ActiveSetting))
+            {
               this.Log.DoLogDebug("'" + marketPair + "' - '" + this.ActiveSetting + "' - Is not allowed in '" + marketSetting.SettingName + "'.");
               continue;
             }
 
             #region Checking Off Triggers
             SingleMarketSettingSummary smss = this.SingleMarketSettingSummaries.Find(s => s.Market.Equals(marketPair, StringComparison.InvariantCultureIgnoreCase) && s.SingleMarketSetting.SettingName.Equals(marketSetting.SettingName, StringComparison.InvariantCultureIgnoreCase));
-            if (smss != null) {
-              if (marketSetting.OffTriggers != null) {
-                if (marketSetting.OffTriggers.Count > 0) {
+            if (smss != null)
+            {
+              if (marketSetting.OffTriggers != null)
+              {
+                if (marketSetting.OffTriggers.Count > 0)
+                {
 
                   this.Log.DoLogDebug("'" + marketPair + "' - Checking off triggers '" + marketSetting.SettingName + "'...");
 
                   List<bool> offTriggerResults = new List<bool>();
-                  foreach (OffTrigger offTrigger in marketSetting.OffTriggers) {
-                    if (offTrigger.HoursSinceTriggered > 0) {
+                  foreach (OffTrigger offTrigger in marketSetting.OffTriggers)
+                  {
+                    if (offTrigger.HoursSinceTriggered > 0)
+                    {
                       #region Check for Activation time period trigger
                       int smsActiveHours = (int)Math.Floor(DateTime.UtcNow.Subtract(smss.ActivationDateTimeUTC).TotalHours);
-                      if (smsActiveHours >= offTrigger.HoursSinceTriggered) {
+                      if (smsActiveHours >= offTrigger.HoursSinceTriggered)
+                      {
 
                         // Trigger met!
                         this.Log.DoLogDebug("'" + marketPair + "' - SMS already active for  " + smsActiveHours.ToString() + " hours. Trigger matched!");
 
                         offTriggerResults.Add(true);
-                      } else {
+                      }
+                      else
+                      {
 
                         // Trigger not met!
                         this.Log.DoLogDebug("'" + marketPair + "' - SMS only active for  " + smsActiveHours.ToString() + " hours. Trigger not matched!");
@@ -1256,19 +1578,26 @@ namespace Core.Main {
                         offTriggerResults.Add(false);
                       }
                       #endregion
-                    } else if (offTrigger.Min24hVolume > 0 || offTrigger.Max24hVolume < Constants.Max24hVolume) {
+                    }
+                    else if (offTrigger.Min24hVolume > 0 || offTrigger.Max24hVolume < Constants.Max24hVolume)
+                    {
                       #region Check for 24h volume trigger
                       List<MarketTrendChange> marketTrendChanges = this.SingleMarketTrendChanges[this.SingleMarketTrendChanges.Keys.Last()];
-                      if (marketTrendChanges.Count > 0) {
+                      if (marketTrendChanges.Count > 0)
+                      {
                         MarketTrendChange mtc = marketTrendChanges.Find(m => m.Market.Equals(marketPair, StringComparison.InvariantCultureIgnoreCase));
-                        if (mtc != null) {
-                          if (mtc.Volume24h >= offTrigger.Min24hVolume && mtc.Volume24h <= offTrigger.Max24hVolume) {
+                        if (mtc != null)
+                        {
+                          if (mtc.Volume24h >= offTrigger.Min24hVolume && mtc.Volume24h <= offTrigger.Max24hVolume)
+                          {
 
                             // Trigger met!
                             this.Log.DoLogDebug("'" + marketPair + "' - 24h volume off trigger matched! 24h volume = " + mtc.Volume24h.ToString(new System.Globalization.CultureInfo("en-US")) + " " + this.LastRuntimeSummary.MainMarket);
 
                             offTriggerResults.Add(true);
-                          } else {
+                          }
+                          else
+                          {
 
                             // Trigger not met!
                             this.Log.DoLogDebug("'" + marketPair + "' - 24h volume off trigger not matched! 24h volume = " + mtc.Volume24h.ToString(new System.Globalization.CultureInfo("en-US")) + " " + this.LastRuntimeSummary.MainMarket);
@@ -1279,24 +1608,32 @@ namespace Core.Main {
                       }
 
                       #endregion
-                    } else {
+                    }
+                    else
+                    {
                       #region Check for market trend triggers
-                      if (this.SingleMarketTrendChanges.ContainsKey(offTrigger.MarketTrendName)) {
+                      if (this.SingleMarketTrendChanges.ContainsKey(offTrigger.MarketTrendName))
+                      {
 
                         List<MarketTrendChange> marketTrendChanges = this.SingleMarketTrendChanges[offTrigger.MarketTrendName];
-                        if (marketTrendChanges.Count > 0) {
+                        if (marketTrendChanges.Count > 0)
+                        {
                           double averageMarketTrendChange = marketTrendChanges.Average(m => m.TrendChange);
 
                           MarketTrendChange mtc = marketTrendChanges.Find(m => m.Market.Equals(marketPair, StringComparison.InvariantCultureIgnoreCase));
-                          if (mtc != null) {
+                          if (mtc != null)
+                          {
                             // Get trend change according to configured relation
                             double trendChange = mtc.TrendChange;
 
-                            if (offTrigger.MarketTrendRelation.Equals(Constants.MarketTrendRelationRelative)) {
+                            if (offTrigger.MarketTrendRelation.Equals(Constants.MarketTrendRelationRelative))
+                            {
 
                               // Build pair trend change relative to the global market trend
                               trendChange = trendChange - averageMarketTrendChange;
-                            } else if (offTrigger.MarketTrendRelation.Equals(Constants.MarketTrendRelationRelativeTrigger)) {
+                            }
+                            else if (offTrigger.MarketTrendRelation.Equals(Constants.MarketTrendRelationRelativeTrigger))
+                            {
 
                               // Build pair trend change relative to the trigger price
                               double currentPrice = mtc.LastPrice;
@@ -1306,20 +1643,27 @@ namespace Core.Main {
                             }
 
                             // Get market trend change for trigger
-                            if (trendChange >= offTrigger.MinChange && trendChange < offTrigger.MaxChange) {
+                            if (trendChange >= offTrigger.MinChange && trendChange < offTrigger.MaxChange)
+                            {
 
                               // Trigger met!
                               this.Log.DoLogDebug("'" + marketPair + "' - Off Trigger '" + offTrigger.MarketTrendName + "' triggered! TrendChange (" + offTrigger.MarketTrendRelation + ") = " + trendChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%");
 
                               offTriggerResults.Add(true);
-                            } else {
+                            }
+                            else
+                            {
                               this.Log.DoLogDebug("'" + marketPair + "' - Off Trigger '" + offTrigger.MarketTrendName + "' not triggered. TrendChange (" + offTrigger.MarketTrendRelation + ") = " + trendChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%");
                               offTriggerResults.Add(false);
                             }
-                          } else {
+                          }
+                          else
+                          {
                             offTriggerResults.Add(false);
                           }
-                        } else {
+                        }
+                        else
+                        {
                           offTriggerResults.Add(false);
                         }
                       }
@@ -1329,7 +1673,8 @@ namespace Core.Main {
 
                   // Check if all off triggers have to get triggered or just one
                   bool settingOffTriggered = false;
-                  switch (marketSetting.OffTriggerConnection.ToLower()) {
+                  switch (marketSetting.OffTriggerConnection.ToLower())
+                  {
                     case "and":
                       settingOffTriggered = offTriggerResults.FindAll(tr => tr == false).Count == 0;
                       break;
@@ -1339,14 +1684,19 @@ namespace Core.Main {
                   }
 
                   // Setting got off triggered, remove it from the summary
-                  if (settingOffTriggered) {
+                  if (settingOffTriggered)
+                  {
                     this.Log.DoLogDebug("'" + marketPair + "' - '" + marketSetting.SettingName + "' off triggered!");
                     this.SingleMarketSettingSummaries.Remove(smss);
                     smss = null;
-                  } else {
+                  }
+                  else
+                  {
                     this.Log.DoLogDebug("'" + marketPair + "' - '" + marketSetting.SettingName + "' not off triggered!");
                   }
-                } else {
+                }
+                else
+                {
                   this.Log.DoLogDebug("'" + marketPair + "' - '" + marketSetting.SettingName + "' has no off triggers -> triggering off!");
                   this.SingleMarketSettingSummaries.Remove(smss);
                   smss = null;
@@ -1355,41 +1705,51 @@ namespace Core.Main {
             }
             #endregion
 
-            if (marketSetting.Triggers.Count > 0 && !stopTriggers) {
+            if (marketSetting.Triggers.Count > 0 && !stopTriggers)
+            {
               #region Checking Triggers
               this.Log.DoLogDebug("'" + marketPair + "' - Checking triggers for '" + marketSetting.SettingName + "'...");
 
               List<bool> triggerResults = new List<bool>();
               Dictionary<int, double> relevantTriggers = new Dictionary<int, double>();
               int triggerIndex = 0;
-              foreach (Trigger trigger in marketSetting.Triggers) {
+              foreach (Trigger trigger in marketSetting.Triggers)
+              {
 
-                if (trigger.Min24hVolume > 0 || trigger.Max24hVolume < Constants.Max24hVolume) {
+                if (trigger.Min24hVolume > 0 || trigger.Max24hVolume < Constants.Max24hVolume)
+                {
                   #region Check for 24h volume trigger
                   List<MarketTrendChange> marketTrendChanges = this.SingleMarketTrendChanges[this.SingleMarketTrendChanges.Keys.Last()];
-                  if (marketTrendChanges.Count > 0) {
+                  if (marketTrendChanges.Count > 0)
+                  {
                     MarketTrendChange mtc = marketTrendChanges.Find(m => m.Market.Equals(marketPair, StringComparison.InvariantCultureIgnoreCase));
-                    if (mtc != null) {
+                    if (mtc != null)
+                    {
 
-                      if (mtc.Volume24h >= trigger.Min24hVolume && mtc.Volume24h <= trigger.Max24hVolume) {
+                      if (mtc.Volume24h >= trigger.Min24hVolume && mtc.Volume24h <= trigger.Max24hVolume)
+                      {
                         // Trigger met!
                         this.Log.DoLogDebug("'" + marketPair + "' - 24h volume trigger matched! 24h volume = " + mtc.Volume24h.ToString(new System.Globalization.CultureInfo("en-US")) + " " + this.LastRuntimeSummary.MainMarket);
 
                         relevantTriggers.Add(triggerIndex, mtc.Volume24h);
 
                         string triggerContent = "24h Volume";
-                        if (trigger.Min24hVolume > 0) {
+                        if (trigger.Min24hVolume > 0)
+                        {
                           triggerContent += " - Min: " + trigger.Min24hVolume.ToString(new System.Globalization.CultureInfo("en-US")) + " " + this.LastRuntimeSummary.MainMarket;
                         }
 
-                        if (trigger.Max24hVolume < Constants.Max24hVolume) {
+                        if (trigger.Max24hVolume < Constants.Max24hVolume)
+                        {
                           triggerContent += " - Max: " + trigger.Max24hVolume.ToString(new System.Globalization.CultureInfo("en-US")) + " " + this.LastRuntimeSummary.MainMarket;
                         }
 
                         matchedSingleMarketTriggers.Add(marketSetting.SettingName + ": " + triggerContent + " - 24h volume = " + mtc.Volume24h.ToString(new System.Globalization.CultureInfo("en-US")) + " " + this.LastRuntimeSummary.MainMarket);
 
                         triggerResults.Add(true);
-                      } else {
+                      }
+                      else
+                      {
                         this.Log.DoLogDebug("'" + marketPair + "' - 24h volume trigger not matched. 24h volume = " + mtc.Volume24h.ToString(new System.Globalization.CultureInfo("en-US")) + " " + this.LastRuntimeSummary.MainMarket);
                         triggerResults.Add(false);
                       }
@@ -1397,52 +1757,68 @@ namespace Core.Main {
                   }
 
                   #endregion
-                } else if (trigger.AgeDaysLowerThan > 0) {
+                }
+                else if (trigger.AgeDaysLowerThan > 0)
+                {
                   #region Check for age trigger
                   MarketInfo marketInfo = null;
-                  if (this.MarketInfos.ContainsKey(marketPair)) {
+                  if (this.MarketInfos.ContainsKey(marketPair))
+                  {
                     marketInfo = this.MarketInfos[marketPair];
                   }
 
-                  if (marketInfo != null) {
+                  if (marketInfo != null)
+                  {
                     int marketAge = (int)Math.Floor(DateTime.Now.ToUniversalTime().Subtract(marketInfo.FirstSeen).TotalDays);
-                    if (marketAge < trigger.AgeDaysLowerThan) {
+                    if (marketAge < trigger.AgeDaysLowerThan)
+                    {
                       matchedSingleMarketTriggers.Add(marketSetting.SettingName + ": '" + marketPair + "' is only " + marketAge.ToString() + " days old on this exchange. Trigger matched!");
                       this.Log.DoLogDebug("'" + marketPair + "' - Is only " + marketAge.ToString() + " days old on this exchange. Trigger matched!");
 
                       relevantTriggers.Add(triggerIndex, marketAge);
                       triggerResults.Add(true);
-                    } else {
+                    }
+                    else
+                    {
                       this.Log.DoLogDebug("'" + marketPair + "' - Age Trigger not triggered. Is already " + marketAge.ToString() + " days old on this exchange.");
                       triggerResults.Add(false);
                     }
-                  } else {
+                  }
+                  else
+                  {
                     matchedSingleMarketTriggers.Add("Age for '" + marketPair + "' not found, trigger matched just to be safe!");
                     this.Log.DoLogDebug("'" + marketPair + "' - Age not found, trigger matched just to be safe!");
                     triggerResults.Add(true);
                   }
 
                   #endregion
-                } else {
+                }
+                else
+                {
                   #region Check for market trend triggers
-                  if (this.SingleMarketTrendChanges.ContainsKey(trigger.MarketTrendName)) {
+                  if (this.SingleMarketTrendChanges.ContainsKey(trigger.MarketTrendName))
+                  {
 
                     List<MarketTrendChange> marketTrendChanges = this.SingleMarketTrendChanges[trigger.MarketTrendName];
-                    if (marketTrendChanges.Count > 0) {
+                    if (marketTrendChanges.Count > 0)
+                    {
                       double averageMarketTrendChange = marketTrendChanges.Average(m => m.TrendChange);
 
                       MarketTrendChange mtc = marketTrendChanges.Find(m => m.Market.Equals(marketPair, StringComparison.InvariantCultureIgnoreCase));
-                      if (mtc != null) {
+                      if (mtc != null)
+                      {
                         // Get trend change according to configured relation
                         double trendChange = mtc.TrendChange;
 
-                        if (trigger.MarketTrendRelation.Equals(Constants.MarketTrendRelationRelative)) {
+                        if (trigger.MarketTrendRelation.Equals(Constants.MarketTrendRelationRelative))
+                        {
                           // Build pair trend change relative to the global market trend
                           trendChange = trendChange - averageMarketTrendChange;
                         }
 
                         // Get market trend change for trigger
-                        if (trendChange >= trigger.MinChange && trendChange < trigger.MaxChange) {
+                        if (trendChange >= trigger.MinChange && trendChange < trigger.MaxChange)
+                        {
 
                           // Trigger met!
                           this.Log.DoLogDebug("'" + marketPair + "' - Trigger '" + trigger.MarketTrendName + "' triggered! TrendChange (" + trigger.MarketTrendRelation + ") = " + trendChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%");
@@ -1450,37 +1826,51 @@ namespace Core.Main {
                           relevantTriggers.Add(triggerIndex, trendChange);
 
                           string triggerContent = trigger.MarketTrendName + " - ";
-                          if (trigger.MinChange != Constants.MinTrendChange) {
+                          if (trigger.MinChange != Constants.MinTrendChange)
+                          {
                             triggerContent += " - Min: " + trigger.MinChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
                           }
 
-                          if (trigger.MaxChange != Constants.MaxTrendChange) {
+                          if (trigger.MaxChange != Constants.MaxTrendChange)
+                          {
                             triggerContent += " - Max: " + trigger.MaxChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
                           }
 
                           matchedSingleMarketTriggers.Add(marketSetting.SettingName + ": " + triggerContent + " - TrendChange (" + trigger.MarketTrendRelation + ") = " + trendChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%");
 
                           triggerResults.Add(true);
-                        } else {
+                        }
+                        else
+                        {
                           this.Log.DoLogDebug("'" + marketPair + "' - Trigger '" + trigger.MarketTrendName + "' not triggered. TrendChange (" + trigger.MarketTrendRelation + ") = " + trendChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%");
                           triggerResults.Add(false);
                         }
-                      } else {
+                      }
+                      else
+                      {
                         this.Log.DoLogDebug("'" + marketPair + "' - No market trend change found for '" + trigger.MarketTrendName + "'! Coin just got released? Trigger ignored!");
                         triggerResults.Add(false);
                       }
-                    } else {
+                    }
+                    else
+                    {
                       this.Log.DoLogWarn("'" + marketPair + "' - No market trend changes found for '" + trigger.MarketTrendName + "'! Trigger ignored!");
                       triggerResults.Add(false);
                     }
-                  } else {
+                  }
+                  else
+                  {
                     MarketTrend marketTrend = this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends.Find(mt => mt.Name.Equals(trigger.MarketTrendName, StringComparison.InvariantCultureIgnoreCase));
-                    if (marketTrend != null) {
-                      if (!marketTrend.Platform.Equals("Exchange", StringComparison.InvariantCultureIgnoreCase)) {
+                    if (marketTrend != null)
+                    {
+                      if (!marketTrend.Platform.Equals("Exchange", StringComparison.InvariantCultureIgnoreCase))
+                      {
                         this.Log.DoLogWarn("Market Trend '" + trigger.MarketTrendName + "' is invalid for single market settings! Only trends using the platform 'Exchange' are valid for single market settings.");
                         triggerResults.Add(false);
                       }
-                    } else {
+                    }
+                    else
+                    {
                       this.Log.DoLogWarn("Market Trend '" + trigger.MarketTrendName + "' not found! Trigger ignored!");
                       triggerResults.Add(false);
                     }
@@ -1492,7 +1882,8 @@ namespace Core.Main {
 
               // Check if all triggers have to get triggered or just one
               bool settingTriggered = false;
-              switch (marketSetting.TriggerConnection.ToLower()) {
+              switch (marketSetting.TriggerConnection.ToLower())
+              {
                 case "and":
                   settingTriggered = triggerResults.FindAll(tr => tr == false).Count == 0;
                   break;
@@ -1505,25 +1896,32 @@ namespace Core.Main {
               bool isFreshTrigger = true;
 
               // Setting not triggered -> Check if it is already active as a long term SMS using Off Triggers
-              if (!settingTriggered) {
+              if (!settingTriggered)
+              {
                 this.Log.DoLogDebug("'" + marketPair + "' - SMS '" + marketSetting.SettingName + "' not triggered, checking for long term activation.");
-                if (smss != null) {
-                  if (marketSetting.OffTriggers != null) {
-                    if (marketSetting.OffTriggers.Count > 0) {
+                if (smss != null)
+                {
+                  if (marketSetting.OffTriggers != null)
+                  {
+                    if (marketSetting.OffTriggers.Count > 0)
+                    {
                       this.Log.DoLogDebug("'" + marketPair + "' - SMS '" + marketSetting.SettingName + "' has off triggers, starting special trigger...");
                       // Setting already active and using off triggers -> set as triggered
                       settingTriggered = true;
                       isFreshTrigger = false;
 
                       matchedSingleMarketTriggers = new List<string>();
-                      foreach (string matchedTriggerContent in smss.TriggerSnapshot.MatchedTriggersContent) {
-                        if (matchedTriggerContent.StartsWith(marketSetting.SettingName + ":")) {
+                      foreach (string matchedTriggerContent in smss.TriggerSnapshot.MatchedTriggersContent)
+                      {
+                        if (matchedTriggerContent.StartsWith(marketSetting.SettingName + ":"))
+                        {
                           matchedSingleMarketTriggers.Add(matchedTriggerContent);
                         }
                       }
 
                       int removalLength = matchedSingleMarketTriggers.Count - marketSetting.Triggers.Count;
-                      if (removalLength > 0) {
+                      if (removalLength > 0)
+                      {
                         matchedSingleMarketTriggers.RemoveRange(0, removalLength);
                       }
 
@@ -1534,39 +1932,54 @@ namespace Core.Main {
               }
 
               // Setting got triggered -> Activate it!
-              if (settingTriggered) {
+              if (settingTriggered)
+              {
                 this.Log.DoLogDebug("'" + marketPair + "' - '" + marketSetting.SettingName + "' triggered!");
 
                 // Save matched triggers to get displayed in the comment lines
-                if (!matchedMarketTriggers.ContainsKey(marketPair)) {
+                if (!matchedMarketTriggers.ContainsKey(marketPair))
+                {
                   matchedMarketTriggers.Add(marketPair, matchedSingleMarketTriggers);
-                } else {
+                }
+                else
+                {
                   matchedMarketTriggers[marketPair].AddRange(matchedSingleMarketTriggers);
                 }
 
-                if (!this.TriggeredSingleMarketSettings.ContainsKey(marketPair)) {
+                if (!this.TriggeredSingleMarketSettings.ContainsKey(marketPair))
+                {
                   List<SingleMarketSetting> smsList = new List<SingleMarketSetting>();
                   smsList.Add(marketSetting);
                   this.TriggeredSingleMarketSettings.Add(marketPair, smsList);
-                } else {
+                }
+                else
+                {
                   this.TriggeredSingleMarketSettings[marketPair].Add(marketSetting);
                 }
 
                 // Counting triggered setting
-                if (!this.SingleMarketSettingsCount.ContainsKey(marketSetting.SettingName)) {
+                if (!this.SingleMarketSettingsCount.ContainsKey(marketSetting.SettingName))
+                {
                   this.SingleMarketSettingsCount.Add(marketSetting.SettingName, 1);
-                } else {
+                }
+                else
+                {
                   this.SingleMarketSettingsCount[marketSetting.SettingName]++;
                 }
 
-                if (isFreshTrigger) {
+                if (isFreshTrigger)
+                {
                   this.Log.DoLogDebug("'" + marketPair + "' - SMS '" + marketSetting.SettingName + "' saving summary data...");
 
                   // Check if this setting is already active for this market
-                  if (smss == null || marketSetting.RefreshOffTriggers) {
-                    if (smss == null) {
+                  if (smss == null || marketSetting.RefreshOffTriggers)
+                  {
+                    if (smss == null)
+                    {
                       smss = new SingleMarketSettingSummary();
-                    } else {
+                    }
+                    else
+                    {
                       this.SingleMarketSettingSummaries.Remove(smss);
                     }
 
@@ -1580,9 +1993,11 @@ namespace Core.Main {
                     smss.TriggerSnapshot.MatchedTriggersContent = matchedSingleMarketTriggers;
 
                     List<MarketTrendChange> marketTrendChanges = this.SingleMarketTrendChanges[this.SingleMarketTrendChanges.Keys.Last()];
-                    if (marketTrendChanges.Count > 0) {
+                    if (marketTrendChanges.Count > 0)
+                    {
                       MarketTrendChange mtc = marketTrendChanges.Find(m => m.Market.Equals(marketPair, StringComparison.InvariantCultureIgnoreCase));
-                      if (mtc != null) {
+                      if (mtc != null)
+                      {
                         smss.TriggerSnapshot.Last24hVolume = mtc.Volume24h;
                         smss.TriggerSnapshot.LastPrice = mtc.LastPrice;
                       }
@@ -1591,29 +2006,36 @@ namespace Core.Main {
                     this.SingleMarketSettingSummaries.Add(smss);
 
                     this.Log.DoLogDebug("'" + marketPair + "' - SMS '" + marketSetting.SettingName + "' summary data saved.");
-                  } else {
+                  }
+                  else
+                  {
                     this.Log.DoLogDebug("'" + marketPair + "' - SMS '" + marketSetting.SettingName + "' already active for this market and no refresh allowed.");
                   }
                 }
 
                 // Stop processing other settings if configured
-                if (marketSetting.StopProcessWhenTriggered) {
+                if (marketSetting.StopProcessWhenTriggered)
+                {
                   stopTriggers = true;
                 }
-              } else {
+              }
+              else
+              {
                 this.Log.DoLogDebug("'" + marketPair + "' - '" + marketSetting.SettingName + "' not triggered!");
               }
             }
           }
 
-          if ((marketPairProcess % 10) == 0) {
+          if ((marketPairProcess % 10) == 0)
+          {
             this.Log.DoLogInfo("What are you looking at? " + marketPairProcess + "/" + this.MarketList.Count + " markets done...");
           }
 
           marketPairProcess++;
         }
 
-        if (this.TriggeredSingleMarketSettings.Count > 0) {
+        if (this.TriggeredSingleMarketSettings.Count > 0)
+        {
 
           // Write single market settings
           this.Log.DoLogInfo("Building single market settings for '" + this.TriggeredSingleMarketSettings.Count.ToString() + "' markets...");
@@ -1622,21 +2044,28 @@ namespace Core.Main {
           this.SingleMarketSettingWritten = true;
 
           this.Log.DoLogInfo("Building single market settings completed.");
-        } else {
+        }
+        else
+        {
           this.Log.DoLogInfo("No settings triggered for single markets.");
 
           // Remove single market settings if no triggers are met - if necessary
           this.SingleMarketSettingWritten = SettingsHandler.RemoveSingleMarketSettings(this);
         }
 
-      } else {
+      }
+      else
+      {
         this.Log.DoLogInfo("No single market settings found.");
       }
     }
 
-    private void SaveProfitTrailerProperties(bool headerLinesAdded, string pairsPropertiesPath, string dcaPropertiesPath, string indicatorsPropertiesPath) {
-      if (headerLinesAdded || this.GlobalSettingWritten || this.SingleMarketSettingWritten) {
-        if (this.ProfitTrailerMajorVersion == 1) {
+    private void SaveProfitTrailerProperties(bool headerLinesAdded, string pairsPropertiesPath, string dcaPropertiesPath, string indicatorsPropertiesPath)
+    {
+      if (headerLinesAdded || this.GlobalSettingWritten || this.SingleMarketSettingWritten)
+      {
+        if (this.ProfitTrailerMajorVersion == 1)
+        {
           // Save current PT properties to files (Valid for PT 1.x)
           this.Log.DoLogInfo("Saving properties files...");
 
@@ -1656,7 +2085,9 @@ namespace Core.Main {
           if (!this.PTMagicConfiguration.GeneralSettings.Application.TestMode) File.WriteAllLines(indicatorsPropertiesPath, this.IndicatorsLines);
 
           this.Log.DoLogInfo("All properties files saved!");
-        } else {
+        }
+        else
+        {
           // Save current PT properties to API (Valid for PT 2.x and above)
           this.Log.DoLogInfo("Saving properties using API...");
 
@@ -1672,12 +2103,15 @@ namespace Core.Main {
           this.Log.DoLogInfo("All properties saved!");
         }
 
-      } else {
+      }
+      else
+      {
         this.Log.DoLogInfo("Nothing changed, no files touched!");
       }
     }
 
-    private void SaveSingleMarketSettingsSummary() {
+    private void SaveSingleMarketSettingsSummary()
+    {
       JsonSerializerSettings smsSummaryJsonSettings = new JsonSerializerSettings();
       smsSummaryJsonSettings.NullValueHandling = NullValueHandling.Ignore;
       smsSummaryJsonSettings.DefaultValueHandling = DefaultValueHandling.Ignore;
@@ -1687,7 +2121,8 @@ namespace Core.Main {
       this.Log.DoLogInfo("Single Market Settings Summary saved.");
     }
 
-    private void SaveRuntimeSummary(bool headerLinesAdded) {
+    private void SaveRuntimeSummary(bool headerLinesAdded)
+    {
       DateTime endTime = DateTime.Now;
       int elapsedSeconds = (int)Math.Round(endTime.Subtract(this.LastRuntime).TotalSeconds, 0);
 
@@ -1696,18 +2131,23 @@ namespace Core.Main {
       this.Log.DoLogInfo("Building LastRuntimeSummary.json for your monitor...");
 
       // Load existing runtime summary and read ongoing data
-      if (File.Exists(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "LastRuntimeSummary.json")) {
-        try {
+      if (File.Exists(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "LastRuntimeSummary.json"))
+      {
+        try
+        {
           Summary summary = JsonConvert.DeserializeObject<Summary>(System.IO.File.ReadAllText(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "LastRuntimeSummary.json"));
-          if (summary != null) {
+          if (summary != null)
+          {
 
             // Last setting switch in case the app got restarted and has no history
-            if (this.LastRuntimeSummary.LastGlobalSettingSwitch == Constants.confMinDate) {
+            if (this.LastRuntimeSummary.LastGlobalSettingSwitch == Constants.confMinDate)
+            {
               this.LastRuntimeSummary.LastGlobalSettingSwitch = summary.LastGlobalSettingSwitch;
             }
 
             // Market trend changes history for graph data
-            foreach (string key in summary.MarketTrendChanges.Keys) {
+            foreach (string key in summary.MarketTrendChanges.Keys)
+            {
               this.LastRuntimeSummary.MarketTrendChanges.Add(key, summary.MarketTrendChanges[key].FindAll(mtc => mtc.TrendDateTime >= DateTime.Now.AddHours(-PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours)));
             }
 
@@ -1716,7 +2156,9 @@ namespace Core.Main {
 
             this.Log.DoLogInfo("Summary: Loaded old LastRuntimeSummary.json to keep data.");
           }
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
           this.Log.DoLogCritical("Summary: Error loading old summary (" + ex.Message + "). Creating new one.", ex);
         }
       }
@@ -1725,14 +2167,16 @@ namespace Core.Main {
 
       // Change setting summary
       GlobalSettingSummary lastSettingSummary = null;
-      if (this.LastRuntimeSummary.LastGlobalSettingSwitch == this.LastRuntimeSummary.LastRuntime || this.LastRuntimeSummary.GlobalSettingSummary.Count == 0) {
+      if (this.LastRuntimeSummary.LastGlobalSettingSwitch == this.LastRuntimeSummary.LastRuntime || this.LastRuntimeSummary.GlobalSettingSummary.Count == 0)
+      {
 
         // Setting got switched this run, add a new setting summary
         GlobalSettingSummary gss = new GlobalSettingSummary();
         gss.SettingName = this.LastRuntimeSummary.CurrentGlobalSetting.SettingName;
         gss.SwitchDateTime = this.LastRuntimeSummary.LastRuntime.ToUniversalTime();
 
-        if (this.LastRuntimeSummary.GlobalSettingSummary.Count > 0) {
+        if (this.LastRuntimeSummary.GlobalSettingSummary.Count > 0)
+        {
           lastSettingSummary = this.LastRuntimeSummary.GlobalSettingSummary.OrderByDescending(lss => lss.SwitchDateTime).First();
           lastSettingSummary.ActiveSeconds = (int)Math.Ceiling(DateTime.Now.ToUniversalTime().Subtract(lastSettingSummary.SwitchDateTime).TotalSeconds);
         }
@@ -1740,10 +2184,13 @@ namespace Core.Main {
         this.LastRuntimeSummary.GlobalSettingSummary.Add(gss);
 
         lastSettingSummary = this.LastRuntimeSummary.GlobalSettingSummary.OrderByDescending(lss => lss.SwitchDateTime).First();
-      } else {
+      }
+      else
+      {
 
         // Setting did not get switched, update data
-        if (this.LastRuntimeSummary.GlobalSettingSummary.Count > 0) {
+        if (this.LastRuntimeSummary.GlobalSettingSummary.Count > 0)
+        {
           lastSettingSummary = this.LastRuntimeSummary.GlobalSettingSummary.OrderByDescending(lss => lss.SwitchDateTime).First();
           lastSettingSummary.ActiveSeconds = (int)Math.Ceiling(DateTime.Now.ToUniversalTime().Subtract(lastSettingSummary.SwitchDateTime).TotalSeconds);
         }
@@ -1753,9 +2200,11 @@ namespace Core.Main {
 
       this.Log.DoLogInfo("Summary: Save market trend changes for summary.");
       // Save market trend changes for the summary
-      foreach (string key in this.AverageMarketTrendChanges.Keys) {
+      foreach (string key in this.AverageMarketTrendChanges.Keys)
+      {
         List<MarketTrendChange> mtChanges = new List<MarketTrendChange>();
-        if (this.LastRuntimeSummary.MarketTrendChanges.ContainsKey(key)) {
+        if (this.LastRuntimeSummary.MarketTrendChanges.ContainsKey(key))
+        {
           mtChanges = this.LastRuntimeSummary.MarketTrendChanges[key];
         }
 
@@ -1765,11 +2214,15 @@ namespace Core.Main {
         newChange.TrendDateTime = this.LastRuntimeSummary.LastRuntime;
 
         mtChanges.Add(newChange);
-        if (lastSettingSummary != null) {
-          if (!lastSettingSummary.MarketTrendChanges.ContainsKey(key)) {
+        if (lastSettingSummary != null)
+        {
+          if (!lastSettingSummary.MarketTrendChanges.ContainsKey(key))
+          {
             GlobalSetting gs = this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Find(g => g.SettingName.Equals(lastSettingSummary.SettingName));
-            if (gs != null) {
-              if (gs.SettingName.Equals("Default", StringComparison.InvariantCultureIgnoreCase) || gs.Triggers.Find(t => t.MarketTrendName.Equals(key)) != null) {
+            if (gs != null)
+            {
+              if (gs.SettingName.Equals("Default", StringComparison.InvariantCultureIgnoreCase) || gs.Triggers.Find(t => t.MarketTrendName.Equals(key)) != null)
+              {
                 lastSettingSummary.MarketTrendChanges.Add(key, newChange);
               }
             }
@@ -1848,102 +2301,131 @@ namespace Core.Main {
       this.LastRuntimeSummary.DCATrigger = dcaDefaultTrigger;
 
       // Get configured DCA triggers
-      for (int dca = 1; dca <= maxDCALevel; dca++) {
+      for (int dca = 1; dca <= maxDCALevel; dca++)
+      {
         string dcaTriggerString = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "buy_trigger_" + dca.ToString(), "DEFAULT_DCA_buy_trigger_" + dca.ToString());
-        if (!dcaTriggerString.Equals("")) {
+        if (!dcaTriggerString.Equals(""))
+        {
           double dcaTrigger = SystemHelper.TextToDouble(dcaTriggerString, 0, "en-US");
 
           this.LastRuntimeSummary.DCATriggers.Add(dca, dcaTrigger);
-        } else {
+        }
+        else
+        {
           if (this.LastRuntimeSummary.DCALevels == 0) this.LastRuntimeSummary.DCALevels = dca - 1;
           break;
         }
       }
 
       // Get configured DCA percentages
-      if (this.ProfitTrailerMajorVersion >= 2) {
+      if (this.ProfitTrailerMajorVersion >= 2)
+      {
         string dcaDefaultPercentageString = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_buy_percentage", "");
         double dcaDefaultPercentage = SystemHelper.TextToDouble(dcaDefaultPercentageString, 0, "en-US");
 
         this.LastRuntimeSummary.DCAPercentage = dcaDefaultPercentage;
 
-        for (int dca = 1; dca <= maxDCALevel; dca++) {
+        for (int dca = 1; dca <= maxDCALevel; dca++)
+        {
           string dcaPercentageString = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_buy_percentage_" + dca.ToString(), "");
-          if (!dcaPercentageString.Equals("")) {
+          if (!dcaPercentageString.Equals(""))
+          {
             double dcaPercentage = SystemHelper.TextToDouble(dcaPercentageString, 0, "en-US");
 
             this.LastRuntimeSummary.DCAPercentages.Add(dca, dcaPercentage);
-          } else {
+          }
+          else
+          {
             if (this.LastRuntimeSummary.DCALevels == 0) this.LastRuntimeSummary.DCALevels = dca - 1;
             break;
           }
         }
-      } else {
+      }
+      else
+      {
         this.LastRuntimeSummary.DCAPercentage = 100;
       }
 
       // Get configured Buy Strategies
-      for (char c = 'A'; c <= 'Z'; c++) {
+      for (char c = 'A'; c <= 'Z'; c++)
+      {
         string buyStrategyName = SettingsHandler.GetCurrentPropertyValue(pairsProperties, "DEFAULT_" + c + "_buy_strategy", "");
-        if (!buyStrategyName.Equals("")) {
+        if (!buyStrategyName.Equals(""))
+        {
           StrategySummary buyStrategy = new StrategySummary();
           buyStrategy.Name = buyStrategyName;
           buyStrategy.Value = SystemHelper.TextToDouble(SettingsHandler.GetCurrentPropertyValue(pairsProperties, "DEFAULT_" + c + "_buy_value", ""), 0, "en-US");
 
           this.LastRuntimeSummary.BuyStrategies.Add(buyStrategy);
-        } else {
+        }
+        else
+        {
           break;
         }
       }
 
       // Get configured Sell Strategies
-      for (char c = 'A'; c <= 'Z'; c++) {
+      for (char c = 'A'; c <= 'Z'; c++)
+      {
         string sellStrategyName = SettingsHandler.GetCurrentPropertyValue(pairsProperties, "DEFAULT_" + c + "_sell_strategy", "");
-        if (!sellStrategyName.Equals("")) {
+        if (!sellStrategyName.Equals(""))
+        {
           StrategySummary sellStrategy = new StrategySummary();
           sellStrategy.Name = sellStrategyName;
           sellStrategy.Value = SystemHelper.TextToDouble(SettingsHandler.GetCurrentPropertyValue(pairsProperties, "DEFAULT_" + c + "_sell_value", ""), 0, "en-US");
 
           this.LastRuntimeSummary.SellStrategies.Add(sellStrategy);
-        } else {
+        }
+        else
+        {
           break;
         }
       }
 
       // Get configured DCA Buy Strategies
-      for (char c = 'A'; c <= 'Z'; c++) {
+      for (char c = 'A'; c <= 'Z'; c++)
+      {
         string buyStrategyName = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_" + c + "_buy_strategy", "");
-        if (!buyStrategyName.Equals("")) {
+        if (!buyStrategyName.Equals(""))
+        {
           StrategySummary buyStrategy = new StrategySummary();
           buyStrategy.Name = buyStrategyName;
           buyStrategy.Value = SystemHelper.TextToDouble(SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_" + c + "_buy_value", ""), 0, "en-US");
 
           this.LastRuntimeSummary.DCABuyStrategies.Add(buyStrategy);
-        } else {
+        }
+        else
+        {
           break;
         }
       }
 
       // Get configured DCA Sell Strategies
-      for (char c = 'A'; c <= 'Z'; c++) {
+      for (char c = 'A'; c <= 'Z'; c++)
+      {
         string sellStrategyName = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_" + c + "_sell_strategy", "");
-        if (!sellStrategyName.Equals("")) {
+        if (!sellStrategyName.Equals(""))
+        {
           StrategySummary sellStrategy = new StrategySummary();
           sellStrategy.Name = sellStrategyName;
           sellStrategy.Value = SystemHelper.TextToDouble(SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_" + c + "_sell_value", ""), 0, "en-US");
 
           this.LastRuntimeSummary.DCASellStrategies.Add(sellStrategy);
-        } else {
+        }
+        else
+        {
           break;
         }
       }
 
       // Get current main currency price
       Dictionary<string, Market> recentMarkets = BaseAnalyzer.GetMarketDataFromFile(this.PTMagicConfiguration, this.Log, "Exchange", DateTime.UtcNow, "Recent");
-      if (recentMarkets.Keys.Count > 0) {
+      if (recentMarkets.Keys.Count > 0)
+      {
         this.LastRuntimeSummary.MainMarketPrice = recentMarkets.First().Value.MainCurrencyPriceUSD;
 
-        if (!this.LastRuntimeSummary.MainFiatCurrency.Equals("USD", StringComparison.InvariantCultureIgnoreCase)) {
+        if (!this.LastRuntimeSummary.MainFiatCurrency.Equals("USD", StringComparison.InvariantCultureIgnoreCase))
+        {
           this.LastRuntimeSummary.MainMarketPrice = this.LastRuntimeSummary.MainMarketPrice * this.LastRuntimeSummary.MainFiatCurrencyExchangeRate;
         }
       }
@@ -1952,7 +2434,8 @@ namespace Core.Main {
 
       this.Log.DoLogInfo("Summary: Getting current single market properties...");
       // Get current single market settings from PAIRS.PROPERTIES for each configured market
-      foreach (string marketPair in this.MarketList) {
+      foreach (string marketPair in this.MarketList)
+      {
         MarketPairSummary mpSummary = new MarketPairSummary();
         mpSummary.CurrentBuyValue = defaultBuyValue;
         mpSummary.CurrentTrailingBuy = defaultTrailingBuy;
@@ -1962,13 +2445,16 @@ namespace Core.Main {
         mpSummary.IsSOMActive = defaultSOMActive;
         mpSummary.ActiveSingleSettings = new List<SingleMarketSetting>();
 
-        if (this.MarketList.Contains(marketPair)) {
+        if (this.MarketList.Contains(marketPair))
+        {
 
           // Pair is allowed for trading, check for individual values
           mpSummary.IsTradingEnabled = true;
 
-          if (this.TriggeredSingleMarketSettings.Count > 0) {
-            if (this.TriggeredSingleMarketSettings.ContainsKey(marketPair)) {
+          if (this.TriggeredSingleMarketSettings.Count > 0)
+          {
+            if (this.TriggeredSingleMarketSettings.ContainsKey(marketPair))
+            {
               mpSummary.ActiveSingleSettings = this.TriggeredSingleMarketSettings[marketPair];
             }
           }
@@ -1976,30 +2462,38 @@ namespace Core.Main {
           string marketPairSimple = marketPair.Replace(this.LastRuntimeSummary.MainMarket, "").Replace("_", "").Replace("-", "");
 
           // Get configured Buy Strategies
-          for (char c = 'A'; c <= 'Z'; c++) {
+          for (char c = 'A'; c <= 'Z'; c++)
+          {
             string buyStrategyName = SettingsHandler.GetCurrentPropertyValue(pairsProperties, marketPairSimple + "_" + c + "_buy_strategy", "");
-            if (!buyStrategyName.Equals("")) {
+            if (!buyStrategyName.Equals(""))
+            {
               StrategySummary buyStrategy = new StrategySummary();
               buyStrategy.Name = buyStrategyName;
               buyStrategy.Value = SystemHelper.TextToDouble(SettingsHandler.GetCurrentPropertyValue(pairsProperties, marketPair + "_" + c + "_buy_value", ""), 0, "en-US");
 
               mpSummary.BuyStrategies.Add(buyStrategy);
-            } else {
+            }
+            else
+            {
               break;
             }
           }
           if (mpSummary.BuyStrategies.Count == 0) mpSummary.BuyStrategies = this.LastRuntimeSummary.BuyStrategies;
 
           // Get configured Sell Strategies
-          for (char c = 'A'; c <= 'Z'; c++) {
+          for (char c = 'A'; c <= 'Z'; c++)
+          {
             string sellStrategyName = SettingsHandler.GetCurrentPropertyValue(pairsProperties, marketPairSimple + "_" + c + "_sell_strategy", "");
-            if (!sellStrategyName.Equals("")) {
+            if (!sellStrategyName.Equals(""))
+            {
               StrategySummary sellStrategy = new StrategySummary();
               sellStrategy.Name = sellStrategyName;
               sellStrategy.Value = SystemHelper.TextToDouble(SettingsHandler.GetCurrentPropertyValue(pairsProperties, marketPairSimple + "_" + c + "_sell_value", ""), 0, "en-US");
 
               mpSummary.SellStrategies.Add(sellStrategy);
-            } else {
+            }
+            else
+            {
               break;
             }
           }
@@ -2032,10 +2526,13 @@ namespace Core.Main {
         }
 
         // Get market trend values for each market pair
-        foreach (string marketTrendName in this.SingleMarketTrendChanges.Keys) {
-          if (this.SingleMarketTrendChanges.ContainsKey(marketTrendName)) {
+        foreach (string marketTrendName in this.SingleMarketTrendChanges.Keys)
+        {
+          if (this.SingleMarketTrendChanges.ContainsKey(marketTrendName))
+          {
             MarketTrendChange mtc = this.SingleMarketTrendChanges[marketTrendName].Find(m => m.Market == marketPair);
-            if (mtc != null) {
+            if (mtc != null)
+            {
               double marketTrendChange = mtc.TrendChange;
               mpSummary.MarketTrendChanges.Add(marketTrendName, marketTrendChange);
 
@@ -2045,7 +2542,8 @@ namespace Core.Main {
           }
         }
 
-        if (!this.LastRuntimeSummary.MarketSummary.ContainsKey(marketPair)) {
+        if (!this.LastRuntimeSummary.MarketSummary.ContainsKey(marketPair))
+        {
           this.LastRuntimeSummary.MarketSummary.Add(marketPair, mpSummary);
         }
       }
@@ -2055,25 +2553,32 @@ namespace Core.Main {
       string serialziedJson = JsonConvert.SerializeObject(this.LastRuntimeSummary);
 
       // Save the summary JSON file
-      try {
+      try
+      {
         FileHelper.WriteTextToFile(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar, "LastRuntimeSummary.json", serialziedJson);
 
         this.Log.DoLogInfo("Summary: LastRuntimeSummary.json saved.");
-      } catch (Exception ex) {
+      }
+      catch (Exception ex)
+      {
         this.Log.DoLogCritical("Exception while writing LastRuntimeSummary.json", ex);
 
-        try {
+        try
+        {
           this.Log.DoLogInfo("Summary: Retrying one more time to save LastRuntimeSummary.json.");
           FileHelper.WriteTextToFile(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar, "LastRuntimeSummary.json", serialziedJson);
 
           this.Log.DoLogInfo("Summary: LastRuntimeSummary.json saved.");
-        } catch (Exception ex2) {
+        }
+        catch (Exception ex2)
+        {
           this.Log.DoLogCritical("Nope, another Exception while writing LastRuntimeSummary.json", ex2);
         }
       }
 
       string logsPath = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathLogs + Path.DirectorySeparatorChar;
-      if (Directory.Exists(logsPath)) {
+      if (Directory.Exists(logsPath))
+      {
         FileHelper.CleanupFiles(logsPath, 24 * 3);
         this.Log.DoLogInfo("Cleaned up logfiles.");
       }
@@ -2082,7 +2587,8 @@ namespace Core.Main {
       this.Log.DoLogInfo("##########################################################");
       this.Log.DoLogInfo("#******************* RAID SUMMARY ********************#");
       this.Log.DoLogInfo("+ PT Magic Version: " + this.LastRuntimeSummary.Version);
-      if (!SystemHelper.IsRecentVersion(this.LastRuntimeSummary.Version, this.LatestVersion)) {
+      if (!SystemHelper.IsRecentVersion(this.LastRuntimeSummary.Version, this.LatestVersion))
+      {
         this.Log.DoLogWarn("+ Your version is out of date! The most recent version is " + this.LatestVersion);
       }
       this.Log.DoLogInfo("+ Proft Trailer Major Version: " + PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMajorVersion.ToString());
@@ -2092,7 +2598,8 @@ namespace Core.Main {
       this.Log.DoLogInfo("+ Global setting changed: " + ((this.LastRuntimeSummary.LastGlobalSettingSwitch == this.LastRuntimeSummary.LastRuntime) ? "Yes" : "No") + " " + ((this.LastRuntimeSummary.FloodProtectedSetting != null) ? "(Flood protection!)" : ""));
       this.Log.DoLogInfo("+ Files changed: " + (((headerLinesAdded || this.GlobalSettingWritten || this.SingleMarketSettingWritten) && !this.PTMagicConfiguration.GeneralSettings.Application.TestMode) ? "Yes" : "No"));
       this.Log.DoLogInfo("+ Markets with active single market settings: " + this.TriggeredSingleMarketSettings.Count.ToString());
-      foreach (string activeSMS in this.SingleMarketSettingsCount.Keys) {
+      foreach (string activeSMS in this.SingleMarketSettingsCount.Keys)
+      {
         this.Log.DoLogInfo("+   " + activeSMS + ": " + this.SingleMarketSettingsCount[activeSMS].ToString());
       }
       this.Log.DoLogInfo("+ " + this.TotalElapsedSeconds.ToString() + " Magicbots killed in " + this.RunCount.ToString() + " raids on Cryptodragon's Lair " + this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes.ToString() + ".");
@@ -2104,7 +2611,8 @@ namespace Core.Main {
       this.Log.DoLogInfo("");
     }
 
-    private void Cleanup() {
+    private void Cleanup()
+    {
       this.GlobalSettingWritten = false;
       this.SingleMarketSettingWritten = false;
       this.EnforceSettingsReapply = false;

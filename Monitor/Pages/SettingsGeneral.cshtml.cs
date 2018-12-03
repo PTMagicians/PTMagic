@@ -6,11 +6,14 @@ using Core.Main;
 using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
 
-namespace Monitor.Pages {
-  public class SettingsGeneralModel : _Internal.BasePageModelSecure {
+namespace Monitor.Pages
+{
+  public class SettingsGeneralModel : _Internal.BasePageModelSecure
+  {
     public string ValidationMessage = "";
 
-    private string GetTimezoneOffsetString(TimeZoneInfo tzi) {
+    private string GetTimezoneOffsetString(TimeZoneInfo tzi)
+    {
       string result = "";
 
       result += (tzi.BaseUtcOffset >= TimeSpan.Zero) ? "+" : "-";
@@ -21,15 +24,19 @@ namespace Monitor.Pages {
       return result;
     }
 
-    public string GetTimezoneSelection() {
+    public string GetTimezoneSelection()
+    {
       string result = "";
 
       List<string> tzOffsetList = new List<string>();
-      foreach (TimeZoneInfo tzi in TimeZoneInfo.GetSystemTimeZones()) {
+      foreach (TimeZoneInfo tzi in TimeZoneInfo.GetSystemTimeZones())
+      {
         string offsetString = this.GetTimezoneOffsetString(tzi);
-        if (!tzOffsetList.Contains(offsetString)) {
+        if (!tzOffsetList.Contains(offsetString))
+        {
           string selected = "";
-          if (PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.Equals(offsetString, StringComparison.InvariantCultureIgnoreCase)) {
+          if (PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.Equals(offsetString, StringComparison.InvariantCultureIgnoreCase))
+          {
             selected = " selected=\"selected\"";
           }
 
@@ -41,18 +48,21 @@ namespace Monitor.Pages {
       return result;
     }
 
-    public void OnGet() {
+    public void OnGet()
+    {
       base.Init();
 
       string notification = GetStringParameter("n", "");
-      if (notification.Equals("BackupRestored")) {
+      if (notification.Equals("BackupRestored"))
+      {
         NotifyHeadline = "Backup restored!";
         NotifyMessage = "Your backup of settings.general.json was successfully restored.";
         NotifyType = "success";
       }
     }
 
-    public void OnPost() {
+    public void OnPost()
+    {
       base.Init();
 
       PTMagicConfiguration.GeneralSettings.Application.IsEnabled = HttpContext.Request.Form["Application_IsEnabled"].Equals("on");

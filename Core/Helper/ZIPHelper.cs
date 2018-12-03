@@ -6,20 +6,25 @@ using System.IO;
 using System.Text;
 using ICSharpCode.SharpZipLib.Zip;
 
-namespace Core.Helper {
-  
-  public class ZIPHelper {
+namespace Core.Helper
+{
 
-    public static bool CreateZipFile(ArrayList filePaths, string outputPath) {
+  public class ZIPHelper
+  {
+
+    public static bool CreateZipFile(ArrayList filePaths, string outputPath)
+    {
       bool result = true;
 
       ZipOutputStream pack = new ZipOutputStream(File.Create(outputPath));
-      try {
+      try
+      {
 
         // set compression level
         pack.SetLevel(5);
 
-        foreach (string filePath in filePaths) {
+        foreach (string filePath in filePaths)
+        {
           FileStream fs = File.OpenRead(filePath);
 
           // allocate buffer
@@ -32,9 +37,13 @@ namespace Core.Helper {
           pack.Write(buffer, 0, buffer.Length);
         }
 
-      } catch {
+      }
+      catch
+      {
         result = false;
-      } finally {
+      }
+      finally
+      {
         pack.Finish();
         pack.Close();
       }
@@ -42,15 +51,20 @@ namespace Core.Helper {
       return result;
     }
 
-    public static ArrayList ExtractFileFromZipFile(string filePath, string destinationPath, bool isInvoicePackage) {
+    public static ArrayList ExtractFileFromZipFile(string filePath, string destinationPath, bool isInvoicePackage)
+    {
       ArrayList result = new ArrayList();
 
       ZipFile zip = new ZipFile(File.OpenRead(filePath));
-      try {
-        foreach (ZipEntry entry in zip) {
-          if (entry.IsFile) {
+      try
+      {
+        foreach (ZipEntry entry in zip)
+        {
+          if (entry.IsFile)
+          {
             string fileName = entry.Name;
-            if (isInvoicePackage) {
+            if (isInvoicePackage)
+            {
               fileName = fileName.Replace("unsigned", "signed");
             }
 
@@ -58,25 +72,32 @@ namespace Core.Helper {
 
             Stream inputStream = zip.GetInputStream(entry);
             FileStream fileStream = new FileStream(destinationPath + fileName, FileMode.Create);
-            try {
+            try
+            {
               CopyStream(inputStream, fileStream);
-            } finally {
+            }
+            finally
+            {
               fileStream.Close();
               inputStream.Close();
             }
           }
         }
-      } finally {
+      }
+      finally
+      {
         zip.Close();
       }
 
       return result;
     }
 
-    private static void CopyStream(Stream input, Stream output) {
+    private static void CopyStream(Stream input, Stream output)
+    {
       byte[] buffer = new byte[0x1000];
       int read;
-      while ((read = input.Read(buffer, 0, buffer.Length)) > 0) {
+      while ((read = input.Read(buffer, 0, buffer.Length)) > 0)
+      {
         output.Write(buffer, 0, read);
       }
     }

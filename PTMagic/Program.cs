@@ -10,9 +10,12 @@ using Microsoft.Extensions.DependencyInjection;
 [assembly: AssemblyVersion("2.0.5")]
 [assembly: AssemblyProduct("PT Magic")]
 
-namespace PTMagic {
-  class Program {
-    static void Main(string[] args) {
+namespace PTMagic
+{
+  class Program
+  {
+    static void Main(string[] args)
+    {
       // Init PTMagic
       Core.Main.PTMagic ptMagic = new Core.Main.PTMagic(ServiceHelper.BuildLoggerService().GetRequiredService<LogHelper>());
       ptMagic.CurrentVersion = Assembly.GetExecutingAssembly().GetName().Version;
@@ -21,7 +24,8 @@ namespace PTMagic {
       ptMagic.StartProcess();
 
       // Keep the app running
-      for (; ; ) {
+      for (; ; )
+      {
         Thread.Sleep(100);
       }
     }

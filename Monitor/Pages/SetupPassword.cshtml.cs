@@ -5,20 +5,26 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Core.Main;
 
-namespace Monitor.Pages {
-  public class SetupPasswordModel : _Internal.BasePageModel {
+namespace Monitor.Pages
+{
+  public class SetupPasswordModel : _Internal.BasePageModel
+  {
     public string ValidationMessage = "";
 
-    public void OnGet() {
+    public void OnGet()
+    {
       base.PreInit();
     }
 
-    public void OnPost(string password, string passwordConfirm) {
-      if (!password.Equals(passwordConfirm)) {
+    public void OnPost(string password, string passwordConfirm)
+    {
+      if (!password.Equals(passwordConfirm))
+      {
         ValidationMessage = "Password does not match the confirmation!";
       }
 
-      if (ModelState.IsValid) {
+      if (ModelState.IsValid)
+      {
         base.PreInit();
         PTMagicConfiguration.WriteSecureSettings(password, PTMagicBasePath);
 

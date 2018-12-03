@@ -8,25 +8,32 @@ using Newtonsoft.Json;
 using Core.Main.DataObjects.PTMagicData;
 using Core.Helper;
 
-namespace Core.Main.DataObjects {
+namespace Core.Main.DataObjects
+{
 
-  public class TransactionData {
+  public class TransactionData
+  {
     private List<Transaction> _transactions = new List<Transaction>();
 
-    public TransactionData(string basePath) {
+    public TransactionData(string basePath)
+    {
       string transactionsFilePath = basePath + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "Transactions.json";
-      if (File.Exists(transactionsFilePath)) {
+      if (File.Exists(transactionsFilePath))
+      {
         this._transactions = JsonConvert.DeserializeObject<List<Transaction>>(File.ReadAllText(transactionsFilePath));
       }
     }
 
-    public List<Transaction> Transactions {
-      get {
+    public List<Transaction> Transactions
+    {
+      get
+      {
         return _transactions;
       }
     }
 
-    public void SaveTransactions(string basePath) {
+    public void SaveTransactions(string basePath)
+    {
       FileHelper.WriteTextToFile(basePath + Constants.PTMagicPathData + Path.DirectorySeparatorChar, "Transactions.json", JsonConvert.SerializeObject(this.Transactions));
     }
   }

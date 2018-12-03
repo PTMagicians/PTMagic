@@ -13,26 +13,34 @@ using Core.MarketAnalyzer;
 using Core.ProfitTrailer;
 using Microsoft.Extensions.Primitives;
 
-namespace Monitor._Internal {
+namespace Monitor._Internal
+{
 
-  public class BasePageModelSecure : BasePageModel {
-    public void Init() {
+  public class BasePageModelSecure : BasePageModel
+  {
+    public void Init()
+    {
       base.PreInit();
 
-      if (String.IsNullOrEmpty(HttpContext.Session.GetString("LoggedIn" + PTMagicConfiguration.GeneralSettings.Monitor.Port.ToString())) && PTMagicConfiguration.GeneralSettings.Monitor.IsPasswordProtected) {
+      if (String.IsNullOrEmpty(HttpContext.Session.GetString("LoggedIn" + PTMagicConfiguration.GeneralSettings.Monitor.Port.ToString())) && PTMagicConfiguration.GeneralSettings.Monitor.IsPasswordProtected)
+      {
         bool redirectToLogin = true;
-        if (Request.Cookies.ContainsKey("PTMRememberMeKey")) {
+        if (Request.Cookies.ContainsKey("PTMRememberMeKey"))
+        {
           string rememberMeKey = Request.Cookies["PTMRememberMeKey"];
-          if (!rememberMeKey.Equals("")) {
+          if (!rememberMeKey.Equals(""))
+          {
             string encryptedPassword = EncryptionHelper.Decrypt(Request.Cookies["PTMRememberMeKey"]);
-            if (encryptedPassword.Equals(PTMagicConfiguration.SecureSettings.MonitorPassword)) {
+            if (encryptedPassword.Equals(PTMagicConfiguration.SecureSettings.MonitorPassword))
+            {
               HttpContext.Session.SetString("LoggedIn" + PTMagicConfiguration.GeneralSettings.Monitor.Port.ToString(), DateTime.Now.ToUniversalTime().ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'"));
               redirectToLogin = false;
             }
           }
         }
 
-        if (redirectToLogin) {
+        if (redirectToLogin)
+        {
           HttpContext.Response.Redirect(PTMagicConfiguration.GeneralSettings.Monitor.RootUrl + "Login");
         }
       }

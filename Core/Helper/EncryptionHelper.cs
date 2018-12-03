@@ -7,29 +7,39 @@ using System.Security.Cryptography;
 using System.Collections.Specialized;
 using System.Configuration;
 
-namespace Core.Helper {
-  public class EncryptionHelper {
+namespace Core.Helper
+{
+  public class EncryptionHelper
+  {
 
     #region Properties
 
-    public static string CryptoMainSaltValue {
-      get {
+    public static string CryptoMainSaltValue
+    {
+      get
+      {
         return "b3+Pz.~L<R 8NH-p=Ze<smbpb*]dP,%d9d{P{DC)R$xf]s|6UC-d)X[y_kDR^EsL";
       }
     }
 
-    public static string CryptoSaltValue {
-      get {
+    public static string CryptoSaltValue
+    {
+      get
+      {
         return "/-T:_~Z|j~0%@~|?7,L~]:us9-=VO[.0V[nZDYTjnUeHcka#hdQ{U^YHv:0sJlfk";
       }
     }
-    public static string CryptoInitVector {
-      get {
+    public static string CryptoInitVector
+    {
+      get
+      {
         return "qWEE:ADg)}6b;V{B";
       }
     }
-    public static string CryptoPassPhrase {
-      get {
+    public static string CryptoPassPhrase
+    {
+      get
+      {
         return "KUBD`o.]*#CCL n9m}tZN4B4~>2EK>((/xnTbWdTo:/5_$hq8ja8yOq% j}M6zTM";
       }
     }
@@ -39,7 +49,8 @@ namespace Core.Helper {
     #region Methoden
 
     #region Passwortverschlüsselung
-    public static string CreateHash(string password, string randomSalt) {
+    public static string CreateHash(string password, string randomSalt)
+    {
       // Generate a random salt
       byte[] salt = Encoding.UTF8.GetBytes(EncryptionHelper.CryptoMainSaltValue + randomSalt);
       byte[] hash = PBKDF2(password, salt, 64000, 24);
@@ -47,19 +58,23 @@ namespace Core.Helper {
       return Convert.ToBase64String(hash);
     }
 
-    public static bool SlowEquals(string aHash, string bHash) {
+    public static bool SlowEquals(string aHash, string bHash)
+    {
       byte[] a = Encoding.UTF8.GetBytes(aHash);
       byte[] b = Encoding.UTF8.GetBytes(bHash);
 
       uint diff = (uint)a.Length ^ (uint)b.Length;
-      for (int i = 0; i < a.Length && i < b.Length; i++) {
+      for (int i = 0; i < a.Length && i < b.Length; i++)
+      {
         diff |= (uint)(a[i] ^ b[i]);
       }
       return diff == 0;
     }
 
-    private static byte[] PBKDF2(string password, byte[] salt, int iterations, int outputBytes) {
-      using (Rfc2898DeriveBytes pbkdf2 = new Rfc2898DeriveBytes(password, salt)) {
+    private static byte[] PBKDF2(string password, byte[] salt, int iterations, int outputBytes)
+    {
+      using (Rfc2898DeriveBytes pbkdf2 = new Rfc2898DeriveBytes(password, salt))
+      {
         pbkdf2.IterationCount = iterations;
         return pbkdf2.GetBytes(outputBytes);
       }
@@ -69,19 +84,23 @@ namespace Core.Helper {
     #endregion
 
     #region Standardverschlüsselung
-    public static string Encrypt(string plainText) {
+    public static string Encrypt(string plainText)
+    {
       return Encrypt(plainText, EncryptionHelper.CryptoPassPhrase, EncryptionHelper.CryptoSaltValue, "SHA512", 2, EncryptionHelper.CryptoInitVector, 256);
     }
 
-    public static string Decrypt(string cipherText) {
+    public static string Decrypt(string cipherText)
+    {
       return Decrypt(cipherText, EncryptionHelper.CryptoPassPhrase, EncryptionHelper.CryptoSaltValue, "SHA512", 2, EncryptionHelper.CryptoInitVector, 256, true);
     }
 
-    public static string Encrypt(string plainText, string passPhrase) {
+    public static string Encrypt(string plainText, string passPhrase)
+    {
       return Encrypt(plainText, passPhrase, EncryptionHelper.CryptoSaltValue, "SHA512", 2, EncryptionHelper.CryptoInitVector, 256);
     }
 
-    public static string Decrypt(string cipherText, string passPhrase) {
+    public static string Decrypt(string cipherText, string passPhrase)
+    {
       return Decrypt(cipherText, passPhrase, EncryptionHelper.CryptoSaltValue, "SHA512", 2, EncryptionHelper.CryptoInitVector, 256, true);
     }
 
@@ -129,7 +148,8 @@ namespace Core.Helper {
                                  string hashAlgorithm,
                                  int passwordIterations,
                                  string initVector,
-                                 int keySize) {
+                                 int keySize)
+    {
       // Convert strings into byte arrays.
       byte[] initVectorBytes = Encoding.UTF8.GetBytes(initVector);
       byte[] saltValueBytes = Encoding.UTF8.GetBytes(saltValue);
@@ -235,8 +255,10 @@ namespace Core.Helper {
                                  int passwordIterations,
                                  string initVector,
                                  int keySize,
-                                 bool doDecrypt) {
-      if (doDecrypt) {
+                                 bool doDecrypt)
+    {
+      if (doDecrypt)
+      {
         // Convert strings defining encryption key characteristics into byte
         // arrays. 
         byte[] initVectorBytes = Encoding.UTF8.GetBytes(initVector);
@@ -292,7 +314,9 @@ namespace Core.Helper {
 
         // Return decrypted string.   
         return plainText;
-      } else {
+      }
+      else
+      {
         return "";
       }
     }
