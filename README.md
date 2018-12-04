@@ -8,7 +8,7 @@ Profit Trailer Magic is a **FREE** open source and the most complete all-in-one 
 
 - By combining the **Global Settings** and **Single Market Settings** PTMagic allows you to create a robust and dynamic trading strategy to ensure more protection and versatility than any single strategy can provide -- without constant supervision and intervention.
 
-- **Watch what your bot is thinking in real time**, with a simple GUI interface showing the buy status for strategy in your possible buy list, as well as the current status of your sell strategies for all the coins you currently hold.
+- **Watch what your bot is thinking in real time**, with a simple GUI interface showing the status of current buy strategies in your possible buy list, as well as the current status of your sell strategies for all the coins you currently hold.
 
 - See a simple representations of **current market conditions**, as well as the current trends in various timeframes, for every coin on your exchange.
 
