@@ -1,14 +1,26 @@
 # Profit Trailer Magic
-Profit Trailer Magic is an open source and the most complete all-in-one addon for the cryptocurrency trading bot Profit Trailer.
+Profit Trailer Magic is a **FREE** open source and the most complete all-in-one addon for the cryptocurrency trading bot Profit Trailer.  It was originally created in February 2018 by Christian Kühl (Legedric), with a robust development cycle that ended on June 7th, when he decided to make the project open-source.  He always exemplified the standards found in the Code of Conduct posted in the orginal repository.  https://github.com/Legedric  Those of us following his lead and continuing to develop PTMagic have made a clone of the project here in December 2018, in order to more easily access and administer the project.
 
 ### Feature Highlights:
-- Define multiple individual Profit Trailer settings as **presets for different market conditions**. PTMagic will apply them automatically based on trends for **your trading pairs**.  
+- Define multiple Profit Trailer **Global Settings** and use the Profit Trailer API to modify the currently active PAIRS/DCA/INDICATORS settings in real time, to adjust your settings for ALL COINS, according to changing market conditions.
 
-- Never run out of balance again when using DCA. The PTMagic **DCA calculator** helps you to find the perfect DCA values for your balance, pairs and DCA levels.  
+- Define multiple Profit Trailer **Single Market Settings** and use the Profit Trailer API to modify the currently active PAIRS/DCA/INDICATORS settings in real time, to modify any coin-specific settings automatically based on their individual behavior.  
 
-- **Pump and Dump protection** works even for single trading pairs that act suspicious.  
+- By combining the **Global Settings** and **Single Market Settings** PTMagic creates a dynamic trading strategy that automatically changes how Profit Trailer trades, to ensure more protection and versatility than any single strategy can provide, without constant supervision and intervention.
 
-- **Analyze your sales** to find the winners and losers in your trading pairs.
+- Watch what your bot is thinking in real time, with a simple GUI interface showing you where a coin stands in relations to your currently defined buy and sell strategies.
+
+- See a simple representations of **current market conditions**, as well as the current trend for every coin on your exchange.
+
+- A **complete sales history and analysis**, including a list of your best performing coins, and projections for the next year based on your past performance.
+
+- A **bag analyzer** showing details buy and sell details for coins your currently hold, including a embeded trading view chart.
+
+- An **automated DCA calcuulator** that takes into account your current Profit Trailer settings, and custom DCA triggers and percentages, to generate a more accurate view of projected DCA costs.
+
+- A status and summary page containing an overview of of PTMagic's most recent setting changes, and the active Profit Trailer settings, including all buy and sell strategies and their current values.
+
+- A complete **wiki and Discord community** to help you refine your strategies and understand how to take advantage of the full potential of Profit Trailer with PTMagic.
 
 # License
 ![Creative Commons Attribution-NonCommercial 4.0 International License](https://i.creativecommons.org/l/by-nc/4.0/88x31.png)  
@@ -21,7 +33,7 @@ https://github.com/Legedric/ptmagic/wiki/How-it-works
 # Wiki
 https://github.com/Legedric/ptmagic/wiki
 
-# Download latest release
+# Download the latest release
 https://github.com/Legedric/ptmagic/releases
 
 **Important: Please do not install PTMagic if you are already running Profit Trailer Feeder. Both tools write to your bot .PROPERTIES files and there may be side effects.**
@@ -45,8 +57,6 @@ Read our [CONTRIBUTING.md](https://github.com/Legedric/ptmagic/blob/master/CONTR
 ![Sales Analyzer](http://www.profit-trailer-magic.com/assets/img-temp/mockups/salesanalyzer.png)
 
 ![Market Trends](http://www.profit-trailer-magic.com/assets/img-temp/mockups/markettrends.png)
-
-![DCA Calculator](http://www.profit-trailer-magic.com/assets/img-temp/mockups/dcacalculator.png)
 
 # Disclaimer
 By using or simply downloading Profit Trailer Magic you understand and accept the following Terms of Use:  
