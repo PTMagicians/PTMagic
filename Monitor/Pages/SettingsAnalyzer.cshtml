@@ -68,7 +68,6 @@
       <div class="row">
         <div class="col-md-4">
           <h4 class="m-t-0 header-title">Market Trends (@Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends.Count)</h4>
-
           <ul>
             @foreach (Core.Main.DataObjects.PTMagicData.MarketTrend mt in Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends) {
               <li><a href="#MarketTrend_@Core.Helper.SystemHelper.StripBadCode(mt.Name, Core.Main.Constants.WhiteListNames)">@Core.Helper.SystemHelper.SplitCamelCase(mt.Name)</a></li>
@@ -102,32 +101,14 @@
           </button>
         </div>
         <div class="col-md-4">
-          <div class="btn-group btn-block">
-            <button class="btn btn-ptmagic btn-custom  btn-block text-uppercase waves-effect waves-light dropdown-toggle" data-toggle="dropdown">
-              Add Global Setting
-            </button>
-            <div class="dropdown-menu">
-              @foreach (Core.Main.DataObjects.PTMagicData.GlobalSetting gs in Model.PTMagicConfiguration.AnalyzerSettings.GlobalSettings) {
-                <a class="dropdown-item btn-new" data-datatype="GlobalSetting" data-datatarget="@Core.Helper.SystemHelper.StripBadCode(gs.SettingName, Core.Main.Constants.WhiteListNames)">Add before <i>@Core.Helper.SystemHelper.SplitCamelCase(gs.SettingName)</i></a>
-              }
-            </div>
-          </div>
+          <button class="btn btn-ptmagic btn-custom  btn-block text-uppercase waves-effect waves-light btn-new" data-datatype="GlobalSetting">
+            Add Global Setting
+          </button>
         </div>
         <div class="col-md-4">
-          <div class="btn-group btn-block">
-            <button class="btn btn-ptmagic btn-custom  btn-block text-uppercase waves-effect waves-light dropdown-toggle" data-toggle="dropdown">
-              Add Single Market Setting
-            </button>
-            <div class="dropdown-menu">
-              @foreach (Core.Main.DataObjects.PTMagicData.SingleMarketSetting sms in Model.PTMagicConfiguration.AnalyzerSettings.SingleMarketSettings) {
-                <a class="dropdown-item btn-new" data-datatype="SingleMarketSetting" data-datadirection="before" data-datatarget="@Core.Helper.SystemHelper.StripBadCode(sms.SettingName, Core.Main.Constants.WhiteListNames)">Add before <i>@Core.Helper.SystemHelper.SplitCamelCase(sms.SettingName)</i></a>
-              }
-              <div class="dropdown-divider"></div>
-              @foreach (Core.Main.DataObjects.PTMagicData.SingleMarketSetting sms in Model.PTMagicConfiguration.AnalyzerSettings.SingleMarketSettings) {
-                <a class="dropdown-item btn-new" data-datatype="SingleMarketSetting" data-datadirection="after" data-datatarget="@Core.Helper.SystemHelper.StripBadCode(sms.SettingName, Core.Main.Constants.WhiteListNames)">Add after <i>@Core.Helper.SystemHelper.SplitCamelCase(sms.SettingName)</i></a>
-              }
-            </div>
-          </div>
+          <button class="btn btn-ptmagic btn-custom  btn-block text-uppercase waves-effect waves-light btn-new" data-datatype="SingleMarketSetting">
+            Add Single Market Setting
+          </button>
         </div>
       </div>
     </div>
@@ -138,26 +119,33 @@
   <div class="row">
     <div class="col-md-12">
       <div class="card-box">
-        <h4 class="m-t-0 header-title">Market Analyzer</h4>
+        <div class="panel-group" style="">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title"><strong><a href="#collapse0" data-toggle="collapse">MARKET ANALYZER</a></strong></h3>
+            </div>
+            <div id="collapse0" class="panel-collapse collapse">
+              <div class="form-group row">
+                <label class="col-md-4 col-form-label">Store Data Max Hours <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Number of hours to store market data."></i></label>
+                <div class="col-md-8">
+                  <input type="text" class="form-control" name="MarketAnalyzer_StoreDataMaxHours" value="@Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours.ToString()">
+                </div>
+              </div>
 
-        <div class="form-group row">
-          <label class="col-md-4 col-form-label">Store Data Max Hours <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Number of hours to store market data."></i></label>
-          <div class="col-md-8">
-            <input type="text" class="form-control" name="MarketAnalyzer_StoreDataMaxHours" value="@Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours.ToString()">
-          </div>
-        </div>
+              <div class="form-group row">
+                <label class="col-md-4 col-form-label">Interval Minutes <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Interval in minutes for PTMagic to check market trends and triggers."></i></label>
+                <div class="col-md-8">
+                  <input type="text" class="form-control" name="MarketAnalyzer_IntervalMinutes" value="@Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes.ToString()">
+                </div>
+              </div>
 
-        <div class="form-group row">
-          <label class="col-md-4 col-form-label">Interval Minutes <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Interval in minutes for PTMagic to check market trends and triggers."></i></label>
-          <div class="col-md-8">
-            <input type="text" class="form-control" name="MarketAnalyzer_IntervalMinutes" value="@Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes.ToString()">
-          </div>
-        </div>
-
-        <div class="form-group row">
-          <label class="col-md-4 col-form-label">Exclude Main Currency <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Excludes the main currency (for example BTC) from market trend analysis."></i></label>
-          <div class="col-md-8">
-            <input type="checkbox" name="MarketAnalyzer_ExcludeMainCurrency" checked="@(Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.ExcludeMainCurrency)" data-plugin="switchery" data-color="#81c868" data-size="small" />
+              <div class="form-group row">
+                <label class="col-md-4 col-form-label">Exclude Main Currency <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Excludes the main currency (for example BTC) from market trend analysis."></i></label>
+                <div class="col-md-8">
+                  <input type="checkbox" name="MarketAnalyzer_ExcludeMainCurrency" checked="@(Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.ExcludeMainCurrency)" data-plugin="switchery" data-color="#81c868" data-size="small" />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -167,7 +155,22 @@
   <div id="MarketAnalyzer_MarketTrends">
     @if (Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends.Count > 0) {
       @foreach (Core.Main.DataObjects.PTMagicData.MarketTrend mt in Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends) {
-        <div class="settings-markettrend" data-trendname="@Core.Helper.SystemHelper.StripBadCode(mt.Name, Core.Main.Constants.WhiteListNames)" data-rooturl="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)"><i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i></div>
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card-box">
+              <div class="panel-group" style="">
+                <div class="panel panel-default">
+                  <div class="panel-heading">
+                    <h3 class="panel-title"><strong><a href="#@Core.Helper.SystemHelper.StripBadCode(mt.Name, Core.Main.Constants.WhiteListNames)" data-toggle="collapse">MARKET TREND: @Core.Helper.SystemHelper.StripBadCode(mt.Name, Core.Main.Constants.WhiteListNames)</a></strong></h3>
+                  </div>
+                  <div id="@Core.Helper.SystemHelper.StripBadCode(mt.Name, Core.Main.Constants.WhiteListNames)" class="panel-collapse collapse">
+                    <div class="settings-markettrend" data-trendname="@Core.Helper.SystemHelper.StripBadCode(mt.Name, Core.Main.Constants.WhiteListNames)" data-rooturl="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)"><i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+           </div>
+        </div>
       }
     } else {
       <div class="row">
@@ -183,7 +186,22 @@
   <div id="MarketAnalyzer_GlobalSettings">
     @if (Model.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Count > 0) {
       @foreach (Core.Main.DataObjects.PTMagicData.GlobalSetting gs in Model.PTMagicConfiguration.AnalyzerSettings.GlobalSettings) {
-        <div class="settings-globalsetting" data-settingname="@Core.Helper.SystemHelper.StripBadCode(gs.SettingName, Core.Main.Constants.WhiteListNames)" data-rooturl="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)"><i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i></div>
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card-box">
+              <div class="panel-group" style="">
+                <div class="panel panel-default">
+                  <div class="panel-heading">
+                    <h3 class="panel-title"><strong><a href="#@Core.Helper.SystemHelper.StripBadCode(gs.SettingName, Core.Main.Constants.WhiteListNames)" data-toggle="collapse">GLOBAL SETTING: @Core.Helper.SystemHelper.StripBadCode(gs.SettingName, Core.Main.Constants.WhiteListNames)</a></strong></h3>
+                  </div>
+                  <div id="@Core.Helper.SystemHelper.StripBadCode(gs.SettingName, Core.Main.Constants.WhiteListNames)" class="panel-collapse collapse">
+                    <div class="settings-globalsetting" data-settingname="@Core.Helper.SystemHelper.StripBadCode(gs.SettingName, Core.Main.Constants.WhiteListNames)" data-rooturl="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)"><i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+           </div>
+        </div>
       }
     } else {
       <div class="row">
@@ -199,7 +217,22 @@
   <div id="MarketAnalyzer_SingleMarketSettings">
     @if (Model.PTMagicConfiguration.AnalyzerSettings.SingleMarketSettings.Count > 0) {
       @foreach (Core.Main.DataObjects.PTMagicData.SingleMarketSetting sms in Model.PTMagicConfiguration.AnalyzerSettings.SingleMarketSettings) {
-        <div class="settings-singlemarketsetting" data-settingname="@Core.Helper.SystemHelper.StripBadCode(sms.SettingName, Core.Main.Constants.WhiteListNames)" data-rooturl="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)"><i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i></div>
+        <div class="row">
+          <div class="col-md-12">
+            <div class="card-box">
+              <div class="panel-group" style="">
+                <div class="panel panel-default">
+                  <div class="panel-heading">
+                    <h3 class="panel-title"><strong><a href="#@Core.Helper.SystemHelper.StripBadCode(sms.SettingName, Core.Main.Constants.WhiteListNames)" data-toggle="collapse">Single Market Setting: @Core.Helper.SystemHelper.StripBadCode(sms.SettingName, Core.Main.Constants.WhiteListNames)</a></strong></h3>
+                  </div>
+                  <div id="@Core.Helper.SystemHelper.StripBadCode(sms.SettingName, Core.Main.Constants.WhiteListNames)" class="panel-collapse collapse">
+                    <div class="settings-singlemarketsetting" data-settingname="@Core.Helper.SystemHelper.StripBadCode(sms.SettingName, Core.Main.Constants.WhiteListNames)" data-rooturl="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)"><i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+           </div>
+        </div>
       }
     } else {
       <div class="row">
@@ -211,7 +244,6 @@
       </div>
     }
   </div>
-
   <div id="div-loading-settings" class="row">
     <div class="col-md-12">
       <div class="card-box">
@@ -299,18 +331,14 @@
             $('.settings-markettrend.new').buildMarketTrendSettings();
             break;
           case 'GlobalSetting':
-            $('html, body').scrollTop($('#MarketAnalyzer_GlobalSettings > [data-settingname="' + dataTarget + '"]').offset().top - 100);
-            $('#MarketAnalyzer_GlobalSettings > [data-settingname="' + dataTarget + '"]').before('<div class="settings-globalsetting new" data-settingname="" data-rooturl="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)"><i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i></div>');
+            $('#MarketAnalyzer_GlobalSettings').append('<div class="settings-globalsetting new" data-settingname="" data-rooturl="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)"><i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i></div>');
+            $('html, body').scrollTop($('#MarketAnalyzer_GlobalSettings').offset().top + $('#MarketAnalyzer_GlobalSettings').height() - 100);
             $('.settings-globalsetting.new').buildGlobalSettings();
             break;
           case 'SingleMarketSetting':
-            if (dataDirection === 'before') {
-              $('html, body').scrollTop($('#MarketAnalyzer_SingleMarketSettings > [data-settingname="' + dataTarget + '"]').offset().top - 100);
-              $('#MarketAnalyzer_SingleMarketSettings > [data-settingname="' + dataTarget + '"]').before('<div class="settings-singlemarketsetting new" data-settingname="" data-rooturl="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)"><i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i></div>');
-            } else {
-              $('html, body').scrollTop($('#MarketAnalyzer_SingleMarketSettings > [data-settingname="' + dataTarget + '"]').offset().top + $('#MarketAnalyzer_SingleMarketSettings > [data-settingname="' + dataTarget + '"]').height() - 100);
-              $('#MarketAnalyzer_SingleMarketSettings > [data-settingname="' + dataTarget + '"]').after('<div class="settings-singlemarketsetting new" data-settingname="" data-rooturl="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)"><i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i></div>');
-            }
+
+            $('#MarketAnalyzer_SingleMarketSettings').append('<div class="settings-singlemarketsetting new" data-settingname="" data-rooturl="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)"><i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i></div>');
+            $('html, body').scrollTop($('#MarketAnalyzer_SingleMarketSettings').offset().top + $('#MarketAnalyzer_SingleMarketSettings').height() - 100);
             $('.settings-singlemarketsetting.new').buildSingleMarketSettings();
             break;
         }
