@@ -1226,6 +1226,10 @@ namespace Core.Main
         // Get most recent market data from CMC
         string cmcMarketDataResult = CoinMarketCap.GetMarketData(this.PTMagicConfiguration, this.Log);
       }
+      else
+      {
+        this.Log.DoLogInfo("No CMC API-Key specified. No CMC Data will be pulled");
+      }
 
       if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Bittrex", StringComparison.InvariantCultureIgnoreCase))
       {
