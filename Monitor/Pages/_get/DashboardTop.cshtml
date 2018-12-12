@@ -85,7 +85,9 @@
               <th class="text-right" data-toggle="tooltip" data-placement="top" title="Current DCA level">DCA</th>
               <th data-toggle="tooltip" data-placement="top" title="Active buy strategies">Buy Strats</th>
               <th data-toggle="tooltip" data-placement="top" title="Active sell strategies">Sell Strats</th>
-              <th class="text-right" data-toggle="tooltip" data-placement="top" title="Current profit percentage">Profit</th>
+              <th class="text-right" data-toggle="tooltip" data-placement="top" title=""></th>
+              <th class="text-left" data-toggle="tooltip" data-placement="top" title="Current Profit">Profit</th>
+              <th class="text-left" data-toggle="tooltip" data-placement="top" title="Current Total Cost">Cost</th>
               <th></th>
             </tr>
           </thead>
@@ -127,6 +129,8 @@
                 buyDisabled = true;
               }
 
+              double currentFiatValue = Math.Round(dcaLogEntry.Amount * dcaLogEntry.CurrentPrice * Model.Summary.MainMarketPrice, 2);
+            
               string sellStrategyText = Core.ProfitTrailer.StrategyHelper.GetStrategyText(Model.Summary, dcaLogEntry.SellStrategies, dcaLogEntry.SellStrategy, isSellStrategyTrue, isTrailingSellActive);
 
               <tr>
@@ -154,8 +158,10 @@
                   @if (isTrailingSellActive) {
                     <i class="fa fa-flag-checkered text-success" data-toggle="tooltip" data-placement="top" title="Trailing sell active!"></i>
                   }
-                  <span class="text-autocolor">@dcaLogEntry.ProfitPercent.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</span>
+                 
                 </td>
+                <td class="text-autocolor">@dcaLogEntry.ProfitPercent.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+                <td class="text-left">@Html.Raw(dcaLogEntry.TotalCost.ToString("#,#0.000000", new System.Globalization.CultureInfo("en-US")) + " (" + Model.MainFiatCurrencySymbol + @currentFiatValue.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + ")")</td> 
                 <td class="text-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)_get/BagDetails/?m=@dcaLogEntry.Market" data-remote="false" data-toggle="modal" data-target="#dca-chart" class="btn btn-mini btn-ptmagic"><i class="fa fa-plus"></i></a></td>
               </tr>
             }
