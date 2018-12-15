@@ -3,29 +3,35 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text;
 
-namespace Core.Main.DataObjects.PTMagicData {
+namespace Core.Main.DataObjects.PTMagicData
+{
   #region Settings Objects
-  public class GeneralSettingsWrapper {
+  public class GeneralSettingsWrapper
+  {
     public GeneralSettings GeneralSettings { get; set; }
   }
 
-  public class AnalyzerSettingsWrapper {
+  public class AnalyzerSettingsWrapper
+  {
     public AnalyzerSettings AnalyzerSettings { get; set; }
   }
 
-  public class SecureSettingsWrapper {
+  public class SecureSettingsWrapper
+  {
     public SecureSettings SecureSettings { get; set; }
   }
 
   #region GeneralSettings
-  public class GeneralSettings {
+  public class GeneralSettings
+  {
     public Application Application { get; set; }
     public Monitor Monitor { get; set; }
     public Backup Backup { get; set; }
     public Telegram Telegram { get; set; }
   }
 
-  public class Application {
+  public class Application
+  {
     public bool IsEnabled { get; set; } = true;
     public bool TestMode { get; set; } = true;
     public bool EnableBetaFeatures { get; set; } = false;
@@ -44,7 +50,8 @@ namespace Core.Main.DataObjects.PTMagicData {
     public string CoinMarketCapAPIKey { get; set; }
   }
 
-  public class Monitor {
+  public class Monitor
+  {
     private string _rootUrl = "/";
 
     public bool IsPasswordProtected { get; set; } = true;
@@ -65,23 +72,28 @@ namespace Core.Main.DataObjects.PTMagicData {
     public string LinkPlatform { get; set; } = "TradingView";
     public string DefaultDCAMode { get; set; } = "Simple";
 
-    public string RootUrl {
-      get {
+    public string RootUrl
+    {
+      get
+      {
         if (!_rootUrl.EndsWith("/")) _rootUrl += "/";
         return _rootUrl;
       }
-      set {
+      set
+      {
         _rootUrl = value;
       }
     }
   }
 
-  public class Backup {
+  public class Backup
+  {
     public bool IsEnabled { get; set; } = true;
     public int MaxHours { get; set; } = 48;
   }
 
-  public class Telegram {
+  public class Telegram
+  {
     public bool IsEnabled { get; set; } = false;
     public string BotToken { get; set; }
     public Int64 ChatId { get; set; }
@@ -90,20 +102,23 @@ namespace Core.Main.DataObjects.PTMagicData {
   #endregion
 
   #region AnalyzerSettings
-  public class AnalyzerSettings {
+  public class AnalyzerSettings
+  {
     public MarketAnalyzer MarketAnalyzer { get; set; }
     public List<GlobalSetting> GlobalSettings { get; set; }
     public List<SingleMarketSetting> SingleMarketSettings { get; set; }
   }
 
-  public class MarketAnalyzer {
+  public class MarketAnalyzer
+  {
     public int StoreDataMaxHours { get; set; }
     public int IntervalMinutes { get; set; } = 5;
     public bool ExcludeMainCurrency { get; set; } = true;
     public List<MarketTrend> MarketTrends { get; set; }
   }
 
-  public class MarketTrend {
+  public class MarketTrend
+  {
     public string Name { get; set; }
     public string Platform { get; set; } = "Exchange";
 
@@ -130,7 +145,8 @@ namespace Core.Main.DataObjects.PTMagicData {
     public bool ExcludeMainCurrency { get; set; } = true;
   }
 
-  public class GlobalSetting {
+  public class GlobalSetting
+  {
     public string SettingName { get; set; }
     public string TriggerConnection { get; set; } = "AND";
     public List<Trigger> Triggers { get; set; } = new List<Trigger>();
@@ -139,7 +155,8 @@ namespace Core.Main.DataObjects.PTMagicData {
     public Dictionary<string, object> IndicatorsProperties { get; set; } = new Dictionary<string, object>();
   }
 
-  public class SingleMarketSetting {
+  public class SingleMarketSetting
+  {
     public string SettingName { get; set; }
     public string TriggerConnection { get; set; } = "AND";
 
@@ -170,7 +187,8 @@ namespace Core.Main.DataObjects.PTMagicData {
     public Dictionary<string, object> IndicatorsProperties { get; set; } = new Dictionary<string, object>();
   }
 
-  public class Trigger {
+  public class Trigger
+  {
     [DefaultValue("")]
     public string MarketTrendName { get; set; } = "";
 
@@ -193,7 +211,8 @@ namespace Core.Main.DataObjects.PTMagicData {
     public int AgeDaysLowerThan { get; set; } = 0;
   }
 
-  public class OffTrigger {
+  public class OffTrigger
+  {
     [DefaultValue("")]
     public string MarketTrendName { get; set; } = "";
 
@@ -218,7 +237,8 @@ namespace Core.Main.DataObjects.PTMagicData {
   #endregion
 
   #region SecureSettings
-  public class SecureSettings {
+  public class SecureSettings
+  {
     public string MonitorPassword { get; set; } = "";
   }
   #endregion
@@ -226,7 +246,8 @@ namespace Core.Main.DataObjects.PTMagicData {
   #endregion
 
   #region Market Analyzer Objects
-  public class Market {
+  public class Market
+  {
     public int Position;
     public string Name = "";
     public string Symbol = "";
@@ -236,13 +257,15 @@ namespace Core.Main.DataObjects.PTMagicData {
     public double MainCurrencyPriceUSD = 0.0;
   }
 
-  public class MarketTick {
+  public class MarketTick
+  {
     public double Volume24h = 0.0;
     public double Price = 0.0;
     public DateTime Time = Constants.confMinDate;
   }
 
-  public class MarketTrendChange {
+  public class MarketTrendChange
+  {
     public string MarketTrendName = "";
     public string Market = "";
     public double LastPrice = 0.0;
@@ -252,7 +275,8 @@ namespace Core.Main.DataObjects.PTMagicData {
     public DateTime TrendDateTime = Constants.confMinDate;
   }
 
-  public class MarketInfo {
+  public class MarketInfo
+  {
     public string Name = "";
     public DateTime FirstSeen = Constants.confMinDate;
     public DateTime LastSeen = Constants.confMaxDate;
@@ -260,7 +284,8 @@ namespace Core.Main.DataObjects.PTMagicData {
   #endregion
 
   #region Summary Objects
-  public class Summary {
+  public class Summary
+  {
     public string Version { get; set; } = "";
     public DateTime LastRuntime { get; set; } = Constants.confMinDate;
     public int LastRuntimeSeconds { get; set; } = 0;
@@ -298,19 +323,22 @@ namespace Core.Main.DataObjects.PTMagicData {
     public List<StrategySummary> DCASellStrategies { get; set; } = new List<StrategySummary>();
   }
 
-  public class StrategySummary {
+  public class StrategySummary
+  {
     public string Name { get; set; } = "";
     public double Value { get; set; } = 0;
   }
 
-  public class GlobalSettingSummary {
+  public class GlobalSettingSummary
+  {
     public string SettingName { get; set; }
     public DateTime SwitchDateTime { get; set; }
     public int ActiveSeconds { get; set; } = 0;
     public Dictionary<string, MarketTrendChange> MarketTrendChanges { get; set; } = new Dictionary<string, MarketTrendChange>();
   }
 
-  public class MarketPairSummary {
+  public class MarketPairSummary
+  {
     public bool IsTradingEnabled { get; set; } = false;
     public bool IsSOMActive { get; set; } = false;
     public bool IsDCAEnabled { get; set; } = false;
@@ -330,12 +358,14 @@ namespace Core.Main.DataObjects.PTMagicData {
   #endregion
 
   #region Transaction Objects
-  public class Transaction {
+  public class Transaction
+  {
     public string GUID { get; set; } = "";
     public DateTime UTCDateTime { get; set; } = Constants.confMinDate;
     public double Amount { get; set; } = 0.0;
 
-    public DateTime GetLocalDateTime(string offset) {
+    public DateTime GetLocalDateTime(string offset)
+    {
       DateTimeOffset result = this.UTCDateTime;
 
       // Convert UTC sales time to local offset time
@@ -348,14 +378,16 @@ namespace Core.Main.DataObjects.PTMagicData {
   #endregion
 
   #region SingleMarketSettingSummary Objects
-  public class SingleMarketSettingSummary {
+  public class SingleMarketSettingSummary
+  {
     public string Market { get; set; } = "";
     public DateTime ActivationDateTimeUTC { get; set; } = Constants.confMinDate;
     public SingleMarketSetting SingleMarketSetting { get; set; } = null;
     public TriggerSnapshot TriggerSnapshot { get; set; } = null;
   }
 
-  public class TriggerSnapshot {
+  public class TriggerSnapshot
+  {
     public Dictionary<int, double> RelevantTriggers { get; set; } = new Dictionary<int, double>();
     public List<string> MatchedTriggersContent { get; set; } = new List<string>();
     public double LastPrice { get; set; } = 0;
@@ -365,14 +397,16 @@ namespace Core.Main.DataObjects.PTMagicData {
 
   #region Profit Trailer JSON Objects
 
-  public class PTData {
+  public class PTData
+  {
     public List<sellLogData> SellLogData { get; set; } = new List<sellLogData>();
     public List<dcaLogData> DCALogData { get; set; } = new List<dcaLogData>();
     public List<dcaLogData> GainLogData { get; set; } = new List<dcaLogData>();
     public List<buyLogData> bbBuyLogData { get; set; } = new List<buyLogData>();
   }
 
-  public class sellLogData {
+  public class sellLogData
+  {
     public double soldAmount { get; set; }
     public SoldDate soldDate { get; set; }
     public int boughtTimes { get; set; }
@@ -382,7 +416,8 @@ namespace Core.Main.DataObjects.PTMagicData {
     public double currentPrice { get; set; }
   }
 
-  public class SellLogData {
+  public class SellLogData
+  {
     public double SoldAmount { get; set; }
     public DateTime SoldDate { get; set; }
     public int BoughtTimes { get; set; }
@@ -395,30 +430,35 @@ namespace Core.Main.DataObjects.PTMagicData {
     public double SoldValue { get; set; }
   }
 
-  public class SoldDate {
+  public class SoldDate
+  {
     public Date date { get; set; }
     public Time time { get; set; }
   }
 
-  public class FirstBoughtDate {
+  public class FirstBoughtDate
+  {
     public Date date { get; set; }
     public Time time { get; set; }
   }
 
-  public class Date {
+  public class Date
+  {
     public int year { get; set; }
     public int month { get; set; }
     public int day { get; set; }
   }
 
-  public class Time {
+  public class Time
+  {
     public int hour { get; set; }
     public int minute { get; set; }
     public int second { get; set; }
     public int nano { get; set; }
   }
 
-  public class AverageCalculator {
+  public class AverageCalculator
+  {
     public double totalCost { get; set; }
     public double totalAmount { get; set; }
     public double totalAmountWithSold { get; set; }
@@ -430,7 +470,8 @@ namespace Core.Main.DataObjects.PTMagicData {
     public double fee { get; set; }
   }
 
-  public class PTStrategy {
+  public class PTStrategy
+  {
     public string type { get; set; }
     public string name { get; set; }
     public double entryValue { get; set; }
@@ -442,7 +483,8 @@ namespace Core.Main.DataObjects.PTMagicData {
     public string positive { get; set; }
   }
 
-  public class dcaLogData {
+  public class dcaLogData
+  {
     public int boughtTimes { get; set; } = 0;
     public string market { get; set; }
     public string positive { get; set; }
@@ -461,7 +503,8 @@ namespace Core.Main.DataObjects.PTMagicData {
     public List<PTStrategy> sellStrategies { get; set; }
   }
 
-  public class Strategy {
+  public class Strategy
+  {
     public string Type { get; set; }
     public string Name { get; set; }
     public double EntryValue { get; set; }
@@ -474,7 +517,8 @@ namespace Core.Main.DataObjects.PTMagicData {
     public bool IsTrue { get; set; }
   }
 
-  public class DCALogData {
+  public class DCALogData
+  {
     public int BoughtTimes { get; set; }
     public double CurrentLowBBValue { get; set; }
     public double CurrentHighBBValue { get; set; }
@@ -497,7 +541,8 @@ namespace Core.Main.DataObjects.PTMagicData {
     public List<Strategy> SellStrategies { get; set; } = new List<Strategy>();
   }
 
-  public class buyLogData {
+  public class buyLogData
+  {
     public string market { get; set; }
     public string positive { get; set; }
     public double BBLow { get; set; }
@@ -512,7 +557,8 @@ namespace Core.Main.DataObjects.PTMagicData {
     public List<PTStrategy> buyStrategies { get; set; }
   }
 
-  public class BuyLogData {
+  public class BuyLogData
+  {
     public double CurrentLowBBValue { get; set; }
     public double CurrentHighBBValue { get; set; }
     public double BBTrigger { get; set; }

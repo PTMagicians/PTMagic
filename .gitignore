@@ -8,8 +8,9 @@ _[Dd]ata
 _[Rr]eleases
 _backups
 LocalProfitTrailer
-PTMagic/settings.*.json
+PTMagic/settings.*
 Monitor/appsettings.json
+Monitor/Monitor
 Release/
 
 

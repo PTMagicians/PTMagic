@@ -8,22 +8,27 @@ using Core.Main.DataObjects;
 using Core.Main.DataObjects.PTMagicData;
 using System.Globalization;
 
-namespace Monitor.Pages {
-  public class TransactionsModel : _Internal.BasePageModelSecure {
+namespace Monitor.Pages
+{
+  public class TransactionsModel : _Internal.BasePageModelSecure
+  {
     public TransactionData TransactionData = null;
     public string ValidationMessage = "";
 
-    public void OnGet() {
+    public void OnGet()
+    {
       base.Init();
 
       BindData();
     }
 
-    private void BindData() {
+    private void BindData()
+    {
       TransactionData = new TransactionData(PTMagicBasePath);
     }
 
-    public void OnPost() {
+    public void OnPost()
+    {
       base.Init();
 
       BindData();
@@ -31,11 +36,13 @@ namespace Monitor.Pages {
       SaveTransaction();
     }
 
-    private void SaveTransaction() {
+    private void SaveTransaction()
+    {
       double transactionAmount = 0;
       DateTimeOffset transactionDateTime = Constants.confMinDate;
 
-      try {
+      try
+      {
         transactionAmount = SystemHelper.TextToDouble(HttpContext.Request.Form["Transaction_Amount"], transactionAmount, "en-US");
         //transactionDateTime = DateTimeOffset.Parse(HttpContext.Request.Form["Transaction_Date"] + " " + HttpContext.Request.Form["Transaction_Time"], CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
         DateTime tmp = DateTime.Parse(HttpContext.Request.Form["Transaction_Date"] + " " + HttpContext.Request.Form["Transaction_Time"], CultureInfo.InvariantCulture, DateTimeStyles.None);
@@ -43,14 +50,21 @@ namespace Monitor.Pages {
         // Convert local offset time to UTC
         TimeSpan offsetTimeSpan = TimeSpan.Parse(PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
         transactionDateTime = new DateTimeOffset(tmp, offsetTimeSpan);
-      } catch { }
+      }
+      catch { }
 
-      if (transactionAmount == 0) {
+      if (transactionAmount == 0)
+      {
         ValidationMessage = "Please enter a valid amount in the format 123.45!";
-      } else {
-        if (transactionDateTime == Constants.confMinDate) {
+      }
+      else
+      {
+        if (transactionDateTime == Constants.confMinDate)
+        {
           ValidationMessage = "Please select a valid date and time!";
-        } else {
+        }
+        else
+        {
           TransactionData.Transactions.Add(new Transaction() { GUID = Guid.NewGuid().ToString(), Amount = transactionAmount, UTCDateTime = transactionDateTime.UtcDateTime });
           TransactionData.SaveTransactions(PTMagicBasePath);
 

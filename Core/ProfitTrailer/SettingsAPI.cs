@@ -13,12 +13,16 @@ using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
 using Newtonsoft.Json;
 
-namespace Core.ProfitTrailer {
-  public static class SettingsAPI {
-    public static List<string> GetPropertyLinesFromAPI(string ptFileName, PTMagicConfiguration systemConfiguration, LogHelper log) {
+namespace Core.ProfitTrailer
+{
+  public static class SettingsAPI
+  {
+    public static List<string> GetPropertyLinesFromAPI(string ptFileName, PTMagicConfiguration systemConfiguration, LogHelper log)
+    {
       List<string> result = null;
 
-      try {
+      try
+      {
         ServicePointManager.Expect100Continue = true;
         ServicePointManager.DefaultConnectionLimit = 9999;
         ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
@@ -33,7 +37,8 @@ namespace Core.ProfitTrailer {
         byte[] formData = Encoding.ASCII.GetBytes(query);
         httpWebRequest.ContentLength = formData.Length;
 
-        using (Stream stream = httpWebRequest.GetRequestStream()) {
+        using (Stream stream = httpWebRequest.GetRequestStream())
+        {
           stream.Write(formData, 0, formData.Length);
         }
 
@@ -48,33 +53,44 @@ namespace Core.ProfitTrailer {
         //}
 
         HttpWebResponse httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-        using (StreamReader streamReader = new StreamReader(httpResponse.GetResponseStream())) {
+        using (StreamReader streamReader = new StreamReader(httpResponse.GetResponseStream()))
+        {
           string jsonResult = streamReader.ReadToEnd();
           result = JsonConvert.DeserializeObject<List<string>>(jsonResult);
         }
-      } catch (WebException ex) {
+      }
+      catch (WebException ex)
+      {
         // Manual error handling as PT doesn't seem to provide a proper error response...
-        if (ex.Message.IndexOf("401") > -1) {
+        if (ex.Message.IndexOf("401") > -1)
+        {
           log.DoLogError("Loading " + ptFileName + ".properties failed for setting '" + systemConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName + "': Unauthorized! The specified Profit Trailer license key '" + systemConfiguration.GetProfitTrailerLicenseKeyMasked() + "' is invalid!");
-        } else {
+        }
+        else
+        {
           log.DoLogCritical("Loading " + ptFileName + ".properties failed for setting '" + systemConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName + "': " + ex.Message, ex);
         }
 
-      } catch (Exception ex) {
+      }
+      catch (Exception ex)
+      {
         log.DoLogCritical("Loading " + ptFileName + ".properties failed for setting '" + systemConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName + "': " + ex.Message, ex);
       }
 
       return result;
     }
 
-    public static void SendPropertyLinesToAPI(string ptFileName, List<string> lines, PTMagicConfiguration systemConfiguration, LogHelper log) {
+    public static void SendPropertyLinesToAPI(string ptFileName, List<string> lines, PTMagicConfiguration systemConfiguration, LogHelper log)
+    {
       int retryCount = 0;
       int maxRetries = 3;
       bool transferCompleted = false;
       bool transferCanceled = false;
 
-      while (!transferCompleted && !transferCanceled) {
-        try {
+      while (!transferCompleted && !transferCanceled)
+      {
+        try
+        {
           ServicePointManager.Expect100Continue = true;
           ServicePointManager.DefaultConnectionLimit = 9999;
           ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
@@ -94,7 +110,8 @@ namespace Core.ProfitTrailer {
           byte[] formData = Encoding.ASCII.GetBytes(query);
           httpWebRequest.ContentLength = formData.Length;
 
-          using (Stream stream = httpWebRequest.GetRequestStream()) {
+          using (Stream stream = httpWebRequest.GetRequestStream())
+          {
             stream.Write(formData, 0, formData.Length);
           }
           log.DoLogDebug("Built POST request for " + ptFileName + ".properties.");
@@ -117,34 +134,51 @@ namespace Core.ProfitTrailer {
           log.DoLogDebug(ptFileName + ".properties response object closed.");
           transferCompleted = true;
 
-        } catch (WebException ex) {
+        }
+        catch (WebException ex)
+        {
           // Manual error handling as PT doesn't seem to provide a proper error response...
-          if (ex.Message.IndexOf("401") > -1) {
+          if (ex.Message.IndexOf("401") > -1)
+          {
             log.DoLogError("Saving " + ptFileName + ".properties failed for setting '" + systemConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName + "': Unauthorized! The specified Profit Trailer license key '" + systemConfiguration.GetProfitTrailerLicenseKeyMasked() + "' is invalid!");
             transferCanceled = true;
-          } else if (ex.Message.IndexOf("timed out") > -1) {
+          }
+          else if (ex.Message.IndexOf("timed out") > -1)
+          {
             // Handle timeout seperately
             retryCount++;
-            if (retryCount <= maxRetries) {
+            if (retryCount <= maxRetries)
+            {
               log.DoLogError("Saving " + ptFileName + ".properties failed for setting '" + systemConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName + "': Timeout! Starting retry number " + retryCount + "/" + maxRetries.ToString() + "!");
-            } else {
+            }
+            else
+            {
               transferCanceled = true;
               log.DoLogError("Saving " + ptFileName + ".properties failed for setting '" + systemConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName + "': Timeout! Canceling transfer after " + maxRetries.ToString() + " failed retries.");
             }
-          } else {
+          }
+          else
+          {
             log.DoLogCritical("Saving " + ptFileName + ".properties failed for setting '" + systemConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName + "': " + ex.Message, ex);
             transferCanceled = true;
           }
 
-        } catch (TimeoutException ex) {
+        }
+        catch (TimeoutException ex)
+        {
           retryCount++;
-          if (retryCount <= maxRetries) {
+          if (retryCount <= maxRetries)
+          {
             log.DoLogError("Saving " + ptFileName + ".properties failed for setting '" + systemConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName + "': Timeout (" + ex.Message + ")! Starting retry number " + retryCount + "/" + maxRetries.ToString() + "!");
-          } else {
+          }
+          else
+          {
             transferCanceled = true;
             log.DoLogError("Saving " + ptFileName + ".properties failed for setting '" + systemConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName + "': Timeout (" + ex.Message + ")! Canceling transfer after " + maxRetries.ToString() + " failed retries.");
           }
-        } catch (Exception ex) {
+        }
+        catch (Exception ex)
+        {
           log.DoLogCritical("Saving " + ptFileName + ".properties failed for setting '" + systemConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName + "': " + ex.Message, ex);
           transferCanceled = true;
         }

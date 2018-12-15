@@ -7,23 +7,29 @@ using Newtonsoft.Json;
 using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
 
-namespace Core.Main {
+namespace Core.Main
+{
 
-  public class PTMagicConfiguration {
+  public class PTMagicConfiguration
+  {
     private GeneralSettings _generalSettings = null;
     private AnalyzerSettings _analyzerSettings = null;
     private SecureSettings _secureSettings = null;
 
-    public PTMagicConfiguration() {
+    public PTMagicConfiguration()
+    {
       LoadSettings(Directory.GetCurrentDirectory());
     }
 
-    public PTMagicConfiguration(string basePath) {
+    public PTMagicConfiguration(string basePath)
+    {
       LoadSettings(basePath);
     }
 
-    private void LoadSettings(string basePath) {
-      if (!basePath.EndsWith(Path.DirectorySeparatorChar)) {
+    private void LoadSettings(string basePath)
+    {
+      if (!basePath.EndsWith(Path.DirectorySeparatorChar))
+      {
         basePath += Path.DirectorySeparatorChar;
       }
 
@@ -33,27 +39,33 @@ namespace Core.Main {
       AnalyzerSettingsWrapper asw = JsonConvert.DeserializeObject<AnalyzerSettingsWrapper>(File.ReadAllText(basePath + "settings.analyzer.json"));
       _analyzerSettings = asw.AnalyzerSettings;
 
-      if (!_generalSettings.Application.ProfitTrailerPath.EndsWith(Path.DirectorySeparatorChar)) {
+      if (!_generalSettings.Application.ProfitTrailerPath.EndsWith(Path.DirectorySeparatorChar))
+      {
         _generalSettings.Application.ProfitTrailerPath += Path.DirectorySeparatorChar;
       }
 
-      if (!_generalSettings.Application.ProfitTrailerMonitorURL.EndsWith("/")) {
+      if (!_generalSettings.Application.ProfitTrailerMonitorURL.EndsWith("/"))
+      {
         _generalSettings.Application.ProfitTrailerMonitorURL += "/";
       }
 
-      if (File.Exists(basePath + "settings.secure.json")) {
+      if (File.Exists(basePath + "settings.secure.json"))
+      {
         SecureSettingsWrapper ssw = JsonConvert.DeserializeObject<SecureSettingsWrapper>(File.ReadAllText(basePath + "settings.secure.json"));
         _secureSettings = ssw.SecureSettings;
       }
     }
 
-    public string GetProfitTrailerLicenseKeyMasked() {
+    public string GetProfitTrailerLicenseKeyMasked()
+    {
       string result = "";
 
-      if (!this.GeneralSettings.Application.ProfitTrailerLicense.Equals("")) {
+      if (!this.GeneralSettings.Application.ProfitTrailerLicense.Equals(""))
+      {
         result = this.GeneralSettings.Application.ProfitTrailerLicense.Substring(0, 4);
 
-        for (int i = 1; i < this.GeneralSettings.Application.ProfitTrailerLicense.Length - 8; i++) {
+        for (int i = 1; i < this.GeneralSettings.Application.ProfitTrailerLicense.Length - 8; i++)
+        {
           result += "*";
         }
 
@@ -63,26 +75,33 @@ namespace Core.Main {
       return result;
     }
 
-    public GeneralSettings GeneralSettings {
-      get {
+    public GeneralSettings GeneralSettings
+    {
+      get
+      {
         return _generalSettings;
       }
     }
 
-    public AnalyzerSettings AnalyzerSettings {
-      get {
+    public AnalyzerSettings AnalyzerSettings
+    {
+      get
+      {
         return _analyzerSettings;
       }
     }
 
-    public SecureSettings SecureSettings {
-      get {
+    public SecureSettings SecureSettings
+    {
+      get
+      {
         if (_secureSettings == null) _secureSettings = new SecureSettings();
         return _secureSettings;
       }
     }
 
-    public void WriteGeneralSettings(string basePath) {
+    public void WriteGeneralSettings(string basePath)
+    {
       GeneralSettingsWrapper gsWrapper = new GeneralSettingsWrapper();
       gsWrapper.GeneralSettings = this.GeneralSettings;
 
@@ -91,7 +110,8 @@ namespace Core.Main {
       FileHelper.WriteTextToFile(basePath, "settings.general.json", JsonConvert.SerializeObject(gsWrapper, Formatting.Indented));
     }
 
-    public void WriteAnalyzerSettings(string basePath) {
+    public void WriteAnalyzerSettings(string basePath)
+    {
       AnalyzerSettingsWrapper asWrapper = new AnalyzerSettingsWrapper();
       asWrapper.AnalyzerSettings = this.AnalyzerSettings;
 
@@ -104,7 +124,8 @@ namespace Core.Main {
       FileHelper.WriteTextToFile(basePath, "settings.analyzer.json", JsonConvert.SerializeObject(asWrapper, Formatting.Indented, settings));
     }
 
-    public void WriteSecureSettings(string password, string basePath) {
+    public void WriteSecureSettings(string password, string basePath)
+    {
       string passwordEncrypted = EncryptionHelper.Encrypt(password);
 
       this.SecureSettings.MonitorPassword = passwordEncrypted;

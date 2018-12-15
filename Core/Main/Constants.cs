@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Core.Main {
-  public static class Constants {
+namespace Core.Main
+{
+  public static class Constants
+  {
     // Minimales Datum (für NULL)
     public static DateTime confMinDate = (DateTime)System.Data.SqlTypes.SqlDateTime.MinValue;
     public static DateTime confMaxDate = (DateTime)System.Data.SqlTypes.SqlDateTime.MaxValue;

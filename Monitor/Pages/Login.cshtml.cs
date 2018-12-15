@@ -4,29 +4,37 @@ using Microsoft.AspNetCore.Mvc;
 using Core.Main;
 using Core.Helper;
 
-namespace Monitor.Pages {
-  public class LoginModel : _Internal.BasePageModel {
+namespace Monitor.Pages
+{
+  public class LoginModel : _Internal.BasePageModel
+  {
     public string CurrentPassword = "";
 
-    public void OnGet() {
+    public void OnGet()
+    {
       base.PreInit();
 
       CurrentPassword = PTMagicConfiguration.SecureSettings.MonitorPassword;
-      if (CurrentPassword.Equals("")) {
+      if (CurrentPassword.Equals(""))
+      {
         Response.Redirect(PTMagicConfiguration.GeneralSettings.Monitor.RootUrl + "SetupPassword");
       }
     }
 
-    public void OnPost(string password, string cbRememberMe) {
+    public void OnPost(string password, string cbRememberMe)
+    {
       base.PreInit();
 
       string encryptedPassword = EncryptionHelper.Encrypt(password);
 
-      if (encryptedPassword.Equals(PTMagicConfiguration.SecureSettings.MonitorPassword)) {
+      if (encryptedPassword.Equals(PTMagicConfiguration.SecureSettings.MonitorPassword))
+      {
         HttpContext.Session.SetString("LoggedIn" + PTMagicConfiguration.GeneralSettings.Monitor.Port.ToString(), DateTime.Now.ToUniversalTime().ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'"));
 
-        if (cbRememberMe != null) {
-          if (cbRememberMe.Equals("on", StringComparison.InvariantCultureIgnoreCase)) {
+        if (cbRememberMe != null)
+        {
+          if (cbRememberMe.Equals("on", StringComparison.InvariantCultureIgnoreCase))
+          {
             CookieOptions cookieOption = new CookieOptions();
             cookieOption.Expires = DateTime.Now.AddYears(1);
 
