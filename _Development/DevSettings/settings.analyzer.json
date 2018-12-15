@@ -102,7 +102,7 @@
         "Triggers": [
           {
             "MarketTrendName": "15m",
-            "MaxChange": 1
+            "MaxChange": 0
           },
 		  {
             "MarketTrendName": "1h",
@@ -174,7 +174,7 @@
         "Triggers": [
           {
             "MarketTrendName": "1h",
-            "MinChange": -1
+            "MinChange": 0
           },
           {
             "MarketTrendName": "12h",
@@ -207,7 +207,7 @@
         "Triggers": [
           {
             "MarketTrendName": "1h",
-            "MinChange": 0
+            "MinChange": 1
           },
           {
             "MarketTrendName": "12h",
