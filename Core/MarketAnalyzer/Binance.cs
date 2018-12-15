@@ -68,24 +68,37 @@ namespace Core.MarketAnalyzer
             foreach (Newtonsoft.Json.Linq.JObject currencyTicker in jsonArray)
             {
               string marketName = currencyTicker["symbol"].ToString();
-              if (marketName.EndsWith(mainMarket, StringComparison.InvariantCultureIgnoreCase))
+              //New variables for filtering out bad markets.
+              float marketLastPrice = currencyTicker["lastPrice"].ToObject<float>();
+              float marketVolume = currencyTicker["volume"].ToObject<float>(); 
+               
+            if (marketName.EndsWith(mainMarket, StringComparison.InvariantCultureIgnoreCase))
               {
+                //Try and filter out markets that were delisted to avoid trending data being effected
+                if(marketLastPrice > 0 && marketVolume > 0 )
+                {
+                  
+                  // Set last values in case any error occurs
+                  lastMarket = marketName;
+                  lastTicker = currencyTicker;
 
-                // Set last values in case any error occurs
-                lastMarket = marketName;
-                lastTicker = currencyTicker;
+                  Market market = new Market();
+                  market.Position = markets.Count + 1;
+                  market.Name = marketName;
+                  market.Symbol = currencyTicker["symbol"].ToString();
+                  market.Price = SystemHelper.TextToDouble(currencyTicker["lastPrice"].ToString(), 0, "en-US");
+                  market.Volume24h = SystemHelper.TextToDouble(currencyTicker["quoteVolume"].ToString(), 0, "en-US");
+                  market.MainCurrencyPriceUSD = mainCurrencyPrice;
 
-                Market market = new Market();
-                market.Position = markets.Count + 1;
-                market.Name = marketName;
-                market.Symbol = currencyTicker["symbol"].ToString();
-                market.Price = SystemHelper.TextToDouble(currencyTicker["lastPrice"].ToString(), 0, "en-US");
-                market.Volume24h = SystemHelper.TextToDouble(currencyTicker["quoteVolume"].ToString(), 0, "en-US");
-                market.MainCurrencyPriceUSD = mainCurrencyPrice;
+                  markets.Add(market.Name, market);
 
-                markets.Add(market.Name, market);
-
-                result.Add(market.Name);
+                  result.Add(market.Name);
+                }
+                else
+                {
+                  //Let the user know that the problem market was ignored.
+                  log.DoLogInfo("Binance - Ignoring bad market data for " + marketName);
+                }
               }
             }
 
