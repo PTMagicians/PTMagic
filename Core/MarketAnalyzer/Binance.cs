@@ -68,8 +68,13 @@ namespace Core.MarketAnalyzer
             foreach (Newtonsoft.Json.Linq.JObject currencyTicker in jsonArray)
             {
               string marketName = currencyTicker["symbol"].ToString();
+              //New variables for filtering out bad markets
+              float marketLastPrice = currencyTicker["lastPrice"].ToObject<float>();
+              float marketVolume = currencyTicker["volume"].ToObject<float>();
               if (marketName.EndsWith(mainMarket, StringComparison.InvariantCultureIgnoreCase))
               {
+                if(marketLastPrice > 0 && marketVolume > 0 )
+                {
 
                 // Set last values in case any error occurs
                 lastMarket = marketName;
@@ -86,6 +91,12 @@ namespace Core.MarketAnalyzer
                 markets.Add(market.Name, market);
 
                 result.Add(market.Name);
+                }
+                else
+                {
+                  //Let the user know that the problem market was ignored.
+                  log.DoLogInfo("Binance - Ignoring bad market data for " + marketName);
+                }
               }
             }
 
