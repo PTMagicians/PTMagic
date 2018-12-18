@@ -2095,18 +2095,11 @@ namespace Core.Main
           // Save current PT properties to API (Valid for PT 2.x and above)
           this.Log.DoLogInfo("Saving properties using API...");
 
-          // Send Pairs.properties
-          if (!this.PTMagicConfiguration.GeneralSettings.Application.TestMode) SettingsAPI.SendPropertyLinesToAPI("PAIRS", this.PairsLines, this.PTMagicConfiguration, this.Log);
+          // Send all Properties
+          if (!this.PTMagicConfiguration.GeneralSettings.Application.TestMode) SettingsAPI.SendPropertyLinesToAPI(this.PairsLines, this.DCALines, this.IndicatorsLines, this.PTMagicConfiguration, this.Log);
 
-          // Send DCA.properties
-          if (!this.PTMagicConfiguration.GeneralSettings.Application.TestMode) SettingsAPI.SendPropertyLinesToAPI("DCA", this.DCALines, this.PTMagicConfiguration, this.Log);
-
-          // Send Indicators.properties
-          if (!this.PTMagicConfiguration.GeneralSettings.Application.TestMode) SettingsAPI.SendPropertyLinesToAPI("INDICATORS", this.IndicatorsLines, this.PTMagicConfiguration, this.Log);
-
-          this.Log.DoLogInfo("All properties saved!");
+          this.Log.DoLogInfo("Properties saved!");
         }
-
       }
       else
       {
