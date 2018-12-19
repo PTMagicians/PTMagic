@@ -87,7 +87,7 @@ namespace Core.ProfitTrailer
           result = "SOM";
           break;
         case "max buy times":
-          result = "MAX";
+          result = "DCAMAX";
           break;
         case "max pairs":
           result = "PAIRS";
@@ -121,6 +121,9 @@ namespace Core.ProfitTrailer
           break;
         case "rebuy timeout":
           result = "TIMEOUT";
+          break;
+        case "MIN/MAX CHANGE PERC":
+          result = "MIN/MAX";
           break;
         default:
           break;

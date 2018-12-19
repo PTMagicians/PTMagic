@@ -3,7 +3,7 @@
 - Experienced users with C# and ASP.NET Core may contribute pull requests to this project following the Coding Style below
 
 ## What we expect from users who want to contribute a pull request
-- Read the file [_Development/README.md](https://github.com/Legedric/ptmagic/blob/master/_Development/README.md) and follow the instructions carefully
+- Read the file [_Development/README.md](https://github.com/PTMagicians/PTMagic/blob/master/_Development/README.md) and follow the instructions carefully
 - In depth knowledge of the project PT Magic and what it is supposed to do
 - In depth knowledge of the architecture, the different parts and layers of PT Magic
 
