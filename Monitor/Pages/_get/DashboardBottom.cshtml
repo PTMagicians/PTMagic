@@ -7,6 +7,45 @@
 <div class="row">
   <div class="col-md-6">
     <div class="card-box">
+      <h4 class="m-t-0 m-b-20 header-title"><b>Market Trends</b><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)MarketAnalyzer">more</a></small></h4>
+
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th class="text-right">Markets</th>
+            <th class="text-right">Timeframe</th>
+            <th class="text-right">Change</th>
+          </tr>
+        </thead>
+        <tbody>
+          @foreach (var marketTrend in Model.MarketTrends.OrderBy(mt => mt.TrendMinutes)) {
+            if (Model.Summary.MarketTrendChanges.ContainsKey(marketTrend.Name)) {
+              double trendChange = Model.Summary.MarketTrendChanges[marketTrend.Name].OrderByDescending(mtc => mtc.TrendDateTime).First().TrendChange;
+              string trendChangeOutput = trendChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
+
+              int marketCount = marketTrend.MaxMarkets;
+              string marketCountString = marketCount.ToString();
+
+              if (marketCount == 0) {
+                marketCountString = "All";
+              } else if (marketCount > Model.Summary.MarketSummary.Keys.Count && marketTrend.Platform.Equals("Exchange", StringComparison.InvariantCultureIgnoreCase)) {
+                marketCountString = Model.Summary.MarketSummary.Keys.Count.ToString();
+              }
+              <tr>
+                <td>@Core.Helper.SystemHelper.SplitCamelCase(marketTrend.Name)</td>
+                <td class="text-right">@marketCountString</td>
+                <td class="text-right">@Core.Helper.SystemHelper.GetProperDurationTime(marketTrend.TrendMinutes * 60, false)</td>
+                <td class="text-right text-autocolor">@trendChangeOutput%</td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card-box">
       <h4 class="m-t-0 m-b-20 header-title"><b>Sales Overview</b><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)SalesAnalyzer">more</a></small></h4>
       @{
         double totalProfit = Model.PTData.SellLog.Sum(s => s.Profit);
@@ -76,72 +115,33 @@
       </table>
     </div>
   </div>
-  <div class="col-md-6">
-    <div class="card-box">
-      <h4 class="m-t-0 m-b-20 header-title"><b>Market Trends</b><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)MarketAnalyzer">more</a></small></h4>
-
-      <table class="table table-sm">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th class="text-right">Markets</th>
-            <th class="text-right">Timeframe</th>
-            <th class="text-right">Change</th>
-          </tr>
-        </thead>
-        <tbody>
-          @foreach (var marketTrend in Model.MarketTrends.OrderBy(mt => mt.TrendMinutes)) {
-            if (Model.Summary.MarketTrendChanges.ContainsKey(marketTrend.Name)) {
-              double trendChange = Model.Summary.MarketTrendChanges[marketTrend.Name].OrderByDescending(mtc => mtc.TrendDateTime).First().TrendChange;
-              string trendChangeOutput = trendChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
-
-              int marketCount = marketTrend.MaxMarkets;
-              string marketCountString = marketCount.ToString();
-
-              if (marketCount == 0) {
-                marketCountString = "All";
-              } else if (marketCount > Model.Summary.MarketSummary.Keys.Count && marketTrend.Platform.Equals("Exchange", StringComparison.InvariantCultureIgnoreCase)) {
-                marketCountString = Model.Summary.MarketSummary.Keys.Count.ToString();
-              }
-              <tr>
-                <td>@Core.Helper.SystemHelper.SplitCamelCase(marketTrend.Name)</td>
-                <td class="text-right">@marketCountString</td>
-                <td class="text-right">@Core.Helper.SystemHelper.GetProperDurationTime(marketTrend.TrendMinutes * 60, false)</td>
-                <td class="text-right text-autocolor">@trendChangeOutput%</td>
-              </tr>
-            }
-          }
-        </tbody>
-      </table>
-    </div>
-  </div>
 
 </div>
 
 <div class="row">
-  <div class="col-md-6">
-    <div class="card-box" style="height:205px;">
-      @if (!Model.ProfitChartDataJSON.Equals("")) {
-        <div class="profit-chart">
-          <svg style="height:205px;width:100%"></svg>
-        </div>
-      } else {
-        <p>Not able to load graph, no sales data found.<br />If you still do not see a graph after you made your first sale, report an issue.</p>
-      }
-    </div>
-  </div>
-
-  <div class="col-md-6">
-    <div class="card-box" style="height:205px;">
+   <div class="col-md-6">
+    <div class="card-box" style="height:305px;">
       @if (!Model.TrendChartDataJSON.Equals("")) {
         <div class="trend-chart">
-          <svg style="height:205px;width:100%"></svg>
+          <svg style="height:305px;width:100%"></svg>
         </div>
       } else {
         <p>Not able to load graph, no market trend data found.<br />If you still do not see a graph after more than hour, report an issue.</p>
       }
     </div>
   </div>
+  <div class="col-md-6">
+    <div class="card-box" style="height:305px;">
+      @if (!Model.ProfitChartDataJSON.Equals("")) {
+        <div class="profit-chart">
+          <svg style="height:305px;width:100%"></svg>
+        </div>
+      } else {
+        <p>Not able to load graph, no sales data found.<br />If you still do not see a graph after you made your first sale, report an issue.</p>
+      }
+    </div>
+  </div>
+ 
 </div>
 
 <script type="text/javascript">

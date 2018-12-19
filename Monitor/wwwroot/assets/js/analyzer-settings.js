@@ -16,11 +16,11 @@ const GSStandardTriggerTemplate = ({ settingType, settingName, trendName, market
     </div>
     <div class="col-md-3">
       <input type="text" class="form-control" placeholder="MinChange in %" name="MarketAnalyzer_${settingType}_${settingName}|Trigger_${trendName}|MinChange" value="${minChange}">
-      <span class="help-block"><small>Min. trend change % - <a href="https://github.com/Legedric/ptmagic/wiki/MinChange-&-MaxChange" target="_blank">Read the Wiki!</a></small></span>
+      <span class="help-block"><small>Min. trend change % - <a href="https://github.com/PTMagicians/PTMagic/wiki/MinChange-&-MaxChange" target="_blank">Read the Wiki!</a></small></span>
     </div>
     <div class="col-md-3">
       <input type="text" class="form-control" placeholder="MaxChange in %" name="MarketAnalyzer_${settingType}_${settingName}|Trigger_${trendName}|MaxChange" value="${maxChange}">
-      <span class="help-block"><small>Max. trend change % - <a href="https://github.com/Legedric/ptmagic/wiki/MinChange-&-MaxChange" target="_blank">Read the Wiki!</a></small></span>
+      <span class="help-block"><small>Max. trend change % - <a href="https://github.com/PTMagicians/PTMagic/wiki/MinChange-&-MaxChange" target="_blank">Read the Wiki!</a></small></span>
     </div>
     <div class="col-md-2"><button class="btn btn-danger btn-custom btn-block text-uppercase waves-effect waves-light btn-remove-parentrow-${settingType}-${settingName}">Remove</button></div>
   </div>
@@ -42,11 +42,11 @@ const SMSStandardTriggerTemplate = ({ settingType, settingName, trendName, trigg
     </div>
     <div class="col-md-2">
       <input type="text" class="form-control" placeholder="MinChange in %" name="MarketAnalyzer_${settingType}_${settingName}|${triggerPrefix}Trigger_${trendName}|MinChange" value="${minChange}">
-      <span class="help-block"><small>Min. trend change % - <a href="https://github.com/Legedric/ptmagic/wiki/MinChange-&-MaxChange" target="_blank">Read the Wiki!</a></small></span>
+      <span class="help-block"><small>Min. trend change % - <a href="https://github.com/PTMagicians/PTMagic/wiki/MinChange-&-MaxChange" target="_blank">Read the Wiki!</a></small></span>
     </div>
     <div class="col-md-2">
       <input type="text" class="form-control" placeholder="MaxChange in %" name="MarketAnalyzer_${settingType}_${settingName}|${triggerPrefix}Trigger_${trendName}|MaxChange" value="${maxChange}">
-      <span class="help-block"><small>Max. trend change % - <a href="https://github.com/Legedric/ptmagic/wiki/MinChange-&-MaxChange" target="_blank">Read the Wiki!</a></small></span>
+      <span class="help-block"><small>Max. trend change % - <a href="https://github.com/PTMagicians/PTMagic/wiki/MinChange-&-MaxChange" target="_blank">Read the Wiki!</a></small></span>
     </div>
     <div class="col-md-2"><button class="btn btn-danger btn-custom btn-block text-uppercase waves-effect waves-light btn-remove-parentrow-${settingType}-${settingName}">Remove</button></div>
   </div>
@@ -103,7 +103,7 @@ const PropertyTemplate = ({ settingType, settingName, propertyType, propertyKey,
       <select name="MarketAnalyzer_${settingType}_${settingName}|${propertyType}Property_${propertyKeySimple}|ValueMode" class="form-control">
         ${valueModes}
       </select>
-      <span class="help-block"><small>Value mode - <a href="https://github.com/Legedric/ptmagic/wiki/Writing-Properties" target="_blank">Read the Wiki!</a></small></span>
+      <span class="help-block"><small>Value mode - <a href="https://github.com/PTMagicians/PTMagic/wiki/Writing-Properties" target="_blank">Read the Wiki!</a></small></span>
     </div>
     <div class="col-md-2"><button class="btn btn-danger btn-custom btn-block text-uppercase waves-effect waves-light btn-remove-parentrow-${settingType}-${settingName}">Remove</button></div>
   </div>
