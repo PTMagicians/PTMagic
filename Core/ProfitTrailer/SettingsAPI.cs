@@ -17,6 +17,35 @@ namespace Core.ProfitTrailer
 {
   public static class SettingsAPI
   {
+    public static void GetInitialProfitTrailerSettings(PTMagicConfiguration systemConfiguration)
+    {
+      string html = "";
+      string url = systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL + "api/data?token=" + systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken;
+
+      try
+      {
+        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+        request.AutomaticDecompression = DecompressionMethods.GZip;
+
+        WebResponse response = request.GetResponse();
+        Stream dataStream = response.GetResponseStream();
+        StreamReader reader = new StreamReader(dataStream);
+        html = reader.ReadToEnd();
+        reader.Close();
+        response.Close();
+
+      }
+      catch (System.Exception)
+      {
+        throw;
+      }
+
+      dynamic json = JsonConvert.DeserializeObject(html);
+
+      systemConfiguration.GeneralSettings.Application.Exchange = json.exchange;
+      systemConfiguration.GeneralSettings.Application.TimezoneOffset = json.timeZoneOffset;
+      systemConfiguration.GeneralSettings.Application.StartBalance = json.startBalance;
+    }
     public static List<string> GetPropertyLinesFromAPI(string ptFileName, PTMagicConfiguration systemConfiguration, LogHelper log)
     {
       List<string> result = null;

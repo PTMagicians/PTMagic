@@ -35,17 +35,17 @@ namespace Core.Main.DataObjects.PTMagicData
     public bool IsEnabled { get; set; } = true;
     public bool TestMode { get; set; } = true;
     public bool EnableBetaFeatures { get; set; } = false;
-    public int ProfitTrailerMajorVersion { get; set; } = 1;
     public string ProfitTrailerPath { get; set; }
-    public string ProfitTrailerLicense { get; set; } = "";
+    public string ProfitTrailerLicense { get; set; }
+    public string ProfitTrailerServerAPIToken { get; set; }
     public string ProfitTrailerMonitorURL { get; set; } = "http://localhost:8081/";
     public string ProfitTrailerDefaultSettingName { get; set; } = "default";
     public bool AlwaysLoadDefaultBeforeSwitch { get; set; } = true;
     public int FloodProtectionMinutes { get; set; } = 15;
     public string Exchange { get; set; }
-    public double StartBalance { get; set; } = 0;
+    public double StartBalance { get; set; }
     public string InstanceName { get; set; } = "PT Magic";
-    public string TimezoneOffset { get; set; } = "+0:00";
+    public string TimezoneOffset { get; set; }
     public string MainFiatCurrency { get; set; } = "USD";
     public string CoinMarketCapAPIKey { get; set; }
   }
@@ -316,7 +316,6 @@ namespace Core.Main.DataObjects.PTMagicData
     public double MainMarketPrice { get; set; } = 0;
     public string MainFiatCurrency { get; set; } = "USD";
     public double MainFiatCurrencyExchangeRate { get; set; } = 1;
-    public int ProfitTrailerMajorVersion { get; set; } = 1;
     public List<StrategySummary> BuyStrategies { get; set; } = new List<StrategySummary>();
     public List<StrategySummary> SellStrategies { get; set; } = new List<StrategySummary>();
     public List<StrategySummary> DCABuyStrategies { get; set; } = new List<StrategySummary>();
@@ -408,7 +407,7 @@ namespace Core.Main.DataObjects.PTMagicData
   public class sellLogData
   {
     public double soldAmount { get; set; }
-    public SoldDate soldDate { get; set; }
+    public int soldDate { get; set; }
     public int boughtTimes { get; set; }
     public string market { get; set; }
     public double profit { get; set; }

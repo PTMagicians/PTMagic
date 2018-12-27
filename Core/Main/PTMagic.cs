@@ -31,7 +31,6 @@ namespace Core.Main
     private int _state = 0;
     private int _runCount = 0;
     private int _totalElapsedSeconds = 0;
-    private int _profitTrailerMajorVersion = 0;
     private int _configCheckRetryCount = 0;
     private bool _configCheckResult = true;
     private bool _globalSettingWritten = false;
@@ -146,18 +145,6 @@ namespace Core.Main
       set
       {
         _totalElapsedSeconds = value;
-      }
-    }
-
-    public int ProfitTrailerMajorVersion
-    {
-      get
-      {
-        return _profitTrailerMajorVersion;
-      }
-      set
-      {
-        _profitTrailerMajorVersion = value;
       }
     }
 
@@ -662,17 +649,7 @@ namespace Core.Main
         if (ptRoot.Exists)
         {
           this.Log.DoLogInfo("Profit Trailer directory found");
-
-          // Run checks dependant on PT version
-          this.ProfitTrailerMajorVersion = this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMajorVersion;
-          if (this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMajorVersion < 2)
-          {
-            result = RunProfitTrailerTradingFilesChecks();
-          }
-          else
-          {
-            result = RunProfitTrailerSettingsAPIChecks();
-          }
+          result = RunProfitTrailerSettingsAPIChecks();
         }
         else
         {
@@ -700,153 +677,77 @@ namespace Core.Main
       return result;
     }
 
-    private bool RunProfitTrailerTradingFilesChecks()
-    {
-      bool result = true;
-
-      this.Log.DoLogInfo("========== STARTING CHECKS FOR Profit Trailer 1.x ==========");
-
-      // Check for settings directory "trading"
-      string ptTradingPath = this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar;
-      DirectoryInfo ptTrading = new DirectoryInfo(ptTradingPath);
-      if (ptTrading.Exists)
-      {
-        this.Log.DoLogInfo("Profit Trailer 1.x check: Trading directory found");
-
-        #region File Checks
-        this.Log.DoLogInfo("Profit Trailer 1.x check: Checking for Pairs Properties file");
-        if (File.Exists(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.PairsFileName))
-        {
-          this.Log.DoLogInfo("Profit Trailer 1.x check: PAIRS.PROPERTIES found!");
-        }
-        else
-        {
-          this.PairsFileName = "PAIRS.properties";
-          if (File.Exists(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.PairsFileName))
-          {
-            this.Log.DoLogInfo("Profit Trailer 1.x check: PAIRS.properties found!");
-          }
-          else
-          {
-            this.Log.DoLogError("Profit Trailer 1.x check: No 'PAIRS.properties' found in " + this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar);
-            result = false;
-          }
-        }
-
-        this.Log.DoLogInfo("Profit Trailer 1.x check: Checking for DCA Properties file");
-        if (File.Exists(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.DCAFileName))
-        {
-          this.Log.DoLogInfo("Profit Trailer 1.x check: DCA.PROPERTIES found!");
-        }
-        else
-        {
-          this.DCAFileName = "DCA.properties";
-          if (File.Exists(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.DCAFileName))
-          {
-            this.Log.DoLogInfo("Profit Trailer 1.x check: DCA.properties found!");
-          }
-          else
-          {
-            this.Log.DoLogError("Profit Trailer 1.x check: No 'DCA.properties' found in " + this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar);
-            result = false;
-          }
-        }
-
-        this.Log.DoLogInfo("Profit Trailer 1.x check: Checking for Indicators Properties file");
-        if (File.Exists(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.IndicatorsFileName))
-        {
-          this.Log.DoLogInfo("Profit Trailer 1.x check: INDICATORS.PROPERTIES found!");
-        }
-        else
-        {
-          this.IndicatorsFileName = "INDICATORS.properties";
-          if (File.Exists(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.IndicatorsFileName))
-          {
-            this.Log.DoLogInfo("Profit Trailer 1.x check: INDICATORS.properties found!");
-          }
-          else
-          {
-            this.Log.DoLogError("Profit Trailer 1.x check: No 'INDICATORS.properties' found in " + this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar);
-            result = false;
-          }
-        }
-        #endregion
-      }
-      else
-      {
-        this.Log.DoLogError("Profit Trailer 1.x check: Trading settings directory not found (" + ptTradingPath + ")");
-        result = false;
-      }
-
-      if (result)
-      {
-        this.Log.DoLogInfo("========== CHECKS FOR Profit Trailer 1.x COMPLETED! ==========");
-      }
-      else
-      {
-        this.Log.DoLogInfo("========== CHECKS FOR Profit Trailer 1.x FAILED! ==========");
-      }
-
-      return result;
-    }
-
     private bool RunProfitTrailerSettingsAPIChecks()
     {
       bool result = true;
 
-      this.Log.DoLogInfo("========== STARTING CHECKS FOR Profit Trailer 2.x ==========");
+      this.Log.DoLogInfo("========== STARTING CHECKS FOR Profit Trailer ==========");
 
       // Check for PT license key
       if (!this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerLicense.Equals(""))
       {
-        this.Log.DoLogInfo("Profit Trailer 2.x check: Profit Trailer license found");
+        this.Log.DoLogInfo("Profit Trailer check: Profit Trailer license found");
       }
       else
       {
-        this.Log.DoLogError("Profit Trailer 2.x check: No Profit Trailer license key specified! The license key is necessary to adjust your Profit Trailer settings since 2.0");
+        this.Log.DoLogError("Profit Trailer check: No Profit Trailer license key specified! The license key is necessary to adjust your Profit Trailer settings");
+        result = false;
+      }
+
+      //Check for ptServerAPIToken
+      if (!this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken.Equals(""))
+      {
+          this.Log.DoLogInfo("Profit Trailer check: Profit Trailer Server API Token Specified");
+      }
+      else
+      {
+        this.Log.DoLogError("Profit Trailer check: No Server API Token specified. It has to be the same Token as in the Profit Trailer Config File");
         result = false;
       }
 
       // Check for PT default setting key
       if (!this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName.Equals(""))
       {
-        this.Log.DoLogInfo("Profit Trailer 2.x check: Profit Trailer default setting name specified");
+        this.Log.DoLogInfo("Profit Trailer check: Profit Trailer default setting name specified");
       }
       else
       {
-        this.Log.DoLogError("Profit Trailer 2.x check: No Profit Trailer default setting name specified! The default setting name is necessary to adjust your Profit Trailer settings since 2.0");
+        this.Log.DoLogError("Profit Trailer check: No Profit Trailer default setting name specified! The default setting name is necessary to adjust your Profit Trailer settings since 2.0");
         result = false;
       }
 
       // Check for PT monitor
       if (!this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL.Equals(""))
       {
-        this.Log.DoLogInfo("Profit Trailer 2.x check: Profit Trailer monitor URL found");
+        this.Log.DoLogInfo("Profit Trailer check: Profit Trailer monitor URL found");
       }
       else
       {
-        this.Log.DoLogError("Profit Trailer 2.x check: No Profit Trailer monitor URL specified! The monitor URL is necessary to adjust your Profit Trailer settings since 2.0");
+        this.Log.DoLogError("Profit Trailer check: No Profit Trailer monitor URL specified! The monitor URL is necessary to adjust your Profit Trailer settings since 2.0");
         result = false;
       }
 
       // Check if PT monitor is reachable
       if (SystemHelper.UrlIsReachable(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL))
       {
-        this.Log.DoLogInfo("Profit Trailer 2.x check: Profit Trailer monitor connection test succeeded");
+        this.Log.DoLogInfo("Profit Trailer check: Profit Trailer monitor connection test succeeded");
       }
       else
       {
-        this.Log.DoLogError("Profit Trailer 2.x check: Your Profit Trailer monitor (" + this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL + ") is not available! Make sure your Profit Trailer bot is up and running and your monitor is accessible.");
+        this.Log.DoLogError("Profit Trailer check: Your Profit Trailer monitor (" + this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL + ") is not available! Make sure your Profit Trailer bot is up and running and your monitor is accessible.");
         result = false;
       }
 
+      //Import Initial ProfitTrailer Information
+      SettingsAPI.GetInitialProfitTrailerSettings(this.PTMagicConfiguration);
+
       if (result)
       {
-        this.Log.DoLogInfo("========== CHECKS FOR Profit Trailer 2.x COMPLETED! ==========");
+        this.Log.DoLogInfo("========== CHECKS FOR Profit Trailer COMPLETED! ==========");
       }
       else
       {
-        this.Log.DoLogInfo("========== CHECKS FOR Profit Trailer 2.x FAILED! ==========");
+        this.Log.DoLogInfo("========== CHECKS FOR Profit Trailer FAILED! ==========");
       }
 
       return result;
@@ -1137,24 +1038,12 @@ namespace Core.Main
 
     private void LoadCurrentProfitTrailerProperties(string pairsPropertiesPath, string dcaPropertiesPath, string indicatorsPropertiesPath)
     {
-      if (this.ProfitTrailerMajorVersion == 1)
-      {
-        // Load current PT properties from files (Valid for PT 1.x)
-        this.Log.DoLogInfo("Loading current Profit Trailer properties from files...");
+      // Load current PT properties from API (Valid for PT 2.x and above)
+      this.Log.DoLogInfo("Loading current Profit Trailer properties from API...");
 
-        this.PairsLines = File.ReadLines(pairsPropertiesPath).ToList();
-        this.DCALines = File.ReadLines(dcaPropertiesPath).ToList();
-        this.IndicatorsLines = File.ReadLines(indicatorsPropertiesPath).ToList();
-      }
-      else
-      {
-        // Load current PT properties from API (Valid for PT 2.x and above)
-        this.Log.DoLogInfo("Loading current Profit Trailer properties from API...");
-
-        this.PairsLines = SettingsAPI.GetPropertyLinesFromAPI("PAIRS", this.PTMagicConfiguration, this.Log);
-        this.DCALines = SettingsAPI.GetPropertyLinesFromAPI("DCA", this.PTMagicConfiguration, this.Log);
-        this.IndicatorsLines = SettingsAPI.GetPropertyLinesFromAPI("INDICATORS", this.PTMagicConfiguration, this.Log);
-      }
+      this.PairsLines = SettingsAPI.GetPropertyLinesFromAPI("PAIRS", this.PTMagicConfiguration, this.Log);
+      this.DCALines = SettingsAPI.GetPropertyLinesFromAPI("DCA", this.PTMagicConfiguration, this.Log);
+      this.IndicatorsLines = SettingsAPI.GetPropertyLinesFromAPI("INDICATORS", this.PTMagicConfiguration, this.Log);
 
       if (this.PairsLines != null && this.DCALines != null && this.IndicatorsLines != null)
       {
@@ -1170,8 +1059,6 @@ namespace Core.Main
 
       // Get market from PT properties
       this.LastRuntimeSummary.MainMarket = SettingsHandler.GetMainMarket(this.PTMagicConfiguration, this.PairsLines, this.Log);
-
-      this.LastRuntimeSummary.ProfitTrailerMajorVersion = this.ProfitTrailerMajorVersion;
     }
 
     private void LoadSMSSummaries()
@@ -1269,18 +1156,11 @@ namespace Core.Main
       }
       else
       {
-        if (this.ProfitTrailerMajorVersion == 1)
+        // Since PT 2.0 the main market is no longer included in the market list so we need to rebuild the list
+        List<string> originalMarketList = SystemHelper.ConvertTokenStringToList(marketPairs, ",");
+        foreach (string market in originalMarketList)
         {
-          this.MarketList = SystemHelper.ConvertTokenStringToList(marketPairs, ",");
-        }
-        else
-        {
-          // Since PT 2.0 the main market is no longer included in the market list so we need to rebuild the list
-          List<string> originalMarketList = SystemHelper.ConvertTokenStringToList(marketPairs, ",");
-          foreach (string market in originalMarketList)
-          {
-            this.MarketList.Add(SystemHelper.GetFullMarketName(this.LastRuntimeSummary.MainMarket, market, this.PTMagicConfiguration.GeneralSettings.Application.Exchange));
-          }
+          this.MarketList.Add(SystemHelper.GetFullMarketName(this.LastRuntimeSummary.MainMarket, market, this.PTMagicConfiguration.GeneralSettings.Application.Exchange));
         }
       }
     }
@@ -2068,38 +1948,13 @@ namespace Core.Main
     {
       if (headerLinesAdded || this.GlobalSettingWritten || this.SingleMarketSettingWritten)
       {
-        if (this.ProfitTrailerMajorVersion == 1)
-        {
-          // Save current PT properties to files (Valid for PT 1.x)
-          this.Log.DoLogInfo("Saving properties files...");
+        // Save current PT properties to API (Valid for PT 2.x and above)
+        this.Log.DoLogInfo("Saving properties using API...");
 
-          // Write Pairs.properties
-          if (this.PTMagicConfiguration.GeneralSettings.Backup.IsEnabled) FileHelper.CreateBackup(pairsPropertiesPath, this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + "_backups" + Path.DirectorySeparatorChar);
-          this.Log.DoLogInfo("Writing Pairs.properties...");
-          if (!this.PTMagicConfiguration.GeneralSettings.Application.TestMode) File.WriteAllLines(pairsPropertiesPath, this.PairsLines);
+        // Send all Properties
+        if (!this.PTMagicConfiguration.GeneralSettings.Application.TestMode) SettingsAPI.SendPropertyLinesToAPI(this.PairsLines, this.DCALines, this.IndicatorsLines, this.PTMagicConfiguration, this.Log);
 
-          // Write DCA.properties
-          if (this.PTMagicConfiguration.GeneralSettings.Backup.IsEnabled) FileHelper.CreateBackup(dcaPropertiesPath, this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + "_backups" + Path.DirectorySeparatorChar);
-          this.Log.DoLogInfo("Writing DCA.properties...");
-          if (!this.PTMagicConfiguration.GeneralSettings.Application.TestMode) File.WriteAllLines(dcaPropertiesPath, this.DCALines);
-
-          // Write Indicators.properties
-          if (this.PTMagicConfiguration.GeneralSettings.Backup.IsEnabled) FileHelper.CreateBackup(indicatorsPropertiesPath, this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + "_backups" + Path.DirectorySeparatorChar);
-          this.Log.DoLogInfo("Writing Indicators.properties...");
-          if (!this.PTMagicConfiguration.GeneralSettings.Application.TestMode) File.WriteAllLines(indicatorsPropertiesPath, this.IndicatorsLines);
-
-          this.Log.DoLogInfo("All properties files saved!");
-        }
-        else
-        {
-          // Save current PT properties to API (Valid for PT 2.x and above)
-          this.Log.DoLogInfo("Saving properties using API...");
-
-          // Send all Properties
-          if (!this.PTMagicConfiguration.GeneralSettings.Application.TestMode) SettingsAPI.SendPropertyLinesToAPI(this.PairsLines, this.DCALines, this.IndicatorsLines, this.PTMagicConfiguration, this.Log);
-
-          this.Log.DoLogInfo("Properties saved!");
-        }
+        this.Log.DoLogInfo("Properties saved!");
       }
       else
       {
@@ -2315,32 +2170,26 @@ namespace Core.Main
       }
 
       // Get configured DCA percentages
-      if (this.ProfitTrailerMajorVersion >= 2)
+
+      string dcaDefaultPercentageString = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_buy_percentage", "");
+      double dcaDefaultPercentage = SystemHelper.TextToDouble(dcaDefaultPercentageString, 0, "en-US");
+
+      this.LastRuntimeSummary.DCAPercentage = dcaDefaultPercentage;
+
+      for (int dca = 1; dca <= maxDCALevel; dca++)
       {
-        string dcaDefaultPercentageString = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_buy_percentage", "");
-        double dcaDefaultPercentage = SystemHelper.TextToDouble(dcaDefaultPercentageString, 0, "en-US");
-
-        this.LastRuntimeSummary.DCAPercentage = dcaDefaultPercentage;
-
-        for (int dca = 1; dca <= maxDCALevel; dca++)
+        string dcaPercentageString = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_buy_percentage_" + dca.ToString(), "");
+        if (!dcaPercentageString.Equals(""))
         {
-          string dcaPercentageString = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_buy_percentage_" + dca.ToString(), "");
-          if (!dcaPercentageString.Equals(""))
-          {
-            double dcaPercentage = SystemHelper.TextToDouble(dcaPercentageString, 0, "en-US");
+          double dcaPercentage = SystemHelper.TextToDouble(dcaPercentageString, 0, "en-US");
 
-            this.LastRuntimeSummary.DCAPercentages.Add(dca, dcaPercentage);
-          }
-          else
-          {
-            if (this.LastRuntimeSummary.DCALevels == 0) this.LastRuntimeSummary.DCALevels = dca - 1;
-            break;
-          }
+          this.LastRuntimeSummary.DCAPercentages.Add(dca, dcaPercentage);
         }
-      }
-      else
-      {
-        this.LastRuntimeSummary.DCAPercentage = 100;
+        else
+        {
+          if (this.LastRuntimeSummary.DCALevels == 0) this.LastRuntimeSummary.DCALevels = dca - 1;
+          break;
+        }
       }
 
       // Get configured Buy Strategies
@@ -2588,7 +2437,6 @@ namespace Core.Main
       {
         this.Log.DoLogWarn("+ Your version is out of date! The most recent version is " + this.LatestVersion);
       }
-      this.Log.DoLogInfo("+ Proft Trailer Major Version: " + PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMajorVersion.ToString());
       this.Log.DoLogInfo("+ Instance name: " + PTMagicConfiguration.GeneralSettings.Application.InstanceName);
       this.Log.DoLogInfo("+ Time spent: " + SystemHelper.GetProperDurationTime(elapsedSeconds));
       this.Log.DoLogInfo("+ Active setting: " + this.LastRuntimeSummary.CurrentGlobalSetting.SettingName);

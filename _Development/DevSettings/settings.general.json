@@ -3,14 +3,11 @@
     "Application": {
       "IsEnabled": true, // Enables the PTMagic bot (needs restart to take effect)
       "TestMode": false, // If TestMode is active, no properties files will be changed
-      "ProfitTrailerMajorVersion": 2, // Major version of your Profit Trailer (If you are using 1.2.x the major version is "1", if you are using 2.x the major version is "2" and so on)
       "ProfitTrailerPath": "YOUR PROFIT TRAILER PATH", // Path to your Profit Trailer main directory (use double backslashes for windows like C:\\ProfitTrailer\\)
       "ProfitTrailerLicense": "YOUR PROFIT TRAILER LICENSE KEY", // Your Profit Trailer license key (needed to change your settings for PT 2.0 and above)
+      "ProfitTrailerServerAPIToken": "", //Your Profit Trailer Server API Token
       "ProfitTrailerMonitorURL": "http://localhost:8081/", // The URL to your profit trailer monitor (needed to change your settings for PT 2.0 and above)
       "ProfitTrailerDefaultSettingName": "default", // Your Profit Trailer default setting name (needed to change your settings for PT 2.0 and above)
-      "Exchange": "Bittrex", // The exchange your are running Profit Trailer on
-      "StartBalance": 0, // The balance you had in your wallet when you started working with Profit Trailer
-      "TimezoneOffset": "+0:00", // Your timezone offset from UTC time
       "MainFiatCurrency": "USD", // Your main fiat currency that will be used in the monitor
       "AlwaysLoadDefaultBeforeSwitch": true, // If this is enabled, PTMagic will always load default settings before switching to another setting
       "FloodProtectionMinutes": 15, // If a price trend is just zig-zagging around its trigger, you may want to protect your settings from getting switched back and forth every minute
