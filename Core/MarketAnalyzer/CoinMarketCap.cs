@@ -34,7 +34,6 @@ namespace Core.MarketAnalyzer
 
             for (int i = 0; i < jsonObject["data"].Count; i++)
             {
-
               if (jsonObject["data"][i]["quote"]["USD"] != null)
               {
                 Market market = new Market();

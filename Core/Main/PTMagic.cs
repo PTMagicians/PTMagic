@@ -609,6 +609,9 @@ namespace Core.Main
     {
       bool result = true;
 
+      //Import Initial ProfitTrailer Information
+      SettingsAPI.GetInitialProfitTrailerSettings(this.PTMagicConfiguration);
+
       // Check for valid default setting
       GlobalSetting defaultSetting = this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Find(s => s.SettingName.Equals("default", StringComparison.InvariantCultureIgnoreCase));
       if (defaultSetting == null)
@@ -697,7 +700,7 @@ namespace Core.Main
       //Check for ptServerAPIToken
       if (!this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken.Equals(""))
       {
-          this.Log.DoLogInfo("Profit Trailer check: Profit Trailer Server API Token Specified");
+        this.Log.DoLogInfo("Profit Trailer check: Profit Trailer Server API Token Specified");
       }
       else
       {
@@ -737,9 +740,6 @@ namespace Core.Main
         this.Log.DoLogError("Profit Trailer check: Your Profit Trailer monitor (" + this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL + ") is not available! Make sure your Profit Trailer bot is up and running and your monitor is accessible.");
         result = false;
       }
-
-      //Import Initial ProfitTrailer Information
-      SettingsAPI.GetInitialProfitTrailerSettings(this.PTMagicConfiguration);
 
       if (result)
       {

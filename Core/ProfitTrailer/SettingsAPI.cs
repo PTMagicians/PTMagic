@@ -45,6 +45,7 @@ namespace Core.ProfitTrailer
       systemConfiguration.GeneralSettings.Application.Exchange = json.exchange;
       systemConfiguration.GeneralSettings.Application.TimezoneOffset = json.timeZoneOffset;
       systemConfiguration.GeneralSettings.Application.StartBalance = json.startBalance;
+      systemConfiguration.GeneralSettings.Application.MainFiatCurrency = json.settings.currency;
     }
     public static List<string> GetPropertyLinesFromAPI(string ptFileName, PTMagicConfiguration systemConfiguration, LogHelper log)
     {

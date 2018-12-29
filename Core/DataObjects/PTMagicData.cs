@@ -36,16 +36,16 @@ namespace Core.Main.DataObjects.PTMagicData
     public bool TestMode { get; set; } = true;
     public bool EnableBetaFeatures { get; set; } = false;
     public string ProfitTrailerPath { get; set; }
-    public string ProfitTrailerLicense { get; set; }
+    public string ProfitTrailerLicense { get; set; } = "";
     public string ProfitTrailerServerAPIToken { get; set; }
     public string ProfitTrailerMonitorURL { get; set; } = "http://localhost:8081/";
     public string ProfitTrailerDefaultSettingName { get; set; } = "default";
     public bool AlwaysLoadDefaultBeforeSwitch { get; set; } = true;
     public int FloodProtectionMinutes { get; set; } = 15;
     public string Exchange { get; set; }
-    public double StartBalance { get; set; }
+    public double StartBalance { get; set; } = 0;
     public string InstanceName { get; set; } = "PT Magic";
-    public string TimezoneOffset { get; set; }
+    public string TimezoneOffset { get; set; }  = "+0:00";
     public string MainFiatCurrency { get; set; } = "USD";
     public string CoinMarketCapAPIKey { get; set; }
   }
