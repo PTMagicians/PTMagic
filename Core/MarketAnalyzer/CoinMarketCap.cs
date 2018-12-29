@@ -17,7 +17,7 @@ namespace Core.MarketAnalyzer
       string result = "";
       try
       {
-        string baseUrl = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=200";
+        string baseUrl = "https://sandbox-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=200";
         string cmcAPI = systemConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey;
 
         log.DoLogInfo("CoinMarketCap - Getting market data...");

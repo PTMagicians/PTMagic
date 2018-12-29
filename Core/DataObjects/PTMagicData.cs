@@ -45,7 +45,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public string Exchange { get; set; }
     public double StartBalance { get; set; } = 0;
     public string InstanceName { get; set; } = "PT Magic";
-    public string TimezoneOffset { get; set; }  = "+0:00";
+    public string TimezoneOffset { get; set; } = "+0:00";
     public string MainFiatCurrency { get; set; } = "USD";
     public string CoinMarketCapAPIKey { get; set; }
   }

@@ -23,7 +23,7 @@ namespace Core.Main.DataObjects
     private TransactionData _transactionData = null;
     private DateTimeOffset _dateTimeNow = Constants.confMinDate;
     
-    public ProfitTrailerData(string ptmBasePath, PTMagicConfiguration systemConfiguration)
+    public ProfitTrailerData(PTMagicConfiguration systemConfiguration)
     {
       string html = "";
       string url = systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL + "api/data?token=" + systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken;
