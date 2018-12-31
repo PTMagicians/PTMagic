@@ -62,13 +62,6 @@
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Profit Trailer Major Version <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Major version of your Profit Trailer."></i></label>
-                <div class="col-md-8">
-                  @Model.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMajorVersion
-                </div>
-              </div>
-
-              <div class="form-group row">
                 <label class="col-md-4 col-form-label">Profit Trailer Path <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Path to your Profit Trailer main directory."></i></label>
                 <div class="col-md-8">
                   @Model.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath
@@ -93,33 +86,6 @@
                 <label class="col-md-4 col-form-label">Profit Trailer Default Setting Name <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Your Profit Trailer default setting name (needed to change your settings for PT 2.0 and above)"></i></label>
                 <div class="col-md-8">
                   @Model.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName
-                </div>
-              </div>
-
-              <div class="form-group row">
-                <label class="col-md-4 col-form-label">Exchange <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The exchange your are running Profit Trailer on."></i></label>
-                <div class="col-md-8">
-                  <select name="Application_Exchange" class="form-control">
-                    <option selected="@(Model.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Binance", StringComparison.InvariantCultureIgnoreCase))">Binance</option>
-                    <option selected="@(Model.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Bittrex", StringComparison.InvariantCultureIgnoreCase))">Bittrex</option>
-                    <option selected="@(Model.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Poloniex", StringComparison.InvariantCultureIgnoreCase))">Poloniex</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="form-group row">
-                <label class="col-md-4 col-form-label">Start Balance <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The balance you had in your wallet when you started working with Profit Trailer."></i></label>
-                <div class="col-md-8">
-                  <input type="text" class="form-control" name="Application_StartBalance" value="@Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance.ToString(new System.Globalization.CultureInfo("en-US"))">
-                </div>
-              </div>
-
-              <div class="form-group row">
-                <label class="col-md-4 col-form-label">Timezone Offset <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Your timezone offset from GMT."></i></label>
-                <div class="col-md-8">
-                  <select name="Application_TimezoneOffset" class="form-control">
-                    @Html.Raw(Model.GetTimezoneSelection())
-                  </select>
                 </div>
               </div>
 

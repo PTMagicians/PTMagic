@@ -436,9 +436,9 @@ namespace Core.ProfitTrailer
             ptmagicInstance.Log.DoLogInfo("Built single market settings '" + setting.SettingName + "' for '" + marketPair + "'.");
           }
 
-          newPairsLines = SettingsHandler.BuildPropertyLinesForSingleMarketSetting(ptmagicInstance.ProfitTrailerMajorVersion, ptmagicInstance.LastRuntimeSummary.MainMarket, marketPair, ptmagicInstance.TriggeredSingleMarketSettings[marketPair], pairsPropertiesToApply, matchedTriggers, globalPairsProperties, newPairsLines, ptmagicInstance.PTMagicConfiguration, ptmagicInstance.Log);
-          newDCALines = SettingsHandler.BuildPropertyLinesForSingleMarketSetting(ptmagicInstance.ProfitTrailerMajorVersion, ptmagicInstance.LastRuntimeSummary.MainMarket, marketPair, ptmagicInstance.TriggeredSingleMarketSettings[marketPair], dcaPropertiesToApply, matchedTriggers, globalDCAProperties, newDCALines, ptmagicInstance.PTMagicConfiguration, ptmagicInstance.Log);
-          newIndicatorsLines = SettingsHandler.BuildPropertyLinesForSingleMarketSetting(ptmagicInstance.ProfitTrailerMajorVersion, ptmagicInstance.LastRuntimeSummary.MainMarket, marketPair, ptmagicInstance.TriggeredSingleMarketSettings[marketPair], indicatorsPropertiesToApply, matchedTriggers, globalIndicatorsProperties, newIndicatorsLines, ptmagicInstance.PTMagicConfiguration, ptmagicInstance.Log);
+          newPairsLines = SettingsHandler.BuildPropertyLinesForSingleMarketSetting(ptmagicInstance.LastRuntimeSummary.MainMarket, marketPair, ptmagicInstance.TriggeredSingleMarketSettings[marketPair], pairsPropertiesToApply, matchedTriggers, globalPairsProperties, newPairsLines, ptmagicInstance.PTMagicConfiguration, ptmagicInstance.Log);
+          newDCALines = SettingsHandler.BuildPropertyLinesForSingleMarketSetting(ptmagicInstance.LastRuntimeSummary.MainMarket, marketPair, ptmagicInstance.TriggeredSingleMarketSettings[marketPair], dcaPropertiesToApply, matchedTriggers, globalDCAProperties, newDCALines, ptmagicInstance.PTMagicConfiguration, ptmagicInstance.Log);
+          newIndicatorsLines = SettingsHandler.BuildPropertyLinesForSingleMarketSetting(ptmagicInstance.LastRuntimeSummary.MainMarket, marketPair, ptmagicInstance.TriggeredSingleMarketSettings[marketPair], indicatorsPropertiesToApply, matchedTriggers, globalIndicatorsProperties, newIndicatorsLines, ptmagicInstance.PTMagicConfiguration, ptmagicInstance.Log);
         }
 
         // Combine global settings lines with single market settings lines
@@ -457,7 +457,7 @@ namespace Core.ProfitTrailer
       }
     }
 
-    public static List<string> BuildPropertyLinesForSingleMarketSetting(int ptMajorVersion, string mainMarket, string marketPair, List<SingleMarketSetting> appliedSettings, Dictionary<string, object> properties, Dictionary<string, List<string>> matchedTriggers, Dictionary<string, string> fullProperties, List<string> newPropertyLines, PTMagicConfiguration systemConfiguration, LogHelper log)
+    public static List<string> BuildPropertyLinesForSingleMarketSetting(string mainMarket, string marketPair, List<SingleMarketSetting> appliedSettings, Dictionary<string, object> properties, Dictionary<string, List<string>> matchedTriggers, Dictionary<string, string> fullProperties, List<string> newPropertyLines, PTMagicConfiguration systemConfiguration, LogHelper log)
     {
       if (properties.Keys.Count > 0)
       {
@@ -499,11 +499,9 @@ namespace Core.ProfitTrailer
           }
 
           string propertyMarketName = marketPair;
-          if (ptMajorVersion > 1)
-          {
-            // Adjust market pair name for PT 2.0 and above
-            propertyMarketName = propertyMarketName.Replace(mainMarket, "").Replace("_", "").Replace("-", "");
-          }
+
+          // Adjust market pair name
+          propertyMarketName = propertyMarketName.Replace(mainMarket, "").Replace("_", "").Replace("-", "");
 
           string propertyKeyString = "";
           if (propertyKey.StartsWith("ALL", StringComparison.InvariantCultureIgnoreCase))

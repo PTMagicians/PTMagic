@@ -29,7 +29,7 @@ namespace Monitor.Pages
 
     private void BindData()
     {
-      PTData = new ProfitTrailerData(PTMagicBasePath, PTMagicConfiguration);
+      PTData = new ProfitTrailerData(PTMagicConfiguration);
 
       // Convert local offset time to UTC
       TimeSpan offsetTimeSpan = TimeSpan.Parse(PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
