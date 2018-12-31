@@ -25,7 +25,7 @@ namespace Monitor.Pages {
     }
 
     private void BindData() {
-      PTData = new ProfitTrailerData(PTMagicConfiguration);
+      PTData = new ProfitTrailerData(PTMagicBasePath, PTMagicConfiguration);
 
       // Cleanup temp files
       FileHelper.CleanupFilesMinutes(PTMagicMonitorBasePath + "wwwroot" + System.IO.Path.DirectorySeparatorChar + "assets" + System.IO.Path.DirectorySeparatorChar + "tmp" + System.IO.Path.DirectorySeparatorChar, 5);

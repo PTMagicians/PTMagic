@@ -29,7 +29,7 @@ namespace Monitor.Pages {
       salesDateString = GetStringParameter("d", "");
       salesMonthString = GetStringParameter("m", "");
 
-      PTData = new ProfitTrailerData(PTMagicConfiguration);
+      PTData = new ProfitTrailerData(PTMagicBasePath, PTMagicConfiguration);
 
       if (!salesDateString.Equals("")) {
         SalesDate = SystemHelper.TextToDateTime(salesDateString, Constants.confMinDate);

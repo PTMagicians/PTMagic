@@ -20,7 +20,7 @@ namespace Monitor.Pages {
     }
 
     private void BindData() {
-      PTData = new ProfitTrailerData(PTMagicConfiguration);
+      PTData = new ProfitTrailerData(PTMagicBasePath, PTMagicConfiguration);
 
       // Get markets with active single settings
       foreach (string key in Summary.MarketSummary.Keys) {

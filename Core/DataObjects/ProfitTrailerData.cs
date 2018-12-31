@@ -3,8 +3,6 @@ using System.IO;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
@@ -22,31 +20,27 @@ namespace Core.Main.DataObjects
     private PTMagicConfiguration _systemConfiguration = null;
     private TransactionData _transactionData = null;
     private DateTimeOffset _dateTimeNow = Constants.confMinDate;
-    
-    public ProfitTrailerData(PTMagicConfiguration systemConfiguration)
+
+    public ProfitTrailerData(string ptmBasePath, PTMagicConfiguration systemConfiguration)
     {
-      string html = "";
-      string url = systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL + "api/data?token=" + systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken;
+      _ptmBasePath = ptmBasePath;
+      _systemConfiguration = systemConfiguration;
 
-      try
+      // Find the path to the Profit Trailer data file
+      string ptDataFilePath = Path.Combine(systemConfiguration.GeneralSettings.Application.ProfitTrailerPath, "data", "ProfitTrailerData.json");
+
+      if (!File.Exists(ptDataFilePath))
       {
-        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-        request.AutomaticDecompression = DecompressionMethods.GZip;
-
-        WebResponse response = request.GetResponse();
-        Stream dataStream = response.GetResponseStream();
-        StreamReader reader = new StreamReader(dataStream);
-        html = reader.ReadToEnd();
-        reader.Close();
-        response.Close();
-
-      }
-      catch (System.Exception)
-      {
-          throw;
+        // Try the older location for PT 1.x and PT 2.0.x
+        ptDataFilePath = Path.Combine(systemConfiguration.GeneralSettings.Application.ProfitTrailerPath, "ProfitTrailerData.json");
+        if (!File.Exists(ptDataFilePath))
+        {
+          // Can't find the Profit Trailer Data
+          throw new Exception("Unable to load Profit Trailer data file at: " + ptDataFilePath);
+        }
       }
 
-      PTData rawPTData = JsonConvert.DeserializeObject<PTData>(html);
+      PTData rawPTData = JsonConvert.DeserializeObject<PTData>(File.ReadAllText(ptDataFilePath));
       if (rawPTData.SellLogData != null)
       {
         this.BuildSellLogData(rawPTData.SellLogData, _systemConfiguration);
@@ -155,18 +149,14 @@ namespace Core.Main.DataObjects
         double soldValueRaw = (sellLogData.SoldAmount * sellLogData.SoldPrice);
         double soldValueAfterFees = soldValueRaw - (soldValueRaw * (rsld.averageCalculator.fee / 100));
         sellLogData.SoldValue = soldValueAfterFees;
-        sellLogData.Profit = Math.Round(sellLogData.SoldValue - sellLogData.TotalCost, 8);    
-
-        //Convert Unix Timestamp to Datetime
-        System.DateTime dtDateTime = new DateTime(1970,1,1,0,0,0,System.DateTimeKind.Utc);
-        dtDateTime = dtDateTime.AddSeconds(rsld.soldDate).ToLocalTime();  
+        sellLogData.Profit = Math.Round(sellLogData.SoldValue - sellLogData.TotalCost, 8);
 
         // Profit Trailer sales are saved in UTC
-        DateTimeOffset ptSoldDate = DateTimeOffset.Parse(dtDateTime.Year.ToString() + "-" + dtDateTime.Month.ToString("00") + "-" + dtDateTime.Day.ToString("00") + "T" + dtDateTime.Hour.ToString("00") + ":" + dtDateTime.Minute.ToString("00") + ":" + dtDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+        DateTimeOffset ptSoldDate = DateTimeOffset.Parse(rsld.soldDate.date.year.ToString() + "-" + rsld.soldDate.date.month.ToString("00") + "-" + rsld.soldDate.date.day.ToString("00") + "T" + rsld.soldDate.time.hour.ToString("00") + ":" + rsld.soldDate.time.minute.ToString("00") + ":" + rsld.soldDate.time.second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
 
         // Convert UTC sales time to local offset time
-         TimeSpan offsetTimeSpan = TimeSpan.Parse(systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
-         ptSoldDate = ptSoldDate.ToOffset(offsetTimeSpan);
+        TimeSpan offsetTimeSpan = TimeSpan.Parse(systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
+        ptSoldDate = ptSoldDate.ToOffset(offsetTimeSpan);
 
         sellLogData.SoldDate = ptSoldDate.DateTime;
 

@@ -9,7 +9,10 @@
 }
 
 @{
-  string maxCostCaption = "Initial";
+  string maxCostCaption = "Max";
+  if (Model.Summary.ProfitTrailerMajorVersion > 1) {
+    maxCostCaption = "Initial";
+  }
 }
 
 <div class="row">
