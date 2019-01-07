@@ -35,9 +35,9 @@ namespace Core.Main.DataObjects.PTMagicData
     public bool IsEnabled { get; set; } = true;
     public bool TestMode { get; set; } = true;
     public bool EnableBetaFeatures { get; set; } = false;
-    public int ProfitTrailerMajorVersion { get; set; } = 1;
     public string ProfitTrailerPath { get; set; }
     public string ProfitTrailerLicense { get; set; } = "";
+    public string ProfitTrailerServerAPIToken { get; set; }
     public string ProfitTrailerMonitorURL { get; set; } = "http://localhost:8081/";
     public string ProfitTrailerDefaultSettingName { get; set; } = "default";
     public bool AlwaysLoadDefaultBeforeSwitch { get; set; } = true;
@@ -316,7 +316,6 @@ namespace Core.Main.DataObjects.PTMagicData
     public double MainMarketPrice { get; set; } = 0;
     public string MainFiatCurrency { get; set; } = "USD";
     public double MainFiatCurrencyExchangeRate { get; set; } = 1;
-    public int ProfitTrailerMajorVersion { get; set; } = 1;
     public List<StrategySummary> BuyStrategies { get; set; } = new List<StrategySummary>();
     public List<StrategySummary> SellStrategies { get; set; } = new List<StrategySummary>();
     public List<StrategySummary> DCABuyStrategies { get; set; } = new List<StrategySummary>();
@@ -408,12 +407,13 @@ namespace Core.Main.DataObjects.PTMagicData
   public class sellLogData
   {
     public double soldAmount { get; set; }
-    public SoldDate soldDate { get; set; }
+    public double soldDate { get; set; }
     public int boughtTimes { get; set; }
     public string market { get; set; }
     public double profit { get; set; }
     public AverageCalculator averageCalculator { get; set; }
     public double currentPrice { get; set; }
+    public double fee { get; set; }
   }
 
   public class SellLogData
@@ -430,33 +430,6 @@ namespace Core.Main.DataObjects.PTMagicData
     public double SoldValue { get; set; }
   }
 
-  public class SoldDate
-  {
-    public Date date { get; set; }
-    public Time time { get; set; }
-  }
-
-  public class FirstBoughtDate
-  {
-    public Date date { get; set; }
-    public Time time { get; set; }
-  }
-
-  public class Date
-  {
-    public int year { get; set; }
-    public int month { get; set; }
-    public int day { get; set; }
-  }
-
-  public class Time
-  {
-    public int hour { get; set; }
-    public int minute { get; set; }
-    public int second { get; set; }
-    public int nano { get; set; }
-  }
-
   public class AverageCalculator
   {
     public double totalCost { get; set; }
@@ -464,10 +437,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public double totalAmountWithSold { get; set; }
     public double avgPrice { get; set; }
     public double avgCost { get; set; }
-    public FirstBoughtDate firstBoughtDate { get; set; }
     public double totalWeightedPrice { get; set; }
-    public double orderNumber { get; set; }
-    public double fee { get; set; }
   }
 
   public class PTStrategy
@@ -494,6 +464,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public double highbb { get; set; }
     public double profit { get; set; }
     public AverageCalculator averageCalculator { get; set; }
+    public int firstBoughtDate { get; set; }
     public double currentPrice { get; set; }
     public string sellStrategy { get; set; }
     public string buyStrategy { get; set; }

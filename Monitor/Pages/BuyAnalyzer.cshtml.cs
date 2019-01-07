@@ -21,7 +21,7 @@ namespace Monitor.Pages
 
     private void BindData()
     {
-      PTData = new ProfitTrailerData(PTMagicBasePath, PTMagicConfiguration);
+      PTData = new ProfitTrailerData(PTMagicConfiguration);
     }
   }
 }

@@ -24,7 +24,7 @@ namespace Monitor.Pages {
     private void BindData() {
       DCAMarket = GetStringParameter("m", "");
 
-      PTData = new ProfitTrailerData(PTMagicBasePath, PTMagicConfiguration);
+      PTData = new ProfitTrailerData(PTMagicConfiguration);
 
       DCALogData = PTData.DCALog.Find(d => d.Market == DCAMarket);
 
