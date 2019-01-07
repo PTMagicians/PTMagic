@@ -3,6 +3,8 @@ using System.IO;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
@@ -20,27 +22,31 @@ namespace Core.Main.DataObjects
     private PTMagicConfiguration _systemConfiguration = null;
     private TransactionData _transactionData = null;
     private DateTimeOffset _dateTimeNow = Constants.confMinDate;
-
-    public ProfitTrailerData(string ptmBasePath, PTMagicConfiguration systemConfiguration)
+    
+    public ProfitTrailerData(PTMagicConfiguration systemConfiguration)
     {
-      _ptmBasePath = ptmBasePath;
-      _systemConfiguration = systemConfiguration;
+      string html = "";
+      string url = systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL + "api/data?token=" + systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken;
 
-      // Find the path to the Profit Trailer data file
-      string ptDataFilePath = Path.Combine(systemConfiguration.GeneralSettings.Application.ProfitTrailerPath, "data", "ProfitTrailerData.json");
-
-      if (!File.Exists(ptDataFilePath))
+      try
       {
-        // Try the older location for PT 1.x and PT 2.0.x
-        ptDataFilePath = Path.Combine(systemConfiguration.GeneralSettings.Application.ProfitTrailerPath, "ProfitTrailerData.json");
-        if (!File.Exists(ptDataFilePath))
-        {
-          // Can't find the Profit Trailer Data
-          throw new Exception("Unable to load Profit Trailer data file at: " + ptDataFilePath);
-        }
+        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+        request.AutomaticDecompression = DecompressionMethods.GZip;
+
+        WebResponse response = request.GetResponse();
+        Stream dataStream = response.GetResponseStream();
+        StreamReader reader = new StreamReader(dataStream);
+        html = reader.ReadToEnd();
+        reader.Close();
+        response.Close();
+
+      }
+      catch (System.Exception)
+      {
+          throw;
       }
 
-      PTData rawPTData = JsonConvert.DeserializeObject<PTData>(File.ReadAllText(ptDataFilePath));
+      PTData rawPTData = JsonConvert.DeserializeObject<PTData>(html);
       if (rawPTData.SellLogData != null)
       {
         this.BuildSellLogData(rawPTData.SellLogData, _systemConfiguration);
@@ -147,12 +153,16 @@ namespace Core.Main.DataObjects
         sellLogData.TotalCost = sellLogData.SoldAmount * sellLogData.AverageBuyPrice;
 
         double soldValueRaw = (sellLogData.SoldAmount * sellLogData.SoldPrice);
-        double soldValueAfterFees = soldValueRaw - (soldValueRaw * (rsld.averageCalculator.fee / 100));
+        double soldValueAfterFees = soldValueRaw - (soldValueRaw * (rsld.fee / 100));
         sellLogData.SoldValue = soldValueAfterFees;
-        sellLogData.Profit = Math.Round(sellLogData.SoldValue - sellLogData.TotalCost, 8);
+        sellLogData.Profit = Math.Round(sellLogData.SoldValue - sellLogData.TotalCost, 8);    
+
+        //Convert Unix Timestamp to Datetime
+        System.DateTime dtDateTime = new DateTime(1970,1,1,0,0,0,System.DateTimeKind.Utc);
+        dtDateTime = dtDateTime.AddSeconds(rsld.soldDate).ToLocalTime();  
 
         // Profit Trailer sales are saved in UTC
-        DateTimeOffset ptSoldDate = DateTimeOffset.Parse(rsld.soldDate.date.year.ToString() + "-" + rsld.soldDate.date.month.ToString("00") + "-" + rsld.soldDate.date.day.ToString("00") + "T" + rsld.soldDate.time.hour.ToString("00") + ":" + rsld.soldDate.time.minute.ToString("00") + ":" + rsld.soldDate.time.second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+        DateTimeOffset ptSoldDate = DateTimeOffset.Parse(dtDateTime.Year.ToString() + "-" + dtDateTime.Month.ToString("00") + "-" + dtDateTime.Day.ToString("00") + "T" + dtDateTime.Hour.ToString("00") + ":" + dtDateTime.Minute.ToString("00") + ":" + dtDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
 
         // Convert UTC sales time to local offset time
         TimeSpan offsetTimeSpan = TimeSpan.Parse(systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
@@ -235,11 +245,14 @@ namespace Core.Main.DataObjects
           }
         }
 
+        //Convert Unix Timestamp to Datetime
+        System.DateTime rdldDateTime = new DateTime(1970,1,1,0,0,0,System.DateTimeKind.Utc);
+        rdldDateTime = rdldDateTime.AddSeconds(rdld.firstBoughtDate).ToLocalTime();
 
         // Profit Trailer bought times are saved in UTC
-        if (rdld.averageCalculator.firstBoughtDate != null)
+        if (rdld.firstBoughtDate != null)
         {
-          DateTimeOffset ptFirstBoughtDate = DateTimeOffset.Parse(rdld.averageCalculator.firstBoughtDate.date.year.ToString() + "-" + rdld.averageCalculator.firstBoughtDate.date.month.ToString("00") + "-" + rdld.averageCalculator.firstBoughtDate.date.day.ToString("00") + "T" + rdld.averageCalculator.firstBoughtDate.time.hour.ToString("00") + ":" + rdld.averageCalculator.firstBoughtDate.time.minute.ToString("00") + ":" + rdld.averageCalculator.firstBoughtDate.time.second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+          DateTimeOffset ptFirstBoughtDate = DateTimeOffset.Parse(rdldDateTime.Year.ToString() + "-" + rdldDateTime.Month.ToString("00") + "-" + rdldDateTime.Day.ToString("00") + "T" + rdldDateTime.Hour.ToString("00") + ":" + rdldDateTime.Minute.ToString("00") + ":" + rdldDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
 
           // Convert UTC bought time to local offset time
           TimeSpan offsetTimeSpan = TimeSpan.Parse(systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
@@ -294,10 +307,14 @@ namespace Core.Main.DataObjects
           }
         }
 
+        //Convert Unix Timestamp to Datetime
+        System.DateTime rpldDateTime = new DateTime(1970,1,1,0,0,0,System.DateTimeKind.Utc);
+        rpldDateTime = rpldDateTime.AddSeconds(rpld.firstBoughtDate).ToLocalTime();
+
         // Profit Trailer bought times are saved in UTC
-        if (rpld.averageCalculator.firstBoughtDate != null)
+        if (rpld.firstBoughtDate != null)
         {
-          DateTimeOffset ptFirstBoughtDate = DateTimeOffset.Parse(rpld.averageCalculator.firstBoughtDate.date.year.ToString() + "-" + rpld.averageCalculator.firstBoughtDate.date.month.ToString("00") + "-" + rpld.averageCalculator.firstBoughtDate.date.day.ToString("00") + "T" + rpld.averageCalculator.firstBoughtDate.time.hour.ToString("00") + ":" + rpld.averageCalculator.firstBoughtDate.time.minute.ToString("00") + ":" + rpld.averageCalculator.firstBoughtDate.time.second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+          DateTimeOffset ptFirstBoughtDate = DateTimeOffset.Parse(rpldDateTime.Year.ToString() + "-" + rpldDateTime.Month.ToString("00") + "-" + rpldDateTime.Day.ToString("00") + "T" + rpldDateTime.Hour.ToString("00") + ":" + rpldDateTime.Minute.ToString("00") + ":" + rpldDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
 
           // Convert UTC bought time to local offset time
           TimeSpan offsetTimeSpan = TimeSpan.Parse(systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));

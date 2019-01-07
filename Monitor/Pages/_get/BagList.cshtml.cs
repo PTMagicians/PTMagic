@@ -23,7 +23,7 @@ namespace Monitor.Pages {
       SortFieldId = GetStringParameter("s", "ProfitPercent");
       SortDirection = GetStringParameter("d", "DESC");
 
-      PTData = new ProfitTrailerData(PTMagicBasePath, PTMagicConfiguration);
+      PTData = new ProfitTrailerData(PTMagicConfiguration);
     }
   }
 }
