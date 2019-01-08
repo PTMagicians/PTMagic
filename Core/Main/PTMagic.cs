@@ -791,7 +791,7 @@ namespace Core.Main
 
         if (PTMagicConfiguration.GeneralSettings.Application.IsEnabled)
         {
-
+          
           // Validate settings
           this.ValidateSettings();
 
@@ -963,6 +963,9 @@ namespace Core.Main
 
     private void ValidateSettings()
     {
+      //Reimport Initial ProfitTrailer Information
+      SettingsAPI.GetInitialProfitTrailerSettings(this.PTMagicConfiguration);
+
       // Check for a valid exchange
       if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange == null)
       {

@@ -250,7 +250,7 @@ namespace Core.Main.DataObjects
         rdldDateTime = rdldDateTime.AddSeconds(rdld.firstBoughtDate).ToLocalTime();
 
         // Profit Trailer bought times are saved in UTC
-        if (rdld.firstBoughtDate != null)
+        if (rdld.firstBoughtDate > 0)
         {
           DateTimeOffset ptFirstBoughtDate = DateTimeOffset.Parse(rdldDateTime.Year.ToString() + "-" + rdldDateTime.Month.ToString("00") + "-" + rdldDateTime.Day.ToString("00") + "T" + rdldDateTime.Hour.ToString("00") + ":" + rdldDateTime.Minute.ToString("00") + ":" + rdldDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
 
@@ -312,7 +312,7 @@ namespace Core.Main.DataObjects
         rpldDateTime = rpldDateTime.AddSeconds(rpld.firstBoughtDate).ToLocalTime();
 
         // Profit Trailer bought times are saved in UTC
-        if (rpld.firstBoughtDate != null)
+        if (rpld.firstBoughtDate > 0)
         {
           DateTimeOffset ptFirstBoughtDate = DateTimeOffset.Parse(rpldDateTime.Year.ToString() + "-" + rpldDateTime.Month.ToString("00") + "-" + rpldDateTime.Day.ToString("00") + "T" + rpldDateTime.Hour.ToString("00") + ":" + rpldDateTime.Minute.ToString("00") + ":" + rpldDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
 
