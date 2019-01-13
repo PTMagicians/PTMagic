@@ -609,8 +609,8 @@ namespace Core.Main
     {
       bool result = true;
 
-      //Import Initial ProfitTrailer Information
-      SettingsAPI.GetInitialProfitTrailerSettings(this.PTMagicConfiguration);
+      //Import Initial ProfitTrailer Information(Deactivated for now)
+      //SettingsAPI.GetInitialProfitTrailerSettings(this.PTMagicConfiguration);
 
       // Check for valid default setting
       GlobalSetting defaultSetting = this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Find(s => s.SettingName.Equals("default", StringComparison.InvariantCultureIgnoreCase));
@@ -963,8 +963,8 @@ namespace Core.Main
 
     private void ValidateSettings()
     {
-      //Reimport Initial ProfitTrailer Information
-      SettingsAPI.GetInitialProfitTrailerSettings(this.PTMagicConfiguration);
+      //Reimport Initial ProfitTrailer Information(Deactivated for now)
+      //SettingsAPI.GetInitialProfitTrailerSettings(this.PTMagicConfiguration);
 
       // Check for a valid exchange
       if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange == null)
