@@ -25,9 +25,11 @@ namespace Core.Main.DataObjects
     
     public ProfitTrailerData(PTMagicConfiguration systemConfiguration)
     {
+      _systemConfiguration = systemConfiguration;
+
       string html = "";
       string url = systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL + "api/data?token=" + systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken;
-
+      
       try
       {
         HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
