@@ -538,12 +538,12 @@ namespace Core.Main
       _configCheckResult = this.RunConfigurationChecks();
       if (!_configCheckResult)
       {
-        this.Log.DoLogInfo("Starting configuration check retry in 5 seconds...");
-        System.Timers.Timer configCheckTimer = new System.Timers.Timer(5000);
+        this.Log.DoLogInfo("Starting configuration check retry in 10 seconds...");
+        System.Timers.Timer configCheckTimer = new System.Timers.Timer(10000);
         configCheckTimer.Enabled = true;
         configCheckTimer.Elapsed += new System.Timers.ElapsedEventHandler(this.ConfigCheckTimer_Elapsed);
 
-        while (!_configCheckResult && _configCheckRetryCount < 10)
+        while (!_configCheckResult && _configCheckRetryCount < 20)
         {
           Thread.Sleep(100);
         }
