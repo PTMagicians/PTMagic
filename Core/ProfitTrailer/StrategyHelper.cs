@@ -119,19 +119,13 @@ namespace Core.ProfitTrailer
         case "max cost reached":
           result = "COST";
           break;
-        case "rebuy timeout":
-          result = "TIMEOUT";
-          break;
-        case "MIN/MAX CHANGE PERC":
-          result = "MIN/MAX";
-          break;
         default:
           break;
       }
 
       if (onlyValidStrategies)
       {
-        if (strategyName.IndexOf("SOM") > -1 || strategyName.IndexOf("MAX") > -1 || strategyName.IndexOf("MIN") > -1 || strategyName.IndexOf("PRICE") > -1 || strategyName.IndexOf("BLACK") > -1 || strategyName.IndexOf("INSUFFICIENT") > -1 || strategyName.IndexOf("COST") > -1 || strategyName.IndexOf("TIMEOUT") > -1)
+        if (strategyName.IndexOf("SOM") > -1 || strategyName.IndexOf("MAX") > -1 || strategyName.IndexOf("MIN") > -1 || strategyName.IndexOf("PRICE") > -1 || strategyName.IndexOf("BLACK") > -1 || strategyName.IndexOf("INSUFFICIENT") > -1 || strategyName.IndexOf("COST") > -1)
         {
           result = "";
         }
