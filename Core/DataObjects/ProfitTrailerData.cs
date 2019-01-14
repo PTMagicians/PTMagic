@@ -101,6 +101,14 @@ namespace Core.Main.DataObjects
       }
     }
 
+    public List<SellLogData> SellLogLast30Days
+    {
+      get
+      {
+        return _sellLog.FindAll(sl => sl.SoldDate.Date >= _dateTimeNow.DateTime.AddDays(-30).Date);
+      }
+    }
+
     public List<DCALogData> DCALog
     {
       get
