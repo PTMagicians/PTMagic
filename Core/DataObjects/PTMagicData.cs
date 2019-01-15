@@ -415,7 +415,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public int boughtTimes { get; set; }
     public string market { get; set; }
     public double profit { get; set; }
-    public AverageCalculator averageCalculator { get; set; }
+    public double avgPrice { get; set; }
     public double currentPrice { get; set; }
     public double fee { get; set; }
   }
@@ -436,10 +436,7 @@ namespace Core.Main.DataObjects.PTMagicData
 
   public class AverageCalculator
   {
-    public double totalCost { get; set; }
-    public double totalAmount { get; set; }
     public double totalAmountWithSold { get; set; }
-    public double avgPrice { get; set; }
     public double avgCost { get; set; }
     public double totalWeightedPrice { get; set; }
   }
@@ -467,7 +464,9 @@ namespace Core.Main.DataObjects.PTMagicData
     public double BBTrigger { get; set; }
     public double highbb { get; set; }
     public double profit { get; set; }
-    public AverageCalculator averageCalculator { get; set; }
+    public double avgPrice { get; set; }
+    public double totalCost { get; set; }
+    public double totalAmount { get; set; }
     public int firstBoughtDate { get; set; }
     public double currentPrice { get; set; }
     public string sellStrategy { get; set; }
