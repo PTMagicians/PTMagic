@@ -159,7 +159,7 @@ namespace Core.Main.DataObjects
         sellLogData.Market = rsld.market;
         sellLogData.ProfitPercent = rsld.profit;
         sellLogData.SoldPrice = rsld.currentPrice;
-        sellLogData.AverageBuyPrice = rsld.averageCalculator.avgPrice;
+        sellLogData.AverageBuyPrice = rsld.avgPrice;
         sellLogData.TotalCost = sellLogData.SoldAmount * sellLogData.AverageBuyPrice;
 
         double soldValueRaw = (sellLogData.SoldAmount * sellLogData.SoldPrice);
@@ -189,12 +189,12 @@ namespace Core.Main.DataObjects
       foreach (dcaLogData rdld in rawDCALogData)
       {
         DCALogData dcaLogData = new DCALogData();
-        dcaLogData.Amount = rdld.averageCalculator.totalAmount;
+        dcaLogData.Amount = rdld.totalAmount;
         dcaLogData.BoughtTimes = rdld.boughtTimes;
         dcaLogData.Market = rdld.market;
         dcaLogData.ProfitPercent = rdld.profit;
-        dcaLogData.AverageBuyPrice = rdld.averageCalculator.avgPrice;
-        dcaLogData.TotalCost = rdld.averageCalculator.totalCost;
+        dcaLogData.AverageBuyPrice = rdld.avgPrice;
+        dcaLogData.TotalCost = rdld.totalCost;
         dcaLogData.BuyTriggerPercent = rdld.buyProfit;
         dcaLogData.CurrentLowBBValue = rdld.BBLow;
         dcaLogData.CurrentHighBBValue = rdld.highbb;
@@ -281,12 +281,12 @@ namespace Core.Main.DataObjects
       foreach (dcaLogData rpld in rawPairsLogData)
       {
         DCALogData dcaLogData = new DCALogData();
-        dcaLogData.Amount = rpld.averageCalculator.totalAmount;
+        dcaLogData.Amount = rpld.totalAmount;
         dcaLogData.BoughtTimes = 0;
         dcaLogData.Market = rpld.market;
         dcaLogData.ProfitPercent = rpld.profit;
-        dcaLogData.AverageBuyPrice = rpld.averageCalculator.avgPrice;
-        dcaLogData.TotalCost = rpld.averageCalculator.totalCost;
+        dcaLogData.AverageBuyPrice = rpld.avgPrice;
+        dcaLogData.TotalCost = rpld.totalCost;
         dcaLogData.BuyTriggerPercent = rpld.buyProfit;
         dcaLogData.CurrentPrice = rpld.currentPrice;
         dcaLogData.SellTrigger = rpld.triggerValue;
