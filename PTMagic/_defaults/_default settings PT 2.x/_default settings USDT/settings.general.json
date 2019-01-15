@@ -29,10 +29,10 @@
       "MaxTopMarkets": 20, // The amount of top markets being shown in your Sales Analyzer
       "MaxDailySummaries": 10, // The amount of "Last Days" being shown in your Sales Analyzer
       "MaxMonthlySummaries": 10, // The amount of "Last Months" being shown in your Sales Analyzer
-	  "TvStudyA": "BB@tv-basicstudies", // See available STUDIES at https://www.tradingview.com/wiki/Widget:TradingView_Widget
-	  "TvStudyB": "",
-	  "TvStudyC": "",
-	  "TvStudyD": "" // The amount of "Last Months" being shown in your Sales Analyzer
+	    "TvStudyA": "BB@tv-basicstudies", // See available STUDIES at https://www.tradingview.com/wiki/Widget:TradingView_Widget
+	    "TvStudyB": "",
+	    "TvStudyC": "",
+	    "TvStudyD": ""
     },
     "Backup": {
       "IsEnabled": true, // Enables a backup procedure for your properties files. Before every switch PTMagic will backup the current properties
