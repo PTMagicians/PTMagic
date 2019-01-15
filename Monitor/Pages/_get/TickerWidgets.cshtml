@@ -39,10 +39,6 @@
   <b>TV:</b> @currentBalanceString @Model.Summary.MainMarket
 </div>
 
-<div class="card-box card-box-mini card-box-ptmagic-outlined" data-toggle="tooltip" data-placement="bottom" title="Active global setting">
-  <b>GS:</b> @Core.Helper.SystemHelper.SplitCamelCase(Model.Summary.CurrentGlobalSetting.SettingName)
-</div>
-
 <div class="card-box card-box-mini card-box-ptmagic-outlined" data-toggle="tooltip" data-placement="bottom" title="Active single market settings">
   <b>SMS:</b> <a href="ManageSMS">@Html.Raw(singleSettingInfoIcon)</a> @activeSingleSettings
 </div>

@@ -39,11 +39,18 @@
           </span>
         </div>
         <!-- End Logo container-->
-
+        
+        <div class="menu-extras topbar-custom">
+          <ul class="list-inline float-left mb-0">
+            <br>&nbsp;&nbsp;&nbsp;&nbsp;
+            <span class="card-box card-box-mini card-box-ptmagic-outlined" data-toggle="tooltip" data-placement="bottom" title="Active global setting">
+              <b>GS:</b> @Core.Helper.SystemHelper.SplitCamelCase(Model.Summary.CurrentGlobalSetting.SettingName)
+            </span>
+          </ul>
+        </div>
 
         <div class="menu-extras topbar-custom">
           <ul class="list-inline float-right mb-0">
-
             <li class="menu-item list-inline-item">
               <!-- Mobile menu toggle-->
               <a class="navbar-toggle nav-link">
@@ -57,7 +64,6 @@
             </li>
             <li id="ticker-widgets" class="list-inline-item ticker-widgets"></li>
           </ul>
-
         </div>
         <!-- end menu-extras -->
 
