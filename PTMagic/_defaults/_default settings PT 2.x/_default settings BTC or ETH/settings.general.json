@@ -29,7 +29,7 @@
       "MaxTopMarkets": 20, // The amount of top markets being shown in your Sales Analyzer
       "MaxDailySummaries": 10, // The amount of "Last Days" being shown in your Sales Analyzer
       "MaxMonthlySummaries": 10, // The amount of "Last Months" being shown in your Sales Analyzer
-	    "TvStudyA": "BB@tv-basicstudies", // See available STUDIES at https://www.tradingview.com/wiki/Widget:TradingView_Widget
+      "TvStudyA": "BB@tv-basicstudies", // See available STUDIES at https://www.tradingview.com/wiki/Widget:TradingView_Widget
       "TvStudyB": "",
       "TvStudyC": "",
       "TvStudyD": ""
