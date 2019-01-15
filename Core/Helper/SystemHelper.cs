@@ -604,6 +604,13 @@ namespace Core.Helper
       return result;
     }
 
+    public static string GetTradingViewStudies(string study)
+			{
+			string result = study;
+
+			return result;
+			}
+
     public static string GetCurrencySymbol(string code)
     {
       string result = code;

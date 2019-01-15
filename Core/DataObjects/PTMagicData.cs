@@ -71,7 +71,11 @@ namespace Core.Main.DataObjects.PTMagicData
     public int MaxSettingsLogEntries { get; set; } = 20;
     public string LinkPlatform { get; set; } = "TradingView";
     public string DefaultDCAMode { get; set; } = "Simple";
-
+    public string TvStudyA { get; set; } = "";
+    public string TvStudyB { get; set; } = "";
+    public string TvStudyC { get; set; } = "";
+    public string TvStudyD { get; set; } = "";
+    
     public string RootUrl
     {
       get

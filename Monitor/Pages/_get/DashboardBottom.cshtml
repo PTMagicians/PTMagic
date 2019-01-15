@@ -70,6 +70,11 @@
         double last7DaysProfit = Model.PTData.SellLogLast7Days.Sum(s => s.Profit);
         double last7DaysProfitFiat = Math.Round(last7DaysProfit * Model.Summary.MainMarketPrice, 2);
         double last7DaysPercentGain = Math.Round(last7DaysProfit / last7DaysStartBalance * 100, 2);
+
+        double last30DaysStartBalance = Model.PTData.GetSnapshotBalance(Model.DateTimeNow.DateTime.AddDays(-30));
+        double last30DaysProfit = Model.PTData.SellLogLast30Days.Sum(s => s.Profit);
+        double last30DaysProfitFiat = Math.Round(last30DaysProfit * Model.Summary.MainMarketPrice, 2);
+        double last30DaysPercentGain = Math.Round(last30DaysProfit / last30DaysStartBalance * 100, 2);
       }
 
       <table class="table table-sm">
@@ -103,6 +108,13 @@
             <td class="text-right text-autocolor">@last7DaysProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
             <td class="text-right text-autocolor">@Html.Raw(Model.MainFiatCurrencySymbol + last7DaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
             <td class="text-right text-autocolor">@last7DaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+          </tr>
+          <tr>
+            <th>Last 30 Days</th>
+            <td class="text-right">@Model.PTData.SellLogLast30Days.Count</td>
+            <td class="text-right text-autocolor">@last30DaysProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
+            <td class="text-right text-autocolor">@Html.Raw(Model.MainFiatCurrencySymbol + last30DaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
+            <td class="text-right text-autocolor">@last30DaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
           </tr>
           <tr>
             <th>Total</th>

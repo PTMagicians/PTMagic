@@ -129,8 +129,6 @@
                 buyDisabled = true;
               }
 
-              double currentFiatValue = Math.Round(dcaLogEntry.Amount * dcaLogEntry.CurrentPrice * Model.Summary.MainMarketPrice, 2);
-            
               string sellStrategyText = Core.ProfitTrailer.StrategyHelper.GetStrategyText(Model.Summary, dcaLogEntry.SellStrategies, dcaLogEntry.SellStrategy, isSellStrategyTrue, isTrailingSellActive);
 
               <tr>
