@@ -169,7 +169,7 @@ namespace Core.Main.DataObjects
 
         //Convert Unix Timestamp to Datetime
         System.DateTime dtDateTime = new DateTime(1970,1,1,0,0,0,System.DateTimeKind.Utc);
-        dtDateTime = dtDateTime.AddSeconds(rsld.soldDate).ToLocalTime();  
+        dtDateTime = dtDateTime.AddSeconds(rsld.soldDate).ToUniversalTime();  
 
         // Profit Trailer sales are saved in UTC
         DateTimeOffset ptSoldDate = DateTimeOffset.Parse(dtDateTime.Year.ToString() + "-" + dtDateTime.Month.ToString("00") + "-" + dtDateTime.Day.ToString("00") + "T" + dtDateTime.Hour.ToString("00") + ":" + dtDateTime.Minute.ToString("00") + ":" + dtDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
@@ -257,7 +257,7 @@ namespace Core.Main.DataObjects
 
         //Convert Unix Timestamp to Datetime
         System.DateTime rdldDateTime = new DateTime(1970,1,1,0,0,0,System.DateTimeKind.Utc);
-        rdldDateTime = rdldDateTime.AddSeconds(rdld.firstBoughtDate).ToLocalTime();
+        rdldDateTime = rdldDateTime.AddSeconds(rdld.firstBoughtDate).ToUniversalTime();
 
         // Profit Trailer bought times are saved in UTC
         if (rdld.firstBoughtDate > 0)
@@ -319,7 +319,7 @@ namespace Core.Main.DataObjects
 
         //Convert Unix Timestamp to Datetime
         System.DateTime rpldDateTime = new DateTime(1970,1,1,0,0,0,System.DateTimeKind.Utc);
-        rpldDateTime = rpldDateTime.AddSeconds(rpld.firstBoughtDate).ToLocalTime();
+        rpldDateTime = rpldDateTime.AddSeconds(rpld.firstBoughtDate).ToUniversalTime();
 
         // Profit Trailer bought times are saved in UTC
         if (rpld.firstBoughtDate > 0)
