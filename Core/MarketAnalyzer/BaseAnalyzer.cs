@@ -175,7 +175,7 @@ namespace Core.MarketAnalyzer
 
       try
       {
-        string baseUrl = "https://api.github.com/repos/legedric/ptmagic/releases/latest";
+        string baseUrl = "https://api.github.com/repos/PTMagicians/PTMagic/releases/latest";
 
         Newtonsoft.Json.Linq.JObject jsonObject = GetSimpleJsonObjectFromURL(baseUrl, log, true);
         if (jsonObject != null)

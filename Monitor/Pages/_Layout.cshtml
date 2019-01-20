@@ -32,18 +32,25 @@
           <span class="logo-version">
             v<span>@Model.CurrentBotVersion</span>
             @if (!Core.Helper.SystemHelper.IsRecentVersion(Model.CurrentBotVersion, Model.LatestVersion)) {
-              <a href="https://github.com/Legedric/ptmagic/releases" target="_blank"><i class="fa fa-exclamation-triangle text-warning" data-toggle="tooltip" data-placement="top" title="Your PT Magic is out of date. Click here to get to the latest release."></i></a>
+              <a href="https://github.com/PTMagicians/PTMagic/releases" target="_blank"><i class="fa fa-exclamation-triangle text-warning" data-toggle="tooltip" data-placement="top" title="Your PT Magic is out of date. Click here to get to the latest release."></i></a>
             } else {
               <i class="fa fa-check text-success" data-toggle="tooltip" data-placement="top" title="Your PT Magic is up to date."></i>
             }
           </span>
         </div>
         <!-- End Logo container-->
-
+        
+        <div class="menu-extras topbar-custom">
+          <ul class="list-inline float-left mb-0">
+            <br>&nbsp;&nbsp;&nbsp;&nbsp;
+            <span class="card-box card-box-mini card-box-ptmagic-outlined" data-toggle="tooltip" data-placement="bottom" title="Active global setting">
+              <b>GS:</b> @Core.Helper.SystemHelper.SplitCamelCase(Model.Summary.CurrentGlobalSetting.SettingName)
+            </span>
+          </ul>
+        </div>
 
         <div class="menu-extras topbar-custom">
           <ul class="list-inline float-right mb-0">
-
             <li class="menu-item list-inline-item">
               <!-- Mobile menu toggle-->
               <a class="navbar-toggle nav-link">
@@ -57,7 +64,6 @@
             </li>
             <li id="ticker-widgets" class="list-inline-item ticker-widgets"></li>
           </ul>
-
         </div>
         <!-- end menu-extras -->
 
@@ -113,7 +119,7 @@
             }
 
             <li>
-              <a href="https://github.com/Legedric/ptmagic/wiki" target="_blank"><i class="fa fa-book fa-2x"></i> <span> Wiki </span></a>
+              <a href="https://github.com/PTMagicians/PTMagic/wiki" target="_blank"><i class="fa fa-book fa-2x"></i> <span> Wiki </span></a>
             </li>
 
             <li>
@@ -140,11 +146,9 @@
     <div class="container">
       <div class="row">
         <div class="col-12 text-center">
-          <a href="http://www.profit-trailer-magic.com/" target="_blank">www.profit-trailer-magic.com</a>
+          <a href="https://github.com/PTMagicians/PTMagic" target="_blank">GitHub</a>
           |
-          <a href="https://github.com/Legedric/ptmagic" target="_blank">GitHub</a>
-          |
-          <a href="https://github.com/Legedric/ptmagic/wiki" target="_blank">Wiki</a>
+          <a href="https://github.com/PTMagicians/PTMagic/wiki" target="_blank">Wiki</a>
         </div>
       </div>
     </div>
