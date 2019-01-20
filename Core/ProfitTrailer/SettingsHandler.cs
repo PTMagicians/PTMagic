@@ -469,11 +469,6 @@ namespace Core.ProfitTrailer
         }
 
         newPropertyLines.Add("# " + marketPair + " - Current active settings: " + appliedSettingsStringList);
-        newPropertyLines.Add("# Matching triggers:");
-        foreach (string matchingTrigger in matchedTriggers[marketPair])
-        {
-          newPropertyLines.Add("# " + matchingTrigger);
-        }
 
         foreach (string settingProperty in properties.Keys)
         {
