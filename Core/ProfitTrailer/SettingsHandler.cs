@@ -90,7 +90,6 @@ namespace Core.ProfitTrailer
       fileLines.Insert(0, "# ####################################");
       fileLines.Insert(0, "# PTMagic_LastChanged = " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString());
       fileLines.Insert(0, "# PTMagic_ActiveSetting = " + SystemHelper.StripBadCode(ptmagicInstance.DefaultSettingName, Constants.WhiteListProperties));
-      fileLines.Insert(0, "# ####### PTMagic Current Setting ########");
       fileLines.Insert(0, "# ####################################");
 
       ptmagicInstance.GetType().GetProperty(fileType + "Lines").SetValue(ptmagicInstance, fileLines);

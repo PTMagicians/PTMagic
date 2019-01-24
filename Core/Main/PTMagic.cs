@@ -559,6 +559,7 @@ namespace Core.Main
 
       SettingsFiles.CheckPresets(this.PTMagicConfiguration, this.Log, true);
 
+      EnforceSettingsReapply = true;
       this.StartPTMagicIntervalTimer();
 
       return result;
@@ -903,7 +904,7 @@ namespace Core.Main
 
       FileInfo generalSettingsFile = new FileInfo(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "settings.general.json");
       FileInfo analyzerSettingsFile = new FileInfo(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "settings.analyzer.json");
-      if (generalSettingsFile.LastWriteTime > this.LastSettingFileCheck || analyzerSettingsFile.LastWriteTime > this.LastSettingFileCheck)
+      if (generalSettingsFile.LastWriteTime > this.LastSettingFileCheck || analyzerSettingsFile.LastWriteTime > this.LastSettingFileCheck || EnforceSettingsReapply)
       {
         Log.DoLogInfo("Detected configuration changes. Reloading settings...");
 
