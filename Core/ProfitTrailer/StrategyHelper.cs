@@ -41,16 +41,34 @@ namespace Core.ProfitTrailer
         case "emagain":
           result = "EG";
           break;
+        case "hmagain":
+          result = "EG";
+          break;
+        case "dmagain":
+          result = "EG";
+          break;
         case "smaspread":
           result = "SS";
           break;
         case "emaspread":
           result = "ES";
           break;
+        case "hmaspread":
+          result = "ES";
+          break;
+        case "dmaspread":
+          result = "ES";
+          break;
         case "smacross":
           result = "SC";
           break;
         case "emacross":
+          result = "EC";
+          break;
+        case "hmacross":
+          result = "SC";
+          break;
+        case "dmacross":
           result = "EC";
           break;
         case "rsi":
@@ -79,6 +97,9 @@ namespace Core.ProfitTrailer
           break;
         case "bbwidth":
           result = "BBW";
+          break;
+        case "pdhigh":
+          result = "PDH";
           break;
         case "anderson":
           result = "AND";
@@ -153,10 +174,16 @@ namespace Core.ProfitTrailer
           case "loss":
           case "smagain":
           case "emagain":
+          case "hmagain":
+          case "dmagain":
           case "smaspread":
           case "emaspread":
+          case "hmaspread":
+          case "dmaspread":
           case "smacross":
           case "emacross":
+          case "hmacross":
+          case "dmacross":
           case "rsi":
           case "stoch":
           case "stochrsi":
@@ -167,6 +194,9 @@ namespace Core.ProfitTrailer
           case "obv":
           case "bbwidth":
           case "anderson":
+          case "dema":
+          case "hma":
+          case "pdhigh":
             result = true;
             break;
           default:
@@ -207,11 +237,18 @@ namespace Core.ProfitTrailer
         case "loss":
         case "smagain":
         case "emagain":
+        case "hmagain":
+        case "dmagain":
         case "smaspread":
         case "emaspread":
-        case "anderson":
+        case "hmaspread":
+        case "dmaspread":
         case "smacross":
         case "emacross":
+        case "hmacross":
+        case "dmacross":
+        case "anderson":
+        case "pdhigh":
           result = 2;
           break;
         case "rsi":
