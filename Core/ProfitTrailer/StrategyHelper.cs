@@ -40,8 +40,10 @@ namespace Core.ProfitTrailer
           break;
         case "emagain":
           result = "EG";
+          break;
         case "hmagain":
           result = "EG";
+          break;
         case "dmagain":
           result = "EG";
           break;
@@ -53,8 +55,10 @@ namespace Core.ProfitTrailer
           break;
         case "hmaspread":
           result = "ES";
+          break;
         case "dmaspread":
           result = "ES";
+          break;
         case "smacross":
           result = "SC";
           break;
@@ -93,7 +97,7 @@ namespace Core.ProfitTrailer
           break;
         case "bbwidth":
           result = "BBW";
-          break
+          break;
         case "pdhigh":
           result = "PDH";
           break;
