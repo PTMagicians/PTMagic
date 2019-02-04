@@ -29,14 +29,14 @@ namespace Monitor.Pages
 
       if (encryptedPassword.Equals(PTMagicConfiguration.SecureSettings.MonitorPassword))
       {
-        HttpContext.Session.SetString("LoggedIn" + PTMagicConfiguration.GeneralSettings.Monitor.Port.ToString(), DateTime.Now.ToUniversalTime().ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'"));
+        HttpContext.Session.SetString("LoggedIn" + PTMagicConfiguration.GeneralSettings.Monitor.Port.ToString(), DateTime.UtcNow.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'"));
 
         if (cbRememberMe != null)
         {
           if (cbRememberMe.Equals("on", StringComparison.InvariantCultureIgnoreCase))
           {
             CookieOptions cookieOption = new CookieOptions();
-            cookieOption.Expires = DateTime.Now.AddYears(1);
+            cookieOption.Expires = DateTime.UtcNow.AddYears(1);
 
             string cookieValue = EncryptionHelper.Encrypt(encryptedPassword);
 

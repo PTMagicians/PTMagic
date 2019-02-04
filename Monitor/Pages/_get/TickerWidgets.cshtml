@@ -16,7 +16,7 @@
   }
 
   DateTime lastRuntime = Model.Summary.LastRuntime;
-  double elapsedSecondsSinceRuntime = DateTime.Now.Subtract(lastRuntime).TotalSeconds;
+  double elapsedSecondsSinceRuntime = DateTime.UtcNow.Subtract(lastRuntime).TotalSeconds;
   double intervalSeconds = Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 60.0;
 
   string iconColor = "text-success";

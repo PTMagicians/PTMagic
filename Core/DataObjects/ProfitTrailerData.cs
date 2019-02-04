@@ -136,7 +136,7 @@ namespace Core.Main.DataObjects
 
     public double GetCurrentBalance()
     {
-      return this.GetSnapshotBalance(DateTime.Now.ToUniversalTime());
+      return this.GetSnapshotBalance(DateTime.UtcNow);
     }
 
     public double GetSnapshotBalance(DateTime snapshotDateTime)

@@ -300,7 +300,7 @@ namespace Core.MarketAnalyzer
         List<MarketTrend> marketTrends = systemConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends.FindAll(mt => mt.Platform.Equals(platform, StringComparison.InvariantCultureIgnoreCase));
         if (marketTrends.Count > 0)
         {
-          Dictionary<string, Market> recentMarkets = BaseAnalyzer.GetMarketDataFromFile(systemConfiguration, log, platform, DateTime.Now.ToUniversalTime(), "Recent");
+          Dictionary<string, Market> recentMarkets = BaseAnalyzer.GetMarketDataFromFile(systemConfiguration, log, platform, DateTime.UtcNow, "Recent");
 
           foreach (MarketTrend marketTrend in marketTrends)
           {
@@ -313,7 +313,7 @@ namespace Core.MarketAnalyzer
               log.DoLogInfo(platform + " - Building market trend changes for '" + marketTrend.Name + "'...");
             }
 
-            Dictionary<string, Market> trendMarkets = BaseAnalyzer.GetMarketDataFromFile(systemConfiguration, log, platform, DateTime.Now.ToUniversalTime().AddMinutes(-marketTrend.TrendMinutes), marketTrend.Name);
+            Dictionary<string, Market> trendMarkets = BaseAnalyzer.GetMarketDataFromFile(systemConfiguration, log, platform, DateTime.UtcNow.AddMinutes(-marketTrend.TrendMinutes), marketTrend.Name);
 
             List<MarketTrendChange> marketTrendChanges = BaseAnalyzer.GetMarketTrendChanges(platform, mainMarket, marketTrend, marketList, recentMarkets, trendMarkets, sortBy, isGlobal, systemConfiguration, log);
 
@@ -407,7 +407,7 @@ namespace Core.MarketAnalyzer
               mtc.Market = recentMarket.Name;
               mtc.LastPrice = recentMarket.Price;
               mtc.Volume24h = recentMarket.Volume24h;
-              mtc.TrendDateTime = DateTime.Now;
+              mtc.TrendDateTime = DateTime.UtcNow;
 
               result.Add(mtc);
 

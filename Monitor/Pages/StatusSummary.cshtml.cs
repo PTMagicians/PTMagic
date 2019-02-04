@@ -71,7 +71,7 @@ namespace Monitor.Pages
     {
       if (Summary.GlobalSettingSummary.Count > 0)
       {
-        DateTime dateTime24hAgo = DateTime.Now.AddHours(-24);
+        DateTime dateTime24hAgo = DateTime.UtcNow.AddHours(-24);
         List<GlobalSettingSummary> gsSummaries24h = Summary.GlobalSettingSummary.FindAll(gss => gss.SwitchDateTime >= dateTime24hAgo);
         IEnumerable<GlobalSettingSummary> gsNames24h = gsSummaries24h.GroupBy(gss => gss.SettingName).Select(group => group.First());
 
@@ -141,7 +141,7 @@ namespace Monitor.Pages
     {
       if (Summary.GlobalSettingSummary.Count > 0)
       {
-        DateTime dateTime3dAgo = DateTime.Now.AddHours(-72);
+        DateTime dateTime3dAgo = DateTime.UtcNow.AddHours(-72);
         List<GlobalSettingSummary> gsSummaries3d = Summary.GlobalSettingSummary.FindAll(gss => gss.SwitchDateTime >= dateTime3dAgo);
         IEnumerable<GlobalSettingSummary> gsNames3d = gsSummaries3d.GroupBy(gss => gss.SettingName).Select(group => group.First());
 

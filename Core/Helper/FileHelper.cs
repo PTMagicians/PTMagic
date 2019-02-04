@@ -45,7 +45,7 @@ namespace Core.Helper
 
       FileInfo file = new FileInfo(filePath);
 
-      string backupFilePath = backupFolder + DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss") + "_" + file.Name;
+      string backupFilePath = backupFolder + DateTime.UtcNow.ToString("yyyy-MM-dd_HH.mm.ss") + "_" + file.Name;
       if (!backupFileName.Equals(""))
       {
         backupFilePath = backupFolder + backupFileName;
@@ -64,7 +64,7 @@ namespace Core.Helper
       DirectoryInfo folder = new DirectoryInfo(folderPath);
       foreach (FileInfo file in folder.GetFiles())
       {
-        DateTime maxAge = DateTime.Now.AddMinutes(-maxMinutes);
+        DateTime maxAge = DateTime.UtcNow.AddMinutes(-maxMinutes);
 
         if (file.LastWriteTime < maxAge)
         {
@@ -83,7 +83,7 @@ namespace Core.Helper
       DirectoryInfo folder = new DirectoryInfo(folderPath);
       foreach (FileInfo file in folder.GetFiles())
       {
-        DateTime maxAge = DateTime.Now.AddHours(-(maxHours + 1));
+        DateTime maxAge = DateTime.UtcNow.AddHours(-(maxHours + 1));
 
         if (file.LastWriteTime < maxAge)
         {

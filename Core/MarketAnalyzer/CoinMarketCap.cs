@@ -53,7 +53,7 @@ namespace Core.MarketAnalyzer
 
             CoinMarketCap.CheckForMarketDataRecreation(markets, systemConfiguration, log);
 
-            DateTime fileDateTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, 0).ToUniversalTime();
+            DateTime fileDateTime = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, DateTime.UtcNow.Hour, DateTime.UtcNow.Minute, 0).ToUniversalTime();
 
             FileHelper.WriteTextToFile(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathCoinMarketCap + Path.DirectorySeparatorChar, "MarketData_" + fileDateTime.ToString("yyyy-MM-dd_HH.mm") + ".json", JsonConvert.SerializeObject(markets), fileDateTime, fileDateTime);
 
@@ -87,7 +87,7 @@ namespace Core.MarketAnalyzer
 
       List<FileInfo> marketFiles = dataDirectory.EnumerateFiles("MarketData*")
                          .Select(x => { x.Refresh(); return x; })
-                         .Where(x => x.LastWriteTimeUtc <= DateTime.Now.AddHours(-24))
+                         .Where(x => x.LastWriteTimeUtc <= DateTime.UtcNow.AddHours(-24))
                          .ToArray().OrderByDescending(f => f.LastWriteTimeUtc).ToList();
 
       bool build24hMarketDataFile = false;
@@ -95,7 +95,7 @@ namespace Core.MarketAnalyzer
       if (marketFiles.Count > 0)
       {
         marketFile = marketFiles.First();
-        if (marketFile.LastWriteTimeUtc <= DateTime.Now.AddHours(-24).AddMinutes(-systemConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes).AddSeconds(-10))
+        if (marketFile.LastWriteTimeUtc <= DateTime.UtcNow.AddHours(-24).AddMinutes(-systemConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes).AddSeconds(-10))
         {
           log.DoLogDebug("CoinMarketCap - 24h market data file too old (" + marketFile.LastWriteTimeUtc.ToString() + "). Rebuilding data...");
           build24hMarketDataFile = true;
@@ -105,13 +105,13 @@ namespace Core.MarketAnalyzer
       {
         marketFiles = dataDirectory.EnumerateFiles("MarketData*")
                          .Select(x => { x.Refresh(); return x; })
-                         .Where(x => x.LastWriteTimeUtc >= DateTime.Now.AddHours(-24))
+                         .Where(x => x.LastWriteTimeUtc >= DateTime.UtcNow.AddHours(-24))
                          .ToArray().OrderBy(f => f.LastWriteTimeUtc).ToList();
 
         if (marketFiles.Count > 0)
         {
           marketFile = marketFiles.First();
-          if (marketFile.LastWriteTimeUtc >= DateTime.Now.AddHours(-24).AddMinutes(systemConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes).AddSeconds(10))
+          if (marketFile.LastWriteTimeUtc >= DateTime.UtcNow.AddHours(-24).AddMinutes(systemConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes).AddSeconds(10))
           {
             log.DoLogDebug("CoinMarketCap - 24h market data file too young (" + marketFile.LastWriteTimeUtc.ToString() + "). Rebuilding data...");
             build24hMarketDataFile = true;
@@ -139,7 +139,7 @@ namespace Core.MarketAnalyzer
           markets24h.Add(markets[key].Name, market24h);
         }
 
-        DateTime fileDateTime = new DateTime(DateTime.Now.ToLocalTime().AddHours(-24).Year, DateTime.Now.ToLocalTime().AddHours(-24).Month, DateTime.Now.ToLocalTime().AddHours(-24).Day, DateTime.Now.ToLocalTime().AddHours(-24).Hour, DateTime.Now.ToLocalTime().AddHours(-24).Minute, 0).ToUniversalTime();
+        DateTime fileDateTime = new DateTime(DateTime.UtcNow.ToLocalTime().AddHours(-24).Year, DateTime.UtcNow.ToLocalTime().AddHours(-24).Month, DateTime.UtcNow.ToLocalTime().AddHours(-24).Day, DateTime.UtcNow.ToLocalTime().AddHours(-24).Hour, DateTime.UtcNow.ToLocalTime().AddHours(-24).Minute, 0).ToUniversalTime();
 
         FileHelper.WriteTextToFile(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathCoinMarketCap + Path.DirectorySeparatorChar, "MarketData_" + fileDateTime.ToString("yyyy-MM-dd_HH.mm") + ".json", JsonConvert.SerializeObject(markets24h), fileDateTime, fileDateTime);
 

@@ -31,8 +31,6 @@ namespace Core.Main
     private int _state = 0;
     private int _runCount = 0;
     private int _totalElapsedSeconds = 0;
-    private int _configCheckRetryCount = 0;
-    private bool _configCheckResult = true;
     private bool _globalSettingWritten = false;
     private bool _singleMarketSettingWritten = false;
     private bool _enforceSettingsReapply = false;
@@ -510,6 +508,30 @@ namespace Core.Main
     #endregion
 
     #region PTMagic Startup  Methods
+
+    private static int ExponentialDelay(int failedAttempts, 
+                                          int maxDelayInSeconds = 900)
+    {
+        //Attempt 1     0s     0s
+        //Attempt 2     2s     2s
+        //Attempt 3     4s     4s
+        //Attempt 4     8s     8s
+        //Attempt 5     16s    16s
+        //Attempt 6     32s    32s
+
+        //Attempt 7     64s     1m 4s
+        //Attempt 8     128s    2m 8s
+        //Attempt 9     256s    4m 16s
+        //Attempt 10    512     8m 32s
+        //Attempt 11    1024    17m 4s
+
+        var delayInSeconds = ((1d / 2d) * (Math.Pow(2d, failedAttempts) - 1d));
+
+        return maxDelayInSeconds < delayInSeconds
+            ? maxDelayInSeconds
+            : (int)delayInSeconds;
+    }
+
     public bool StartProcess()
     {
       bool result = true;
@@ -535,27 +557,28 @@ namespace Core.Main
         return false;
       }
 
-      _configCheckResult = this.RunConfigurationChecks();
-      if (!_configCheckResult)
-      {
-        this.Log.DoLogInfo("Starting configuration check retry in 10 seconds...");
-        System.Timers.Timer configCheckTimer = new System.Timers.Timer(10000);
-        configCheckTimer.Enabled = true;
-        configCheckTimer.Elapsed += new System.Timers.ElapsedEventHandler(this.ConfigCheckTimer_Elapsed);
+      bool configCheckResult = this.RunConfigurationChecks();
 
-        while (!_configCheckResult && _configCheckRetryCount < 20)
+      if (!configCheckResult)
+      {
+        // Config check failed so retry using an exponential back off until it passes; max retry time 15 mins.
+        int configRetryCount = 1;
+        int delaySeconds;
+
+        while (!configCheckResult)
         {
-          Thread.Sleep(100);
+          delaySeconds = ExponentialDelay(configRetryCount);
+          this.Log.DoLogError("Configuration check retry " + configRetryCount + " failed, starting next retry in " + delaySeconds + " seconds...");
+          Thread.Sleep(delaySeconds * 1000);
+
+          // Reinit config in case the user changed something
+          this.InitializeConfiguration();
+          configCheckResult = this.RunConfigurationChecks();
+          configRetryCount++;
         }
-        configCheckTimer.Stop();
       }
 
-      if (!_configCheckResult)
-      {
-        return false;
-      }
-
-      this.LastSettingFileCheck = DateTime.Now;
+      this.LastSettingFileCheck = DateTime.UtcNow;
 
       SettingsFiles.CheckPresets(this.PTMagicConfiguration, this.Log, true);
 
@@ -662,7 +685,7 @@ namespace Core.Main
         }
 
         // Check for CoinMarketCap API Key
-        if (!this.PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey.Equals(""))
+        if (!String.IsNullOrEmpty(this.PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey))
         {
           this.Log.DoLogInfo("CoinMarketCap API KEY found");
         }
@@ -688,7 +711,7 @@ namespace Core.Main
       this.Log.DoLogInfo("========== STARTING CHECKS FOR Profit Trailer ==========");
 
       // Check for PT license key
-      if (!this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerLicense.Equals(""))
+      if (!String.IsNullOrEmpty(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerLicense))
       {
         this.Log.DoLogInfo("Profit Trailer check: Profit Trailer license found");
       }
@@ -699,18 +722,18 @@ namespace Core.Main
       }
 
       //Check for ptServerAPIToken
-      if (!this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken.Equals(""))
+      if (!String.IsNullOrEmpty(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken))
       {
         this.Log.DoLogInfo("Profit Trailer check: Profit Trailer Server API Token Specified");
       }
       else
       {
-        this.Log.DoLogError("Profit Trailer check: No Server API Token specified. It has to be the same Token as in the Profit Trailer Config File");
+        this.Log.DoLogError("Profit Trailer check: No Server API Token specified. Please configure ProfitTrailerServerAPIToken in settings.general.json , ensuring it has to be the same Token as in the Profit Trailer Config File!");
         result = false;
       }
 
       // Check for PT default setting key
-      if (!this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName.Equals(""))
+      if (!String.IsNullOrEmpty(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName))
       {
         this.Log.DoLogInfo("Profit Trailer check: Profit Trailer default setting name specified");
       }
@@ -721,7 +744,7 @@ namespace Core.Main
       }
 
       // Check for PT monitor
-      if (!this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL.Equals(""))
+      if (!String.IsNullOrEmpty(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL))
       {
         this.Log.DoLogInfo("Profit Trailer check: Profit Trailer monitor URL found");
       }
@@ -768,17 +791,6 @@ namespace Core.Main
     #endregion
 
     #region PTMagic Interval Methods
-    public void ConfigCheckTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-    {
-      // Reinit config in case the user changed something
-      this.InitializeConfiguration();
-      _configCheckResult = this.RunConfigurationChecks();
-      _configCheckRetryCount++;
-      if (!_configCheckResult)
-      {
-        this.Log.DoLogError("Configuration check retry " + _configCheckRetryCount + "/10 failed, starting next retry in 5 seconds...");
-      }
-    }
 
     public void PTMagicIntervalTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
     {
@@ -805,7 +817,7 @@ namespace Core.Main
           // Change state to "Running"
           this.State = Constants.PTMagicBotState_Running;
 
-          this.LastRuntime = DateTime.Now;
+          this.LastRuntime = DateTime.UtcNow;
 
           this.LastRuntimeSummary = new Summary();
           this.LastRuntimeSummary.LastRuntime = this.LastRuntime;
@@ -881,7 +893,7 @@ namespace Core.Main
           if (File.Exists(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "LastRuntimeSummary.json"))
           {
             FileInfo fiLastSummary = new FileInfo(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "LastRuntimeSummary.json");
-            if (fiLastSummary.LastWriteTime < DateTime.Now.AddMinutes(-(this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 2)))
+            if (fiLastSummary.LastWriteTime < DateTime.UtcNow.AddMinutes(-(this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 2)))
             {
               Log.DoLogWarn("PTMagic seems to have frozen after raid " + this.RunCount.ToString() + ", but don't worry I will sacrifice some Magicbots to get this running again...");
               this.State = Constants.PTMagicBotState_Idle;
@@ -935,7 +947,7 @@ namespace Core.Main
           }
 
           Log.DoLogInfo("New configuration reloaded.");
-          this.LastSettingFileCheck = DateTime.Now;
+          this.LastSettingFileCheck = DateTime.UtcNow;
           result = true;
 
           if (this.Timer.Interval != this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 60 * 1000)
@@ -977,7 +989,7 @@ namespace Core.Main
       }
       else
       {
-        if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals(""))
+        if (String.IsNullOrEmpty(this.PTMagicConfiguration.GeneralSettings.Application.Exchange))
         {
           Log.DoLogError("Your setting for Application.Exchange in settings.general.json is invalid (empty)! Terminating process.");
           this.Timer.Stop();
@@ -1000,10 +1012,10 @@ namespace Core.Main
     private void CheckLatestGitHubVersion(string currentVersion)
     {
       // Get latest version number
-      if (this.LastVersionCheck < DateTime.Now.AddMinutes(-30))
+      if (this.LastVersionCheck < DateTime.UtcNow.AddMinutes(-30))
       {
         this.LatestVersion = BaseAnalyzer.GetLatestGitHubRelease(this.Log, currentVersion);
-        this.LastVersionCheck = DateTime.Now;
+        this.LastVersionCheck = DateTime.UtcNow;
         if (!SystemHelper.IsRecentVersion(currentVersion, this.LatestVersion))
         {
           this.Log.DoLogWarn("Your bot is out of date! The most recent version of PTMagic is " + this.LatestVersion);
@@ -1016,7 +1028,7 @@ namespace Core.Main
       this.LastRuntimeSummary.MainFiatCurrency = this.LastMainFiatCurrency;
       this.LastRuntimeSummary.MainFiatCurrencyExchangeRate = this.LastMainFiatCurrencyExchangeRate;
 
-      if (this.LastFiatCurrencyCheck < DateTime.Now.AddHours(-12) && !this.PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency.Equals("USD", StringComparison.InvariantCultureIgnoreCase))
+      if (this.LastFiatCurrencyCheck < DateTime.UtcNow.AddHours(-12) && !this.PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency.Equals("USD", StringComparison.InvariantCultureIgnoreCase))
       {
         try
         {
@@ -1025,7 +1037,7 @@ namespace Core.Main
           this.LastMainFiatCurrency = this.LastRuntimeSummary.MainFiatCurrency;
           this.LastMainFiatCurrencyExchangeRate = this.LastRuntimeSummary.MainFiatCurrencyExchangeRate;
 
-          this.LastFiatCurrencyCheck = DateTime.Now;
+          this.LastFiatCurrencyCheck = DateTime.UtcNow;
         }
         catch (Exception ex)
         {
@@ -1112,7 +1124,7 @@ namespace Core.Main
     private void BuildMarketData()
     {
 
-      if (!this.PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey.Equals(""))
+      if (!String.IsNullOrEmpty(this.PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey))
       {
         // Get most recent market data from CMC
         string cmcMarketDataResult = CoinMarketCap.GetMarketData(this.PTMagicConfiguration, this.Log);
@@ -1154,7 +1166,7 @@ namespace Core.Main
     private void BuildMarketList()
     {
       string marketPairs = SettingsHandler.GetMarketPairs(this.PTMagicConfiguration, this.PairsLines, this.Log);
-      if (marketPairs.ToLower().Equals("all") || marketPairs.ToLower().Equals("false") || marketPairs.ToLower().Equals("true") || marketPairs.Equals(""))
+      if (marketPairs.ToLower().Equals("all") || marketPairs.ToLower().Equals("false") || marketPairs.ToLower().Equals("true") || String.IsNullOrEmpty(marketPairs))
       {
         this.MarketList = this.ExchangeMarketList;
       }
@@ -1299,7 +1311,7 @@ namespace Core.Main
     private void ActivateSetting(ref bool headerLinesAdded, ref GlobalSetting triggeredSetting, ref List<string> matchedTriggers)
     {
       string activeSettingName = SettingsHandler.GetActiveSetting(this, ref headerLinesAdded);
-      if (activeSettingName.Equals("") && this.PTMagicConfiguration.GeneralSettings.Application.TestMode)
+      if (String.IsNullOrEmpty(activeSettingName) && this.PTMagicConfiguration.GeneralSettings.Application.TestMode)
       {
         activeSettingName = this.ActiveSetting;
       }
@@ -1657,7 +1669,7 @@ namespace Core.Main
 
                   if (marketInfo != null)
                   {
-                    int marketAge = (int)Math.Floor(DateTime.Now.ToUniversalTime().Subtract(marketInfo.FirstSeen).TotalDays);
+                    int marketAge = (int)Math.Floor(DateTime.UtcNow.Subtract(marketInfo.FirstSeen).TotalDays);
                     if (marketAge < trigger.AgeDaysLowerThan)
                     {
                       matchedSingleMarketTriggers.Add(marketSetting.SettingName + ": '" + marketPair + "' is only " + marketAge.ToString() + " days old on this exchange. Trigger matched!");
@@ -1979,7 +1991,7 @@ namespace Core.Main
 
     private void SaveRuntimeSummary(bool headerLinesAdded)
     {
-      DateTime endTime = DateTime.Now;
+      DateTime endTime = DateTime.UtcNow;
       int elapsedSeconds = (int)Math.Round(endTime.Subtract(this.LastRuntime).TotalSeconds, 0);
 
       this.LastRuntimeSummary.LastRuntimeSeconds = elapsedSeconds;
@@ -2004,11 +2016,11 @@ namespace Core.Main
             // Market trend changes history for graph data
             foreach (string key in summary.MarketTrendChanges.Keys)
             {
-              this.LastRuntimeSummary.MarketTrendChanges.Add(key, summary.MarketTrendChanges[key].FindAll(mtc => mtc.TrendDateTime >= DateTime.Now.AddHours(-PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours)));
+              this.LastRuntimeSummary.MarketTrendChanges.Add(key, summary.MarketTrendChanges[key].FindAll(mtc => mtc.TrendDateTime >= DateTime.UtcNow.AddHours(-PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours)));
             }
 
             // Global setting summary to be kept
-            this.LastRuntimeSummary.GlobalSettingSummary.AddRange(summary.GlobalSettingSummary.FindAll(gss => gss.SwitchDateTime >= DateTime.Now.AddHours(-96)));
+            this.LastRuntimeSummary.GlobalSettingSummary.AddRange(summary.GlobalSettingSummary.FindAll(gss => gss.SwitchDateTime >= DateTime.UtcNow.AddHours(-96)));
 
             this.Log.DoLogInfo("Summary: Loaded old LastRuntimeSummary.json to keep data.");
           }
@@ -2034,7 +2046,7 @@ namespace Core.Main
         if (this.LastRuntimeSummary.GlobalSettingSummary.Count > 0)
         {
           lastSettingSummary = this.LastRuntimeSummary.GlobalSettingSummary.OrderByDescending(lss => lss.SwitchDateTime).First();
-          lastSettingSummary.ActiveSeconds = (int)Math.Ceiling(DateTime.Now.ToUniversalTime().Subtract(lastSettingSummary.SwitchDateTime).TotalSeconds);
+          lastSettingSummary.ActiveSeconds = (int)Math.Ceiling(DateTime.UtcNow.Subtract(lastSettingSummary.SwitchDateTime).TotalSeconds);
         }
 
         this.LastRuntimeSummary.GlobalSettingSummary.Add(gss);
@@ -2048,7 +2060,7 @@ namespace Core.Main
         if (this.LastRuntimeSummary.GlobalSettingSummary.Count > 0)
         {
           lastSettingSummary = this.LastRuntimeSummary.GlobalSettingSummary.OrderByDescending(lss => lss.SwitchDateTime).First();
-          lastSettingSummary.ActiveSeconds = (int)Math.Ceiling(DateTime.Now.ToUniversalTime().Subtract(lastSettingSummary.SwitchDateTime).TotalSeconds);
+          lastSettingSummary.ActiveSeconds = (int)Math.Ceiling(DateTime.UtcNow.Subtract(lastSettingSummary.SwitchDateTime).TotalSeconds);
         }
       }
 
@@ -2160,7 +2172,7 @@ namespace Core.Main
       for (int dca = 1; dca <= maxDCALevel; dca++)
       {
         string dcaTriggerString = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "buy_trigger_" + dca.ToString(), "DEFAULT_DCA_buy_trigger_" + dca.ToString());
-        if (!dcaTriggerString.Equals(""))
+        if (!String.IsNullOrEmpty(dcaTriggerString))
         {
           double dcaTrigger = SystemHelper.TextToDouble(dcaTriggerString, 0, "en-US");
 
@@ -2183,7 +2195,7 @@ namespace Core.Main
       for (int dca = 1; dca <= maxDCALevel; dca++)
       {
         string dcaPercentageString = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_buy_percentage_" + dca.ToString(), "");
-        if (!dcaPercentageString.Equals(""))
+        if (!String.IsNullOrEmpty(dcaPercentageString))
         {
           double dcaPercentage = SystemHelper.TextToDouble(dcaPercentageString, 0, "en-US");
 
@@ -2200,7 +2212,7 @@ namespace Core.Main
       for (char c = 'A'; c <= 'Z'; c++)
       {
         string buyStrategyName = SettingsHandler.GetCurrentPropertyValue(pairsProperties, "DEFAULT_" + c + "_buy_strategy", "");
-        if (!buyStrategyName.Equals(""))
+        if (!String.IsNullOrEmpty(buyStrategyName))
         {
           StrategySummary buyStrategy = new StrategySummary();
           buyStrategy.Name = buyStrategyName;
@@ -2218,7 +2230,7 @@ namespace Core.Main
       for (char c = 'A'; c <= 'Z'; c++)
       {
         string sellStrategyName = SettingsHandler.GetCurrentPropertyValue(pairsProperties, "DEFAULT_" + c + "_sell_strategy", "");
-        if (!sellStrategyName.Equals(""))
+        if (!String.IsNullOrEmpty(sellStrategyName))
         {
           StrategySummary sellStrategy = new StrategySummary();
           sellStrategy.Name = sellStrategyName;
@@ -2236,7 +2248,7 @@ namespace Core.Main
       for (char c = 'A'; c <= 'Z'; c++)
       {
         string buyStrategyName = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_" + c + "_buy_strategy", "");
-        if (!buyStrategyName.Equals(""))
+        if (!String.IsNullOrEmpty(buyStrategyName))
         {
           StrategySummary buyStrategy = new StrategySummary();
           buyStrategy.Name = buyStrategyName;
@@ -2254,7 +2266,7 @@ namespace Core.Main
       for (char c = 'A'; c <= 'Z'; c++)
       {
         string sellStrategyName = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_" + c + "_sell_strategy", "");
-        if (!sellStrategyName.Equals(""))
+        if (!String.IsNullOrEmpty(sellStrategyName))
         {
           StrategySummary sellStrategy = new StrategySummary();
           sellStrategy.Name = sellStrategyName;
@@ -2315,7 +2327,7 @@ namespace Core.Main
           for (char c = 'A'; c <= 'Z'; c++)
           {
             string buyStrategyName = SettingsHandler.GetCurrentPropertyValue(pairsProperties, marketPairSimple + "_" + c + "_buy_strategy", "");
-            if (!buyStrategyName.Equals(""))
+            if (!String.IsNullOrEmpty(buyStrategyName))
             {
               StrategySummary buyStrategy = new StrategySummary();
               buyStrategy.Name = buyStrategyName;
@@ -2334,7 +2346,7 @@ namespace Core.Main
           for (char c = 'A'; c <= 'Z'; c++)
           {
             string sellStrategyName = SettingsHandler.GetCurrentPropertyValue(pairsProperties, marketPairSimple + "_" + c + "_sell_strategy", "");
-            if (!sellStrategyName.Equals(""))
+            if (!String.IsNullOrEmpty(sellStrategyName))
             {
               StrategySummary sellStrategy = new StrategySummary();
               sellStrategy.Name = sellStrategyName;
