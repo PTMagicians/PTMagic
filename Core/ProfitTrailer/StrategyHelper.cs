@@ -197,6 +197,7 @@ namespace Core.ProfitTrailer
           case "dema":
           case "hma":
           case "pdhigh":
+          case "signal":
             result = true;
             break;
           default:
