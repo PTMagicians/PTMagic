@@ -893,7 +893,7 @@ namespace Core.Main
           if (File.Exists(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "LastRuntimeSummary.json"))
           {
             FileInfo fiLastSummary = new FileInfo(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "LastRuntimeSummary.json");
-            if (fiLastSummary.LastWriteTime < DateTime.UtcNow.AddMinutes(-(this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 2)))
+            if (fiLastSummary.LastWriteTimeUtc < DateTime.UtcNow.AddMinutes(-(this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 2)))
             {
               Log.DoLogWarn("PTMagic seems to have frozen after raid " + this.RunCount.ToString() + ", but don't worry I will sacrifice some Magicbots to get this running again...");
               this.State = Constants.PTMagicBotState_Idle;
@@ -916,7 +916,7 @@ namespace Core.Main
 
       FileInfo generalSettingsFile = new FileInfo(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "settings.general.json");
       FileInfo analyzerSettingsFile = new FileInfo(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "settings.analyzer.json");
-      if (generalSettingsFile.LastWriteTime > this.LastSettingFileCheck || analyzerSettingsFile.LastWriteTime > this.LastSettingFileCheck || EnforceSettingsReapply)
+      if (generalSettingsFile.LastWriteTimeUtc > this.LastSettingFileCheck || analyzerSettingsFile.LastWriteTimeUtc > this.LastSettingFileCheck || EnforceSettingsReapply)
       {
         Log.DoLogInfo("Detected configuration changes. Reloading settings...");
 

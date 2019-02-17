@@ -45,7 +45,7 @@ namespace Core.Helper
 
       FileInfo file = new FileInfo(filePath);
 
-      string backupFilePath = backupFolder + DateTime.UtcNow.ToString("yyyy-MM-dd_HH.mm.ss") + "_" + file.Name;
+      string backupFilePath = backupFolder + DateTime.Now.ToString("yyyy-MM-dd_HH.mm.ss") + "_" + file.Name;
       if (!backupFileName.Equals(""))
       {
         backupFilePath = backupFolder + backupFileName;
@@ -66,7 +66,7 @@ namespace Core.Helper
       {
         DateTime maxAge = DateTime.UtcNow.AddMinutes(-maxMinutes);
 
-        if (file.LastWriteTime < maxAge)
+        if (file.LastWriteTimeUtc < maxAge)
         {
           File.Delete(file.FullName);
         }
@@ -85,7 +85,7 @@ namespace Core.Helper
       {
         DateTime maxAge = DateTime.UtcNow.AddHours(-(maxHours + 1));
 
-        if (file.LastWriteTime < maxAge)
+        if (file.LastWriteTimeUtc < maxAge)
         {
           File.Delete(file.FullName);
         }
