@@ -208,11 +208,11 @@ namespace Core.MarketAnalyzer
       return result;
     }
 
-    public static double GetMainFiatCurrencyRate(string currency, LogHelper log)
+    public static double GetMainFiatCurrencyRate(string currency, string FreeCurrencyAPI, LogHelper log)
     {
       double result = 1;
 
-      string baseUrl = "http://free.currencyconverterapi.com/api/v5/convert?q=USD_" + currency + "&compact=y&apiKey=sample-api-key";
+      string baseUrl = "http://free.currencyconverterapi.com/api/v5/convert?q=USD_" + currency + "&compact=y&apiKey=" + FreeCurrencyAPI;
 
       log.DoLogDebug("http://free.currencyconverterapi.com - Getting latest exchange rates...");
       Newtonsoft.Json.Linq.JObject jsonObject = GetSimpleJsonObjectFromURL(baseUrl, log, false);

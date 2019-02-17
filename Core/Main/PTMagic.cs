@@ -693,6 +693,16 @@ namespace Core.Main
         {
           this.Log.DoLogInfo("No CoinMarketCap API KEY specified! You can't use CoinMarketCap in your settings.analyzer.json");
         }
+
+         // Check for CurrencyConverterApi Key
+        if (!this.PTMagicConfiguration.GeneralSettings.Application.FreeCurrencyConverterAPIKey.Equals(""))
+        {
+          this.Log.DoLogInfo("FreeCurrencyConverterApi KEY found");
+        }
+        else
+        {
+          this.Log.DoLogInfo("No FreeCurrencyConverterApi KEY specified, using default key.");
+        }
       }
 
       else
@@ -1033,7 +1043,7 @@ namespace Core.Main
         try
         {
           this.LastRuntimeSummary.MainFiatCurrency = this.PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency;
-          this.LastRuntimeSummary.MainFiatCurrencyExchangeRate = BaseAnalyzer.GetMainFiatCurrencyRate(this.PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency, this.Log);
+          this.LastRuntimeSummary.MainFiatCurrencyExchangeRate = BaseAnalyzer.GetMainFiatCurrencyRate(this.PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency, this.PTMagicConfiguration.GeneralSettings.Application.FreeCurrencyConverterAPIKey, this.Log);
           this.LastMainFiatCurrency = this.LastRuntimeSummary.MainFiatCurrency;
           this.LastMainFiatCurrencyExchangeRate = this.LastRuntimeSummary.MainFiatCurrencyExchangeRate;
 
