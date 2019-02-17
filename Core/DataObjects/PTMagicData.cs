@@ -48,6 +48,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public string TimezoneOffset { get; set; } = "+0:00";
     public string MainFiatCurrency { get; set; } = "USD";
     public string CoinMarketCapAPIKey { get; set; }
+    public string FreeCurrencyConverterAPIKey { get; set; }
   }
 
   public class Monitor
