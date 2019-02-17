@@ -560,7 +560,6 @@ namespace Core.Main
       SettingsFiles.CheckPresets(this.PTMagicConfiguration, this.Log, true);
 
       EnforceSettingsReapply = true;
-      
       this.StartPTMagicIntervalTimer();
 
       return result;
@@ -670,16 +669,6 @@ namespace Core.Main
         else
         {
           this.Log.DoLogInfo("No CoinMarketCap API KEY specified! You can't use CoinMarketCap in your settings.analyzer.json");
-        }
-
-        // Check for CurrencyConverterApi Key
-        if (!this.PTMagicConfiguration.GeneralSettings.Application.FreeCurrencyConverterAPIKey.Equals(""))
-        {
-          this.Log.DoLogInfo("FreeCurrencyConverterApi KEY found");
-        }
-        else
-        {
-          this.Log.DoLogInfo("No FreeCurrencyConverterApi KEY specified! You can't use non USD Currencies!");
         }
       }
 
@@ -799,9 +788,7 @@ namespace Core.Main
         this.RunCount++;
 
         bool headerLinesAdded = false;
-
-        // Force update from preset files with every run
-        this.EnforceSettingsReapply = true; // = this.HaveSettingsChanged();
+        this.EnforceSettingsReapply = this.HaveSettingsChanged();
 
         if (PTMagicConfiguration.GeneralSettings.Application.IsEnabled)
         {
@@ -1034,7 +1021,7 @@ namespace Core.Main
         try
         {
           this.LastRuntimeSummary.MainFiatCurrency = this.PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency;
-          this.LastRuntimeSummary.MainFiatCurrencyExchangeRate = BaseAnalyzer.GetMainFiatCurrencyRate(this.PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency, this.PTMagicConfiguration.GeneralSettings.Application.FreeCurrencyConverterAPIKey, this.Log);
+          this.LastRuntimeSummary.MainFiatCurrencyExchangeRate = BaseAnalyzer.GetMainFiatCurrencyRate(this.PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency, this.Log);
           this.LastMainFiatCurrency = this.LastRuntimeSummary.MainFiatCurrency;
           this.LastMainFiatCurrencyExchangeRate = this.LastRuntimeSummary.MainFiatCurrencyExchangeRate;
 
