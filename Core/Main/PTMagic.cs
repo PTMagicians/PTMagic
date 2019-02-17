@@ -560,6 +560,7 @@ namespace Core.Main
       SettingsFiles.CheckPresets(this.PTMagicConfiguration, this.Log, true);
 
       EnforceSettingsReapply = true;
+      
       this.StartPTMagicIntervalTimer();
 
       return result;
@@ -798,7 +799,9 @@ namespace Core.Main
         this.RunCount++;
 
         bool headerLinesAdded = false;
-        this.EnforceSettingsReapply = this.HaveSettingsChanged();
+
+        // Force update from preset files with every run
+        this.EnforceSettingsReapply = true; // = this.HaveSettingsChanged();
 
         if (PTMagicConfiguration.GeneralSettings.Application.IsEnabled)
         {
