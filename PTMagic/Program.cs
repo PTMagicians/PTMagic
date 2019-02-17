@@ -7,7 +7,7 @@ using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
 using Microsoft.Extensions.DependencyInjection;
 
-[assembly: AssemblyVersion("2.1.1")]
+[assembly: AssemblyVersion("2.1.2")]
 [assembly: AssemblyProduct("PT Magic")]
 
 namespace PTMagic
