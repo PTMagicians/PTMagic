@@ -64,9 +64,9 @@ namespace Core.Helper
       DirectoryInfo folder = new DirectoryInfo(folderPath);
       foreach (FileInfo file in folder.GetFiles())
       {
-        DateTime maxAge = DateTime.Now.AddMinutes(-maxMinutes);
+        DateTime maxAge = DateTime.UtcNow.AddMinutes(-maxMinutes);
 
-        if (file.LastWriteTime < maxAge)
+        if (file.LastWriteTimeUtc < maxAge)
         {
           File.Delete(file.FullName);
         }
@@ -83,9 +83,9 @@ namespace Core.Helper
       DirectoryInfo folder = new DirectoryInfo(folderPath);
       foreach (FileInfo file in folder.GetFiles())
       {
-        DateTime maxAge = DateTime.Now.AddHours(-(maxHours + 1));
+        DateTime maxAge = DateTime.UtcNow.AddHours(-(maxHours + 1));
 
-        if (file.LastWriteTime < maxAge)
+        if (file.LastWriteTimeUtc < maxAge)
         {
           File.Delete(file.FullName);
         }

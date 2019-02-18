@@ -88,7 +88,7 @@ namespace Core.ProfitTrailer
       // Writing Header lines
       fileLines.Insert(0, "");
       fileLines.Insert(0, "# ####################################");
-      fileLines.Insert(0, "# PTMagic_LastChanged = " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString());
+      fileLines.Insert(0, "# PTMagic_LastChanged = " + DateTime.UtcNow.ToShortDateString() + " " + DateTime.UtcNow.ToShortTimeString());
       fileLines.Insert(0, "# PTMagic_ActiveSetting = " + SystemHelper.StripBadCode(ptmagicInstance.DefaultSettingName, Constants.WhiteListProperties));
       fileLines.Insert(0, "# ####################################");
 
@@ -206,7 +206,7 @@ namespace Core.ProfitTrailer
           {
 
             // Setting last change datetime
-            result.Add("# PTMagic_LastChanged = " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString());
+            result.Add("# PTMagic_LastChanged = " + DateTime.UtcNow.ToShortDateString() + " " + DateTime.UtcNow.ToShortTimeString());
 
           }
           else if (line.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
@@ -293,14 +293,14 @@ namespace Core.ProfitTrailer
         string previousLine = result.Last();
         if (previousLine.IndexOf("PTMagic Changed Line", StringComparison.InvariantCultureIgnoreCase) > -1)
         {
-          previousLine = "# PTMagic changed line for setting '" + settingName + "' on " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString();
+          previousLine = "# PTMagic changed line for setting '" + settingName + "' on " + DateTime.UtcNow.ToShortDateString() + " " + DateTime.UtcNow.ToShortTimeString();
 
           result.RemoveAt(result.Count - 1);
           result.Add(previousLine);
         }
         else
         {
-          string editLine = "# PTMagic changed line for setting '" + settingName + "' on " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString();
+          string editLine = "# PTMagic changed line for setting '" + settingName + "' on " + DateTime.UtcNow.ToShortDateString() + " " + DateTime.UtcNow.ToShortTimeString();
           result.Add(editLine);
         }
         result.Add(line);
@@ -337,7 +337,7 @@ namespace Core.ProfitTrailer
           }
         }
 
-        newPairsLines.Add("# PTMagic_SingleMarketSettings - Written on " + DateTime.Now.ToString());
+        newPairsLines.Add("# PTMagic_SingleMarketSettings - Written on " + DateTime.UtcNow.ToString());
         newPairsLines.Add("# ########################################################################");
         newPairsLines.Add("");
 
@@ -357,7 +357,7 @@ namespace Core.ProfitTrailer
           }
         }
 
-        newDCALines.Add("# PTMagic_SingleMarketSettings - Written on " + DateTime.Now.ToString());
+        newDCALines.Add("# PTMagic_SingleMarketSettings - Written on " + DateTime.UtcNow.ToString());
         newDCALines.Add("# ########################################################################");
         newDCALines.Add("");
 
@@ -381,7 +381,7 @@ namespace Core.ProfitTrailer
         Dictionary<string, string> globalDCAProperties = SettingsHandler.GetPropertiesAsDictionary(globalDCALines);
         Dictionary<string, string> globalIndicatorsProperties = SettingsHandler.GetPropertiesAsDictionary(globalIndicatorsLines);
 
-        newIndicatorsLines.Add("# PTMagic_SingleMarketSettings - Written on " + DateTime.Now.ToString());
+        newIndicatorsLines.Add("# PTMagic_SingleMarketSettings - Written on " + DateTime.UtcNow.ToString());
         newIndicatorsLines.Add("# ########################################################################");
         newIndicatorsLines.Add("");
 

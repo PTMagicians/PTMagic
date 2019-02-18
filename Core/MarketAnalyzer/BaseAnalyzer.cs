@@ -27,9 +27,11 @@ namespace Core.MarketAnalyzer
       request.UserAgent = "PTMagic.Import";
       request.KeepAlive = true;
 
+      HttpWebResponse httpResponse = null;
+
       try
       {
-        HttpWebResponse httpResponse = (HttpWebResponse)request.GetResponse();
+        httpResponse = (HttpWebResponse)request.GetResponse();
 
         StreamReader jsonReader = new StreamReader(httpResponse.GetResponseStream());
         string jsonString = jsonReader.ReadToEnd();
@@ -41,7 +43,18 @@ namespace Core.MarketAnalyzer
       }
       catch (WebException ex)
       {
-        log.DoLogCritical(ex.Message, ex);
+        // Error calling the service but we got a response so dump it.
+        string responseString = string.Empty;
+        var encoding = httpResponse.CharacterSet == "" ? Encoding.UTF8 : Encoding.GetEncoding(httpResponse.CharacterSet);
+
+        using (var stream = httpResponse.GetResponseStream())
+        {
+          var reader = new StreamReader(stream, encoding);
+          responseString = reader.ReadToEnd();
+        }
+
+        log.DoLogCritical(String.Format("{0} - Response: ({1}) {2} : {3}", ex.Message, httpResponse.StatusCode, httpResponse.StatusDescription, responseString), ex);
+
         throw ex;
       }
       catch (Exception ex)
@@ -199,7 +212,7 @@ namespace Core.MarketAnalyzer
     {
       double result = 1;
 
-      string baseUrl = "http://free.currencyconverterapi.com/api/v5/convert?q=USD_" + currency + "&compact=y&apiKey="+FreeCurrencyAPI;
+      string baseUrl = "http://free.currencyconverterapi.com/api/v5/convert?q=USD_" + currency + "&compact=y&apiKey=" + FreeCurrencyAPI;
 
       log.DoLogDebug("http://free.currencyconverterapi.com - Getting latest exchange rates...");
       Newtonsoft.Json.Linq.JObject jsonObject = GetSimpleJsonObjectFromURL(baseUrl, log, false);
@@ -300,7 +313,7 @@ namespace Core.MarketAnalyzer
         List<MarketTrend> marketTrends = systemConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends.FindAll(mt => mt.Platform.Equals(platform, StringComparison.InvariantCultureIgnoreCase));
         if (marketTrends.Count > 0)
         {
-          Dictionary<string, Market> recentMarkets = BaseAnalyzer.GetMarketDataFromFile(systemConfiguration, log, platform, DateTime.Now.ToUniversalTime(), "Recent");
+          Dictionary<string, Market> recentMarkets = BaseAnalyzer.GetMarketDataFromFile(systemConfiguration, log, platform, DateTime.UtcNow, "Recent");
 
           foreach (MarketTrend marketTrend in marketTrends)
           {
@@ -313,7 +326,7 @@ namespace Core.MarketAnalyzer
               log.DoLogInfo(platform + " - Building market trend changes for '" + marketTrend.Name + "'...");
             }
 
-            Dictionary<string, Market> trendMarkets = BaseAnalyzer.GetMarketDataFromFile(systemConfiguration, log, platform, DateTime.Now.ToUniversalTime().AddMinutes(-marketTrend.TrendMinutes), marketTrend.Name);
+            Dictionary<string, Market> trendMarkets = BaseAnalyzer.GetMarketDataFromFile(systemConfiguration, log, platform, DateTime.UtcNow.AddMinutes(-marketTrend.TrendMinutes), marketTrend.Name);
 
             List<MarketTrendChange> marketTrendChanges = BaseAnalyzer.GetMarketTrendChanges(platform, mainMarket, marketTrend, marketList, recentMarkets, trendMarkets, sortBy, isGlobal, systemConfiguration, log);
 
@@ -407,7 +420,7 @@ namespace Core.MarketAnalyzer
               mtc.Market = recentMarket.Name;
               mtc.LastPrice = recentMarket.Price;
               mtc.Volume24h = recentMarket.Volume24h;
-              mtc.TrendDateTime = DateTime.Now;
+              mtc.TrendDateTime = DateTime.UtcNow;
 
               result.Add(mtc);
 

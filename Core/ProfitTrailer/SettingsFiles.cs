@@ -44,7 +44,7 @@ namespace Core.ProfitTrailer
       List<string> lines = File.ReadAllLines(filePath).ToList();
       lines.Insert(0, "");
       lines.Insert(0, "# ####################################");
-      lines.Insert(0, "# PTMagic_LastChanged = " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString());
+      lines.Insert(0, "# PTMagic_LastChanged = " + DateTime.UtcNow.ToShortDateString() + " " + DateTime.UtcNow.ToShortTimeString());
       lines.Insert(0, "# PTMagic_ActiveSetting = " + SystemHelper.StripBadCode(settingName, Constants.WhiteListProperties));
       lines.Insert(0, "# ####### PTMagic Current Setting ########");
       lines.Insert(0, "# ####################################");
@@ -117,7 +117,7 @@ namespace Core.ProfitTrailer
           if (presetFilePath.IndexOf(".properties", StringComparison.InvariantCultureIgnoreCase) > -1)
           {
             FileInfo presetFile = new FileInfo(presetFilePath);
-            if (presetFile.LastWriteTime > DateTime.Now.AddMinutes(-systemConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes).AddSeconds(2))
+            if (presetFile.LastWriteTime > DateTime.UtcNow.AddMinutes(-systemConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes).AddSeconds(2))
             {
 
               // File has changed recently, force preparation check

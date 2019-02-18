@@ -27,7 +27,7 @@ namespace Monitor {
       string appsettingsJson = monitorBasePath + Path.DirectorySeparatorChar + "appsettings.json";
       if (!File.Exists(appsettingsJson)) {
         Console.WriteLine("ERROR: appsettings.json not found: '" + appsettingsJson + "'. Please check if the file exists. If not, review the PT Magic setup steps listed on the wiki!");
-        if (Console.KeyAvailable) Console.ReadKey();
+        if (!Console.IsInputRedirected) Console.ReadKey();
       } else {
         Console.WriteLine("INFO: appsettings.json found in " + monitorBasePath);
 
@@ -46,7 +46,7 @@ namespace Monitor {
         // Check if PT Magic directoy is correctly configured
         if (!Directory.Exists(ptMagicBasePath)) {
           Console.WriteLine("ERROR: PT Magic directory not found: '" + ptMagicBasePath + "'. Please check your setting for 'PTMagicBasePath' in 'Monitor/appsettings.json'");
-          if (Console.KeyAvailable) Console.ReadKey();
+          if (!Console.IsInputRedirected) Console.ReadKey();
         } else {
           Console.WriteLine("INFO: PT Magic directory found at " + ptMagicBasePath);
 
@@ -54,7 +54,7 @@ namespace Monitor {
           string settingsGeneralJson = ptMagicBasePath + "settings.general.json";
           if (!File.Exists(settingsGeneralJson)) {
             Console.WriteLine("ERROR: PT Magic settings not found: '" + settingsGeneralJson + "'. Please check if you setup PT Magic correctly!");
-            if (Console.KeyAvailable) Console.ReadKey();
+            if (!Console.IsInputRedirected) Console.ReadKey();
           } else {
             Console.WriteLine("INFO: settings.general.json found at " + settingsGeneralJson);
 
@@ -62,7 +62,7 @@ namespace Monitor {
             string lastRuntimeSummaryJson = ptMagicBasePath + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "LastRuntimeSummary.json";
             if (!File.Exists(lastRuntimeSummaryJson)) {
               Console.WriteLine("ERROR: PT Magic runtime summary not found: '" + lastRuntimeSummaryJson + "'. Please wait for PT Magic to complete its first run!");
-              if (Console.KeyAvailable) Console.ReadKey();
+              if (!Console.IsInputRedirected) Console.ReadKey();
             } else {
               Console.WriteLine("INFO: LastRuntimeSummary.json found at " + lastRuntimeSummaryJson);
 
@@ -76,14 +76,14 @@ namespace Monitor {
               string wwwrootPath = monitorBasePath + Path.DirectorySeparatorChar + "wwwroot";
               if (!Directory.Exists(wwwrootPath)) {
                 Console.WriteLine("ERROR: wwwroot directory not found: '" + wwwrootPath + "'. Did you copy all files as instructed on the wiki?");
-                if (Console.KeyAvailable) Console.ReadKey();
+                if (!Console.IsInputRedirected) Console.ReadKey();
               } else {
                 Console.WriteLine("INFO: wwwroot directory found at " + wwwrootPath);
 
                 string assetsPath = wwwrootPath + Path.DirectorySeparatorChar + "assets";
                 if (!Directory.Exists(assetsPath)) {
                   Console.WriteLine("ERROR: assets directory not found: '" + assetsPath + "'. Did you copy all files as instructed on the wiki?");
-                  if (Console.KeyAvailable) Console.ReadKey();
+                  if (!Console.IsInputRedirected) Console.ReadKey();
                 } else {
                   Console.WriteLine("INFO: assets directory found at " + assetsPath);
                   Console.WriteLine("INFO: ALL CHECKS COMPLETED - ATTEMPTING TO START WEBSERVER...");

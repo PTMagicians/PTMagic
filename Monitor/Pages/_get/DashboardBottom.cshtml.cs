@@ -72,7 +72,7 @@ namespace Monitor.Pages {
                 TrendChartDataJSON += "values: [";
 
                 // Get trend ticks for chart
-                DateTime currentDateTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, 0, 0);
+                DateTime currentDateTime = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, DateTime.UtcNow.Hour, 0, 0);
                 DateTime startDateTime = currentDateTime.AddHours(-PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours);
                 DateTime endDateTime = currentDateTime;
                 int trendChartTicks = 0;
@@ -115,9 +115,9 @@ namespace Monitor.Pages {
       string profitPerDayJSON = "";
       if (PTData.SellLog.Count > 0) {
         DateTime minSellLogDate = PTData.SellLog.OrderBy(sl => sl.SoldDate).First().SoldDate.Date;
-        DateTime graphStartDate = DateTime.Now.Date.AddDays(-30);
+        DateTime graphStartDate = DateTime.UtcNow.Date.AddDays(-30);
         if (minSellLogDate > graphStartDate) graphStartDate = minSellLogDate;
-        for (DateTime salesDate = graphStartDate; salesDate <= DateTime.Now.Date; salesDate = salesDate.AddDays(1)) {
+        for (DateTime salesDate = graphStartDate; salesDate <= DateTime.UtcNow.Date; salesDate = salesDate.AddDays(1)) {
           if (tradeDayIndex > 0) {
             profitPerDayJSON += ",\n";
           }
