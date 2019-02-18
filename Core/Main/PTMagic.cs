@@ -701,7 +701,7 @@ namespace Core.Main
         }
         else
         {
-          this.Log.DoLogInfo("No FreeCurrencyConverterApi KEY specified, using default key.");
+          this.Log.DoLogInfo("No FreeCurrencyConverterApi KEY specified, you can only use USD; apply for a key at: https://freecurrencyrates.com/en");
         }
       }
 
