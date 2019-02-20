@@ -509,27 +509,26 @@ namespace Core.Main
 
     #region PTMagic Startup  Methods
 
-    private static int ExponentialDelay(int failedAttempts, 
-                                          int maxDelayInSeconds = 900)
+    private static int ExponentialDelay(int failedAttempts, int maxDelayInSeconds = 900)
     {
-        //Attempt 1     0s     0s
-        //Attempt 2     2s     2s
-        //Attempt 3     4s     4s
-        //Attempt 4     8s     8s
-        //Attempt 5     16s    16s
-        //Attempt 6     32s    32s
+      //Attempt 1     0s     0s
+      //Attempt 2     2s     2s
+      //Attempt 3     4s     4s
+      //Attempt 4     8s     8s
+      //Attempt 5     16s    16s
+      //Attempt 6     32s    32s
 
-        //Attempt 7     64s     1m 4s
-        //Attempt 8     128s    2m 8s
-        //Attempt 9     256s    4m 16s
-        //Attempt 10    512     8m 32s
-        //Attempt 11    1024    17m 4s
+      //Attempt 7     64s     1m 4s
+      //Attempt 8     128s    2m 8s
+      //Attempt 9     256s    4m 16s
+      //Attempt 10    512     8m 32s
+      //Attempt 11    1024    17m 4s
 
-        var delayInSeconds = ((1d / 2d) * (Math.Pow(2d, failedAttempts) - 1d));
+      var delayInSeconds = ((1d / 2d) * (Math.Pow(2d, failedAttempts) - 1d));
 
-        return maxDelayInSeconds < delayInSeconds
-            ? maxDelayInSeconds
-            : (int)delayInSeconds;
+      return maxDelayInSeconds < delayInSeconds
+          ? maxDelayInSeconds
+          : (int)delayInSeconds;
     }
 
     public bool StartProcess()
@@ -669,40 +668,48 @@ namespace Core.Main
       // Check if the program is enabled
       if (this.PTMagicConfiguration.GeneralSettings.Application.IsEnabled)
       {
-        if (this.PTMagicConfiguration.GeneralSettings.Application.TestMode) this.Log.DoLogInfo("TESTMODE ENABLED - No files will be changed!");
+        try
+        {
+          if (this.PTMagicConfiguration.GeneralSettings.Application.TestMode) this.Log.DoLogInfo("TESTMODE ENABLED - No files will be changed!");
 
-        // Check for PT Directory
-        DirectoryInfo ptRoot = new DirectoryInfo(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath);
-        if (ptRoot.Exists)
-        {
-          this.Log.DoLogInfo("Profit Trailer directory found");
-          result = RunProfitTrailerSettingsAPIChecks();
+          // Check for PT Directory
+          DirectoryInfo ptRoot = new DirectoryInfo(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath);
+          if (ptRoot.Exists)
+          {
+            this.Log.DoLogInfo("Profit Trailer directory found");
+            result = RunProfitTrailerSettingsAPIChecks();
+          }
+          else
+          {
+            this.Log.DoLogError("Profit Trailer directory not found (" + this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + ")");
+            result = false;
+          }
+
+          // Check for CoinMarketCap API Key
+          if (!String.IsNullOrEmpty(this.PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey))
+          {
+            this.Log.DoLogInfo("CoinMarketCap API KEY found");
+          }
+          else
+          {
+            this.Log.DoLogInfo("No CoinMarketCap API KEY specified! You can't use CoinMarketCap in your settings.analyzer.json");
+          }
+
+          // Check for CurrencyConverterApi Key
+          if (!this.PTMagicConfiguration.GeneralSettings.Application.FreeCurrencyConverterAPIKey.Equals(""))
+          {
+            this.Log.DoLogInfo("FreeCurrencyConverterApi KEY found");
+          }
+          else
+          {
+            this.Log.DoLogInfo("No FreeCurrencyConverterApi KEY specified, you can only use USD; apply for a key at: https://freecurrencyrates.com/en");
+          }
         }
-        else
+        catch (System.NullReferenceException ex)
         {
-          this.Log.DoLogError("Profit Trailer directory not found (" + this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + ")");
-          result = false;
+          this.Log.DoLogError("PTM failed to read the Config File. That means something in the File is either missing or incorrect. If this happend after an update please take a look at the release notes at: https://github.com/PTMagicians/PTMagic/releases");
         }
 
-        // Check for CoinMarketCap API Key
-        if (!String.IsNullOrEmpty(this.PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey))
-        {
-          this.Log.DoLogInfo("CoinMarketCap API KEY found");
-        }
-        else
-        {
-          this.Log.DoLogInfo("No CoinMarketCap API KEY specified! You can't use CoinMarketCap in your settings.analyzer.json");
-        }
-
-         // Check for CurrencyConverterApi Key
-        if (!this.PTMagicConfiguration.GeneralSettings.Application.FreeCurrencyConverterAPIKey.Equals(""))
-        {
-          this.Log.DoLogInfo("FreeCurrencyConverterApi KEY found");
-        }
-        else
-        {
-          this.Log.DoLogInfo("No FreeCurrencyConverterApi KEY specified, you can only use USD; apply for a key at: https://freecurrencyrates.com/en");
-        }
       }
 
       else
@@ -814,7 +821,7 @@ namespace Core.Main
 
         if (PTMagicConfiguration.GeneralSettings.Application.IsEnabled)
         {
-          
+
           // Validate settings
           this.ValidateSettings();
 
