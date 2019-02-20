@@ -509,8 +509,7 @@ namespace Core.Main
 
     #region PTMagic Startup  Methods
 
-    private static int ExponentialDelay(int failedAttempts,
-                                          int maxDelayInSeconds = 900)
+    private static int ExponentialDelay(int failedAttempts, int maxDelayInSeconds = 900)
     {
       //Attempt 1     0s     0s
       //Attempt 2     2s     2s
