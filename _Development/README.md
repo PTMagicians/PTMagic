@@ -12,5 +12,3 @@ However, you should be carefull to not mess up your files when you commit using 
 1. Copy settings.analyzer.json and settings.general.json from /_Development/DevSettings to /PTMagic
 2. Setup a Profit Trailer instance for development (for example in _Development/LocalProfitTrailer)
 3. Adjust the necessary values in settings.general.json to your needs
-4. Copy appsettings.json from /_Development/DevSettings/Monitor to /PTMagic/Monitor
-5. In the appsettings.json file, set the value for PTMagicBasePath development /PTMagic path
