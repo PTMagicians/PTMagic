@@ -281,7 +281,9 @@ namespace Core.ProfitTrailer
               double oldValue = SystemHelper.TextToDouble(oldValueString, 0, "en-US");
               if (oldValue < 0) offsetValuePercent = offsetValuePercent * -1;
               double oldValueOffset = (oldValue * (offsetValuePercent / 100));
-              newValueString = Math.Round((oldValue + oldValueOffset), 8).ToString(new System.Globalization.CultureInfo("en-US"));
+              //Round up any decimal value >= .5 
+              int newTempValue = (int)(Math.Round((oldValue + oldValueOffset), MidpointRounding.AwayFromZero) + .5);
+              newValueString = newTempValue.ToString(new System.Globalization.CultureInfo("en-US"));
             }
             break;
           default:
@@ -537,7 +539,9 @@ namespace Core.ProfitTrailer
                 double oldValue = SystemHelper.TextToDouble(SettingsHandler.GetCurrentPropertyValue(fullProperties, propertyKey, propertyKey.Replace("ALL_", "DEFAULT_")), 0, "en-US");
                 if (oldValue < 0) offsetValuePercent = offsetValuePercent * -1;
                 double oldValueOffset = (oldValue * (offsetValuePercent / 100));
-                newValueString = Math.Round((oldValue + oldValueOffset), 8).ToString(new System.Globalization.CultureInfo("en-US"));
+                //Round up any decimal value >= .5 
+                int newTempValue = (int)(Math.Round((oldValue + oldValueOffset), MidpointRounding.AwayFromZero) + .5);
+                newValueString = newTempValue.ToString(new System.Globalization.CultureInfo("en-US"));
               }
               break;
             default:
