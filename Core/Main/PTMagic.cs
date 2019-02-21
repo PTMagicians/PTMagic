@@ -646,49 +646,42 @@ namespace Core.Main
       // Check if the program is enabled
       if (this.PTMagicConfiguration.GeneralSettings.Application.IsEnabled)
       {
-        try
+        if (this.PTMagicConfiguration.GeneralSettings.Application.TestMode) this.Log.DoLogInfo("TESTMODE ENABLED - No files will be changed!");
+
+        // Check for PT Directory
+        DirectoryInfo ptRoot = new DirectoryInfo(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath);
+        if (ptRoot.Exists)
         {
-          if (this.PTMagicConfiguration.GeneralSettings.Application.TestMode) this.Log.DoLogInfo("TESTMODE ENABLED - No files will be changed!");
-
-          // Check for PT Directory
-          DirectoryInfo ptRoot = new DirectoryInfo(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath);
-          if (ptRoot.Exists)
-          {
-            this.Log.DoLogInfo("Profit Trailer directory found");
-            result = RunProfitTrailerSettingsAPIChecks();
-          }
-          else
-          {
-            this.Log.DoLogError("Profit Trailer directory not found (" + this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + ")");
-            result = false;
-          }
-
-          // Check for CoinMarketCap API Key
-          if (!this.PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey.Equals(""))
-          {
-            this.Log.DoLogInfo("CoinMarketCap API KEY found");
-          }
-          else
-          {
-            this.Log.DoLogInfo("No CoinMarketCap API KEY specified! You can't use CoinMarketCap in your settings.analyzer.json");
-          }
-
-          // Check for CurrencyConverterApi Key
-          if (!this.PTMagicConfiguration.GeneralSettings.Application.FreeCurrencyConverterAPIKey.Equals(""))
-          {
-            this.Log.DoLogInfo("FreeCurrencyConverterApi KEY found");
-          }
-          else
-          {
-            this.Log.DoLogInfo("No FreeCurrencyConverterApi KEY specified! You can't use non USD Currencies!");
-          }
+          this.Log.DoLogInfo("Profit Trailer directory found");
+          result = RunProfitTrailerSettingsAPIChecks();
         }
-        catch (System.NullReferenceException ex)
+        else
         {
-          this.Log.DoLogError("PTM failed to read the Config File. That means something in the File is either missing or incorrect. If this happend after an update please take a look at the release notes at: https://github.com/PTMagicians/PTMagic/releases");
+          this.Log.DoLogError("Profit Trailer directory not found (" + this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + ")");
+          result = false;
         }
 
+        // Check for CoinMarketCap API Key
+        if (!this.PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey.Equals(""))
+        {
+          this.Log.DoLogInfo("CoinMarketCap API KEY found");
+        }
+        else
+        {
+          this.Log.DoLogInfo("No CoinMarketCap API KEY specified! You can't use CoinMarketCap in your settings.analyzer.json");
+        }
+
+         // Check for CurrencyConverterApi Key
+        if (!this.PTMagicConfiguration.GeneralSettings.Application.FreeCurrencyConverterAPIKey.Equals(""))
+        {
+          this.Log.DoLogInfo("FreeCurrencyConverterApi KEY found");
+        }
+        else
+        {
+          this.Log.DoLogInfo("No FreeCurrencyConverterApi KEY specified! You can't use non USD Currencies!");
+        }
       }
+
       else
       {
         this.Log.DoLogWarn("PTMagic disabled, shutting down...");
@@ -809,7 +802,7 @@ namespace Core.Main
 
         if (PTMagicConfiguration.GeneralSettings.Application.IsEnabled)
         {
-
+          
           // Validate settings
           this.ValidateSettings();
 
