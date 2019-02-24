@@ -81,7 +81,7 @@
   lostValue = (dcaLogEntry.TotalCost == 0.0);
 
   // Render the row
-  <tr @(lostValue ? "class=errorRow" : "") >
+  <tr @(lostValue ? "class=errorRow" : "" ) >
     @if (mps != null && (mps.ActiveSingleSettings == null || mps.ActiveSingleSettings.Count == 0)) {
       <th class="align-top"><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, dcaLogEntry.Market, Model.Summary.MainMarket)" target="_blank">@dcaLogEntry.Market</a></th>
     } else {
