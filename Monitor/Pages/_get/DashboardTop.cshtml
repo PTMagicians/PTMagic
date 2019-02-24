@@ -134,7 +134,7 @@
 
               // Check for when PT loses the value of a pair
               bool lostValue = false;
-              lostValue = (dcaLogEntry.TotalCost == 0.0);
+              lostValue = (dcaLogEntry.TotalCost == 0.0) || (dcaLogEntry.AverageBuyPrice == 0.0);
 
               // Render the row
               <tr @(lostValue ? "class=errorRow" : "") >
@@ -144,7 +144,7 @@
                   <th class="align-top"><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, dcaLogEntry.Market, Model.Summary.MainMarket)" target="_blank">@dcaLogEntry.Market</a> <i class="fa fa-exclamation-triangle text-highlight" data-toggle="tooltip" data-placement="top" data-html="true" title="@await Component.InvokeAsync("PairIcon", mps)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner pair-tooltip'></div></div>"></i></th>
                 }
                 
-                <td class="text-left">@(!lostValue ? dcaLogEntry.TotalCost.ToString("#,#0.000000", new System.Globalization.CultureInfo("en-US")) : "No value!")</td>
+                <td class="text-left">@Html.Raw(dcaLogEntry.TotalCost.ToString("#,#0.000000", new System.Globalization.CultureInfo("en-US")))</td>
                 
                 <td class="text-right">
                   @if (dcaEnabled) {
@@ -155,6 +155,7 @@
                     <span class="text-warning" data-toggle="tooltip" data-placement="top" title="DCA is disabled for this market!">Disabled!</span>
                   }
                 </td>
+
                 @if (buyDisabled) {
                   <td>@Html.Raw(buyStrategyText)</td>
                 } else {
@@ -167,7 +168,16 @@
                   }
                  
                 </td>
-                <td class="text-autocolor">@dcaLogEntry.ProfitPercent.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+
+                @if(!@lostValue)
+                {
+                  <td class="text-autocolor">@dcaLogEntry.ProfitPercent.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+                }
+                else
+                {
+                  <td class="text-left">No Value!</td>
+                }
+
                 <td class="text-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)_get/BagDetails/?m=@dcaLogEntry.Market" data-remote="false" data-toggle="modal" data-target="#dca-chart" class="btn btn-mini btn-ptmagic"><i class="fa fa-plus"></i></a></td>
               </tr>
             }
