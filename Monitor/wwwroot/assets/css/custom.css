@@ -141,6 +141,16 @@
   display: none;
 }
 
+.errorRow
+{
+  background-color: #550000;
+}
+
+.errorRow a
+{
+  color: white;
+}
+
 .table-scroll-hori {
   display: block;
   width: 100%;
