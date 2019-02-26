@@ -537,11 +537,25 @@ namespace Core.ProfitTrailer
               if (offsetValuePercent != 0)
               {
                 double oldValue = SystemHelper.TextToDouble(SettingsHandler.GetCurrentPropertyValue(fullProperties, propertyKey, propertyKey.Replace("ALL_", "DEFAULT_")), 0, "en-US");
-                if (oldValue < 0) offsetValuePercent = offsetValuePercent * -1;
+
+                if (oldValue < 0)
+                {
+                  offsetValuePercent = offsetValuePercent * -1;
+                }
+
                 double oldValueOffset = (oldValue * (offsetValuePercent / 100));
-                //Round up any decimal value >= .5 
-                int newTempValue = (int)(Math.Round((oldValue + oldValueOffset), MidpointRounding.AwayFromZero) + .5);
-                newValueString = newTempValue.ToString(new System.Globalization.CultureInfo("en-US"));
+
+                if (propertyKey.Contains("Timeout", StringComparison.CurrentCultureIgnoreCase))
+                {
+                  // Ensure timeout values are rounded up to integers for PT comaptability 
+                  newValueString = ((int)(Math.Round((oldValue + oldValueOffset), MidpointRounding.AwayFromZero) + .5)).ToString(new System.Globalization.CultureInfo("en-US"));
+                }
+                else
+                {
+                  // Use double to calculate
+                  newValueString = Math.Round((oldValue + oldValueOffset), 8).ToString(new System.Globalization.CultureInfo("en-US"));
+                }
+
               }
               break;
             default:
