@@ -8,6 +8,8 @@ using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
 using Newtonsoft.Json;
 using Core.ProfitTrailer;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Core.MarketAnalyzer
 {
@@ -232,7 +234,10 @@ namespace Core.MarketAnalyzer
         // Get Ticks for all markets
         log.DoLogDebug("Bittrex - Getting ticks for '" + markets.Count + "' markets");
         Dictionary<string, List<MarketTick>> marketTicks = new Dictionary<string, List<MarketTick>>();
-        foreach (string key in markets.Keys)
+
+        Parallel.ForEach( markets.Keys, 
+                          new ParallelOptions { MaxDegreeOfParallelism = 5 },
+                          (key) =>
         {
           marketTicks.Add(key, Bittrex.GetMarketTicks(key, systemConfiguration, log));
 
@@ -240,7 +245,7 @@ namespace Core.MarketAnalyzer
           {
             log.DoLogInfo("Bittrex - No worries, I am still alive... " + marketTicks.Count + "/" + markets.Count + " markets done...");
           }
-        }
+        });
 
         log.DoLogInfo("Bittrex - Ticks completed.");
 

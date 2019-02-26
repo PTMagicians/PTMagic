@@ -167,6 +167,7 @@ namespace Core.MarketAnalyzer
       log.DoLogInfo("Binance - Checking first seen dates for " + markets.Count + " markets. This may take a while...");
 
       int marketsChecked = 0;
+      
       foreach (string key in markets.Keys)
       {
         // Save market info
