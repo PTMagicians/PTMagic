@@ -545,9 +545,9 @@ namespace Core.ProfitTrailer
 
                 double oldValueOffset = (oldValue * (offsetValuePercent / 100));
 
-                if (propertyKey.Contains("Timeout", StringComparison.CurrentCultureIgnoreCase))
+                if (propertyKey.Contains("rebuy_timeout", StringComparison.CurrentCultureIgnoreCase) || (propertyKey.Contains("trading_pairs", StringComparison.CurrentCultureIgnoreCase) )
                 {
-                  // Ensure timeout values are rounded up to integers for PT comaptability 
+                  // Ensure some values are rounded up to integers for PT comaptability 
                   newValueString = ((int)(Math.Round((oldValue + oldValueOffset), MidpointRounding.AwayFromZero) + .5)).ToString(new System.Globalization.CultureInfo("en-US"));
                 }
                 else
