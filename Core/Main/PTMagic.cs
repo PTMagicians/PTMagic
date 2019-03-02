@@ -615,8 +615,13 @@ namespace Core.Main
       {
         this.PTMagicConfiguration = new PTMagicConfiguration();
 
-        this.Log.DoLogInfo("Configuration loaded. Found " + this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends.Count.ToString() + " Market Trends, " + this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Count.ToString() + " Global Settings and " + this.PTMagicConfiguration.AnalyzerSettings.SingleMarketSettings.Count.ToString() + " Single Market Settings.");
-
+        this.Log.DoLogInfo( "Configuration loaded. Found " + 
+                            this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends != null ? this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends.Count.ToString() : "0" + 
+                            " Market Trends, " + 
+                            this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings != null ? this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Count.ToString() : "0" + 
+                            " Global Settings and " + 
+                            this.PTMagicConfiguration.AnalyzerSettings.SingleMarketSettings != null ? this.PTMagicConfiguration.AnalyzerSettings.SingleMarketSettings.Count.ToString() : "0" + 
+                            " Single Market Settings.");
       }
       catch (Exception ex)
       {
@@ -2311,8 +2316,9 @@ namespace Core.Main
 
       this.Log.DoLogInfo("Summary: Current global properties saved.");
 
-      this.Log.DoLogInfo("Summary: Getting current single market properties...");
       // Get current single market settings from PAIRS.PROPERTIES for each configured market
+      this.Log.DoLogInfo("Summary: Getting current single market properties...");
+
       foreach (string marketPair in this.MarketList)
       {
         MarketPairSummary mpSummary = new MarketPairSummary();

@@ -88,7 +88,7 @@ namespace Core.ProfitTrailer
       // Writing Header lines
       fileLines.Insert(0, "");
       fileLines.Insert(0, "# ####################################");
-      fileLines.Insert(0, "# PTMagic_LastChanged = " + DateTime.UtcNow.ToShortDateString() + " " + DateTime.UtcNow.ToShortTimeString());
+      fileLines.Insert(0, "# PTMagic_LastChanged = " + DateTime.Now.ToShortDateString() + " " + DateTime.UtcNow.ToShortTimeString());
       fileLines.Insert(0, "# PTMagic_ActiveSetting = " + SystemHelper.StripBadCode(ptmagicInstance.DefaultSettingName, Constants.WhiteListProperties));
       fileLines.Insert(0, "# ####################################");
 
@@ -339,7 +339,7 @@ namespace Core.ProfitTrailer
           }
         }
 
-        newPairsLines.Add("# PTMagic_SingleMarketSettings - Written on " + DateTime.UtcNow.ToString());
+        newPairsLines.Add("# PTMagic_SingleMarketSettings - Written on " + DateTime.Now.ToString());
         newPairsLines.Add("# ########################################################################");
         newPairsLines.Add("");
 
@@ -359,7 +359,7 @@ namespace Core.ProfitTrailer
           }
         }
 
-        newDCALines.Add("# PTMagic_SingleMarketSettings - Written on " + DateTime.UtcNow.ToString());
+        newDCALines.Add("# PTMagic_SingleMarketSettings - Written on " + DateTime.Now.ToString());
         newDCALines.Add("# ########################################################################");
         newDCALines.Add("");
 
@@ -383,7 +383,7 @@ namespace Core.ProfitTrailer
         Dictionary<string, string> globalDCAProperties = SettingsHandler.GetPropertiesAsDictionary(globalDCALines);
         Dictionary<string, string> globalIndicatorsProperties = SettingsHandler.GetPropertiesAsDictionary(globalIndicatorsLines);
 
-        newIndicatorsLines.Add("# PTMagic_SingleMarketSettings - Written on " + DateTime.UtcNow.ToString());
+        newIndicatorsLines.Add("# PTMagic_SingleMarketSettings - Written on " + DateTime.Now.ToString());
         newIndicatorsLines.Add("# ########################################################################");
         newIndicatorsLines.Add("");
 
@@ -534,6 +534,7 @@ namespace Core.ProfitTrailer
             case Constants.ValueModeOffsetPercent:
               // Offset value by percentage
               double offsetValuePercent = SystemHelper.TextToDouble(newValueString, 0, "en-US");
+
               if (offsetValuePercent != 0)
               {
                 double oldValue = SystemHelper.TextToDouble(SettingsHandler.GetCurrentPropertyValue(fullProperties, propertyKey, propertyKey.Replace("ALL_", "DEFAULT_")), 0, "en-US");
@@ -545,7 +546,7 @@ namespace Core.ProfitTrailer
 
                 double oldValueOffset = (oldValue * (offsetValuePercent / 100));
 
-                if (propertyKey.Contains("rebuy_timeout", StringComparison.CurrentCultureIgnoreCase) || propertyKey.Contains("trading_pairs", StringComparison.CurrentCultureIgnoreCase))
+                if (propertyKey.Contains("rebuy_timeout", StringComparison.InvariantCultureIgnoreCase) || propertyKey.Contains("trading_pairs", StringComparison.InvariantCultureIgnoreCase))
                 {
                   // Ensure some values are rounded up to integers for PT comaptability 
                   newValueString = ((int)(Math.Round((oldValue + oldValueOffset), MidpointRounding.AwayFromZero) + .5)).ToString(new System.Globalization.CultureInfo("en-US"));
@@ -646,7 +647,5 @@ namespace Core.ProfitTrailer
 
       return result;
     }
-
-
   }
 }
