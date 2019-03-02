@@ -7,6 +7,7 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Core.Main;
 using Core.Helper;
@@ -17,6 +18,85 @@ namespace Core.ProfitTrailer
 {
   public static class SettingsHandler
   {
+    #region "Private methods"
+
+    private static bool IsPropertyLine(string line)
+    {
+      Regex lineRegex = new Regex(@"^[^#][^=]+=.*$");
+      return lineRegex.IsMatch(line);
+    }
+
+    private static string CalculatePropertyValue(string settingProperty, string oldValueString, string newValueString, out string configPropertyKey)
+    {
+      int valueMode = Constants.ValueModeDefault;
+      configPropertyKey = settingProperty;
+      string result = null;
+
+      // Determine the mode for changing the value
+      if (configPropertyKey.IndexOf("_OFFSETPERCENT") > -1)
+      {
+        valueMode = Constants.ValueModeOffsetPercent;
+        configPropertyKey = configPropertyKey.Replace("_OFFSETPERCENT", "");
+      }
+      else if (configPropertyKey.IndexOf("_OFFSET") > -1)
+      {
+        valueMode = Constants.ValueModeOffset;
+        configPropertyKey = configPropertyKey.Replace("_OFFSET", "");
+      }
+
+      // Boolean value, fix case
+      if (newValueString.ToLower().Equals("true") || newValueString.ToLower().Equals("false"))
+      {
+        result = newValueString.ToLower();
+      }
+      else
+      {
+        // Value, calculate new value
+        switch (valueMode)
+        {
+          case Constants.ValueModeOffset:
+            // Offset value by a fixed amount
+            double offsetValue = SystemHelper.TextToDouble(newValueString, 0, "en-US");
+            if (offsetValue != 0)
+            {
+              double oldValue = SystemHelper.TextToDouble(oldValueString, 0, "en-US");
+              result = Math.Round((oldValue + offsetValue), 8).ToString(new System.Globalization.CultureInfo("en-US"));
+            }
+            break;
+
+          case Constants.ValueModeOffsetPercent:
+            // Offset value by percentage
+            double offsetValuePercent = SystemHelper.TextToDouble(newValueString, 0, "en-US");
+            if (offsetValuePercent != 0)
+            {
+              double oldValue = SystemHelper.TextToDouble(oldValueString, 0, "en-US");
+              if (oldValue < 0) offsetValuePercent = offsetValuePercent * -1;
+              double oldValueOffset = (oldValue * (offsetValuePercent / 100));
+
+              // Use integers for timeout and pairs properties, otherwise double
+              if (configPropertyKey.Contains("rebuy_timeout", StringComparison.InvariantCultureIgnoreCase) || configPropertyKey.Contains("trading_pairs", StringComparison.InvariantCultureIgnoreCase))
+              {
+                // Ensure some values are rounded up to integers for PT comaptability 
+                result = ((int)(Math.Round((oldValue + oldValueOffset), MidpointRounding.AwayFromZero) + .5)).ToString(new System.Globalization.CultureInfo("en-US"));
+              }
+              else
+              {
+                // Use double to calculate
+                result = Math.Round((oldValue + oldValueOffset), 8).ToString(new System.Globalization.CultureInfo("en-US"));
+              }
+            }
+            break;
+          default:
+            break;
+        }
+      }
+      return result;
+    }
+
+    #endregion
+
+    #region "Public interface"
+
     public static string GetMainMarket(PTMagicConfiguration systemConfiguration, List<string> pairsLines, LogHelper log)
     {
       string result = "";
@@ -86,9 +166,9 @@ namespace Core.ProfitTrailer
       List<string> fileLines = (List<string>)ptmagicInstance.GetType().GetProperty(fileType + "Lines").GetValue(ptmagicInstance, null);
 
       // Writing Header lines
-      fileLines.Insert(0, "");
+      fileLines.Insert(0, "#");
       fileLines.Insert(0, "# ####################################");
-      fileLines.Insert(0, "# PTMagic_LastChanged = " + DateTime.Now.ToShortDateString() + " " + DateTime.UtcNow.ToShortTimeString());
+      fileLines.Insert(0, "# PTMagic_LastChanged = " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString());
       fileLines.Insert(0, "# PTMagic_ActiveSetting = " + SystemHelper.StripBadCode(ptmagicInstance.DefaultSettingName, Constants.WhiteListProperties));
       fileLines.Insert(0, "# ####################################");
 
@@ -162,7 +242,6 @@ namespace Core.ProfitTrailer
           GlobalSetting defaultSetting = ptmagicInstance.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Find(a => a.SettingName.Equals(ptmagicInstance.DefaultSettingName, StringComparison.InvariantCultureIgnoreCase));
           if (defaultSetting != null)
           {
-
             Dictionary<string, object> defaultProperties = new Dictionary<string, object>();
             switch (fileType.ToLower())
             {
@@ -185,7 +264,6 @@ namespace Core.ProfitTrailer
         }
         else
         {
-
           // Check if settings are configured in a seperate file
           if (properties.ContainsKey("File"))
           {
@@ -193,6 +271,8 @@ namespace Core.ProfitTrailer
           }
         }
 
+
+        // Loop through config line by line reprocessing where required.
         foreach (string line in fileLines)
         {
           if (line.IndexOf("PTMagic_ActiveSetting", StringComparison.InvariantCultureIgnoreCase) > -1)
@@ -206,7 +286,7 @@ namespace Core.ProfitTrailer
           {
 
             // Setting last change datetime
-            result.Add("# PTMagic_LastChanged = " + DateTime.UtcNow.ToShortDateString() + " " + DateTime.UtcNow.ToShortTimeString());
+            result.Add("# PTMagic_LastChanged = " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString());
 
           }
           else if (line.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
@@ -215,19 +295,37 @@ namespace Core.ProfitTrailer
             // Single Market Settings will get overwritten every single run => crop the lines
             break;
           }
-          else
+          else if (IsPropertyLine(line))
           {
-
-            // Writing property items
-            int oldResultCount = result.Count;
+            // We have got a property line
             if (properties != null)
             {
+              bool madeSubstitution = false;
+
               foreach (string settingProperty in properties.Keys)
               {
-                result = SettingsHandler.BuildPropertyLine(result, setting.SettingName, line, properties, settingProperty);
+                if (madeSubstitution)
+                {
+                  // We've made a substitution so no need to process the rest of the properties
+                  break;
+                }
+                else
+                {
+                  madeSubstitution = SettingsHandler.BuildPropertyLine(result, setting.SettingName, line, properties, settingProperty);
+                }
+              }
+
+              if (!madeSubstitution)
+              {
+                // No substitution made, so simply copy the line
+                result.Add(line);
               }
             }
-            if (oldResultCount == result.Count) result.Add(line);
+          }
+          else
+          {
+            // Non property line, just copy it
+            result.Add(line);
           }
         }
       }
@@ -235,80 +333,39 @@ namespace Core.ProfitTrailer
       ptmagicInstance.GetType().GetProperty(fileType + "Lines").SetValue(ptmagicInstance, result);
     }
 
-    public static List<string> BuildPropertyLine(List<string> result, string settingName, string line, Dictionary<string, object> properties, string settingProperty)
+    public static bool BuildPropertyLine(List<string> result, string settingName, string line, Dictionary<string, object> properties, string settingProperty)
     {
-      int valueMode = Constants.ValueModeDefault;
-      string propertyKey = settingProperty;
+      bool madeSubstitutions = false;
 
-      // Check for offset values
-      if (propertyKey.IndexOf("_OFFSETPERCENT") > -1)
+      string propertyKey;
+
+      string newValueString = SystemHelper.PropertyToString(properties[settingProperty]);
+      string oldValueString = line.Substring(line.IndexOf("=") + 1).Trim();
+
+      newValueString = CalculatePropertyValue(settingProperty, oldValueString, newValueString, out propertyKey);
+
+      if (line.Contains(propertyKey, StringComparison.InvariantCultureIgnoreCase))
       {
-        valueMode = Constants.ValueModeOffsetPercent;
-        propertyKey = propertyKey.Replace("_OFFSETPERCENT", "");
-      }
-      else if (propertyKey.IndexOf("_OFFSET") > -1)
-      {
-        valueMode = Constants.ValueModeOffset;
-        propertyKey = propertyKey.Replace("_OFFSET", "");
-      }
-
-      if (line.StartsWith(propertyKey + " ", StringComparison.InvariantCultureIgnoreCase) || line.StartsWith(propertyKey + "=", StringComparison.InvariantCultureIgnoreCase))
-      {
-        string newValueString = SystemHelper.PropertyToString(properties[settingProperty]);
-        if (newValueString.ToLower().Equals("true") || newValueString.ToLower().Equals("false"))
-        {
-          newValueString = newValueString.ToLower();
-        }
-
-        string oldValueString = line.Replace(propertyKey, "").Replace("=", "").Trim();
-
-        switch (valueMode)
-        {
-          case Constants.ValueModeOffset:
-            // Offset value by a fixed amount
-            double offsetValue = SystemHelper.TextToDouble(newValueString, 0, "en-US");
-            if (offsetValue != 0)
-            {
-              double oldValue = SystemHelper.TextToDouble(oldValueString, 0, "en-US");
-              newValueString = Math.Round((oldValue + offsetValue), 8).ToString(new System.Globalization.CultureInfo("en-US"));
-            }
-            break;
-          case Constants.ValueModeOffsetPercent:
-            // Offset value by percentage
-            double offsetValuePercent = SystemHelper.TextToDouble(newValueString, 0, "en-US");
-            if (offsetValuePercent != 0)
-            {
-              double oldValue = SystemHelper.TextToDouble(oldValueString, 0, "en-US");
-              if (oldValue < 0) offsetValuePercent = offsetValuePercent * -1;
-              double oldValueOffset = (oldValue * (offsetValuePercent / 100));
-              //Round up any decimal value >= .5 
-              int newTempValue = (int)(Math.Round((oldValue + oldValueOffset), MidpointRounding.AwayFromZero) + .5);
-              newValueString = newTempValue.ToString(new System.Globalization.CultureInfo("en-US"));
-            }
-            break;
-          default:
-            break;
-        }
-
+        madeSubstitutions = true;
         line = propertyKey + " = " + newValueString;
 
         string previousLine = result.Last();
         if (previousLine.IndexOf("PTMagic Changed Line", StringComparison.InvariantCultureIgnoreCase) > -1)
         {
-          previousLine = "# PTMagic changed line for setting '" + settingName + "' on " + DateTime.UtcNow.ToShortDateString() + " " + DateTime.UtcNow.ToShortTimeString();
+          previousLine = "# PTMagic changed line for setting '" + settingName + "' on " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString();
 
           result.RemoveAt(result.Count - 1);
           result.Add(previousLine);
         }
         else
         {
-          string editLine = "# PTMagic changed line for setting '" + settingName + "' on " + DateTime.UtcNow.ToShortDateString() + " " + DateTime.UtcNow.ToShortTimeString();
+          string editLine = "# PTMagic changed line for setting '" + settingName + "' on " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString();
           result.Add(editLine);
         }
         result.Add(line);
       }
 
-      return result;
+      return madeSubstitutions;
     }
 
     public static void CompileSingleMarketProperties(PTMagic ptmagicInstance, Dictionary<string, List<string>> matchedTriggers)
@@ -339,9 +396,11 @@ namespace Core.ProfitTrailer
           }
         }
 
+        newPairsLines.Add("#");
+        newPairsLines.Add("# ########################################################################");
         newPairsLines.Add("# PTMagic_SingleMarketSettings - Written on " + DateTime.Now.ToString());
         newPairsLines.Add("# ########################################################################");
-        newPairsLines.Add("");
+        newPairsLines.Add("#");
 
         foreach (string dcaLine in ptmagicInstance.DCALines)
         {
@@ -359,9 +418,11 @@ namespace Core.ProfitTrailer
           }
         }
 
+        newDCALines.Add("#");
+        newDCALines.Add("# ########################################################################");
         newDCALines.Add("# PTMagic_SingleMarketSettings - Written on " + DateTime.Now.ToString());
         newDCALines.Add("# ########################################################################");
-        newDCALines.Add("");
+        newDCALines.Add("#");
 
         foreach (string indicatorsLine in ptmagicInstance.IndicatorsLines)
         {
@@ -383,9 +444,11 @@ namespace Core.ProfitTrailer
         Dictionary<string, string> globalDCAProperties = SettingsHandler.GetPropertiesAsDictionary(globalDCALines);
         Dictionary<string, string> globalIndicatorsProperties = SettingsHandler.GetPropertiesAsDictionary(globalIndicatorsLines);
 
+        newIndicatorsLines.Add("#");
+        newIndicatorsLines.Add("# ########################################################################");
         newIndicatorsLines.Add("# PTMagic_SingleMarketSettings - Written on " + DateTime.Now.ToString());
         newIndicatorsLines.Add("# ########################################################################");
-        newIndicatorsLines.Add("");
+        newIndicatorsLines.Add("#");
 
         foreach (string marketPair in ptmagicInstance.TriggeredSingleMarketSettings.Keys.OrderBy(k => k))
         {
@@ -473,26 +536,15 @@ namespace Core.ProfitTrailer
 
         foreach (string settingProperty in properties.Keys)
         {
-          int valueMode = Constants.ValueModeDefault;
           string propertyKey = settingProperty;
 
-          // Check for offset values
-          if (propertyKey.IndexOf("_OFFSETPERCENT") > -1)
-          {
-            valueMode = Constants.ValueModeOffsetPercent;
-            propertyKey = propertyKey.Replace("_OFFSETPERCENT", "");
-          }
-          else if (propertyKey.IndexOf("_OFFSET") > -1)
-          {
-            valueMode = Constants.ValueModeOffset;
-            propertyKey = propertyKey.Replace("_OFFSET", "");
-          }
+          string propertyKeyName = propertyKey.Replace("_OFFSETPERCENT", "");
+          propertyKeyName = propertyKeyName.Replace("_OFFSET", "");
 
           string newValueString = SystemHelper.PropertyToString(properties[settingProperty]);
-          if (newValueString.ToLower().Equals("true") || newValueString.ToLower().Equals("false"))
-          {
-            newValueString = newValueString.ToLower();
-          }
+          string oldValueString = SettingsHandler.GetCurrentPropertyValue(fullProperties, propertyKeyName, propertyKeyName.Replace("ALL_", "DEFAULT_"));
+
+          newValueString = CalculatePropertyValue(settingProperty, oldValueString, newValueString, out propertyKey);
 
           string propertyMarketName = marketPair;
 
@@ -520,52 +572,8 @@ namespace Core.ProfitTrailer
             }
           }
 
-          switch (valueMode)
-          {
-            case Constants.ValueModeOffset:
-              // Offset value by a fixed amount
-              double offsetValue = SystemHelper.TextToDouble(newValueString, 0, "en-US");
-              if (offsetValue != 0)
-              {
-                double oldValue = SystemHelper.TextToDouble(SettingsHandler.GetCurrentPropertyValue(fullProperties, propertyKey, propertyKey.Replace("ALL_", "DEFAULT_")), 0, "en-US");
-                newValueString = Math.Round((oldValue + offsetValue), 8).ToString(new System.Globalization.CultureInfo("en-US"));
-              }
-              break;
-            case Constants.ValueModeOffsetPercent:
-              // Offset value by percentage
-              double offsetValuePercent = SystemHelper.TextToDouble(newValueString, 0, "en-US");
-
-              if (offsetValuePercent != 0)
-              {
-                double oldValue = SystemHelper.TextToDouble(SettingsHandler.GetCurrentPropertyValue(fullProperties, propertyKey, propertyKey.Replace("ALL_", "DEFAULT_")), 0, "en-US");
-
-                if (oldValue < 0)
-                {
-                  offsetValuePercent = offsetValuePercent * -1;
-                }
-
-                double oldValueOffset = (oldValue * (offsetValuePercent / 100));
-
-                if (propertyKey.Contains("rebuy_timeout", StringComparison.InvariantCultureIgnoreCase) || propertyKey.Contains("trading_pairs", StringComparison.InvariantCultureIgnoreCase))
-                {
-                  // Ensure some values are rounded up to integers for PT comaptability 
-                  newValueString = ((int)(Math.Round((oldValue + oldValueOffset), MidpointRounding.AwayFromZero) + .5)).ToString(new System.Globalization.CultureInfo("en-US"));
-                }
-                else
-                {
-                  // Use double to calculate
-                  newValueString = Math.Round((oldValue + oldValueOffset), 8).ToString(new System.Globalization.CultureInfo("en-US"));
-                }
-
-              }
-              break;
-            default:
-              break;
-          }
-
           newPropertyLines.Add(propertyKeyString + " = " + newValueString);
         }
-        newPropertyLines.Add("");
       }
 
       return newPropertyLines;
@@ -647,5 +655,6 @@ namespace Core.ProfitTrailer
 
       return result;
     }
+    #endregion
   }
 }
