@@ -396,8 +396,7 @@ namespace Core.ProfitTrailer
           }
         }
 
-        newPairsLines.Add("#");
-        newPairsLines.Add("# ########################################################################");
+
         newPairsLines.Add("# PTMagic_SingleMarketSettings - Written on " + DateTime.Now.ToString());
         newPairsLines.Add("# ########################################################################");
         newPairsLines.Add("#");
@@ -418,8 +417,7 @@ namespace Core.ProfitTrailer
           }
         }
 
-        newDCALines.Add("#");
-        newDCALines.Add("# ########################################################################");
+
         newDCALines.Add("# PTMagic_SingleMarketSettings - Written on " + DateTime.Now.ToString());
         newDCALines.Add("# ########################################################################");
         newDCALines.Add("#");
@@ -444,8 +442,7 @@ namespace Core.ProfitTrailer
         Dictionary<string, string> globalDCAProperties = SettingsHandler.GetPropertiesAsDictionary(globalDCALines);
         Dictionary<string, string> globalIndicatorsProperties = SettingsHandler.GetPropertiesAsDictionary(globalIndicatorsLines);
 
-        newIndicatorsLines.Add("#");
-        newIndicatorsLines.Add("# ########################################################################");
+
         newIndicatorsLines.Add("# PTMagic_SingleMarketSettings - Written on " + DateTime.Now.ToString());
         newIndicatorsLines.Add("# ########################################################################");
         newIndicatorsLines.Add("#");
