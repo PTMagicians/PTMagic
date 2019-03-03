@@ -88,7 +88,6 @@ namespace Monitor._Internal
           LatestVersion = BaseAnalyzer.GetLatestGitHubRelease(Log, Summary.Version);
           HttpContext.Session.SetString("LatestVersion", LatestVersion);
         }
-
       }
       catch { }
 
