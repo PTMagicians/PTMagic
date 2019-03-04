@@ -29,7 +29,7 @@ namespace Core.ProfitTrailer
     private static string CalculatePropertyValue(string settingProperty, string oldValueString, string newValueString, out string configPropertyKey)
     {
       int valueMode = Constants.ValueModeDefault;
-      configPropertyKey = settingProperty;
+      configPropertyKey = settingProperty.Trim();
       string result = null;
 
       // Determine the mode for changing the value
@@ -339,28 +339,27 @@ namespace Core.ProfitTrailer
 
       string propertyKey;
 
+      var lineParts = line.Trim().Split("=");
+
+      string linePropertyName = lineParts[0].Trim();
       string newValueString = SystemHelper.PropertyToString(properties[settingProperty]);
-      string oldValueString = line.Substring(line.IndexOf("=") + 1).Trim();
+      string oldValueString = lineParts[1].Trim();
 
       newValueString = CalculatePropertyValue(settingProperty, oldValueString, newValueString, out propertyKey);
 
-      if (line.Contains(propertyKey, StringComparison.InvariantCultureIgnoreCase))
+      if (linePropertyName.Equals(propertyKey, StringComparison.InvariantCultureIgnoreCase))
       {
         madeSubstitutions = true;
         line = propertyKey + " = " + newValueString;
 
         string previousLine = result.Last();
-        if (previousLine.IndexOf("PTMagic Changed Line", StringComparison.InvariantCultureIgnoreCase) > -1)
+        if (previousLine.IndexOf("PTMagic changed line", StringComparison.InvariantCultureIgnoreCase) > -1)
         {
-          previousLine = "# PTMagic changed line for setting '" + settingName + "' on " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString();
-
           result.RemoveAt(result.Count - 1);
-          result.Add(previousLine);
         }
         else
         {
-          string editLine = "# PTMagic changed line for setting '" + settingName + "' on " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString();
-          result.Add(editLine);
+          result.Add(String.Format("# PTMagic changed {5} for setting '{0}' from value '{1}' to '{2}' on {3} {4}", settingName, oldValueString, newValueString, DateTime.Now.ToShortDateString(), DateTime.Now.ToShortTimeString(), linePropertyName));
         }
         result.Add(line);
       }

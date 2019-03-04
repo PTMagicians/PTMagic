@@ -373,7 +373,7 @@ namespace Core.Helper
       {
         for (int i = 0; i < tokenList.Count; i++)
         {
-          result += tokenList[i].Trim() + separator;
+          result += tokenList[i].Trim() + (i < (tokenList.Count - 1) ? separator : "");
         }
 
         if (cropDoubleSeparators) result = result.Replace(separator + separator, "");
