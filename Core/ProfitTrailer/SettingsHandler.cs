@@ -87,6 +87,8 @@ namespace Core.ProfitTrailer
             }
             break;
           default:
+            // Raw value no processing required
+            result = newValueString;
             break;
         }
       }
