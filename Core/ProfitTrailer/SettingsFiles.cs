@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Security.Permissions;
 using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
@@ -17,6 +18,27 @@ namespace Core.ProfitTrailer
 {
   public static class SettingsFiles
   {
+    private static FileSystemWatcher _presetFileWatcher;
+
+    public static FileSystemWatcher PresetFileWatcher
+    {
+      get
+      {
+        if (_presetFileWatcher == null)
+        {
+          _presetFileWatcher = new FileSystemWatcher()
+          {
+            Path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathPresets,
+            NotifyFilter = NotifyFilters.LastWrite,
+            Filter = "",
+            IncludeSubdirectories = true
+          };
+        }
+
+        return _presetFileWatcher;
+      }
+    }
+
     public static string GetActiveSetting(PTMagicConfiguration systemConfiguration, string pairsFileName, string dcaFileName, string indicatorsFileName, LogHelper log)
     {
       string pairsPropertiesPath = systemConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + pairsFileName;
@@ -33,7 +55,6 @@ namespace Core.ProfitTrailer
         string inditactorsPropertiesPath = systemConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + indicatorsFileName;
         SettingsFiles.WriteHeaderLines(inditactorsPropertiesPath, "Default", systemConfiguration);
       }
-
 
       return result;
     }

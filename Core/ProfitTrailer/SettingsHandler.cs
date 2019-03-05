@@ -140,24 +140,34 @@ namespace Core.ProfitTrailer
     {
       string result = "";
 
-      foreach (string line in ptmagicInstance.PairsLines)
+      if ((ptmagicInstance.PairsLines == null) || ptmagicInstance.PTMagicConfiguration.GeneralSettings.Application.TestMode)
       {
-        if (line.IndexOf("PTMagic_ActiveSetting", StringComparison.InvariantCultureIgnoreCase) > -1)
-        {
-          result = line.Replace("PTMagic_ActiveSetting", "", StringComparison.InvariantCultureIgnoreCase);
-          result = result.Replace("#", "");
-          result = result.Replace("=", "").Trim();
-          result = SystemHelper.StripBadCode(result, Constants.WhiteListProperties);
-          break;
-        }
+        // Return current active setting
+        result = ptmagicInstance.ActiveSetting;
       }
-
-      if (result.Equals(""))
+      else
       {
-        SettingsHandler.WriteHeaderLines("Pairs", ptmagicInstance);
-        SettingsHandler.WriteHeaderLines("DCA", ptmagicInstance);
-        SettingsHandler.WriteHeaderLines("Indicators", ptmagicInstance);
-        headerLinesAdded = true;
+        // Determine from file lines
+        foreach (string line in ptmagicInstance.PairsLines)
+        {
+          if (line.IndexOf("PTMagic_ActiveSetting", StringComparison.InvariantCultureIgnoreCase) > -1)
+          {
+            result = line.Replace("PTMagic_ActiveSetting", "", StringComparison.InvariantCultureIgnoreCase);
+            result = result.Replace("#", "");
+            result = result.Replace("=", "").Trim();
+            result = SystemHelper.StripBadCode(result, Constants.WhiteListProperties);
+            break;
+          }
+        }
+
+        if (result.Equals(""))
+        {
+          SettingsHandler.WriteHeaderLines("Pairs", ptmagicInstance);
+          SettingsHandler.WriteHeaderLines("DCA", ptmagicInstance);
+          SettingsHandler.WriteHeaderLines("Indicators", ptmagicInstance);
+          headerLinesAdded = true;
+        }
+
       }
 
       return result;
