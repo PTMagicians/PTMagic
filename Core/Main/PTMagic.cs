@@ -601,6 +601,8 @@ namespace Core.Main
       // Disable the file watcher whilst we deal with the event
       SettingsFiles.PresetFileWatcher.EnableRaisingEvents = false;
 
+      this.Log.DoLogInfo("Detected a '" + e.ChangeType.ToString() + "' change in the following preset file: " + e.FullPath);
+
       // Reprocess now
       PTMagicIntervalTimer_Elapsed(new object(), null);
 
