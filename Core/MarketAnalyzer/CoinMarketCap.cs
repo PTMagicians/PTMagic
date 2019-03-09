@@ -53,10 +53,9 @@ namespace Core.MarketAnalyzer
 
             CoinMarketCap.CheckForMarketDataRecreation(markets, systemConfiguration, log);
 
-            DateTime fileDateTime = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, DateTime.UtcNow.Hour, DateTime.UtcNow.Minute, 0).ToUniversalTime();
-
+            // Save the data
+            DateTime fileDateTime = DateTime.UtcNow;
             FileHelper.WriteTextToFile(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathCoinMarketCap + Path.DirectorySeparatorChar, "MarketData_" + fileDateTime.ToString("yyyy-MM-dd_HH.mm") + ".json", JsonConvert.SerializeObject(markets), fileDateTime, fileDateTime);
-
 
             log.DoLogInfo("CoinMarketCap - Market data saved.");
 
@@ -139,10 +138,9 @@ namespace Core.MarketAnalyzer
           markets24h.Add(markets[key].Name, market24h);
         }
 
-        DateTime fileDateTime = new DateTime(DateTime.UtcNow.ToLocalTime().AddHours(-24).Year, DateTime.UtcNow.ToLocalTime().AddHours(-24).Month, DateTime.UtcNow.ToLocalTime().AddHours(-24).Day, DateTime.UtcNow.ToLocalTime().AddHours(-24).Hour, DateTime.UtcNow.ToLocalTime().AddHours(-24).Minute, 0).ToUniversalTime();
-
+        // Save the 24hr market data
+        DateTime fileDateTime = DateTime.UtcNow.AddHours(-24);
         FileHelper.WriteTextToFile(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathCoinMarketCap + Path.DirectorySeparatorChar, "MarketData_" + fileDateTime.ToString("yyyy-MM-dd_HH.mm") + ".json", JsonConvert.SerializeObject(markets24h), fileDateTime, fileDateTime);
-
 
         log.DoLogInfo("CoinMarketCap - 24h market data rebuilt.");
       }

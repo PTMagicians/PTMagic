@@ -11,6 +11,7 @@ using Core.ProfitTrailer;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 namespace Core.MarketAnalyzer
 {
@@ -75,24 +76,24 @@ namespace Core.MarketAnalyzer
               float marketVolume = currencyTicker["volume"].ToObject<float>();
               if (marketName.EndsWith(mainMarket, StringComparison.InvariantCultureIgnoreCase))
               {
-                if(marketLastPrice > 0 && marketVolume > 0 )
+                if (marketLastPrice > 0 && marketVolume > 0)
                 {
 
-                // Set last values in case any error occurs
-                lastMarket = marketName;
-                lastTicker = currencyTicker;
+                  // Set last values in case any error occurs
+                  lastMarket = marketName;
+                  lastTicker = currencyTicker;
 
-                Market market = new Market();
-                market.Position = markets.Count + 1;
-                market.Name = marketName;
-                market.Symbol = currencyTicker["symbol"].ToString();
-                market.Price = SystemHelper.TextToDouble(currencyTicker["lastPrice"].ToString(), 0, "en-US");
-                market.Volume24h = SystemHelper.TextToDouble(currencyTicker["quoteVolume"].ToString(), 0, "en-US");
-                market.MainCurrencyPriceUSD = mainCurrencyPrice;
+                  Market market = new Market();
+                  market.Position = markets.Count + 1;
+                  market.Name = marketName;
+                  market.Symbol = currencyTicker["symbol"].ToString();
+                  market.Price = SystemHelper.TextToDouble(currencyTicker["lastPrice"].ToString(), 0, "en-US");
+                  market.Volume24h = SystemHelper.TextToDouble(currencyTicker["quoteVolume"].ToString(), 0, "en-US");
+                  market.MainCurrencyPriceUSD = mainCurrencyPrice;
 
-                markets.Add(market.Name, market);
+                  markets.Add(market.Name, market);
 
-                result.Add(market.Name);
+                  result.Add(market.Name);
                 }
                 else
                 {
@@ -108,7 +109,7 @@ namespace Core.MarketAnalyzer
 
             Binance.CheckForMarketDataRecreation(mainMarket, markets, systemConfiguration, log);
 
-            DateTime fileDateTime = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, DateTime.UtcNow.Hour, DateTime.UtcNow.Minute, 0).ToUniversalTime();
+            DateTime fileDateTime = DateTime.UtcNow;
 
             FileHelper.WriteTextToFile(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathExchange + Path.DirectorySeparatorChar, "MarketData_" + fileDateTime.ToString("yyyy-MM-dd_HH.mm") + ".json", JsonConvert.SerializeObject(markets), fileDateTime, fileDateTime);
 
@@ -167,7 +168,7 @@ namespace Core.MarketAnalyzer
       log.DoLogInfo("Binance - Checking first seen dates for " + markets.Count + " markets. This may take a while...");
 
       int marketsChecked = 0;
-      
+
       foreach (string key in markets.Keys)
       {
         // Save market info
@@ -360,13 +361,17 @@ namespace Core.MarketAnalyzer
 
         // Get Ticks for all markets
         log.DoLogDebug("Binance - Getting ticks for '" + markets.Count + "' markets");
-        Dictionary<string, List<MarketTick>> marketTicks = new Dictionary<string, List<MarketTick>>();
+        ConcurrentDictionary<string, List<MarketTick>> marketTicks = new ConcurrentDictionary<string, List<MarketTick>>();
 
-        Parallel.ForEach( markets.Keys, 
+        Parallel.ForEach(markets.Keys,
                           new ParallelOptions { MaxDegreeOfParallelism = 5 },
                           (key) =>
         {
-          marketTicks.Add(key, Binance.GetMarketTicks(key, totalTicks, systemConfiguration, log));
+          if (!marketTicks.TryAdd(key, GetMarketTicks(key, totalTicks, systemConfiguration, log)))
+          {
+            // Failed to add ticks to dictionary
+            throw new Exception("Failed to add ticks for " + key + " to the memory dictionary, results may be incorrectly calculated!");
+          }
 
           if ((marketTicks.Count % 10) == 0)
           {
