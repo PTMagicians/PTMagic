@@ -736,6 +736,9 @@ namespace Core.Main
         catch (System.NullReferenceException)
         {
           this.Log.DoLogError("PTM failed to read the Config File. That means something in the File is either missing or incorrect. If this happend after an update please take a look at the release notes at: https://github.com/PTMagicians/PTMagic/releases");
+          Console.WriteLine("Press enter to close the Application...");
+          Console.ReadLine();
+          Environment.Exit(0);
         }
 
       }
