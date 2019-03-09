@@ -345,17 +345,7 @@ namespace Core.MarketAnalyzer
       return output;
     }
 
-    public static List<MarketTrendChange> GetMarketTrendChanges(
-      string platform, 
-      string mainMarket, 
-      MarketTrend marketTrend, 
-      List<string> marketList, 
-      Dictionary<string, Market> recentMarkets, 
-      Dictionary<string, Market> trendMarkets, 
-      string sortBy, 
-      bool isGlobal, 
-      PTMagicConfiguration systemConfiguration, 
-      LogHelper log)
+    public static List<MarketTrendChange> GetMarketTrendChanges(string platform, string mainMarket, MarketTrend marketTrend, List<string> marketList, Dictionary<string, Market> recentMarkets, Dictionary<string, Market> trendMarkets, string sortBy, bool isGlobal, PTMagicConfiguration systemConfiguration, LogHelper log)
     {
       List<MarketTrendChange> result = new List<MarketTrendChange>();
 
@@ -378,6 +368,7 @@ namespace Core.MarketAnalyzer
 
           if (platform.Equals("CoinMarketCap", StringComparison.InvariantCulture) && excludeMainCurrency)
           {
+
             // Check if this is the main currency (only for CoinMarketCap)
             if (recentMarketPair.Value.Symbol.Equals(mainMarket, StringComparison.InvariantCultureIgnoreCase))
             {
@@ -386,7 +377,6 @@ namespace Core.MarketAnalyzer
               continue;
             }
           }
-
           Market recentMarket = recentMarkets[recentMarketPair.Key];
 
           if (trendMarkets.ContainsKey(recentMarketPair.Key))

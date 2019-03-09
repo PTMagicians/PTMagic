@@ -99,7 +99,7 @@ namespace Core.MarketAnalyzer
 
             Poloniex.CheckForMarketDataRecreation(mainMarket, markets, systemConfiguration, log);
 
-            DateTime fileDateTime = DateTime.UtcNow;
+            DateTime fileDateTime = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, DateTime.UtcNow.Hour, DateTime.UtcNow.Minute, 0).ToUniversalTime();
 
             FileHelper.WriteTextToFile(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathExchange + Path.DirectorySeparatorChar, "MarketData_" + fileDateTime.ToString("yyyy-MM-dd_HH.mm") + ".json", JsonConvert.SerializeObject(markets), fileDateTime, fileDateTime);
 
@@ -269,15 +269,11 @@ namespace Core.MarketAnalyzer
         log.DoLogDebug("Poloniex - Getting ticks for '" + markets.Count + "' markets");
         Dictionary<string, List<MarketTick>> marketTicks = new Dictionary<string, List<MarketTick>>();
 
-        Parallel.ForEach(markets.Keys,
+        Parallel.ForEach( markets.Keys, 
                           new ParallelOptions { MaxDegreeOfParallelism = 5 },
                           (key) =>
         {
-          if (!marketTicks.TryAdd(key, Bittrex.GetMarketTicks(key, systemConfiguration, log)))
-          {
-            // Failed to add ticks to dictionary
-            throw new Exception("Failed to add ticks for " + key + " to the memory dictionary, results may be incorrectly calculated!");
-          }
+          marketTicks.Add(key, Poloniex.GetMarketTicks(key, systemConfiguration, log));
 
           if ((marketTicks.Count % 10) == 0)
           {

@@ -604,7 +604,6 @@ namespace Core.Main
       this.Log.DoLogInfo("Detected a '" + e.ChangeType.ToString() + "' change in the following preset file: " + e.FullPath);
 
       // Reprocess now
-      this.EnforceSettingsReapply = true;
       PTMagicIntervalTimer_Elapsed(new object(), null);
 
       // Enable the file watcher again
@@ -962,7 +961,7 @@ namespace Core.Main
 
       FileInfo generalSettingsFile = new FileInfo(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "settings.general.json");
       FileInfo analyzerSettingsFile = new FileInfo(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "settings.analyzer.json");
-      if (generalSettingsFile.LastWriteTimeUtc > this.LastSettingFileCheck || analyzerSettingsFile.LastWriteTimeUtc > this.LastSettingFileCheck)
+      if (generalSettingsFile.LastWriteTimeUtc > this.LastSettingFileCheck || analyzerSettingsFile.LastWriteTimeUtc > this.LastSettingFileCheck || EnforceSettingsReapply)
       {
         Log.DoLogInfo("Detected configuration changes. Reloading settings...");
 
@@ -1200,6 +1199,7 @@ namespace Core.Main
       }
       else if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Binance", StringComparison.InvariantCultureIgnoreCase))
       {
+
         // Get most recent market data from Binance
         this.ExchangeMarketList = Binance.GetMarketData(this.LastRuntimeSummary.MainMarket, this.MarketInfos, this.PTMagicConfiguration, this.Log);
       }
@@ -1379,7 +1379,14 @@ namespace Core.Main
       if (this.EnforceSettingsReapply || !activeSettingName.Equals(triggeredSetting.SettingName, StringComparison.InvariantCultureIgnoreCase))
       {
         // Check if we need to force a refresh of the settings
-        this.Log.DoLogInfo("Setting '" + activeSettingName + "' currently active. Checking for flood protection...");
+        if (this.EnforceSettingsReapply)
+        {
+          this.Log.DoLogInfo("Reapplying '" + activeSettingName + "' as the settings.analyzer.json or a preset file got changed.");
+        }
+        else
+        {
+          this.Log.DoLogInfo("Setting '" + activeSettingName + "' currently active. Checking for flood protection...");
+        }
 
         // If the setting we are about to activate is the default one, do not list matched triggers
         if (triggeredSetting.SettingName.Equals(this.DefaultSettingName, StringComparison.InvariantCultureIgnoreCase))
@@ -1395,10 +1402,6 @@ namespace Core.Main
           {
             this.Log.DoLogInfo("Switching global settings to '" + triggeredSetting.SettingName + "'...");
           }
-          else
-          {
-            this.Log.DoLogInfo("Applying '" + triggeredSetting.SettingName + "' as the settings.analyzer.json or a preset file got changed.");
-          }
 
           SettingsHandler.CompileProperties(this, triggeredSetting);
           this.GlobalSettingWritten = true;
@@ -1409,31 +1412,35 @@ namespace Core.Main
 
           // Build Telegram message
           string telegramMessage;
-          telegramMessage = this.PTMagicConfiguration.GeneralSettings.Application.InstanceName + ": Setting switched to '*" + SystemHelper.SplitCamelCase(triggeredSetting.SettingName) + "*'.";
-
-          if (matchedTriggers.Count > 0)
+          if (!EnforceSettingsReapply)
           {
-            telegramMessage += "\n\n*Matching Triggers:*";
-            foreach (string triggerResult in matchedTriggers)
+            telegramMessage = this.PTMagicConfiguration.GeneralSettings.Application.InstanceName + ": Setting switched to '*" + SystemHelper.SplitCamelCase(triggeredSetting.SettingName) + "*'.";
+
+            if (matchedTriggers.Count > 0)
             {
-              telegramMessage += "\n" + triggerResult;
+              telegramMessage += "\n\n*Matching Triggers:*";
+              foreach (string triggerResult in matchedTriggers)
+              {
+                telegramMessage += "\n" + triggerResult;
+              }
+            }
+
+            if (this.AverageMarketTrendChanges.Keys.Count > 0)
+            {
+              telegramMessage += "\n\n*Market Trends:*";
+              foreach (string key in this.AverageMarketTrendChanges.Keys)
+              {
+                telegramMessage += "\n" + key + ": " + this.AverageMarketTrendChanges[key].ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
+              }
             }
           }
-
-          if (this.AverageMarketTrendChanges.Keys.Count > 0)
+          else
           {
-            telegramMessage += "\n\n*Market Trends:*";
-            foreach (string key in this.AverageMarketTrendChanges.Keys)
-            {
-              telegramMessage += "\n" + key + ": " + this.AverageMarketTrendChanges[key].ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
-            }
+            telegramMessage = this.PTMagicConfiguration.GeneralSettings.Application.InstanceName + ": Reapplying settings '*" + SystemHelper.SplitCamelCase(triggeredSetting.SettingName) + "*'.";
           }
 
           // Send Telegram message
-          if (this.PTMagicConfiguration.GeneralSettings.Telegram.IsEnabled)
-          {
-            TelegramHelper.SendMessage(this.PTMagicConfiguration.GeneralSettings.Telegram.BotToken, this.PTMagicConfiguration.GeneralSettings.Telegram.ChatId, telegramMessage, this.PTMagicConfiguration.GeneralSettings.Telegram.SilentMode, this.Log);
-          }
+          if (this.PTMagicConfiguration.GeneralSettings.Telegram.IsEnabled) TelegramHelper.SendMessage(this.PTMagicConfiguration.GeneralSettings.Telegram.BotToken, this.PTMagicConfiguration.GeneralSettings.Telegram.ChatId, telegramMessage, this.PTMagicConfiguration.GeneralSettings.Telegram.SilentMode, this.Log);
 
           // Record last settings run
           this.LastSetting = activeSettingName;
@@ -2476,7 +2483,10 @@ namespace Core.Main
           }
         }
 
-        this.LastRuntimeSummary.MarketSummary.Add(marketPair, mpSummary);
+        if (!this.LastRuntimeSummary.MarketSummary.ContainsKey(marketPair))
+        {
+          this.LastRuntimeSummary.MarketSummary.Add(marketPair, mpSummary);
+        }
       }
 
       this.Log.DoLogInfo("Summary: Current single market properties saved.");
