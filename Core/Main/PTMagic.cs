@@ -738,9 +738,7 @@ namespace Core.Main
         {
           this.Log.DoLogError("PTM failed to read the Config File. That means something in the File is either missing or incorrect. If this happend after an update please take a look at the release notes at: https://github.com/PTMagicians/PTMagic/releases");
         }
-
       }
-
       else
       {
         this.Log.DoLogWarn("PTMagic disabled, shutting down...");
@@ -1388,7 +1386,7 @@ namespace Core.Main
         }
 
         // Check if flood protection is active
-        if (this.EnforceSettingsReapply || !this.LastSetting.Equals(triggeredSetting.SettingName, StringComparison.InvariantCultureIgnoreCase) || this.LastSettingsChange <= DateTime.UtcNow.AddMinutes(-PTMagicConfiguration.GeneralSettings.Application.FloodProtectionMinutes))
+        if (this.EnforceSettingsReapply || this.LastSettingsChange <= DateTime.UtcNow.AddMinutes(-PTMagicConfiguration.GeneralSettings.Application.FloodProtectionMinutes))
         {
           // Setting not set => Change setting
           if (!EnforceSettingsReapply)
@@ -2257,7 +2255,6 @@ namespace Core.Main
       }
 
       // Get configured DCA percentages
-
       string dcaDefaultPercentageString = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_buy_percentage", "");
       double dcaDefaultPercentage = SystemHelper.TextToDouble(dcaDefaultPercentageString, 0, "en-US");
 

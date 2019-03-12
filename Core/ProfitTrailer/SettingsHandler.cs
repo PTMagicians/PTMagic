@@ -391,16 +391,17 @@ namespace Core.ProfitTrailer
         List<string> newDCALines = new List<string>();
         List<string> newIndicatorsLines = new List<string>();
 
+        // Find the previous single market settings section in the pairs file
         foreach (string pairsLine in ptmagicInstance.PairsLines)
         {
           if (pairsLine.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
           {
-
             // Single Market Settings will get overwritten every single run => crop the lines
             break;
           }
           else
           {
+            // Copy the line into the new pairs file and keep searching
             string globalPairsLine = pairsLine;
 
             globalPairsLines.Add(globalPairsLine);
@@ -412,16 +413,17 @@ namespace Core.ProfitTrailer
         newPairsLines.Add("# ########################################################################");
         newPairsLines.Add("#");
 
+        // Find the previous single market settings section in the DCA file
         foreach (string dcaLine in ptmagicInstance.DCALines)
         {
           if (dcaLine.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
           {
-
             // Single Market Settings will get overwritten every single run => crop the lines
             break;
           }
           else
           {
+            // Copy the line into the new pairs file and keep searching
             string globalDCALine = dcaLine;
 
             globalDCALines.Add(globalDCALine);
@@ -433,16 +435,17 @@ namespace Core.ProfitTrailer
         newDCALines.Add("# ########################################################################");
         newDCALines.Add("#");
 
+        // Find the previous single market settings section in the Indicators file
         foreach (string indicatorsLine in ptmagicInstance.IndicatorsLines)
         {
           if (indicatorsLine.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
           {
-
             // Single Market Settings will get overwritten every single run => crop the lines
             break;
           }
           else
           {
+            // Copy the line into the new pairs file and keep searching
             string globalIndicatorsLine = indicatorsLine;
 
             globalIndicatorsLines.Add(globalIndicatorsLine);
@@ -536,7 +539,11 @@ namespace Core.ProfitTrailer
         string appliedSettingsStringList = "";
         foreach (SingleMarketSetting sms in appliedSettings)
         {
-          if (!appliedSettingsStringList.Equals("")) appliedSettingsStringList += ", ";
+          if (!appliedSettingsStringList.Equals(""))
+          {
+            appliedSettingsStringList += ", ";
+          }
+
           appliedSettingsStringList += sms.SettingName;
         }
 
