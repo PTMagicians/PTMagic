@@ -39,31 +39,11 @@ namespace Core.ProfitTrailer
       }
     }
 
-    public static string GetActiveSetting(PTMagicConfiguration systemConfiguration, string pairsFileName, string dcaFileName, string indicatorsFileName, LogHelper log)
-    {
-      string pairsPropertiesPath = systemConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + pairsFileName;
-
-      string result = SettingsFiles.GetActiveSettingFromFile(pairsPropertiesPath, systemConfiguration, log);
-
-      if (result.Equals(""))
-      {
-        SettingsFiles.WriteHeaderLines(pairsPropertiesPath, "Default", systemConfiguration);
-
-        string dcaPropertiesPath = systemConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + dcaFileName;
-        SettingsFiles.WriteHeaderLines(dcaPropertiesPath, "Default", systemConfiguration);
-
-        string inditactorsPropertiesPath = systemConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + indicatorsFileName;
-        SettingsFiles.WriteHeaderLines(inditactorsPropertiesPath, "Default", systemConfiguration);
-      }
-
-      return result;
-    }
-
     public static void WriteHeaderLines(string filePath, string settingName, PTMagicConfiguration systemConfiguration)
     {
       // Writing Header lines
       List<string> lines = File.ReadAllLines(filePath).ToList();
-      lines.Insert(0, "");
+      lines.Insert(0, "#");
       lines.Insert(0, "# ####################################");
       lines.Insert(0, "# PTMagic_LastChanged = " + DateTime.UtcNow.ToShortDateString() + " " + DateTime.UtcNow.ToShortTimeString());
       lines.Insert(0, "# PTMagic_ActiveSetting = " + SystemHelper.StripBadCode(settingName, Constants.WhiteListProperties));
@@ -149,7 +129,6 @@ namespace Core.ProfitTrailer
           }
         }
       }
-
 
       if (forceCheck)
       {

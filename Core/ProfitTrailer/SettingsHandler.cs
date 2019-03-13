@@ -136,55 +136,15 @@ namespace Core.ProfitTrailer
       return result;
     }
 
-    public static string GetActiveSetting(PTMagic ptmagicInstance, ref bool headerLinesAdded)
+    public static void WriteHeaderLines(string settingsName, DateTime settingsChangeTimestamp, List<string> lines)
     {
-      string result = "";
-
-      if ((ptmagicInstance.PairsLines == null) || ptmagicInstance.PTMagicConfiguration.GeneralSettings.Application.TestMode)
-      {
-        // Return current active setting
-        result = ptmagicInstance.ActiveSetting;
-      }
-      else
-      {
-        // Determine from file lines
-        foreach (string line in ptmagicInstance.PairsLines)
-        {
-          if (line.IndexOf("PTMagic_ActiveSetting", StringComparison.InvariantCultureIgnoreCase) > -1)
-          {
-            result = line.Replace("PTMagic_ActiveSetting", "", StringComparison.InvariantCultureIgnoreCase);
-            result = result.Replace("#", "");
-            result = result.Replace("=", "").Trim();
-            result = SystemHelper.StripBadCode(result, Constants.WhiteListProperties);
-            break;
-          }
-        }
-
-        if (result.Equals(""))
-        {
-          SettingsHandler.WriteHeaderLines("Pairs", ptmagicInstance);
-          SettingsHandler.WriteHeaderLines("DCA", ptmagicInstance);
-          SettingsHandler.WriteHeaderLines("Indicators", ptmagicInstance);
-          headerLinesAdded = true;
-        }
-
-      }
-
-      return result;
-    }
-
-    public static void WriteHeaderLines(string fileType, PTMagic ptmagicInstance)
-    {
-      List<string> fileLines = (List<string>)ptmagicInstance.GetType().GetProperty(fileType + "Lines").GetValue(ptmagicInstance, null);
-
       // Writing Header lines
-      fileLines.Insert(0, "#");
-      fileLines.Insert(0, "# ####################################");
-      fileLines.Insert(0, "# PTMagic_LastChanged = " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString());
-      fileLines.Insert(0, "# PTMagic_ActiveSetting = " + SystemHelper.StripBadCode(ptmagicInstance.DefaultSettingName, Constants.WhiteListProperties));
-      fileLines.Insert(0, "# ####################################");
-
-      ptmagicInstance.GetType().GetProperty(fileType + "Lines").SetValue(ptmagicInstance, fileLines);
+      lines.Insert(0, "#");
+      lines.Insert(0, "# ####################################");
+      lines.Insert(0, "# PTMagic_LastChanged = " + settingsChangeTimestamp.ToShortDateString() + " " + settingsChangeTimestamp.ToShortTimeString());
+      lines.Insert(0, "# PTMagic_ActiveSetting = " + SystemHelper.StripBadCode(settingsName, Constants.WhiteListProperties));
+      lines.Insert(0, "# ####### PTMagic Current Setting ########");
+      lines.Insert(0, "# ####################################");
     }
 
     public static Dictionary<string, string> GetPropertiesAsDictionary(List<string> propertyLines)
@@ -229,27 +189,25 @@ namespace Core.ProfitTrailer
       return result;
     }
 
-    public static void CompileProperties(PTMagic ptmagicInstance, GlobalSetting setting)
+    public static void CompileProperties(PTMagic ptmagicInstance, GlobalSetting setting, DateTime settingTimestamp)
     {
-      SettingsHandler.BuildPropertyLines("Pairs", ptmagicInstance, setting);
-      SettingsHandler.BuildPropertyLines("DCA", ptmagicInstance, setting);
-      SettingsHandler.BuildPropertyLines("Indicators", ptmagicInstance, setting);
+      SettingsHandler.BuildPropertyLines("Pairs", ptmagicInstance, setting, settingTimestamp);
+      SettingsHandler.BuildPropertyLines("DCA", ptmagicInstance, setting, settingTimestamp);
+      SettingsHandler.BuildPropertyLines("Indicators", ptmagicInstance, setting, settingTimestamp);
     }
 
-    public static void BuildPropertyLines(string fileType, PTMagic ptmagicInstance, GlobalSetting setting)
+    public static void BuildPropertyLines(string fileType, PTMagic ptmagicInstance, GlobalSetting setting, DateTime settingLastChanged)
     {
+      bool headerLinesExist = false;
       List<string> result = new List<string>();
-
       List<string> fileLines = (List<string>)ptmagicInstance.GetType().GetProperty(fileType + "Lines").GetValue(ptmagicInstance, null);
 
       Dictionary<string, object> properties = (Dictionary<string, object>)setting.GetType().GetProperty(fileType + "Properties").GetValue(setting, null);
       if (properties != null)
       {
-
         // Building Properties
         if (!setting.SettingName.Equals(ptmagicInstance.DefaultSettingName, StringComparison.InvariantCultureIgnoreCase) && ptmagicInstance.PTMagicConfiguration.GeneralSettings.Application.AlwaysLoadDefaultBeforeSwitch && !properties.ContainsKey("File"))
         {
-
           // Load default settings as basis for the switch
           GlobalSetting defaultSetting = ptmagicInstance.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Find(a => a.SettingName.Equals(ptmagicInstance.DefaultSettingName, StringComparison.InvariantCultureIgnoreCase));
           if (defaultSetting != null)
@@ -283,27 +241,23 @@ namespace Core.ProfitTrailer
           }
         }
 
-
+        // Check for PTM header in preset file
         // Loop through config line by line reprocessing where required.
         foreach (string line in fileLines)
         {
           if (line.IndexOf("PTMagic_ActiveSetting", StringComparison.InvariantCultureIgnoreCase) > -1)
           {
-
             // Setting current active setting
             result.Add("# PTMagic_ActiveSetting = " + setting.SettingName);
-
+            headerLinesExist = true;
           }
           else if (line.IndexOf("PTMagic_LastChanged", StringComparison.InvariantCultureIgnoreCase) > -1)
           {
-
             // Setting last change datetime
-            result.Add("# PTMagic_LastChanged = " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString());
-
+            result.Add("# PTMagic_LastChanged = " + settingLastChanged.ToShortDateString() + " " + settingLastChanged.ToShortTimeString());
           }
           else if (line.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
           {
-
             // Single Market Settings will get overwritten every single run => crop the lines
             break;
           }
@@ -342,6 +296,13 @@ namespace Core.ProfitTrailer
         }
       }
 
+      // Write header lines if required
+      if (!headerLinesExist)
+      {
+        WriteHeaderLines(setting.SettingName, settingLastChanged, result);
+      }
+
+      // Save lines to current context for the file type
       ptmagicInstance.GetType().GetProperty(fileType + "Lines").SetValue(ptmagicInstance, result);
     }
 
