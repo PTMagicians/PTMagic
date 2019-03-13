@@ -273,7 +273,7 @@ namespace Core.MarketAnalyzer
                           new ParallelOptions { MaxDegreeOfParallelism = 5 },
                           (key) =>
         {
-          if (!marketTicks.TryAdd(key, Bittrex.GetMarketTicks(key, systemConfiguration, log)))
+          if (!marketTicks.TryAdd(key, Poloniex.GetMarketTicks(key, systemConfiguration, log)))
           {
             // Failed to add ticks to dictionary
             throw new Exception("Failed to add ticks for " + key + " to the memory dictionary, results may be incorrectly calculated!");
