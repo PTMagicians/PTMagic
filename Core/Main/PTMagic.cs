@@ -741,9 +741,7 @@ namespace Core.Main
           Console.ReadLine();
           Environment.Exit(0);
         }
-
       }
-
       else
       {
         this.Log.DoLogWarn("PTMagic disabled, shutting down...");
@@ -1391,7 +1389,7 @@ namespace Core.Main
         }
 
         // Check if flood protection is active
-        if (this.EnforceSettingsReapply || !this.LastSetting.Equals(triggeredSetting.SettingName, StringComparison.InvariantCultureIgnoreCase) || this.LastSettingsChange <= DateTime.UtcNow.AddMinutes(-PTMagicConfiguration.GeneralSettings.Application.FloodProtectionMinutes))
+        if (this.EnforceSettingsReapply || this.LastSettingsChange <= DateTime.UtcNow.AddMinutes(-PTMagicConfiguration.GeneralSettings.Application.FloodProtectionMinutes))
         {
           // Setting not set => Change setting
           if (!EnforceSettingsReapply)
@@ -2260,7 +2258,6 @@ namespace Core.Main
       }
 
       // Get configured DCA percentages
-
       string dcaDefaultPercentageString = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_buy_percentage", "");
       double dcaDefaultPercentage = SystemHelper.TextToDouble(dcaDefaultPercentageString, 0, "en-US");
 
