@@ -85,7 +85,7 @@
               <div class="form-group row">
                 <label class="col-md-4 col-form-label">Profit Trailer Default Setting Name <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Your Profit Trailer default setting name (needed to change your settings for PT 2.0 and above)"></i></label>
                 <div class="col-md-8">
-                  @Model.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName
+                  <input type="text" class="form-control" name="Application_ProfitTrailerDefaultSettingName" value="@Model.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName">
                 </div>
               </div>
 
@@ -116,6 +116,14 @@
                   <input type="text" class="form-control" name="Application_CoinMarketCapAPIKey" value="@Model.PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey">
                 </div>
               </div>
+
+              <div class="form-group row">
+                <label class="col-md-4 col-form-label">FreeCurrencyConverter API Key <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The api key needed for currency conversions for non-USD currency users."></i></label>
+                <div class="col-md-8">
+                  <input type="text" class="form-control" name="Application_FreeCurrencyConverterAPIKey" value="@Model.PTMagicConfiguration.GeneralSettings.Application.FreeCurrencyConverterAPIKey">
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
