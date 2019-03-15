@@ -2526,7 +2526,7 @@ namespace Core.Main
       this.Log.DoLogInfo("+ Time spent: " + SystemHelper.GetProperDurationTime(elapsedSeconds));
       this.Log.DoLogInfo("+ Active setting: " + this.LastRuntimeSummary.CurrentGlobalSetting.SettingName);
       this.Log.DoLogInfo("+ Global setting changed: " + ((this.LastRuntimeSummary.LastGlobalSettingSwitch == this.LastRuntimeSummary.LastRuntime) ? "Yes" : "No") + " " + ((this.LastRuntimeSummary.FloodProtectedSetting != null) ? "(Flood protection!)" : ""));
-      this.Log.DoLogInfo("+ Files changed: " + (((this.GlobalSettingWritten || this.SingleMarketSettingWritten) && !this.PTMagicConfiguration.GeneralSettings.Application.TestMode) ? "Yes" : "No"));
+      this.Log.DoLogInfo("+ PT Config updated: " + (((this.GlobalSettingWritten || this.SingleMarketSettingWritten) && !this.PTMagicConfiguration.GeneralSettings.Application.TestMode) ? "Yes" : "No"));
       this.Log.DoLogInfo("+ Markets with active single market settings: " + this.TriggeredSingleMarketSettings.Count.ToString());
       foreach (string activeSMS in this.SingleMarketSettingsCount.Keys)
       {
