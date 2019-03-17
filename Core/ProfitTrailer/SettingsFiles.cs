@@ -39,20 +39,6 @@ namespace Core.ProfitTrailer
       }
     }
 
-    public static void WriteHeaderLines(string filePath, string settingName, PTMagicConfiguration systemConfiguration)
-    {
-      // Writing Header lines
-      List<string> lines = File.ReadAllLines(filePath).ToList();
-      lines.Insert(0, "#");
-      lines.Insert(0, "# ####################################");
-      lines.Insert(0, "# PTMagic_LastChanged = " + DateTime.UtcNow.ToShortDateString() + " " + DateTime.UtcNow.ToShortTimeString());
-      lines.Insert(0, "# PTMagic_ActiveSetting = " + SystemHelper.StripBadCode(settingName, Constants.WhiteListProperties));
-      lines.Insert(0, "# ####### PTMagic Current Setting ########");
-      lines.Insert(0, "# ####################################");
-
-      if (!systemConfiguration.GeneralSettings.Application.TestMode) File.WriteAllLines(filePath, lines);
-    }
-
     public static string GetActiveSettingFromFile(string filePath, PTMagicConfiguration systemConfiguration, LogHelper log)
     {
       string result = "";
@@ -146,11 +132,7 @@ namespace Core.ProfitTrailer
               string headerPairsSetting = SettingsFiles.GetActiveSettingFromFile(settingPairsPropertiesPath, systemConfiguration, log);
               if (headerPairsSetting.Equals(""))
               {
-                if (File.Exists(settingPairsPropertiesPath))
-                {
-                  SettingsFiles.WriteHeaderLines(settingPairsPropertiesPath, setting.SettingName, systemConfiguration);
-                }
-                else
+                if (!File.Exists(settingPairsPropertiesPath))
                 {
                   Exception ex = new Exception("Not able to find preset file " + SystemHelper.PropertyToString(setting.PairsProperties["File"]) + " for '" + setting.SettingName + "'");
                   log.DoLogCritical("Not able to find preset file " + SystemHelper.PropertyToString(setting.PairsProperties["File"]) + " for '" + setting.SettingName + "'", ex);
@@ -174,11 +156,7 @@ namespace Core.ProfitTrailer
               string headerDCASetting = SettingsFiles.GetActiveSettingFromFile(settingDCAPropertiesPath, systemConfiguration, log);
               if (headerDCASetting.Equals(""))
               {
-                if (File.Exists(settingDCAPropertiesPath))
-                {
-                  SettingsFiles.WriteHeaderLines(settingDCAPropertiesPath, setting.SettingName, systemConfiguration);
-                }
-                else
+                if (!File.Exists(settingDCAPropertiesPath))
                 {
                   Exception ex = new Exception("Not able to find preset file " + SystemHelper.PropertyToString(setting.DCAProperties["File"]) + " for '" + setting.SettingName + "'");
                   log.DoLogCritical("Not able to find preset file " + SystemHelper.PropertyToString(setting.DCAProperties["File"]) + " for '" + setting.SettingName + "'", ex);
@@ -201,11 +179,7 @@ namespace Core.ProfitTrailer
               string headerIndicatorsSetting = SettingsFiles.GetActiveSettingFromFile(settingIndicatorsPropertiesPath, systemConfiguration, log);
               if (headerIndicatorsSetting.Equals(""))
               {
-                if (File.Exists(settingIndicatorsPropertiesPath))
-                {
-                  SettingsFiles.WriteHeaderLines(settingIndicatorsPropertiesPath, setting.SettingName, systemConfiguration);
-                }
-                else
+                if (!File.Exists(settingIndicatorsPropertiesPath))
                 {
                   Exception ex = new Exception("Not able to find preset file " + SystemHelper.PropertyToString(setting.IndicatorsProperties["File"]) + " for '" + setting.SettingName + "'");
                   log.DoLogCritical("Not able to find preset file " + SystemHelper.PropertyToString(setting.IndicatorsProperties["File"]) + " for '" + setting.SettingName + "'", ex);
