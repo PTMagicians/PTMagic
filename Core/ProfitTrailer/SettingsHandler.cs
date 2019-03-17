@@ -143,7 +143,6 @@ namespace Core.ProfitTrailer
       lines.Insert(0, "# ####################################");
       lines.Insert(0, "# PTMagic_LastChanged = " + settingsChangeTimestamp.ToShortDateString() + " " + settingsChangeTimestamp.ToShortTimeString());
       lines.Insert(0, "# PTMagic_ActiveSetting = " + SystemHelper.StripBadCode(settingsName, Constants.WhiteListProperties));
-      lines.Insert(0, "# ####### PTMagic Current Setting ########");
       lines.Insert(0, "# ####################################");
     }
 
