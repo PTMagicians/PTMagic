@@ -17,7 +17,8 @@
           <thead>
             <tr>
               <th>Market</th>
-              <th data-toggle="tooltip" data-placement="top" title="Current profit percentage">Buy Strategies</th>
+              <th>24H Trend</th>
+              <th>Buy Strategies</th>
               <th class="text-right" data-toggle="tooltip" data-placement="top" title="Current ask price for this market">Ask Price</th>
             </tr>
           </thead>
@@ -43,6 +44,8 @@
               if (!Core.ProfitTrailer.StrategyHelper.IsValidStrategy(buyStrategyText, true)) {
                 buyDisabled = true;
               }
+              
+              buyLogEntry.PercChange = @buyLogEntry.PercChange * 100;
 
               <tr>
                 @if (mps == null || mps.ActiveSingleSettings == null || mps.ActiveSingleSettings.Count == 0) {
@@ -50,6 +53,7 @@
                 } else {
                   <th class="align-top"><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, buyLogEntry.Market, Model.Summary.MainMarket)" target="_blank">@buyLogEntry.Market</a> <i class="fa fa-exclamation-triangle text-highlight" data-toggle="tooltip" data-placement="top" data-html="true" title="@await Component.InvokeAsync("PairIcon", mps)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner pair-tooltip'></div></div>"></i></th>
                 }
+                <td class="text-autocolor">@buyLogEntry.PercChange.ToString("#,#0.00")</td>
                 @if (buyDisabled) {
                   <td>@Html.Raw(buyStrategyText)</td>
                 } else {
