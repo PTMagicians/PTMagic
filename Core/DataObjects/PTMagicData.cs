@@ -40,7 +40,6 @@ namespace Core.Main.DataObjects.PTMagicData
     public string ProfitTrailerServerAPIToken { get; set; }
     public string ProfitTrailerMonitorURL { get; set; } = "http://localhost:8081/";
     public string ProfitTrailerDefaultSettingName { get; set; } = "default";
-    public bool AlwaysLoadDefaultBeforeSwitch { get; set; } = true;
     public int FloodProtectionMinutes { get; set; } = 15;
     public string Exchange { get; set; }
     public double StartBalance { get; set; } = 0;

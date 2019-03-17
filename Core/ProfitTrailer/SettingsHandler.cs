@@ -200,99 +200,86 @@ namespace Core.ProfitTrailer
     {
       bool headerLinesExist = false;
       List<string> result = new List<string>();
-      List<string> fileLines = (List<string>)ptmagicInstance.GetType().GetProperty(fileType + "Lines").GetValue(ptmagicInstance, null);
+      List<string> fileLines = null;
 
+      // Analsye the properties for the setting and apply
       Dictionary<string, object> properties = (Dictionary<string, object>)setting.GetType().GetProperty(fileType + "Properties").GetValue(setting, null);
-      if (properties != null)
+
+      // Building Properties
+      if (properties == null || !properties.ContainsKey("File"))
       {
-        // Building Properties
-        if (!setting.SettingName.Equals(ptmagicInstance.DefaultSettingName, StringComparison.InvariantCultureIgnoreCase) && ptmagicInstance.PTMagicConfiguration.GeneralSettings.Application.AlwaysLoadDefaultBeforeSwitch && !properties.ContainsKey("File"))
+        // Load default settings as basis for the switch
+        GlobalSetting defaultSetting = ptmagicInstance.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Find(a => a.SettingName.Equals(ptmagicInstance.DefaultSettingName, StringComparison.InvariantCultureIgnoreCase));
+        Dictionary<string, object> defaultProperties = (Dictionary<string, object>)defaultSetting.GetType().GetProperty(fileType + "Properties").GetValue(defaultSetting, null);
+
+        if (defaultProperties.ContainsKey("File"))
         {
-          // Load default settings as basis for the switch
-          GlobalSetting defaultSetting = ptmagicInstance.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Find(a => a.SettingName.Equals(ptmagicInstance.DefaultSettingName, StringComparison.InvariantCultureIgnoreCase));
-          if (defaultSetting != null)
+          // Load the default settings file lines
+          fileLines = SettingsFiles.GetPresetFileLinesAsList(defaultSetting.SettingName, defaultProperties["File"].ToString(), ptmagicInstance.PTMagicConfiguration);
+        }
+        else
+        {
+          // No preset file defined, this is a bad settings file!
+          throw new ApplicationException(string.Format("No 'File' setting found in the '{0}Properties' of the 'Default' setting section in the 'settings.analyzer.json' file; this must be defined!", fileType));
+        }
+      }
+      else
+      {
+        // Settings are configured in a seperate file
+        fileLines = SettingsFiles.GetPresetFileLinesAsList(setting.SettingName, properties["File"].ToString(), ptmagicInstance.PTMagicConfiguration);
+      }
+
+      // Check for PTM header in preset file
+      // Loop through config line by line reprocessing where required.
+      foreach (string line in fileLines)
+      {
+        if (line.IndexOf("PTMagic_ActiveSetting", StringComparison.InvariantCultureIgnoreCase) > -1)
+        {
+          // Setting current active setting
+          result.Add("# PTMagic_ActiveSetting = " + setting.SettingName);
+          headerLinesExist = true;
+        }
+        else if (line.IndexOf("PTMagic_LastChanged", StringComparison.InvariantCultureIgnoreCase) > -1)
+        {
+          // Setting last change datetime
+          result.Add("# PTMagic_LastChanged = " + settingLastChanged.ToShortDateString() + " " + settingLastChanged.ToShortTimeString());
+        }
+        else if (line.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
+        {
+          // Single Market Settings will get overwritten every single run => crop the lines
+          break;
+        }
+        else if (IsPropertyLine(line))
+        {
+          // We have got a property line
+          if (properties != null)
           {
-            Dictionary<string, object> defaultProperties = new Dictionary<string, object>();
-            switch (fileType.ToLower())
+            bool madeSubstitution = false;
+
+            foreach (string settingProperty in properties.Keys)
             {
-              case "pairs":
-                defaultProperties = defaultSetting.PairsProperties;
+              if (madeSubstitution)
+              {
+                // We've made a substitution so no need to process the rest of the properties
                 break;
-              case "dca":
-                defaultProperties = defaultSetting.DCAProperties;
-                break;
-              case "inidcators":
-                defaultProperties = defaultSetting.IndicatorsProperties;
-                break;
+              }
+              else
+              {
+                madeSubstitution = SettingsHandler.BuildPropertyLine(result, setting.SettingName, line, properties, settingProperty);
+              }
             }
 
-            if (defaultProperties.ContainsKey("File"))
+            if (!madeSubstitution)
             {
-              fileLines = SettingsFiles.GetPresetFileLinesAsList(defaultSetting.SettingName, defaultProperties["File"].ToString(), ptmagicInstance.PTMagicConfiguration);
+              // No substitution made, so simply copy the line
+              result.Add(line);
             }
           }
         }
         else
         {
-          // Check if settings are configured in a seperate file
-          if (properties.ContainsKey("File"))
-          {
-            fileLines = SettingsFiles.GetPresetFileLinesAsList(setting.SettingName, properties["File"].ToString(), ptmagicInstance.PTMagicConfiguration);
-          }
-        }
-
-        // Check for PTM header in preset file
-        // Loop through config line by line reprocessing where required.
-        foreach (string line in fileLines)
-        {
-          if (line.IndexOf("PTMagic_ActiveSetting", StringComparison.InvariantCultureIgnoreCase) > -1)
-          {
-            // Setting current active setting
-            result.Add("# PTMagic_ActiveSetting = " + setting.SettingName);
-            headerLinesExist = true;
-          }
-          else if (line.IndexOf("PTMagic_LastChanged", StringComparison.InvariantCultureIgnoreCase) > -1)
-          {
-            // Setting last change datetime
-            result.Add("# PTMagic_LastChanged = " + settingLastChanged.ToShortDateString() + " " + settingLastChanged.ToShortTimeString());
-          }
-          else if (line.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
-          {
-            // Single Market Settings will get overwritten every single run => crop the lines
-            break;
-          }
-          else if (IsPropertyLine(line))
-          {
-            // We have got a property line
-            if (properties != null)
-            {
-              bool madeSubstitution = false;
-
-              foreach (string settingProperty in properties.Keys)
-              {
-                if (madeSubstitution)
-                {
-                  // We've made a substitution so no need to process the rest of the properties
-                  break;
-                }
-                else
-                {
-                  madeSubstitution = SettingsHandler.BuildPropertyLine(result, setting.SettingName, line, properties, settingProperty);
-                }
-              }
-
-              if (!madeSubstitution)
-              {
-                // No substitution made, so simply copy the line
-                result.Add(line);
-              }
-            }
-          }
-          else
-          {
-            // Non property line, just copy it
-            result.Add(line);
-          }
+          // Non property line, just copy it
+          result.Add(line);
         }
       }
 
@@ -340,10 +327,11 @@ namespace Core.ProfitTrailer
       return madeSubstitutions;
     }
 
-    public static void CompileSingleMarketProperties(PTMagic ptmagicInstance, Dictionary<string, List<string>> matchedTriggers)
+    public static List<KeyValuePair<string, string>> CompileSingleMarketProperties(PTMagic ptmagicInstance, Dictionary<string, List<string>> matchedTriggers)
     {
       try
       {
+        List<KeyValuePair<string, string>> smsApplied = new List<KeyValuePair<string, string>>();
         List<string> globalPairsLines = new List<string>();
         List<string> globalDCALines = new List<string>();
         List<string> globalIndicatorsLines = new List<string>();
@@ -470,6 +458,7 @@ namespace Core.ProfitTrailer
             }
 
             ptmagicInstance.Log.DoLogInfo("Built single market settings '" + setting.SettingName + "' for '" + marketPair + "'.");
+            smsApplied.Add(new KeyValuePair<string, string>(marketPair, setting.SettingName));
           }
 
           newPairsLines = SettingsHandler.BuildPropertyLinesForSingleMarketSetting(ptmagicInstance.LastRuntimeSummary.MainMarket, marketPair, ptmagicInstance.TriggeredSingleMarketSettings[marketPair], pairsPropertiesToApply, matchedTriggers, globalPairsProperties, newPairsLines, ptmagicInstance.PTMagicConfiguration, ptmagicInstance.Log);
@@ -485,6 +474,8 @@ namespace Core.ProfitTrailer
         ptmagicInstance.PairsLines = globalPairsLines;
         ptmagicInstance.DCALines = globalDCALines;
         ptmagicInstance.IndicatorsLines = globalIndicatorsLines;
+
+        return smsApplied;
       }
       catch (Exception ex)
       {
