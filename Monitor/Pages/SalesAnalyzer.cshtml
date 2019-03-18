@@ -13,22 +13,19 @@
 }
 
 <div class="row">
- <div class="col-md-12">
-      <div class="card-box">
-        
-         @{
-           double currentBalance = Model.PTData.GetCurrentBalance();
-           string currentBalanceString = currentBalance.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
-           if (currentBalance > 100) {
-             currentBalanceString = Math.Round(currentBalance, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
-           }
-         }
-
-         <h4 class="m-t-0 header-title text-autocolor">@Model.Summary.MainMarket &nbsp; Balance: &nbsp; &nbsp; @currentBalanceString &nbsp; &nbsp; <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This value is estimated based on your sales history and any entries on the Transactions page"></i></small></h4>
-     
-      </div>
+  <div class="col-md-12">
+    <div class="card-box">       
+      @{
+        double currentBalance = Model.PTData.GetCurrentBalance();
+        string currentBalanceString = currentBalance.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
+        if (currentBalance > 100) {
+          currentBalanceString = Math.Round(currentBalance, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
+        }
+      }
+      <h4 class="m-t-0 header-title text-center">Total Account Value: &nbsp; &nbsp; <text class="text-autocolor"> @currentBalanceString &nbsp; @Model.Summary.MainMarket &nbsp; </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This value is estimated based on your sales history and any entries on the Transactions page"></i></small></h4>
     </div>
   </div>
+</div>
 
 @if (Model.PTData.SellLog.Count == 0) {
   <div class="row">

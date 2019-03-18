@@ -8,6 +8,15 @@
   <link href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/tablesaw/css/tablesaw.css" rel="stylesheet" type="text/css" />
   <link href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/nvd3/nv.d3.min.css" rel="stylesheet" type="text/css" />
 }
+
+<div class="row">
+  <div class="col-sm-12">
+    <div class="card-box">
+    <h4 class="m-t-0 header-title text-center">Current &nbsp; @Model.Summary.MainMarket &nbsp; Price:<text class="text-autocolor">&nbsp; &nbsp; @Html.Raw(Model.MainFiatCurrencySymbol + Model.Summary.MainMarketPrice.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))) &nbsp; </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is the value of your market currency."></i></small></h4>
+    </div>
+  </div>
+</div>
+
 <div class="row">
   <div class="col-sm-12">
     <div class="card-box">

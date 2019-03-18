@@ -30,11 +30,15 @@
 }
 
 <div class="card-box card-box-mini card-box-ptmagic-outlined" data-toggle="tooltip" data-placement="bottom" title="Active global setting">
-  <b>GS:</b> @Core.Helper.SystemHelper.SplitCamelCase(Model.Summary.CurrentGlobalSetting.SettingName)
+   @Core.Helper.SystemHelper.SplitCamelCase(Model.Summary.CurrentGlobalSetting.SettingName)
+</div>
+
+<div class="card-box card-box-mini card-box-ptmagic-outlined" data-toggle="tooltip" data-placement="bottom" title="Active single market settings">
+  <b>SMS:</b> <a href="ManageSMS">@Html.Raw(singleSettingInfoIcon)</a> @activeSingleSettings
 </div>
 
 <div class="card-box card-box-mini card-box-ptmagic-status-outlined @iconColor" data-toggle="tooltip" data-placement="bottom" title="@ptMagicHealthTooltip">
-  <b>PTM: </b><i class="fa @ptMagicHealthIcon @iconColor"></i>
+  <i class="fa @ptMagicHealthIcon @iconColor"></i>
 </div>
 
 <script type="text/javascript">
