@@ -23,7 +23,13 @@
             </tr>
           </thead>
           <tbody>
-            @foreach (Core.Main.DataObjects.PTMagicData.BuyLogData buyLogEntry in Model.PTData.BuyLog.OrderByDescending(b => b.IsTrailing).ThenBy(b => b.CurrentValue).Take(Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxDashboardBuyEntries)) {
+            @foreach (Core.Main.DataObjects.PTMagicData.BuyLogData buyLogEntry in Model.PTData.BuyLog.OrderByDescending(b => b.IsTrailing).
+                        ThenByDescending(b => b.IsTrue).
+                        ThenByDescending(b => b.TrueStrategyCount).
+                        ThenBy(b => b.IsSom).
+                        ThenByDescending(b => b.PercChange).
+                        Take(Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxDashboardBuyEntries)) {
+                          
               Core.Main.DataObjects.PTMagicData.MarketPairSummary mps = null;
               if (Model.Summary.MarketSummary.ContainsKey(buyLogEntry.Market)) {
                 mps = Model.Summary.MarketSummary[buyLogEntry.Market];
@@ -53,7 +59,7 @@
                 } else {
                   <th class="align-top"><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, buyLogEntry.Market, Model.Summary.MainMarket)" target="_blank">@buyLogEntry.Market</a> <i class="fa fa-exclamation-triangle text-highlight" data-toggle="tooltip" data-placement="top" data-html="true" title="@await Component.InvokeAsync("PairIcon", mps)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner pair-tooltip'></div></div>"></i></th>
                 }
-                <td class="text-autocolor">@buyLogEntry.PercChange.ToString("#,#0.00")</td>
+                <td class="text-autocolor">@buyLogEntry.PercChange.ToString("#,#0.00")%</td>
                 @if (buyDisabled) {
                   <td>@Html.Raw(buyStrategyText)</td>
                 } else {

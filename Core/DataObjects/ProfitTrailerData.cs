@@ -350,7 +350,7 @@ namespace Core.Main.DataObjects
     {
       foreach (buyLogData rbld in rawBuyLogData)
       {
-        BuyLogData buyLogData = new BuyLogData();
+        BuyLogData buyLogData = new BuyLogData() {IsTrailing = false, IsTrue = false, IsSom = false, TrueStrategyCount = 0};
         buyLogData.Market = rbld.market;
         buyLogData.ProfitPercent = rbld.profit;
         buyLogData.TriggerValue = rbld.triggerValue;
@@ -387,6 +387,17 @@ namespace Core.Main.DataObjects
               buyStrategy.IsTrailing = bs.positive.IndexOf("trailing", StringComparison.InvariantCultureIgnoreCase) > -1;
               buyStrategy.IsTrue = bs.positive.IndexOf("true", StringComparison.InvariantCultureIgnoreCase) > -1;
 
+              // Is SOM?
+              buyLogData.IsSom = buyLogData.IsSom || buyStrategy.Name.Equals("som enabled", StringComparison.OrdinalIgnoreCase);
+
+              // Is the pair trailing?
+              buyLogData.IsTrailing = buyLogData.IsTrailing || buyStrategy.IsTrailing;
+              buyLogData.IsTrue = buyLogData.IsTrue || buyStrategy.IsTrue;
+
+              // True status strategy count total
+              buyLogData.TrueStrategyCount += buyStrategy.IsTrue ? 1 : 0;
+
+              // Add
               buyLogData.BuyStrategies.Add(buyStrategy);
             }
           }
