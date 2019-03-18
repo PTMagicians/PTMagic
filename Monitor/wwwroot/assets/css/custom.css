@@ -71,12 +71,6 @@
   font-size: 0.78571rem;
 }
 
-@media only screen and (max-width: 991px) {
-  .ticker-widgets {
-    display:none;
-  }
-}
-
 .ticker-widgets div {
   display: inline-block;
   margin-top: 12px;
