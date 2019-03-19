@@ -75,7 +75,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public string TvStudyB { get; set; } = "";
     public string TvStudyC { get; set; } = "";
     public string TvStudyD { get; set; } = "";
-    
+
     public string RootUrl
     {
       get
@@ -538,6 +538,8 @@ namespace Core.Main.DataObjects.PTMagicData
     public double BBTrigger { get; set; }
     public bool IsTrailing { get; set; }
     public bool IsTrue { get; set; }
+    public bool IsSom { get; set; }
+    public int TrueStrategyCount { get; set; }
     public string Market { get; set; }
     public double ProfitPercent { get; set; }
     public double CurrentPrice { get; set; }

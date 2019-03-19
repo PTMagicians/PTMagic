@@ -7,14 +7,14 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="NLog" Version="4.5.0-rc04" />
-    <PackageReference Include="NLog.Extensions.Logging" Version="1.0.0-rtm-rc6" />
+    <PackageReference Include="NLog" Version="4.5.10" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="1.3.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.FileExtensions" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.0.0" />
-    <PackageReference Include="SharpZipLib" Version="1.0.0-alpha2" />
-    <PackageReference Include="Telegram.Bot" Version="14.0.0-rc-367" />
+    <PackageReference Include="SharpZipLib" Version="*" />
+    <PackageReference Include="Telegram.Bot" Version="*" />
   </ItemGroup>
 
   <ItemGroup>
