@@ -12,7 +12,97 @@
 <div class="row">
   <div class="col-sm-12">
     <div class="card-box">
-    <h4 class="m-t-0 header-title text-center">Current &nbsp; @Model.Summary.MainMarket &nbsp; Price:<text class="text-autocolor">&nbsp; &nbsp; @Html.Raw(Model.MainFiatCurrencySymbol + Model.Summary.MainMarketPrice.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))) &nbsp; </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is the value of your market currency."></i></small></h4>
+    @if (Model.Summary.MainMarket.Equals("USDT", StringComparison.InvariantCultureIgnoreCase) || Model.Summary.MainMarket.Equals("TUSD", StringComparison.InvariantCultureIgnoreCase) || Model.Summary.MainMarket.Equals("USDC", StringComparison.InvariantCultureIgnoreCase) || Model.Summary.MainMarket.Equals("PAX", StringComparison.InvariantCultureIgnoreCase) || Model.Summary.MainMarket.Equals("USD", StringComparison.InvariantCultureIgnoreCase)) 
+    {
+      string TvSymbol = @Core.Helper.SystemHelper.GetMainCurrencySymbol(Model.Summary.MainMarket)+"USD"; 
+      <div class="tradingview-widget-container">
+          <div class="tradingview-widget-container__widget"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+            {
+            "symbol": "@Core.Helper.SystemHelper.GetMainCurrencySymbol(@TvSymbol)",
+            "width": "100%",
+            "height": "200",
+            "locale": "en",
+            "dateRange": "1d",
+            "colorTheme": "dark",
+            "trendLineColor": "#37a6ef",
+            "underLineColor": "rgba(55, 166, 239, 0.15)",
+            "isTransparent": true,
+            "autosize": true,
+            "largeChartUrl": ""
+            }
+          </script>
+      </div>
+      
+    } 
+    else {   
+      if (Model.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Binance", StringComparison.InvariantCultureIgnoreCase)) 
+      {
+        string TvSymbol = "BINANCE:" + @Core.Helper.SystemHelper.GetMainCurrencySymbol(Model.Summary.MainMarket) + "USDT";
+        <div class="tradingview-widget-container">
+          <div class="tradingview-widget-container__widget"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+            {
+            "symbol": "@Core.Helper.SystemHelper.GetMainCurrencySymbol(@TvSymbol)",
+            "width": "100%",
+            "height": "200",
+            "locale": "en",
+            "dateRange": "1d",
+            "colorTheme": "dark",
+            "trendLineColor": "#37a6ef",
+            "underLineColor": "rgba(55, 166, 239, 0.15)",
+            "isTransparent": true,
+            "autosize": true,
+            "largeChartUrl": ""
+            }
+          </script>
+        </div>
+      }  
+      else
+      if (Model.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Bittrex", StringComparison.InvariantCultureIgnoreCase)) {
+        string TvSymbol = "BITTREX:" + @Core.Helper.SystemHelper.GetMainCurrencySymbol(Model.Summary.MainMarket) + "USD";
+        <div class="tradingview-widget-container">
+          <div class="tradingview-widget-container__widget"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+            {
+            "symbol": "@Core.Helper.SystemHelper.GetMainCurrencySymbol(@TvSymbol)",
+            "width": "100%",
+            "height": "100%",
+            "locale": "en",
+            "dateRange": "1d",
+            "colorTheme": "dark",
+            "trendLineColor": "#37a6ef",
+            "underLineColor": "rgba(55, 166, 239, 0.15)",
+            "isTransparent": true,
+            "autosize": true,
+            "largeChartUrl": ""
+            }
+          </script>
+        </div>
+      }  
+      else 
+      {
+        string TvSymbol = "Poloniex:" + @Core.Helper.SystemHelper.GetMainCurrencySymbol(Model.Summary.MainMarket) + "USDT";
+        <div class="tradingview-widget-container">
+          <div class="tradingview-widget-container__widget"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" async>
+            {
+            "symbol": "@Core.Helper.SystemHelper.GetMainCurrencySymbol(@TvSymbol)",
+            "width": "100%",
+            "height": "100%",
+            "locale": "en",
+            "dateRange": "1d",
+            "colorTheme": "dark",
+            "trendLineColor": "#37a6ef",
+            "underLineColor": "rgba(55, 166, 239, 0.15)",
+            "isTransparent": true,
+            "autosize": true,
+            "largeChartUrl": ""
+            }
+          </script>
+        </div>
+      }
+    }
     </div>
   </div>
 </div>
@@ -21,7 +111,6 @@
   <div class="col-sm-12">
     <div class="card-box">
       <h4 class="m-t-0 m-b-20 header-title"><b>Market Trend Averages</b></h4>
-
       <table class="table table-sm">
         <thead>
           <tr>

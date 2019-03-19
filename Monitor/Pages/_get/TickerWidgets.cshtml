@@ -22,7 +22,7 @@
   string iconColor = "text-success";
   string ptMagicHealthIcon = "fa-heartbeat";
   string ptMagicHealthTooltip = "PT Magic is alive and healthy!";
-  if (elapsedSecondsSinceRuntime > (intervalSeconds + intervalSeconds * 0.5)) {
+  if (elapsedSecondsSinceRuntime > (intervalSeconds + intervalSeconds)) {
     ptMagicHealthIcon = "fa-exclamation-triangle";
     ptMagicHealthTooltip = "PT Magic seems to have problems, check the logs!";
     iconColor = "text-danger";

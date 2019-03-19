@@ -611,6 +611,13 @@ namespace Core.Helper
 			return result;
 			}
 
+    public static string GetMainCurrencySymbol(string tvSymbol)
+			{
+			string result = tvSymbol;
+
+			return result;
+			}
+
     public static string GetCurrencySymbol(string code)
     {
       string result = code;
