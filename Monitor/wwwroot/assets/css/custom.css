@@ -154,7 +154,8 @@
 
 .trend-chart .nvd3.nv-line .nvd3.nv-scatter .nv-groups .nv-point,
 .trades-chart .nvd3.nv-line .nvd3.nv-scatter .nv-groups .nv-point,
-.profit-chart .nvd3.nv-line .nvd3.nv-scatter .nv-groups .nv-point {
+.profit-chart .nvd3.nv-line .nvd3.nv-scatter .nv-groups .nv-point,
+.balance-chart .nvd3.nv-line .nvd3.nv-scatter .nv-groups .nv-point {
   fill-opacity: 1 !important;
   stroke-opacity: 1 !important;
 }

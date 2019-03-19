@@ -22,7 +22,19 @@
           currentBalanceString = Math.Round(currentBalance, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
         }
       }
-      <h4 class="m-t-0 header-title text-center">Total Account Value: &nbsp; &nbsp; <text class="text-autocolor"> @currentBalanceString &nbsp; @Model.Summary.MainMarket &nbsp; </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This value is estimated based on your sales history and any entries on the Transactions page"></i></small></h4>
+        <h4 class="m-t-0 header-title text-center">Starting Account Value: &nbsp; &nbsp; <text class="text-autocolor"> @Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance &nbsp; @Model.Summary.MainMarket &nbsp; </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is the starting vlaue found in your settings file"></i></small></h4>
+        <h4 class="m-t-0 header-title text-center">Estimated Account Value: &nbsp; &nbsp; <text class="text-autocolor"> @currentBalanceString &nbsp; @Model.Summary.MainMarket &nbsp; </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is based on your sales history and entries on the Transactions page.  It doesn't include any currently held positions."></i></small></h4>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-12">
+    <div class="card-box">       
+      <h4 class="m-t-0 header-title text-center">Cumulative Profits <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This value is based on your sales history"></i></small></h4>
+      <div class="balance-chart">
+          <svg style="height:350px;width:100%"></svg>
+      </div>
     </div>
   </div>
 </div>
@@ -358,6 +370,21 @@
       lineChart.xAxis.tickFormat(function (d) { return d3.time.format('%Y/%m/%d')(new Date(d)); });
       lineChart.yAxis.axisLabel('Profit').tickFormat(d3.format(',.2f'));
       d3.select('.profit-chart svg').attr('perserveAspectRatio', 'xMinYMid').datum(chartData).transition().duration(500).call(lineChart);
+      nv.utils.windowResize(lineChart.update);
+
+      return lineChart;
+    });
+
+    nv.addGraph(function () {
+      var lineChart = nv.models.lineChart();
+      var height = 400;
+      /**/
+      var chartData = @Html.Raw(Model.BalanceChartDataJSON);
+      /**/
+      lineChart.useInteractiveGuideline(true);
+      lineChart.xAxis.tickFormat(function (d) { return d3.time.format('%Y/%m/%d')(new Date(d)); });
+      lineChart.yAxis.axisLabel('Profit').tickFormat(d3.format(',.2f'));
+      d3.select('.balance-chart svg').attr('perserveAspectRatio', 'xMinYMid').datum(chartData).transition().duration(500).call(lineChart);
       nv.utils.windowResize(lineChart.update);
 
       return lineChart;
