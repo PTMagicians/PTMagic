@@ -14,16 +14,27 @@
 
 <div class="row">
   <div class="col-md-12">
-    <div class="card-box">       
-      @{
-        double currentBalance = Model.PTData.GetCurrentBalance();
-        string currentBalanceString = currentBalance.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
-        if (currentBalance > 100) {
-          currentBalanceString = Math.Round(currentBalance, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
-        }
-      }
-        <h4 class="m-t-0 header-title text-center">Starting Account Value: &nbsp; &nbsp; <text class="text-autocolor"> @Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance &nbsp; @Model.Summary.MainMarket &nbsp; </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is the starting vlaue found in your settings file"></i></small></h4>
-        <h4 class="m-t-0 header-title text-center">Estimated Account Value: &nbsp; &nbsp; <text class="text-autocolor"> @currentBalanceString &nbsp; @Model.Summary.MainMarket &nbsp; </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is based on your sales history and entries on the Transactions page.  It doesn't include any currently held positions."></i></small></h4>
+    <div class="card-box"> 
+
+
+      <table class="table table-striped table-sm">
+          <thead>
+            <tr>
+              @{
+                double currentBalance = Model.PTData.GetCurrentBalance();
+                string currentBalanceString = currentBalance.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
+                if (currentBalance > 100) {
+                  currentBalanceString = Math.Round(currentBalance, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
+                }
+              }
+              <th class="text-left">Estimated Account Value: &nbsp; &nbsp; <text class="text-autocolor"> @currentBalanceString &nbsp; @Model.Summary.MainMarket &nbsp; </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is based on your sales history and entries on the Transactions page.  It doesn't include any currently held positions."></i></small></th>
+              <th class="text-right">Starting Account Value: &nbsp; &nbsp; <text class="text-autocolor"> @Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance &nbsp; @Model.Summary.MainMarket &nbsp; </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is the starting vlaue found in your settings file"></i></small></th>
+            </tr>
+          </thead>
+        </table>
+
+        <h4 class="m-t-0 header-title text-center"></h4>
+        <h4 class="m-t-0 header-title text-center"></h4>
     </div>
   </div>
 </div>
