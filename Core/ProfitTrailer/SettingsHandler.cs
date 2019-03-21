@@ -74,7 +74,13 @@ namespace Core.ProfitTrailer
               double oldValueOffset = (oldValue * (offsetValuePercent / 100));
 
               // Use integers for timeout and pairs properties, otherwise double
-              if (configPropertyKey.Contains("rebuy_timeout", StringComparison.InvariantCultureIgnoreCase) || configPropertyKey.Contains("trading_pairs", StringComparison.InvariantCultureIgnoreCase))
+              if (configPropertyKey.Contains("timeout", StringComparison.InvariantCultureIgnoreCase) 
+                || configPropertyKey.Contains("trading_pairs", StringComparison.InvariantCultureIgnoreCase)
+                || configPropertyKey.Contains("buy_volume", StringComparison.InvariantCultureIgnoreCase)
+                || configPropertyKey.Contains("listed_days", StringComparison.InvariantCultureIgnoreCase
+                || configPropertyKey.Contains("orderbook_depth", StringComparison.InvariantCultureIgnoreCase)
+                || configPropertyKey.Contains("rebuy_count", StringComparison.InvariantCultureIgnoreCase)
+                || configPropertyKey.Contains("buy_volume", StringComparison.InvariantCultureIgnoreCase))
               {
                 // Ensure some values are rounded up to integers for PT comaptability 
                 result = ((int)(Math.Round((oldValue + oldValueOffset), MidpointRounding.AwayFromZero) + .5)).ToString(new System.Globalization.CultureInfo("en-US"));
