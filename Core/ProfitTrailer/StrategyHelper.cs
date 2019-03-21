@@ -143,6 +143,9 @@ namespace Core.ProfitTrailer
         case "rebuy timeout":
           result = "TIMEOUT";
           break;
+        case "min/max change perc":
+          result = "MIN/MAX";
+          break;
         default:
           break;
       }
