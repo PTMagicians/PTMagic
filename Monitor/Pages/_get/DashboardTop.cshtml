@@ -93,10 +93,9 @@
             <tr>
               <th>Market</th>
               <th class="text-left" data-toggle="tooltip" data-placement="top" title="Total Bag Value">Value</th>
-              <th class="text-right" data-toggle="tooltip" data-placement="top" title="Current DCA level">DCA</th>
-              <th data-toggle="tooltip" data-placement="top" title="Active buy strategies">Buy Strats</th>
-              <th data-toggle="tooltip" data-placement="top" title="Active sell strategies">Sell Strats</th>
-              <th class="text-right" data-toggle="tooltip" data-placement="top" title=""></th>
+              <th></th>
+              <th class="text-left" data-toggle="tooltip" data-placement="top" title="Active buy strategies">DCA Buy Strats</th>
+              <th class="text-left" data-toggle="tooltip" data-placement="top" title="Active sell strategies">Sell Strats</th>
               <th class="text-left" data-toggle="tooltip" data-placement="top" title="Current Profit">Profit</th>
               <th></th>
             </tr>
@@ -162,7 +161,7 @@
                       @dcaLogEntry.BoughtTimes;
                     }
                   } else {
-                    <span class="text-warning" data-toggle="tooltip" data-placement="top" title="DCA is disabled for this market!">Disabled!</span>
+                    <span data-toggle="tooltip" data-placement="top" title="DCA is disabled"><i class="fa fa-ban text-highlight"></i></span>
                   }
                 </td>
 
@@ -172,23 +171,18 @@
                   <td>@Html.Raw(buyStrategyText)</td>
                 }
                 <td>@Html.Raw(sellStrategyText)</td>
-                <td class="text-right">
-                  @if (isTrailingSellActive) {
-                    <i class="fa fa-flag-checkered text-success" data-toggle="tooltip" data-placement="top" title="Trailing sell active!"></i>
-                  }
-                 
-                </td>
+                
 
                 @if(!@lostValue)
                 {
-                  <td class="text-autocolor">@dcaLogEntry.ProfitPercent.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+                  <td class="text-autocolor">@dcaLogEntry.ProfitPercent.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))% &nbsp; <a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)_get/BagDetails/?m=@dcaLogEntry.Market" data-remote="false" data-toggle="modal" data-target="#dca-chart"><i class="fa fa-plus-circle"></i></a></td>
                 }
                 else
                 {
                   <td class="text-left">No Value!</td>
                 }
 
-                <td class="text-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)_get/BagDetails/?m=@dcaLogEntry.Market" data-remote="false" data-toggle="modal" data-target="#dca-chart" class="btn btn-mini btn-ptmagic"><i class="fa fa-plus"></i></a></td>
+                <td class="text-right"></td>
               </tr>
             }
           </tbody>

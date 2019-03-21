@@ -139,6 +139,8 @@ namespace Core.ProfitTrailer
           break;
         case "max cost reached":
           result = "COST";
+        case "rebuy timeout":
+          result = "TIMEOUT";
           break;
         default:
           break;
