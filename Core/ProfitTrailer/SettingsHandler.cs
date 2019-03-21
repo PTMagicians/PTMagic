@@ -77,7 +77,7 @@ namespace Core.ProfitTrailer
               if (configPropertyKey.Contains("timeout", StringComparison.InvariantCultureIgnoreCase) 
                 || configPropertyKey.Contains("trading_pairs", StringComparison.InvariantCultureIgnoreCase)
                 || configPropertyKey.Contains("buy_volume", StringComparison.InvariantCultureIgnoreCase)
-                || configPropertyKey.Contains("listed_days", StringComparison.InvariantCultureIgnoreCase
+                || configPropertyKey.Contains("listed_days", StringComparison.InvariantCultureIgnoreCase)
                 || configPropertyKey.Contains("orderbook_depth", StringComparison.InvariantCultureIgnoreCase)
                 || configPropertyKey.Contains("rebuy_count", StringComparison.InvariantCultureIgnoreCase)
                 || configPropertyKey.Contains("buy_volume", StringComparison.InvariantCultureIgnoreCase))
