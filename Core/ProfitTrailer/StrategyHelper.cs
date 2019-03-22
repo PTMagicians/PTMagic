@@ -146,6 +146,9 @@ namespace Core.ProfitTrailer
         case "min/max change perc":
           result = "MIN/MAX";
           break;
+        case "buy value below dust":
+          result = "MIN DUST";
+          break;
         default:
           break;
       }

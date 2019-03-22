@@ -58,7 +58,7 @@ namespace Monitor.Pages
       if (PTData.SellLog.Count > 0)
       {
         MinSellLogDate = PTData.SellLog.OrderBy(sl => sl.SoldDate).First().SoldDate.Date;
-        DateTime graphStartDate = DateTimeNow.DateTime.Date.AddDays(-30);
+        DateTime graphStartDate = DateTimeNow.DateTime.Date.AddDays(-1850);
         if (MinSellLogDate > graphStartDate) graphStartDate = MinSellLogDate;
 
         int tradeDayIndex = 0;
