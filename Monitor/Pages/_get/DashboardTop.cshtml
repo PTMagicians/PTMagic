@@ -23,10 +23,11 @@
             </tr>
           </thead>
           <tbody>
-            @foreach (Core.Main.DataObjects.PTMagicData.BuyLogData buyLogEntry in Model.PTData.BuyLog.OrderByDescending(b => b.IsTrailing).
+            @foreach (Core.Main.DataObjects.PTMagicData.BuyLogData buyLogEntry in Model.PTData.BuyLog.OrderBy(b => b.IsSom).
+                        ThenByDescending(b => b.IsTrailing).
                         ThenByDescending(b => b.IsTrue).
                         ThenByDescending(b => b.TrueStrategyCount).
-                        ThenBy(b => b.IsSom).
+                        
                         ThenByDescending(b => b.PercChange).
                         Take(Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxDashboardBuyEntries)) {
                           
