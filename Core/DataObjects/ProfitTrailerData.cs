@@ -5,9 +5,12 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Core.Main.DataObjects.PTMagicData;
 
 namespace Core.Main.DataObjects
@@ -15,6 +18,7 @@ namespace Core.Main.DataObjects
 
   public class ProfitTrailerData
   {
+    private SummaryData _summary = null;
     private List<SellLogData> _sellLog = new List<SellLogData>();
     private List<DCALogData> _dcaLog = new List<DCALogData>();
     private List<BuyLogData> _buyLog = new List<BuyLogData>();
@@ -22,53 +26,67 @@ namespace Core.Main.DataObjects
     private PTMagicConfiguration _systemConfiguration = null;
     private TransactionData _transactionData = null;
     private DateTimeOffset _dateTimeNow = Constants.confMinDate;
-    
+
     public ProfitTrailerData(PTMagicConfiguration systemConfiguration)
     {
       _systemConfiguration = systemConfiguration;
 
       string html = "";
       string url = systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL + "api/data?token=" + systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken;
-      
-      try
-      {
-        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-        request.AutomaticDecompression = DecompressionMethods.GZip;
 
-        WebResponse response = request.GetResponse();
-        Stream dataStream = response.GetResponseStream();
-        StreamReader reader = new StreamReader(dataStream);
-        html = reader.ReadToEnd();
-        reader.Close();
-        response.Close();
+      // Get the data from PT
+      HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+      request.AutomaticDecompression = DecompressionMethods.GZip;
+      request.KeepAlive = true;
 
-      }
-      catch (System.Exception)
-      {
-          throw;
-      }
+      WebResponse response = request.GetResponse();
+      Stream dataStream = response.GetResponseStream();
+      StreamReader reader = new StreamReader(dataStream);
+      html = reader.ReadToEnd();
+      reader.Close();
+      response.Close();
 
-      PTData rawPTData = JsonConvert.DeserializeObject<PTData>(html);
-      if (rawPTData.SellLogData != null)
-      {
-        this.BuildSellLogData(rawPTData.SellLogData, _systemConfiguration);
-      }
+      // Parse the JSON and build the data sets
+      dynamic rawPTData = JObject.Parse(html);
 
-      if (rawPTData.bbBuyLogData != null)
+      Parallel.Invoke(() =>
       {
-        this.BuildBuyLogData(rawPTData.bbBuyLogData, _systemConfiguration);
-      }
-
-      if (rawPTData.DCALogData != null)
+        _summary = BuildSummaryData(rawPTData);
+      },
+      () =>
       {
-        this.BuildDCALogData(rawPTData.DCALogData, rawPTData.GainLogData, _systemConfiguration);
-      }
+        if (rawPTData.sellLogData != null)
+        {
+          this.BuildSellLogData(rawPTData.sellLogData, _systemConfiguration);
+        }
+      },
+      () =>
+      {
+        if (rawPTData.bbBuyLogData != null)
+        {
+          this.BuildBuyLogData(rawPTData.bbBuyLogData);
+        }
+      },
+      () =>
+      {
+        if (rawPTData.dcaLogData != null)
+        {
+          this.BuildDCALogData(rawPTData.dcaLogData, rawPTData.gainLogData, _systemConfiguration);
+        }
+      });
 
       // Convert local offset time to UTC
       TimeSpan offsetTimeSpan = TimeSpan.Parse(systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
       _dateTimeNow = DateTimeOffset.UtcNow.ToOffset(offsetTimeSpan);
     }
 
+    public SummaryData Summary
+    {
+      get
+      {
+        return _summary;
+      }
+    }
     public List<SellLogData> SellLog
     {
       get
@@ -136,7 +154,12 @@ namespace Core.Main.DataObjects
 
     public double GetCurrentBalance()
     {
-      return this.GetSnapshotBalance(DateTime.Now.ToUniversalTime());
+      return 
+      (this.Summary.Balance +
+      this.Summary.PairsValue +
+      this.Summary.DCAValue +
+      this.Summary.PendingValue +
+      this.Summary.DustValue);
     }
 
     public double GetSnapshotBalance(DateTime snapshotDateTime)
@@ -144,14 +167,30 @@ namespace Core.Main.DataObjects
       double result = _systemConfiguration.GeneralSettings.Application.StartBalance;
 
       result += this.SellLog.FindAll(sl => sl.SoldDate.Date < snapshotDateTime.Date).Sum(sl => sl.Profit);
-      result += this.TransactionData.Transactions.FindAll(t => t.GetLocalDateTime(_systemConfiguration.GeneralSettings.Application.TimezoneOffset) < snapshotDateTime).Sum(t => t.Amount);
+      result += this.TransactionData.Transactions.FindAll(t => t.UTCDateTime < snapshotDateTime).Sum(t => t.Amount);
+
+      // Calculate holdings for snapshot date
+      result += this.DCALog.FindAll(pairs => pairs.FirstBoughtDate <= snapshotDateTime).Sum(pairs => pairs.CurrentValue);
 
       return result;
     }
 
-    private void BuildSellLogData(List<sellLogData> rawSellLogData, PTMagicConfiguration systemConfiguration)
+    private SummaryData BuildSummaryData(dynamic PTData)
     {
-      foreach (sellLogData rsld in rawSellLogData)
+      return new SummaryData()
+      {
+        Market = PTData.market,
+        Balance = PTData.realBalance,
+        PairsValue = PTData.totalPairsCurrentValue,
+        DCAValue = PTData.totalDCACurrentValue,
+        PendingValue = PTData.totalPendingCurrentValue,
+        DustValue = PTData.totalDustCurrentValue
+      };
+    }
+
+    private void BuildSellLogData(dynamic rawSellLogData, PTMagicConfiguration systemConfiguration)
+    {
+      foreach (var rsld in rawSellLogData)
       {
         SellLogData sellLogData = new SellLogData();
         sellLogData.SoldAmount = rsld.soldAmount;
@@ -163,13 +202,13 @@ namespace Core.Main.DataObjects
         sellLogData.TotalCost = sellLogData.SoldAmount * sellLogData.AverageBuyPrice;
 
         double soldValueRaw = (sellLogData.SoldAmount * sellLogData.SoldPrice);
-        double soldValueAfterFees = soldValueRaw - (soldValueRaw * (rsld.fee / 100));
+        double soldValueAfterFees = soldValueRaw - (soldValueRaw * ((double)rsld.fee / 100));
         sellLogData.SoldValue = soldValueAfterFees;
-        sellLogData.Profit = Math.Round(sellLogData.SoldValue - sellLogData.TotalCost, 8);    
+        sellLogData.Profit = Math.Round(sellLogData.SoldValue - sellLogData.TotalCost, 8);
 
         //Convert Unix Timestamp to Datetime
-        System.DateTime dtDateTime = new DateTime(1970,1,1,0,0,0,System.DateTimeKind.Utc);
-        dtDateTime = dtDateTime.AddSeconds(rsld.soldDate).ToUniversalTime();  
+        System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
+        dtDateTime = dtDateTime.AddSeconds((double)rsld.soldDate).ToUniversalTime();
 
         // Profit Trailer sales are saved in UTC
         DateTimeOffset ptSoldDate = DateTimeOffset.Parse(dtDateTime.Year.ToString() + "-" + dtDateTime.Month.ToString("00") + "-" + dtDateTime.Day.ToString("00") + "T" + dtDateTime.Hour.ToString("00") + ":" + dtDateTime.Minute.ToString("00") + ":" + dtDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
@@ -184,9 +223,9 @@ namespace Core.Main.DataObjects
       }
     }
 
-    private void BuildDCALogData(List<dcaLogData> rawDCALogData, List<dcaLogData> rawPairsLogData, PTMagicConfiguration systemConfiguration)
+    private void BuildDCALogData(dynamic rawDCALogData, dynamic rawPairsLogData, PTMagicConfiguration systemConfiguration)
     {
-      foreach (dcaLogData rdld in rawDCALogData)
+      foreach (var rdld in rawDCALogData)
       {
         DCALogData dcaLogData = new DCALogData();
         dcaLogData.Amount = rdld.totalAmount;
@@ -196,27 +235,25 @@ namespace Core.Main.DataObjects
         dcaLogData.AverageBuyPrice = rdld.avgPrice;
         dcaLogData.TotalCost = rdld.totalCost;
         dcaLogData.BuyTriggerPercent = rdld.buyProfit;
-        dcaLogData.CurrentLowBBValue = rdld.BBLow;
-        dcaLogData.CurrentHighBBValue = rdld.highbb;
-        dcaLogData.BBTrigger = rdld.BBTrigger;
+        dcaLogData.CurrentLowBBValue = rdld.bbLow == null ? 0 : rdld.bbLow;
+        dcaLogData.CurrentHighBBValue = rdld.highBb == null ? 0 : rdld.highBb;
+        dcaLogData.BBTrigger = rdld.bbTrigger == null ? 0 : rdld.bbTrigger;
         dcaLogData.CurrentPrice = rdld.currentPrice;
-        dcaLogData.SellTrigger = rdld.triggerValue;
+        dcaLogData.SellTrigger = rdld.triggerValue == null ? 0 : rdld.triggerValue;
         dcaLogData.PercChange = rdld.percChange;
-        dcaLogData.BuyStrategy = rdld.buyStrategy;
-        if (dcaLogData.BuyStrategy == null) dcaLogData.BuyStrategy = "";
-        dcaLogData.SellStrategy = rdld.sellStrategy;
-        if (dcaLogData.SellStrategy == null) dcaLogData.SellStrategy = "";
+        dcaLogData.BuyStrategy = rdld.buyStrategy == null ? "" : rdld.buyStrategy;
+        dcaLogData.SellStrategy = rdld.sellStrategy == null ? "" : rdld.sellStrategy;
 
         if (rdld.positive != null)
         {
-          dcaLogData.IsTrailing = rdld.positive.IndexOf("trailing", StringComparison.InvariantCultureIgnoreCase) > -1;
-          dcaLogData.IsTrue = rdld.positive.IndexOf("true", StringComparison.InvariantCultureIgnoreCase) > -1;
+          dcaLogData.IsTrailing = ((string)rdld.positive).IndexOf("trailing", StringComparison.InvariantCultureIgnoreCase) > -1;
+          dcaLogData.IsTrue = ((string)rdld.positive).IndexOf("true", StringComparison.InvariantCultureIgnoreCase) > -1;
         }
         else
         {
           if (rdld.buyStrategies != null)
           {
-            foreach (PTStrategy bs in rdld.buyStrategies)
+            foreach (var bs in rdld.buyStrategies)
             {
               Strategy buyStrategy = new Strategy();
               buyStrategy.Type = bs.type;
@@ -227,8 +264,8 @@ namespace Core.Main.DataObjects
               buyStrategy.CurrentValue = bs.currentValue;
               buyStrategy.CurrentValuePercentage = bs.currentValuePercentage;
               buyStrategy.Decimals = bs.decimals;
-              buyStrategy.IsTrailing = bs.positive.IndexOf("trailing", StringComparison.InvariantCultureIgnoreCase) > -1;
-              buyStrategy.IsTrue = bs.positive.IndexOf("true", StringComparison.InvariantCultureIgnoreCase) > -1;
+              buyStrategy.IsTrailing = ((string)bs.positive).IndexOf("trailing", StringComparison.InvariantCultureIgnoreCase) > -1;
+              buyStrategy.IsTrue = ((string)bs.positive).IndexOf("true", StringComparison.InvariantCultureIgnoreCase) > -1;
 
               dcaLogData.BuyStrategies.Add(buyStrategy);
             }
@@ -236,7 +273,7 @@ namespace Core.Main.DataObjects
 
           if (rdld.sellStrategies != null)
           {
-            foreach (PTStrategy ss in rdld.sellStrategies)
+            foreach (var ss in rdld.sellStrategies)
             {
               Strategy sellStrategy = new Strategy();
               sellStrategy.Type = ss.type;
@@ -247,17 +284,20 @@ namespace Core.Main.DataObjects
               sellStrategy.CurrentValue = ss.currentValue;
               sellStrategy.CurrentValuePercentage = ss.currentValuePercentage;
               sellStrategy.Decimals = ss.decimals;
-              sellStrategy.IsTrailing = ss.positive.IndexOf("trailing", StringComparison.InvariantCultureIgnoreCase) > -1;
-              sellStrategy.IsTrue = ss.positive.IndexOf("true", StringComparison.InvariantCultureIgnoreCase) > -1;
+              sellStrategy.IsTrailing = ((string)ss.positive).IndexOf("trailing", StringComparison.InvariantCultureIgnoreCase) > -1;
+              sellStrategy.IsTrue = ((string)ss.positive).IndexOf("true", StringComparison.InvariantCultureIgnoreCase) > -1;
 
               dcaLogData.SellStrategies.Add(sellStrategy);
             }
           }
         }
 
+        // Calculate current value
+        dcaLogData.CurrentValue = dcaLogData.CurrentPrice * dcaLogData.Amount;
+
         //Convert Unix Timestamp to Datetime
-        System.DateTime rdldDateTime = new DateTime(1970,1,1,0,0,0,System.DateTimeKind.Utc);
-        rdldDateTime = rdldDateTime.AddSeconds(rdld.firstBoughtDate).ToUniversalTime();
+        System.DateTime rdldDateTime = new DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
+        rdldDateTime = rdldDateTime.AddSeconds((double)rdld.firstBoughtDate).ToUniversalTime();
 
         // Profit Trailer bought times are saved in UTC
         if (rdld.firstBoughtDate > 0)
@@ -278,7 +318,7 @@ namespace Core.Main.DataObjects
         _dcaLog.Add(dcaLogData);
       }
 
-      foreach (dcaLogData rpld in rawPairsLogData)
+      foreach (var rpld in rawPairsLogData)
       {
         DCALogData dcaLogData = new DCALogData();
         dcaLogData.Amount = rpld.totalAmount;
@@ -289,17 +329,15 @@ namespace Core.Main.DataObjects
         dcaLogData.TotalCost = rpld.totalCost;
         dcaLogData.BuyTriggerPercent = rpld.buyProfit;
         dcaLogData.CurrentPrice = rpld.currentPrice;
-        dcaLogData.SellTrigger = rpld.triggerValue;
+        dcaLogData.SellTrigger = rpld.triggerValue == null ? 0 : rpld.triggerValue;
         dcaLogData.PercChange = rpld.percChange;
-        dcaLogData.BuyStrategy = rpld.buyStrategy;
-        if (dcaLogData.BuyStrategy == null) dcaLogData.BuyStrategy = "";
-        dcaLogData.SellStrategy = rpld.sellStrategy;
-        if (dcaLogData.SellStrategy == null) dcaLogData.SellStrategy = "";
+        dcaLogData.BuyStrategy = rpld.buyStrategy == null ? "" : rpld.buyStrategy;
+        dcaLogData.SellStrategy = rpld.sellStrategy == null ? "" : rpld.sellStrategy;
         dcaLogData.IsTrailing = false;
 
         if (rpld.sellStrategies != null)
         {
-          foreach (PTStrategy ss in rpld.sellStrategies)
+          foreach (var ss in rpld.sellStrategies)
           {
             Strategy sellStrategy = new Strategy();
             sellStrategy.Type = ss.type;
@@ -310,16 +348,16 @@ namespace Core.Main.DataObjects
             sellStrategy.CurrentValue = ss.currentValue;
             sellStrategy.CurrentValuePercentage = ss.currentValuePercentage;
             sellStrategy.Decimals = ss.decimals;
-            sellStrategy.IsTrailing = ss.positive.IndexOf("trailing", StringComparison.InvariantCultureIgnoreCase) > -1;
-            sellStrategy.IsTrue = ss.positive.IndexOf("true", StringComparison.InvariantCultureIgnoreCase) > -1;
+            sellStrategy.IsTrailing = ((string)ss.positive).IndexOf("trailing", StringComparison.InvariantCultureIgnoreCase) > -1;
+            sellStrategy.IsTrue = ((string)ss.positive).IndexOf("true", StringComparison.InvariantCultureIgnoreCase) > -1;
 
             dcaLogData.SellStrategies.Add(sellStrategy);
           }
         }
 
         //Convert Unix Timestamp to Datetime
-        System.DateTime rpldDateTime = new DateTime(1970,1,1,0,0,0,System.DateTimeKind.Utc);
-        rpldDateTime = rpldDateTime.AddSeconds(rpld.firstBoughtDate).ToUniversalTime();
+        System.DateTime rpldDateTime = new DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
+        rpldDateTime = rpldDateTime.AddSeconds((double)rpld.firstBoughtDate).ToUniversalTime();
 
         // Profit Trailer bought times are saved in UTC
         if (rpld.firstBoughtDate > 0)
@@ -341,34 +379,26 @@ namespace Core.Main.DataObjects
       }
     }
 
-    private void BuildBuyLogData(List<buyLogData> rawBuyLogData, PTMagicConfiguration systemConfiguration)
+    private void BuildBuyLogData(dynamic rawBuyLogData)
     {
-      foreach (buyLogData rbld in rawBuyLogData)
+      foreach (var rbld in rawBuyLogData)
       {
-        BuyLogData buyLogData = new BuyLogData();
+        BuyLogData buyLogData = new BuyLogData() { IsTrailing = false, IsTrue = false, IsSom = false, TrueStrategyCount = 0 };
         buyLogData.Market = rbld.market;
         buyLogData.ProfitPercent = rbld.profit;
-        buyLogData.TriggerValue = rbld.triggerValue;
-        buyLogData.CurrentValue = rbld.currentValue;
         buyLogData.CurrentPrice = rbld.currentPrice;
         buyLogData.PercChange = rbld.percChange;
-        buyLogData.BuyStrategy = rbld.buyStrategy;
-        buyLogData.CurrentLowBBValue = rbld.BBLow;
-        buyLogData.CurrentHighBBValue = rbld.BBHigh;
-        buyLogData.BBTrigger = rbld.BBTrigger;
-
-        if (buyLogData.BuyStrategy == null) buyLogData.BuyStrategy = "";
 
         if (rbld.positive != null)
         {
-          buyLogData.IsTrailing = rbld.positive.IndexOf("trailing", StringComparison.InvariantCultureIgnoreCase) > -1;
-          buyLogData.IsTrue = rbld.positive.IndexOf("true", StringComparison.InvariantCultureIgnoreCase) > -1;
+          buyLogData.IsTrailing = ((string)(rbld.positive)).IndexOf("trailing", StringComparison.InvariantCultureIgnoreCase) > -1;
+          buyLogData.IsTrue = ((string)(rbld.positive)).IndexOf("true", StringComparison.InvariantCultureIgnoreCase) > -1;
         }
         else
         {
           if (rbld.buyStrategies != null)
           {
-            foreach (PTStrategy bs in rbld.buyStrategies)
+            foreach (var bs in rbld.buyStrategies)
             {
               Strategy buyStrategy = new Strategy();
               buyStrategy.Type = bs.type;
@@ -379,9 +409,20 @@ namespace Core.Main.DataObjects
               buyStrategy.CurrentValue = bs.currentValue;
               buyStrategy.CurrentValuePercentage = bs.currentValuePercentage;
               buyStrategy.Decimals = bs.decimals;
-              buyStrategy.IsTrailing = bs.positive.IndexOf("trailing", StringComparison.InvariantCultureIgnoreCase) > -1;
-              buyStrategy.IsTrue = bs.positive.IndexOf("true", StringComparison.InvariantCultureIgnoreCase) > -1;
+              buyStrategy.IsTrailing = ((string)(bs.positive)).IndexOf("trailing", StringComparison.InvariantCultureIgnoreCase) > -1;
+              buyStrategy.IsTrue = ((string)(bs.positive)).IndexOf("true", StringComparison.InvariantCultureIgnoreCase) > -1;
 
+              // Is SOM?
+              buyLogData.IsSom = buyLogData.IsSom || buyStrategy.Name.Equals("som enabled", StringComparison.OrdinalIgnoreCase);
+
+              // Is the pair trailing?
+              buyLogData.IsTrailing = buyLogData.IsTrailing || buyStrategy.IsTrailing;
+              buyLogData.IsTrue = buyLogData.IsTrue || buyStrategy.IsTrue;
+
+              // True status strategy count total
+              buyLogData.TrueStrategyCount += buyStrategy.IsTrue ? 1 : 0;
+
+              // Add
               buyLogData.BuyStrategies.Add(buyStrategy);
             }
           }

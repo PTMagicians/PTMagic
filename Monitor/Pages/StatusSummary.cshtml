@@ -15,11 +15,11 @@
       <h4 class="m-t-0 header-title">PTMagic Status <small id="last-refresh" class="pull-right"></small></h4>
       @{
         DateTime lastRuntime = Model.Summary.LastRuntime;
-        double elapsedSecondsSinceRuntime = DateTime.Now.Subtract(lastRuntime).TotalSeconds;
+        double elapsedSecondsSinceRuntime = DateTime.UtcNow.Subtract(lastRuntime).TotalSeconds;
         double intervalSeconds = Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 60.0;
 
         string ptMagicHealthIcon = "<i class=\"fa fa-heartbeat text-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"PT Magic is alive and healthy!\"></i>";
-        if (elapsedSecondsSinceRuntime > (intervalSeconds + intervalSeconds * 0.2)) {
+        if (elapsedSecondsSinceRuntime > (intervalSeconds + intervalSeconds)) {
           ptMagicHealthIcon = "<i class=\"fa fa-bolt text-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"PT Magic seems to have problems, check the logs!\"></i>";
         }
 
@@ -28,7 +28,7 @@
           floodProtectionIcon = "<i class=\"fa fa-info-circle text-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Flood protection active! Not switching setting to " + Core.Helper.SystemHelper.SplitCamelCase(Model.Summary.FloodProtectedSetting.SettingName) + " .\"></i>";
         }
 
-        string lastGlobalSettingSwitch = Core.Helper.SystemHelper.GetProperDurationTime((int)Math.Ceiling(DateTime.Now.Subtract(Model.Summary.LastGlobalSettingSwitch).TotalSeconds)) + " ago";
+        string lastGlobalSettingSwitch = Core.Helper.SystemHelper.GetProperDurationTime((int)Math.Ceiling(DateTime.UtcNow.Subtract(Model.Summary.LastGlobalSettingSwitch).TotalSeconds)) + " ago";
         if (Model.Summary.LastGlobalSettingSwitch == Core.Main.Constants.confMinDate) {
           lastGlobalSettingSwitch = "-";
         }

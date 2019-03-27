@@ -31,10 +31,9 @@ namespace Core.Main
     private int _state = 0;
     private int _runCount = 0;
     private int _totalElapsedSeconds = 0;
-    private int _configCheckRetryCount = 0;
-    private bool _configCheckResult = true;
     private bool _globalSettingWritten = false;
-    private bool _singleMarketSettingWritten = false;
+    private bool _singleMarketSettingChanged = false;
+    private List<KeyValuePair<string, string>> _lastActiveSingleMarketSettings = null;
     private bool _enforceSettingsReapply = false;
     private DateTime _lastRuntime = Constants.confMinDate;
     private DateTime _lastSettingsChange = Constants.confMinDate;
@@ -42,7 +41,8 @@ namespace Core.Main
     private DateTime _lastVersionCheck = Constants.confMinDate;
     private DateTime _lastFiatCurrencyCheck = Constants.confMinDate;
     private string _lastSetting = "";
-    private string _activeSetting = "";
+    private string _activeSettingName = "";
+    private GlobalSetting _activeSetting = null;
     private string _defaultSettingName = "";
     private string _pairsFileName = "PAIRS.PROPERTIES";
     private string _dcaFileName = "DCA.PROPERTIES";
@@ -63,6 +63,7 @@ namespace Core.Main
     private Dictionary<string, List<MarketTrendChange>> _globalMarketTrendChanges = new Dictionary<string, List<MarketTrendChange>>();
     private Dictionary<string, int> _singleMarketSettingsCount = new Dictionary<string, int>();
     Dictionary<string, List<SingleMarketSetting>> _triggeredSingleMarketSettings = new Dictionary<string, List<SingleMarketSetting>>();
+    private static readonly object _lockObj = new object();
 
     public LogHelper Log
     {
@@ -160,15 +161,15 @@ namespace Core.Main
       }
     }
 
-    public bool SingleMarketSettingWritten
+    public bool SingleMarketSettingChanged
     {
       get
       {
-        return _singleMarketSettingWritten;
+        return _singleMarketSettingChanged;
       }
       set
       {
-        _singleMarketSettingWritten = value;
+        _singleMarketSettingChanged = value;
       }
     }
 
@@ -256,19 +257,7 @@ namespace Core.Main
       }
     }
 
-    public string LastSetting
-    {
-      get
-      {
-        return _lastSetting;
-      }
-      set
-      {
-        _lastSetting = value;
-      }
-    }
-
-    public string ActiveSetting
+    public GlobalSetting ActiveSetting
     {
       get
       {
@@ -277,6 +266,18 @@ namespace Core.Main
       set
       {
         _activeSetting = value;
+      }
+    }
+
+    public string ActiveSettingName
+    {
+      get
+      {
+        return _activeSettingName;
+      }
+      set
+      {
+        _activeSettingName = value;
       }
     }
 
@@ -510,6 +511,29 @@ namespace Core.Main
     #endregion
 
     #region PTMagic Startup  Methods
+
+    private static int ExponentialDelay(int failedAttempts, int maxDelayInSeconds = 900)
+    {
+      //Attempt 1     0s     0s
+      //Attempt 2     2s     2s
+      //Attempt 3     4s     4s
+      //Attempt 4     8s     8s
+      //Attempt 5     16s    16s
+      //Attempt 6     32s    32s
+
+      //Attempt 7     64s     1m 4s
+      //Attempt 8     128s    2m 8s
+      //Attempt 9     256s    4m 16s
+      //Attempt 10    512     8m 32s
+      //Attempt 11    1024    17m 4s
+
+      var delayInSeconds = ((1d / 2d) * (Math.Pow(2d, failedAttempts) - 1d));
+
+      return maxDelayInSeconds < delayInSeconds
+          ? maxDelayInSeconds
+          : (int)delayInSeconds;
+    }
+
     public bool StartProcess()
     {
       bool result = true;
@@ -535,34 +559,63 @@ namespace Core.Main
         return false;
       }
 
-      _configCheckResult = this.RunConfigurationChecks();
-      if (!_configCheckResult)
-      {
-        this.Log.DoLogInfo("Starting configuration check retry in 10 seconds...");
-        System.Timers.Timer configCheckTimer = new System.Timers.Timer(10000);
-        configCheckTimer.Enabled = true;
-        configCheckTimer.Elapsed += new System.Timers.ElapsedEventHandler(this.ConfigCheckTimer_Elapsed);
+      bool configCheckResult = this.RunConfigurationChecks();
 
-        while (!_configCheckResult && _configCheckRetryCount < 20)
+      if (!configCheckResult)
+      {
+        // Config check failed so retry using an exponential back off until it passes; max retry time 15 mins.
+        int configRetryCount = 1;
+        int delaySeconds;
+
+        while (!configCheckResult)
         {
-          Thread.Sleep(100);
+          delaySeconds = ExponentialDelay(configRetryCount);
+          this.Log.DoLogError("Configuration check retry " + configRetryCount + " failed, starting next retry in " + delaySeconds + " seconds...");
+          Thread.Sleep(delaySeconds * 1000);
+
+          // Reinit config in case the user changed something
+          this.InitializeConfiguration();
+          configCheckResult = this.RunConfigurationChecks();
+          configRetryCount++;
         }
-        configCheckTimer.Stop();
       }
 
-      if (!_configCheckResult)
-      {
-        return false;
-      }
-
-      this.LastSettingFileCheck = DateTime.Now;
+      this.LastSettingFileCheck = DateTime.UtcNow;
 
       SettingsFiles.CheckPresets(this.PTMagicConfiguration, this.Log, true);
 
+      // Start the _preset folder file watcher.
+      SettingsFiles.PresetFileWatcher.Changed += PresetFileWatcher_OnChanged;
+      SettingsFiles.PresetFileWatcher.EnableRaisingEvents = true;
+
+      // Force settings refresh first time
       EnforceSettingsReapply = true;
+
+      // Set the Active config
+      this.ActiveSetting = this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Find(s => s.SettingName.Equals(this.DefaultSettingName, StringComparison.InvariantCultureIgnoreCase));
+      this.ActiveSettingName = ActiveSetting.SettingName;
+      this.LastSettingsChange = DateTime.UtcNow;
+
+      // Start polling
       this.StartPTMagicIntervalTimer();
 
       return result;
+    }
+
+    // File watcher event handlers
+    private void PresetFileWatcher_OnChanged(object source, FileSystemEventArgs e)
+    {
+      // Disable the file watcher whilst we deal with the event
+      SettingsFiles.PresetFileWatcher.EnableRaisingEvents = false;
+
+      this.Log.DoLogInfo("Detected a '" + e.ChangeType.ToString() + "' change in the following preset file: " + e.FullPath);
+
+      // Reprocess now
+      this.EnforceSettingsReapply = true;
+      PTMagicIntervalTimer_Elapsed(new object(), null);
+
+      // Enable the file watcher again
+      SettingsFiles.PresetFileWatcher.EnableRaisingEvents = true;
     }
 
     public bool RunStartupChecks()
@@ -593,8 +646,13 @@ namespace Core.Main
       {
         this.PTMagicConfiguration = new PTMagicConfiguration();
 
-        this.Log.DoLogInfo("Configuration loaded. Found " + this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends.Count.ToString() + " Market Trends, " + this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Count.ToString() + " Global Settings and " + this.PTMagicConfiguration.AnalyzerSettings.SingleMarketSettings.Count.ToString() + " Single Market Settings.");
-
+        this.Log.DoLogInfo("Configuration loaded. Found " +
+                            this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends != null ? this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends.Count.ToString() : "0" +
+                            " Market Trends, " +
+                            this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings != null ? this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Count.ToString() : "0" +
+                            " Global Settings and " +
+                            this.PTMagicConfiguration.AnalyzerSettings.SingleMarketSettings != null ? this.PTMagicConfiguration.AnalyzerSettings.SingleMarketSettings.Count.ToString() : "0" +
+                            " Single Market Settings.");
       }
       catch (Exception ex)
       {
@@ -646,42 +704,51 @@ namespace Core.Main
       // Check if the program is enabled
       if (this.PTMagicConfiguration.GeneralSettings.Application.IsEnabled)
       {
-        if (this.PTMagicConfiguration.GeneralSettings.Application.TestMode) this.Log.DoLogInfo("TESTMODE ENABLED - No files will be changed!");
+        try
+        {
+          if (this.PTMagicConfiguration.GeneralSettings.Application.TestMode) this.Log.DoLogInfo("TESTMODE ENABLED - No files will be changed!");
 
-        // Check for PT Directory
-        DirectoryInfo ptRoot = new DirectoryInfo(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath);
-        if (ptRoot.Exists)
-        {
-          this.Log.DoLogInfo("Profit Trailer directory found");
-          result = RunProfitTrailerSettingsAPIChecks();
-        }
-        else
-        {
-          this.Log.DoLogError("Profit Trailer directory not found (" + this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + ")");
-          result = false;
-        }
+          // Check for PT Directory
+          DirectoryInfo ptRoot = new DirectoryInfo(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath);
+          if (ptRoot.Exists)
+          {
+            this.Log.DoLogInfo("Profit Trailer directory found");
+            result = RunProfitTrailerSettingsAPIChecks();
+          }
+          else
+          {
+            this.Log.DoLogError("Profit Trailer directory not found (" + this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + ")");
+            result = false;
+          }
 
-        // Check for CoinMarketCap API Key
-        if (!this.PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey.Equals(""))
-        {
-          this.Log.DoLogInfo("CoinMarketCap API KEY found");
-        }
-        else
-        {
-          this.Log.DoLogInfo("No CoinMarketCap API KEY specified! You can't use CoinMarketCap in your settings.analyzer.json");
-        }
+          // Check for CoinMarketCap API Key
+          if (!String.IsNullOrEmpty(this.PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey))
+          {
+            this.Log.DoLogInfo("CoinMarketCap API KEY found");
+          }
+          else
+          {
+            this.Log.DoLogInfo("No CoinMarketCap API KEY specified! You can't use CoinMarketCap in your settings.analyzer.json");
+          }
 
-         // Check for CurrencyConverterApi Key
-        if (!this.PTMagicConfiguration.GeneralSettings.Application.FreeCurrencyConverterAPIKey.Equals(""))
-        {
-          this.Log.DoLogInfo("FreeCurrencyConverterApi KEY found");
+          // Check for CurrencyConverterApi Key
+          if (!this.PTMagicConfiguration.GeneralSettings.Application.FreeCurrencyConverterAPIKey.Equals(""))
+          {
+            this.Log.DoLogInfo("FreeCurrencyConverterApi KEY found");
+          }
+          else
+          {
+            this.Log.DoLogInfo("No FreeCurrencyConverterApi KEY specified, you can only use USD; apply for a key at: https://freecurrencyrates.com/en");
+          }
         }
-        else
+        catch (System.NullReferenceException)
         {
-          this.Log.DoLogInfo("No FreeCurrencyConverterApi KEY specified! You can't use non USD Currencies!");
+          this.Log.DoLogError("PTM failed to read the Config File. That means something in the File is either missing or incorrect. If this happend after an update please take a look at the release notes at: https://github.com/PTMagicians/PTMagic/releases");
+          Console.WriteLine("Press enter to close the Application...");
+          Console.ReadLine();
+          Environment.Exit(0);
         }
       }
-
       else
       {
         this.Log.DoLogWarn("PTMagic disabled, shutting down...");
@@ -698,7 +765,7 @@ namespace Core.Main
       this.Log.DoLogInfo("========== STARTING CHECKS FOR Profit Trailer ==========");
 
       // Check for PT license key
-      if (!this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerLicense.Equals(""))
+      if (!String.IsNullOrEmpty(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerLicense))
       {
         this.Log.DoLogInfo("Profit Trailer check: Profit Trailer license found");
       }
@@ -709,18 +776,18 @@ namespace Core.Main
       }
 
       //Check for ptServerAPIToken
-      if (!this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken.Equals(""))
+      if (!String.IsNullOrEmpty(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken))
       {
         this.Log.DoLogInfo("Profit Trailer check: Profit Trailer Server API Token Specified");
       }
       else
       {
-        this.Log.DoLogError("Profit Trailer check: No Server API Token specified. It has to be the same Token as in the Profit Trailer Config File");
+        this.Log.DoLogError("Profit Trailer check: No Server API Token specified. Please configure ProfitTrailerServerAPIToken in settings.general.json , ensuring it has to be the same Token as in the Profit Trailer Config File!");
         result = false;
       }
 
       // Check for PT default setting key
-      if (!this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName.Equals(""))
+      if (!String.IsNullOrEmpty(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName))
       {
         this.Log.DoLogInfo("Profit Trailer check: Profit Trailer default setting name specified");
       }
@@ -731,7 +798,7 @@ namespace Core.Main
       }
 
       // Check for PT monitor
-      if (!this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL.Equals(""))
+      if (!String.IsNullOrEmpty(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL))
       {
         this.Log.DoLogInfo("Profit Trailer check: Profit Trailer monitor URL found");
       }
@@ -778,120 +845,148 @@ namespace Core.Main
     #endregion
 
     #region PTMagic Interval Methods
-    public void ConfigCheckTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-    {
-      // Reinit config in case the user changed something
-      this.InitializeConfiguration();
-      _configCheckResult = this.RunConfigurationChecks();
-      _configCheckRetryCount++;
-      if (!_configCheckResult)
-      {
-        this.Log.DoLogError("Configuration check retry " + _configCheckRetryCount + "/10 failed, starting next retry in 5 seconds...");
-      }
-    }
 
     public void PTMagicIntervalTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
     {
       // Check if the bot is idle
       if (this.State == Constants.PTMagicBotState_Idle)
       {
-        this.RunCount++;
-
-        bool headerLinesAdded = false;
-        this.EnforceSettingsReapply = this.HaveSettingsChanged();
-
-        if (PTMagicConfiguration.GeneralSettings.Application.IsEnabled)
+        // Only let one thread change the settings at once
+        lock (_lockObj)
         {
-          
-          // Validate settings
-          this.ValidateSettings();
+          try
+          {
+            // Change state to "Running"
+            this.State = Constants.PTMagicBotState_Running;
+            this.RunCount++;
+            this.LastRuntime = DateTime.UtcNow;
 
-          // Start the process
-          this.Log.DoLogInfo("");
-          this.Log.DoLogInfo("##########################################################");
-          this.Log.DoLogInfo("#********************************************************#");
-          this.Log.DoLogInfo("Starting market trend check with Version " + this.CurrentVersion.Major + "." + this.CurrentVersion.Minor + "." + this.CurrentVersion.Build);
+            this.EnforceSettingsReapply = this.HaveSettingsChanged() || this.EnforceSettingsReapply;
 
-          // Change state to "Running"
-          this.State = Constants.PTMagicBotState_Running;
+            if (PTMagicConfiguration.GeneralSettings.Application.IsEnabled)
+            {
+              // Validate settings
+              this.ValidateSettings();
 
-          this.LastRuntime = DateTime.Now;
+              // Start the process
+              this.Log.DoLogInfo("");
+              this.Log.DoLogInfo("##########################################################");
+              this.Log.DoLogInfo("#********************************************************#");
+              this.Log.DoLogInfo("Starting market trend check with Version " + this.CurrentVersion.Major + "." + this.CurrentVersion.Minor + "." + this.CurrentVersion.Build);
 
-          this.LastRuntimeSummary = new Summary();
-          this.LastRuntimeSummary.LastRuntime = this.LastRuntime;
-          this.LastRuntimeSummary.Version = this.CurrentVersion.Major.ToString() + "." + this.CurrentVersion.Minor.ToString() + "." + this.CurrentVersion.Build.ToString();
+              // Initialise the last runtime summary              
+              this.LastRuntimeSummary = new Summary();
+              this.LastRuntimeSummary.LastRuntime = this.LastRuntime;
+              this.LastRuntimeSummary.Version = this.CurrentVersion.Major.ToString() + "." + this.CurrentVersion.Minor.ToString() + "." + this.CurrentVersion.Build.ToString();
 
-          // Check for latest GitHub version
-          this.CheckLatestGitHubVersion(this.LastRuntimeSummary.Version);
+              // Check for latest GitHub version
+              this.CheckLatestGitHubVersion(this.LastRuntimeSummary.Version);
 
-          // Get latest main fiat currency exchange rate
-          this.GetMainFiatCurrencyDetails();
+              // Get latest main fiat currency exchange rate
+              this.GetMainFiatCurrencyDetails();
 
-          // Get current PT properties
-          string pairsPropertiesPath = this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.PairsFileName;
-          string dcaPropertiesPath = this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.DCAFileName;
-          string indicatorsPropertiesPath = this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.IndicatorsFileName;
+              // Load current PT files
+              this.LoadCurrentProfitTrailerProperties();
 
-          this.LoadCurrentProfitTrailerProperties(pairsPropertiesPath, dcaPropertiesPath, indicatorsPropertiesPath);
+              // Loading SMS Summaries
+              this.LoadSMSSummaries();
 
-          // Loading SMS Summaries
-          this.LoadSMSSummaries();
+              // Get saved market info
+              this.MarketInfos = BaseAnalyzer.GetMarketInfosFromFile(this.PTMagicConfiguration, this.Log);
 
-          // Get saved market info
-          this.MarketInfos = BaseAnalyzer.GetMarketInfosFromFile(this.PTMagicConfiguration, this.Log);
+              // Build exchange market data
+              this.BuildMarketData();
 
-          // Build exchange market data
-          this.BuildMarketData();
+              // Get markets from PT properties
+              this.BuildMarketList();
+              this.ValidateMarketList();
 
-          // Get markets from PT properties
-          this.BuildMarketList();
-          this.ValidateMarketList();
+              // Build global market trends configured in settings
+              this.BuildGlobalMarketTrends();
 
-          // Build global market trends configured in settings
-          this.BuildGlobalMarketTrends();
+              // Check for global settings triggers
+              GlobalSetting triggeredSetting = this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Find(s => s.SettingName.Equals(this.DefaultSettingName, StringComparison.InvariantCultureIgnoreCase));
+              List<string> matchedTriggers = new List<string>();
+              this.CheckGlobalSettingsTriggers(ref triggeredSetting, ref matchedTriggers);
 
-          // Check for global settings triggers
-          GlobalSetting triggeredSetting = this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Find(s => s.SettingName.Equals(this.DefaultSettingName, StringComparison.InvariantCultureIgnoreCase));
-          List<string> matchedTriggers = new List<string>();
-          this.CheckGlobalSettingsTriggers(ref triggeredSetting, ref matchedTriggers);
+              // Activate global setting
+              this.ActivateSetting(ref triggeredSetting, ref matchedTriggers);
 
-          // Activate global setting
-          this.ActivateSetting(ref headerLinesAdded, ref triggeredSetting, ref matchedTriggers);
+              // Check for single market trend triggers
+              this.ApplySingleMarketSettings();
 
-          // Check for single market trend triggers
-          this.ApplySingleMarketSettings();
+              // Save new properties to Profit Trailer
+              this.SaveProfitTrailerProperties();
 
-          // Save new properties to Profit Trailer
-          this.SaveProfitTrailerProperties(headerLinesAdded, pairsPropertiesPath, dcaPropertiesPath, indicatorsPropertiesPath);
+              // Save Single Market Settings Summary
+              this.SaveSingleMarketSettingsSummary();
 
-          // Save Single Market Settings Summary
-          this.SaveSingleMarketSettingsSummary();
+              // Claculate raid time
+              DateTime endTime = DateTime.UtcNow;
+              int elapsedSeconds = (int)Math.Round(endTime.Subtract(this.LastRuntime).TotalSeconds, 0);
+              this.TotalElapsedSeconds += elapsedSeconds;
 
-          // Save Runtime Summary
-          this.SaveRuntimeSummary(headerLinesAdded);
+              // Save Runtime Summary
+              this.SaveRuntimeSummary(elapsedSeconds);
 
-          // Cleanup to free memory in between intervals
-          this.Cleanup();
+              // Summarise raid              
+              this.Log.DoLogInfo("##########################################################");
+              this.Log.DoLogInfo("#******************* RAID SUMMARY ********************#");
+              this.Log.DoLogInfo("+ PT Magic Version: " + this.LastRuntimeSummary.Version);
+              if (!SystemHelper.IsRecentVersion(this.LastRuntimeSummary.Version, this.LatestVersion))
+              {
+                this.Log.DoLogWarn("+ Your version is out of date! The most recent version is " + this.LatestVersion);
+              }
+              this.Log.DoLogInfo("+ Instance name: " + PTMagicConfiguration.GeneralSettings.Application.InstanceName);
+              this.Log.DoLogInfo("+ Time spent: " + SystemHelper.GetProperDurationTime(elapsedSeconds));
+              this.Log.DoLogInfo("+ Active setting: " + this.LastRuntimeSummary.CurrentGlobalSetting.SettingName);
+              this.Log.DoLogInfo("+ Global setting changed: " + ((this.LastRuntimeSummary.LastGlobalSettingSwitch == this.LastRuntimeSummary.LastRuntime) ? "Yes" : "No") + " " + ((this.LastRuntimeSummary.FloodProtectedSetting != null) ? "(Flood protection!)" : ""));
+              this.Log.DoLogInfo("+ Single Market Settings changed: " + (this.SingleMarketSettingChanged ? "Yes" : "No"));
+              this.Log.DoLogInfo("+ PT Config updated: " + (((this.GlobalSettingWritten || this.SingleMarketSettingChanged) && !this.PTMagicConfiguration.GeneralSettings.Application.TestMode) ? "Yes" : "No"));
+              this.Log.DoLogInfo("+ Markets with active single market settings: " + this.TriggeredSingleMarketSettings.Count.ToString());
+              foreach (string activeSMS in this.SingleMarketSettingsCount.Keys)
+              {
+                this.Log.DoLogInfo("+   " + activeSMS + ": " + this.SingleMarketSettingsCount[activeSMS].ToString());
+              }
+              this.Log.DoLogInfo("+ " + this.TotalElapsedSeconds.ToString() + " Magicbots killed in " + this.RunCount.ToString() + " raids on Cryptodragon's Lair " + this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes.ToString() + ".");
+              this.Log.DoLogInfo("");
+              this.Log.DoLogInfo("DO NOT CLOSE THIS WINDOW! THIS IS THE BOT THAT ANALYZES TRENDS AND CHANGES SETTINGS!");
+              this.Log.DoLogInfo("");
+              this.Log.DoLogInfo("#********************************************************#");
+              this.Log.DoLogInfo("##########################################################");
+              this.Log.DoLogInfo("");
+            }
+            else
+            {
+              this.State = Constants.PTMagicBotState_Idle;
+              Log.DoLogWarn("PTMagic disabled, shutting down until next raid...");
+            }
+          }
+          catch (Exception ex)
+          {
+            // Error
+            this.Log.DoLogCritical("A error occurred during the raid, the raid did not complete, but will try again next interval!", ex);
+          }
+          finally
+          {
+            // Cleanup to free memory in between intervals
+            this.Cleanup();
 
-          // Change state to Finished / Stopped
-          this.State = Constants.PTMagicBotState_Idle;
-        }
-        else
-        {
-          this.State = Constants.PTMagicBotState_Idle;
-          Log.DoLogWarn("PTMagic disabled, shutting down until next raid...");
+            // Change state to Finished / Stopped
+            this.State = Constants.PTMagicBotState_Idle;
+          }
         }
       }
       else
       {
         if (this.RunCount > 1)
         {
-          Log.DoLogWarn("PTMagic already raiding since " + this.LastRuntime.ToString() + " - Process frozen? Checking things...");
+          Log.DoLogWarn("PTMagic already raiding since " + this.LastRuntime.ToLocalTime().ToString() + " - Process frozen? Checking things...");
 
           if (File.Exists(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "LastRuntimeSummary.json"))
           {
             FileInfo fiLastSummary = new FileInfo(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "LastRuntimeSummary.json");
-            if (fiLastSummary.LastWriteTime < DateTime.Now.AddMinutes(-(this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 2)))
+            if (fiLastSummary.LastWriteTimeUtc < DateTime.UtcNow.AddMinutes(-(this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 2)))
             {
               Log.DoLogWarn("PTMagic seems to have frozen after raid " + this.RunCount.ToString() + ", but don't worry I will sacrifice some Magicbots to get this running again...");
               this.State = Constants.PTMagicBotState_Idle;
@@ -914,7 +1009,7 @@ namespace Core.Main
 
       FileInfo generalSettingsFile = new FileInfo(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "settings.general.json");
       FileInfo analyzerSettingsFile = new FileInfo(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + "settings.analyzer.json");
-      if (generalSettingsFile.LastWriteTime > this.LastSettingFileCheck || analyzerSettingsFile.LastWriteTime > this.LastSettingFileCheck || EnforceSettingsReapply)
+      if (generalSettingsFile.LastWriteTimeUtc > this.LastSettingFileCheck || analyzerSettingsFile.LastWriteTimeUtc > this.LastSettingFileCheck)
       {
         Log.DoLogInfo("Detected configuration changes. Reloading settings...");
 
@@ -945,7 +1040,7 @@ namespace Core.Main
           }
 
           Log.DoLogInfo("New configuration reloaded.");
-          this.LastSettingFileCheck = DateTime.Now;
+          this.LastSettingFileCheck = DateTime.UtcNow;
           result = true;
 
           if (this.Timer.Interval != this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 60 * 1000)
@@ -987,7 +1082,7 @@ namespace Core.Main
       }
       else
       {
-        if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals(""))
+        if (String.IsNullOrEmpty(this.PTMagicConfiguration.GeneralSettings.Application.Exchange))
         {
           Log.DoLogError("Your setting for Application.Exchange in settings.general.json is invalid (empty)! Terminating process.");
           this.Timer.Stop();
@@ -1010,10 +1105,10 @@ namespace Core.Main
     private void CheckLatestGitHubVersion(string currentVersion)
     {
       // Get latest version number
-      if (this.LastVersionCheck < DateTime.Now.AddMinutes(-30))
+      if (this.LastVersionCheck < DateTime.UtcNow.AddMinutes(-30))
       {
         this.LatestVersion = BaseAnalyzer.GetLatestGitHubRelease(this.Log, currentVersion);
-        this.LastVersionCheck = DateTime.Now;
+        this.LastVersionCheck = DateTime.UtcNow;
         if (!SystemHelper.IsRecentVersion(currentVersion, this.LatestVersion))
         {
           this.Log.DoLogWarn("Your bot is out of date! The most recent version of PTMagic is " + this.LatestVersion);
@@ -1026,7 +1121,7 @@ namespace Core.Main
       this.LastRuntimeSummary.MainFiatCurrency = this.LastMainFiatCurrency;
       this.LastRuntimeSummary.MainFiatCurrencyExchangeRate = this.LastMainFiatCurrencyExchangeRate;
 
-      if (this.LastFiatCurrencyCheck < DateTime.Now.AddHours(-12) && !this.PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency.Equals("USD", StringComparison.InvariantCultureIgnoreCase))
+      if (this.LastFiatCurrencyCheck < DateTime.UtcNow.AddHours(-12) && !this.PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency.Equals("USD", StringComparison.InvariantCultureIgnoreCase))
       {
         try
         {
@@ -1035,7 +1130,7 @@ namespace Core.Main
           this.LastMainFiatCurrency = this.LastRuntimeSummary.MainFiatCurrency;
           this.LastMainFiatCurrencyExchangeRate = this.LastRuntimeSummary.MainFiatCurrencyExchangeRate;
 
-          this.LastFiatCurrencyCheck = DateTime.Now;
+          this.LastFiatCurrencyCheck = DateTime.UtcNow;
         }
         catch (Exception ex)
         {
@@ -1050,14 +1145,21 @@ namespace Core.Main
       }
     }
 
-    private void LoadCurrentProfitTrailerProperties(string pairsPropertiesPath, string dcaPropertiesPath, string indicatorsPropertiesPath)
+    private void GetProfitTrailerPropertiesPaths(out string pairsPropertiesPath, out string dcaPropertiesPath, out string indicatorsPropertiesPath)
+    {
+      // Get current PT properties
+      pairsPropertiesPath = this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.PairsFileName;
+      dcaPropertiesPath = this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.DCAFileName;
+      indicatorsPropertiesPath = this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.IndicatorsFileName;
+    }
+
+    private void LoadCurrentProfitTrailerProperties()
     {
       // Load current PT properties from API (Valid for PT 2.x and above)
-      this.Log.DoLogInfo("Loading current Profit Trailer properties from API...");
+      this.Log.DoLogInfo("Loading current Profit Trailer properties from preset files...");
 
-      this.PairsLines = SettingsAPI.GetPropertyLinesFromAPI("PAIRS", this.PTMagicConfiguration, this.Log);
-      this.DCALines = SettingsAPI.GetPropertyLinesFromAPI("DCA", this.PTMagicConfiguration, this.Log);
-      this.IndicatorsLines = SettingsAPI.GetPropertyLinesFromAPI("INDICATORS", this.PTMagicConfiguration, this.Log);
+      // Get current preset file PT properties
+      SettingsHandler.CompileProperties(this, this.ActiveSetting, this.LastSettingsChange.ToLocalTime());
 
       if (this.PairsLines != null && this.DCALines != null && this.IndicatorsLines != null)
       {
@@ -1122,7 +1224,7 @@ namespace Core.Main
     private void BuildMarketData()
     {
 
-      if (!this.PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey.Equals(""))
+      if (!String.IsNullOrEmpty(this.PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey))
       {
         // Get most recent market data from CMC
         string cmcMarketDataResult = CoinMarketCap.GetMarketData(this.PTMagicConfiguration, this.Log);
@@ -1140,7 +1242,6 @@ namespace Core.Main
       }
       else if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Binance", StringComparison.InvariantCultureIgnoreCase))
       {
-
         // Get most recent market data from Binance
         this.ExchangeMarketList = Binance.GetMarketData(this.LastRuntimeSummary.MainMarket, this.MarketInfos, this.PTMagicConfiguration, this.Log);
       }
@@ -1164,7 +1265,7 @@ namespace Core.Main
     private void BuildMarketList()
     {
       string marketPairs = SettingsHandler.GetMarketPairs(this.PTMagicConfiguration, this.PairsLines, this.Log);
-      if (marketPairs.ToLower().Equals("all") || marketPairs.ToLower().Equals("false") || marketPairs.ToLower().Equals("true") || marketPairs.Equals(""))
+      if (marketPairs.ToLower().Equals("all") || marketPairs.ToLower().Equals("false") || marketPairs.ToLower().Equals("true") || String.IsNullOrEmpty(marketPairs))
       {
         this.MarketList = this.ExchangeMarketList;
       }
@@ -1306,23 +1407,13 @@ namespace Core.Main
       }
     }
 
-    private void ActivateSetting(ref bool headerLinesAdded, ref GlobalSetting triggeredSetting, ref List<string> matchedTriggers)
+    private void ActivateSetting(ref GlobalSetting triggeredSetting, ref List<string> matchedTriggers)
     {
-      string activeSettingName = SettingsHandler.GetActiveSetting(this, ref headerLinesAdded);
-      if (activeSettingName.Equals("") && this.PTMagicConfiguration.GeneralSettings.Application.TestMode)
+      // Do we need to write the settings?
+      if (this.EnforceSettingsReapply || !this.ActiveSettingName.Equals(triggeredSetting.SettingName, StringComparison.InvariantCultureIgnoreCase))
       {
-        activeSettingName = this.ActiveSetting;
-      }
-
-      if (this.EnforceSettingsReapply)
-      {
-        this.Log.DoLogInfo("Reapply '" + activeSettingName + "' as the settings.analyzer.json or a preset file got changed.");
-      }
-
-      GlobalSetting activeSetting = this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Find(s => s.SettingName.Equals(activeSettingName, StringComparison.InvariantCultureIgnoreCase));
-      if (this.EnforceSettingsReapply || !activeSettingName.Equals(triggeredSetting.SettingName, StringComparison.InvariantCultureIgnoreCase))
-      {
-        this.Log.DoLogInfo("Setting '" + activeSettingName + "' currently active. Checking for flood protection...");
+        // Check if we need to force a refresh of the settings
+        this.Log.DoLogInfo("Setting '" + this.ActiveSettingName + "' currently active. Checking for flood protection...");
 
         // If the setting we are about to activate is the default one, do not list matched triggers
         if (triggeredSetting.SettingName.Equals(this.DefaultSettingName, StringComparison.InvariantCultureIgnoreCase))
@@ -1331,52 +1422,71 @@ namespace Core.Main
         }
 
         // Check if flood protection is active
-        if (this.EnforceSettingsReapply || !this.LastSetting.Equals(triggeredSetting.SettingName, StringComparison.InvariantCultureIgnoreCase) || this.LastSettingsChange <= DateTime.UtcNow.AddMinutes(-PTMagicConfiguration.GeneralSettings.Application.FloodProtectionMinutes))
+        if (this.EnforceSettingsReapply || this.LastSettingsChange <= DateTime.UtcNow.AddMinutes(-PTMagicConfiguration.GeneralSettings.Application.FloodProtectionMinutes))
         {
-
           // Setting not set => Change setting
-          this.Log.DoLogInfo("Switching global settings to '" + triggeredSetting.SettingName + "'...");
-          SettingsHandler.CompileProperties(this, triggeredSetting);
-          this.GlobalSettingWritten = true;
-          this.Log.DoLogInfo("Setting '" + triggeredSetting.SettingName + "' now active!");
+          if (!this.ActiveSettingName.Equals(triggeredSetting.SettingName, StringComparison.InvariantCultureIgnoreCase))
+          {
+            this.Log.DoLogInfo("Switching global settings to '" + triggeredSetting.SettingName + "'...");
+          }
+          else
+          {
+            this.Log.DoLogInfo("Applying '" + triggeredSetting.SettingName + "' as the settings.analyzer.json or a preset file got changed.");
+          }
 
+          // Get file lines from the preset files
+          SettingsHandler.CompileProperties(this, triggeredSetting, DateTime.Now);
+          this.GlobalSettingWritten = true;
+
+          // Record the switch in the runtime summary
           this.LastRuntimeSummary.LastGlobalSettingSwitch = this.LastRuntimeSummary.LastRuntime;
           this.LastRuntimeSummary.CurrentGlobalSetting = triggeredSetting;
 
-          // Build Telegram message
-          string telegramMessage = this.PTMagicConfiguration.GeneralSettings.Application.InstanceName + ": Setting switched to '*" + SystemHelper.SplitCamelCase(triggeredSetting.SettingName) + "*'.";
-
-          if (matchedTriggers.Count > 0)
-          {
-            telegramMessage += "\n\n*Matching Triggers:*";
-            foreach (string triggerResult in matchedTriggers)
-            {
-              telegramMessage += "\n" + triggerResult;
-            }
-          }
-
-          if (this.AverageMarketTrendChanges.Keys.Count > 0)
-          {
-            telegramMessage += "\n\n*Market Trends:*";
-            foreach (string key in this.AverageMarketTrendChanges.Keys)
-            {
-              telegramMessage += "\n" + key + ": " + this.AverageMarketTrendChanges[key].ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
-            }
-          }
-
-          // Send Telegram message
-          if (this.PTMagicConfiguration.GeneralSettings.Telegram.IsEnabled) TelegramHelper.SendMessage(this.PTMagicConfiguration.GeneralSettings.Telegram.BotToken, this.PTMagicConfiguration.GeneralSettings.Telegram.ChatId, telegramMessage, this.PTMagicConfiguration.GeneralSettings.Telegram.SilentMode, this.Log);
-
-          this.LastSetting = activeSettingName;
+          // Record last settings run
           this.LastSettingsChange = DateTime.UtcNow;
 
+          // Build Telegram message
+          try
+          {
+            string telegramMessage;
+            telegramMessage = this.PTMagicConfiguration.GeneralSettings.Application.InstanceName + ": Setting switched to '*" + SystemHelper.SplitCamelCase(triggeredSetting.SettingName) + "*'.";
+
+            if (matchedTriggers.Count > 0)
+            {
+              telegramMessage += "\n\n*Matching Triggers:*";
+              foreach (string triggerResult in matchedTriggers)
+              {
+                telegramMessage += "\n" + triggerResult;
+              }
+            }
+
+            if (this.AverageMarketTrendChanges.Keys.Count > 0)
+            {
+              telegramMessage += "\n\n*Market Trends:*";
+              foreach (string key in this.AverageMarketTrendChanges.Keys)
+              {
+                telegramMessage += "\n" + key + ": " + this.AverageMarketTrendChanges[key].ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
+              }
+            }
+
+            // Send Telegram message
+            if (this.PTMagicConfiguration.GeneralSettings.Telegram.IsEnabled)
+            {
+              TelegramHelper.SendMessage(this.PTMagicConfiguration.GeneralSettings.Telegram.BotToken, this.PTMagicConfiguration.GeneralSettings.Telegram.ChatId, telegramMessage, this.PTMagicConfiguration.GeneralSettings.Telegram.SilentMode, this.Log);
+            }
+          }
+          catch (Exception ex)
+          {
+            this.Log.DoLogCritical("Failed to send Telegram message", ex);
+          }
         }
         else
         {
+          // Flood protection
           this.Log.DoLogInfo("Flood protection active until " + this.LastSettingsChange.AddMinutes(PTMagicConfiguration.GeneralSettings.Application.FloodProtectionMinutes).ToString() + " (UTC). Not switching settings to '" + triggeredSetting.SettingName + "'!");
 
           this.LastRuntimeSummary.FloodProtectedSetting = triggeredSetting;
-          this.LastRuntimeSummary.CurrentGlobalSetting = activeSetting;
+          this.LastRuntimeSummary.CurrentGlobalSetting = this.ActiveSetting;
         }
       }
       else
@@ -1389,7 +1499,9 @@ namespace Core.Main
         this.LastRuntimeSummary.CurrentGlobalSetting = triggeredSetting;
       }
 
-      this.ActiveSetting = this.LastRuntimeSummary.CurrentGlobalSetting.SettingName;
+      // Set Active settings
+      this.ActiveSetting = this.LastRuntimeSummary.CurrentGlobalSetting;
+      this.ActiveSettingName = this.ActiveSetting.SettingName;
     }
 
     private void ApplySingleMarketSettings()
@@ -1427,17 +1539,17 @@ namespace Core.Main
 
             // Check ignore global settings
             List<string> ignoredGlobalSettings = SystemHelper.ConvertTokenStringToList(marketSetting.IgnoredGlobalSettings, ",");
-            if (ignoredGlobalSettings.Contains(this.ActiveSetting))
+            if (ignoredGlobalSettings.Contains(this.ActiveSettingName))
             {
-              this.Log.DoLogDebug("'" + marketPair + "' - '" + this.ActiveSetting + "' - Is ignored in '" + marketSetting.SettingName + "'.");
+              this.Log.DoLogDebug("'" + marketPair + "' - '" + this.ActiveSettingName + "' - Is ignored in '" + marketSetting.SettingName + "'.");
               continue;
             }
 
             // Check allowed global settings
             List<string> allowedGlobalSettings = SystemHelper.ConvertTokenStringToList(marketSetting.AllowedGlobalSettings, ",");
-            if (allowedGlobalSettings.Count > 0 && !allowedGlobalSettings.Contains(this.ActiveSetting))
+            if (allowedGlobalSettings.Count > 0 && !allowedGlobalSettings.Contains(this.ActiveSettingName))
             {
-              this.Log.DoLogDebug("'" + marketPair + "' - '" + this.ActiveSetting + "' - Is not allowed in '" + marketSetting.SettingName + "'.");
+              this.Log.DoLogDebug("'" + marketPair + "' - '" + this.ActiveSettingName + "' - Is not allowed in '" + marketSetting.SettingName + "'.");
               continue;
             }
 
@@ -1667,7 +1779,7 @@ namespace Core.Main
 
                   if (marketInfo != null)
                   {
-                    int marketAge = (int)Math.Floor(DateTime.Now.ToUniversalTime().Subtract(marketInfo.FirstSeen).TotalDays);
+                    int marketAge = (int)Math.Floor(DateTime.UtcNow.Subtract(marketInfo.FirstSeen).TotalDays);
                     if (marketAge < trigger.AgeDaysLowerThan)
                     {
                       matchedSingleMarketTriggers.Add(marketSetting.SettingName + ": '" + marketPair + "' is only " + marketAge.ToString() + " days old on this exchange. Trigger matched!");
@@ -1934,12 +2046,20 @@ namespace Core.Main
 
         if (this.TriggeredSingleMarketSettings.Count > 0)
         {
-
-          // Write single market settings
           this.Log.DoLogInfo("Building single market settings for '" + this.TriggeredSingleMarketSettings.Count.ToString() + "' markets...");
 
-          SettingsHandler.CompileSingleMarketProperties(this, matchedMarketTriggers);
-          this.SingleMarketSettingWritten = true;
+          // Write single market settings
+          var newSingleMarketSettings = SettingsHandler.CompileSingleMarketProperties(this, matchedMarketTriggers);
+
+          // Compare against last run to see if they have changed or not
+          if (_lastActiveSingleMarketSettings == null || haveSingleMarketSettingsHaveChanged(_lastActiveSingleMarketSettings, newSingleMarketSettings))
+          {
+            // Single market settings differ from the last raid, so update
+            this.SingleMarketSettingChanged = true;
+          }
+
+          // Buffer for next raid
+          _lastActiveSingleMarketSettings = newSingleMarketSettings;
 
           this.Log.DoLogInfo("Building single market settings completed.");
         }
@@ -1948,9 +2068,8 @@ namespace Core.Main
           this.Log.DoLogInfo("No settings triggered for single markets.");
 
           // Remove single market settings if no triggers are met - if necessary
-          this.SingleMarketSettingWritten = SettingsHandler.RemoveSingleMarketSettings(this);
+          this.SingleMarketSettingChanged = SettingsHandler.RemoveSingleMarketSettings(this);
         }
-
       }
       else
       {
@@ -1958,21 +2077,46 @@ namespace Core.Main
       }
     }
 
-    private void SaveProfitTrailerProperties(bool headerLinesAdded, string pairsPropertiesPath, string dcaPropertiesPath, string indicatorsPropertiesPath)
+    private bool haveSingleMarketSettingsHaveChanged(List<KeyValuePair<string, string>> oldMarketTriggers, List<KeyValuePair<string, string>> newMarketTriggers)
     {
-      if (headerLinesAdded || this.GlobalSettingWritten || this.SingleMarketSettingWritten)
+      // Check if the SMS settings have changed between raids
+      string oldSms = "", newSms = "";
+
+      foreach (var entry in oldMarketTriggers)
+      {
+        oldSms += string.Format("{0}: {1}|", entry.Key, entry.Value);
+      }
+
+      foreach (var entry in newMarketTriggers)
+      {
+        newSms += string.Format("{0}: {1}|", entry.Key, entry.Value);
+      }
+
+      return !string.Equals(oldSms, newSms, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void SaveProfitTrailerProperties()
+    {
+      // Get current PT properties
+      string pairsPropertiesPath, dcaPropertiesPath, indicatorsPropertiesPath;
+      GetProfitTrailerPropertiesPaths(out pairsPropertiesPath, out dcaPropertiesPath, out indicatorsPropertiesPath);
+
+      if (this.GlobalSettingWritten || this.SingleMarketSettingChanged)
       {
         // Save current PT properties to API (Valid for PT 2.x and above)
         this.Log.DoLogInfo("Saving properties using API...");
 
         // Send all Properties
-        if (!this.PTMagicConfiguration.GeneralSettings.Application.TestMode) SettingsAPI.SendPropertyLinesToAPI(this.PairsLines, this.DCALines, this.IndicatorsLines, this.PTMagicConfiguration, this.Log);
+        if (!this.PTMagicConfiguration.GeneralSettings.Application.TestMode)
+        {
+          SettingsAPI.SendPropertyLinesToAPI(this.PairsLines, this.DCALines, this.IndicatorsLines, this.PTMagicConfiguration, this.Log);
+        }
 
         this.Log.DoLogInfo("Properties saved!");
       }
       else
       {
-        this.Log.DoLogInfo("Nothing changed, no files touched!");
+        this.Log.DoLogInfo("Nothing changed, no config written!");
       }
     }
 
@@ -1987,14 +2131,11 @@ namespace Core.Main
       this.Log.DoLogInfo("Single Market Settings Summary saved.");
     }
 
-    private void SaveRuntimeSummary(bool headerLinesAdded)
+    private void SaveRuntimeSummary(int elapsedSeconds)
     {
-      DateTime endTime = DateTime.Now;
-      int elapsedSeconds = (int)Math.Round(endTime.Subtract(this.LastRuntime).TotalSeconds, 0);
+      this.Log.DoLogInfo("Building LastRuntimeSummary.json for your monitor...");
 
       this.LastRuntimeSummary.LastRuntimeSeconds = elapsedSeconds;
-
-      this.Log.DoLogInfo("Building LastRuntimeSummary.json for your monitor...");
 
       // Load existing runtime summary and read ongoing data
       if (File.Exists(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "LastRuntimeSummary.json"))
@@ -2014,11 +2155,11 @@ namespace Core.Main
             // Market trend changes history for graph data
             foreach (string key in summary.MarketTrendChanges.Keys)
             {
-              this.LastRuntimeSummary.MarketTrendChanges.Add(key, summary.MarketTrendChanges[key].FindAll(mtc => mtc.TrendDateTime >= DateTime.Now.AddHours(-PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours)));
+              this.LastRuntimeSummary.MarketTrendChanges.Add(key, summary.MarketTrendChanges[key].FindAll(mtc => mtc.TrendDateTime >= DateTime.UtcNow.AddHours(-PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours)));
             }
 
             // Global setting summary to be kept
-            this.LastRuntimeSummary.GlobalSettingSummary.AddRange(summary.GlobalSettingSummary.FindAll(gss => gss.SwitchDateTime >= DateTime.Now.AddHours(-96)));
+            this.LastRuntimeSummary.GlobalSettingSummary.AddRange(summary.GlobalSettingSummary.FindAll(gss => gss.SwitchDateTime >= DateTime.UtcNow.AddHours(-96)));
 
             this.Log.DoLogInfo("Summary: Loaded old LastRuntimeSummary.json to keep data.");
           }
@@ -2044,7 +2185,7 @@ namespace Core.Main
         if (this.LastRuntimeSummary.GlobalSettingSummary.Count > 0)
         {
           lastSettingSummary = this.LastRuntimeSummary.GlobalSettingSummary.OrderByDescending(lss => lss.SwitchDateTime).First();
-          lastSettingSummary.ActiveSeconds = (int)Math.Ceiling(DateTime.Now.ToUniversalTime().Subtract(lastSettingSummary.SwitchDateTime).TotalSeconds);
+          lastSettingSummary.ActiveSeconds = (int)Math.Ceiling(DateTime.UtcNow.Subtract(lastSettingSummary.SwitchDateTime).TotalSeconds);
         }
 
         this.LastRuntimeSummary.GlobalSettingSummary.Add(gss);
@@ -2058,7 +2199,7 @@ namespace Core.Main
         if (this.LastRuntimeSummary.GlobalSettingSummary.Count > 0)
         {
           lastSettingSummary = this.LastRuntimeSummary.GlobalSettingSummary.OrderByDescending(lss => lss.SwitchDateTime).First();
-          lastSettingSummary.ActiveSeconds = (int)Math.Ceiling(DateTime.Now.ToUniversalTime().Subtract(lastSettingSummary.SwitchDateTime).TotalSeconds);
+          lastSettingSummary.ActiveSeconds = (int)Math.Ceiling(DateTime.UtcNow.Subtract(lastSettingSummary.SwitchDateTime).TotalSeconds);
         }
       }
 
@@ -2170,7 +2311,7 @@ namespace Core.Main
       for (int dca = 1; dca <= maxDCALevel; dca++)
       {
         string dcaTriggerString = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "buy_trigger_" + dca.ToString(), "DEFAULT_DCA_buy_trigger_" + dca.ToString());
-        if (!dcaTriggerString.Equals(""))
+        if (!String.IsNullOrEmpty(dcaTriggerString))
         {
           double dcaTrigger = SystemHelper.TextToDouble(dcaTriggerString, 0, "en-US");
 
@@ -2184,7 +2325,6 @@ namespace Core.Main
       }
 
       // Get configured DCA percentages
-
       string dcaDefaultPercentageString = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_buy_percentage", "");
       double dcaDefaultPercentage = SystemHelper.TextToDouble(dcaDefaultPercentageString, 0, "en-US");
 
@@ -2193,7 +2333,7 @@ namespace Core.Main
       for (int dca = 1; dca <= maxDCALevel; dca++)
       {
         string dcaPercentageString = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_buy_percentage_" + dca.ToString(), "");
-        if (!dcaPercentageString.Equals(""))
+        if (!String.IsNullOrEmpty(dcaPercentageString))
         {
           double dcaPercentage = SystemHelper.TextToDouble(dcaPercentageString, 0, "en-US");
 
@@ -2210,7 +2350,7 @@ namespace Core.Main
       for (char c = 'A'; c <= 'Z'; c++)
       {
         string buyStrategyName = SettingsHandler.GetCurrentPropertyValue(pairsProperties, "DEFAULT_" + c + "_buy_strategy", "");
-        if (!buyStrategyName.Equals(""))
+        if (!String.IsNullOrEmpty(buyStrategyName))
         {
           StrategySummary buyStrategy = new StrategySummary();
           buyStrategy.Name = buyStrategyName;
@@ -2228,7 +2368,7 @@ namespace Core.Main
       for (char c = 'A'; c <= 'Z'; c++)
       {
         string sellStrategyName = SettingsHandler.GetCurrentPropertyValue(pairsProperties, "DEFAULT_" + c + "_sell_strategy", "");
-        if (!sellStrategyName.Equals(""))
+        if (!String.IsNullOrEmpty(sellStrategyName))
         {
           StrategySummary sellStrategy = new StrategySummary();
           sellStrategy.Name = sellStrategyName;
@@ -2246,7 +2386,7 @@ namespace Core.Main
       for (char c = 'A'; c <= 'Z'; c++)
       {
         string buyStrategyName = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_" + c + "_buy_strategy", "");
-        if (!buyStrategyName.Equals(""))
+        if (!String.IsNullOrEmpty(buyStrategyName))
         {
           StrategySummary buyStrategy = new StrategySummary();
           buyStrategy.Name = buyStrategyName;
@@ -2264,7 +2404,7 @@ namespace Core.Main
       for (char c = 'A'; c <= 'Z'; c++)
       {
         string sellStrategyName = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_" + c + "_sell_strategy", "");
-        if (!sellStrategyName.Equals(""))
+        if (!String.IsNullOrEmpty(sellStrategyName))
         {
           StrategySummary sellStrategy = new StrategySummary();
           sellStrategy.Name = sellStrategyName;
@@ -2292,8 +2432,9 @@ namespace Core.Main
 
       this.Log.DoLogInfo("Summary: Current global properties saved.");
 
-      this.Log.DoLogInfo("Summary: Getting current single market properties...");
       // Get current single market settings from PAIRS.PROPERTIES for each configured market
+      this.Log.DoLogInfo("Summary: Getting current single market properties...");
+
       foreach (string marketPair in this.MarketList)
       {
         MarketPairSummary mpSummary = new MarketPairSummary();
@@ -2325,7 +2466,7 @@ namespace Core.Main
           for (char c = 'A'; c <= 'Z'; c++)
           {
             string buyStrategyName = SettingsHandler.GetCurrentPropertyValue(pairsProperties, marketPairSimple + "_" + c + "_buy_strategy", "");
-            if (!buyStrategyName.Equals(""))
+            if (!String.IsNullOrEmpty(buyStrategyName))
             {
               StrategySummary buyStrategy = new StrategySummary();
               buyStrategy.Name = buyStrategyName;
@@ -2344,7 +2485,7 @@ namespace Core.Main
           for (char c = 'A'; c <= 'Z'; c++)
           {
             string sellStrategyName = SettingsHandler.GetCurrentPropertyValue(pairsProperties, marketPairSimple + "_" + c + "_sell_strategy", "");
-            if (!sellStrategyName.Equals(""))
+            if (!String.IsNullOrEmpty(sellStrategyName))
             {
               StrategySummary sellStrategy = new StrategySummary();
               sellStrategy.Name = sellStrategyName;
@@ -2402,10 +2543,7 @@ namespace Core.Main
           }
         }
 
-        if (!this.LastRuntimeSummary.MarketSummary.ContainsKey(marketPair))
-        {
-          this.LastRuntimeSummary.MarketSummary.Add(marketPair, mpSummary);
-        }
+        this.LastRuntimeSummary.MarketSummary.Add(marketPair, mpSummary);
       }
 
       this.Log.DoLogInfo("Summary: Current single market properties saved.");
@@ -2435,45 +2573,13 @@ namespace Core.Main
           this.Log.DoLogCritical("Nope, another Exception while writing LastRuntimeSummary.json", ex2);
         }
       }
-
-      string logsPath = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathLogs + Path.DirectorySeparatorChar;
-      if (Directory.Exists(logsPath))
-      {
-        FileHelper.CleanupFiles(logsPath, 24 * 3);
-        this.Log.DoLogInfo("Cleaned up logfiles.");
-      }
-
-      this.TotalElapsedSeconds += elapsedSeconds;
-      this.Log.DoLogInfo("##########################################################");
-      this.Log.DoLogInfo("#******************* RAID SUMMARY ********************#");
-      this.Log.DoLogInfo("+ PT Magic Version: " + this.LastRuntimeSummary.Version);
-      if (!SystemHelper.IsRecentVersion(this.LastRuntimeSummary.Version, this.LatestVersion))
-      {
-        this.Log.DoLogWarn("+ Your version is out of date! The most recent version is " + this.LatestVersion);
-      }
-      this.Log.DoLogInfo("+ Instance name: " + PTMagicConfiguration.GeneralSettings.Application.InstanceName);
-      this.Log.DoLogInfo("+ Time spent: " + SystemHelper.GetProperDurationTime(elapsedSeconds));
-      this.Log.DoLogInfo("+ Active setting: " + this.LastRuntimeSummary.CurrentGlobalSetting.SettingName);
-      this.Log.DoLogInfo("+ Global setting changed: " + ((this.LastRuntimeSummary.LastGlobalSettingSwitch == this.LastRuntimeSummary.LastRuntime) ? "Yes" : "No") + " " + ((this.LastRuntimeSummary.FloodProtectedSetting != null) ? "(Flood protection!)" : ""));
-      this.Log.DoLogInfo("+ Files changed: " + (((headerLinesAdded || this.GlobalSettingWritten || this.SingleMarketSettingWritten) && !this.PTMagicConfiguration.GeneralSettings.Application.TestMode) ? "Yes" : "No"));
-      this.Log.DoLogInfo("+ Markets with active single market settings: " + this.TriggeredSingleMarketSettings.Count.ToString());
-      foreach (string activeSMS in this.SingleMarketSettingsCount.Keys)
-      {
-        this.Log.DoLogInfo("+   " + activeSMS + ": " + this.SingleMarketSettingsCount[activeSMS].ToString());
-      }
-      this.Log.DoLogInfo("+ " + this.TotalElapsedSeconds.ToString() + " Magicbots killed in " + this.RunCount.ToString() + " raids on Cryptodragon's Lair " + this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes.ToString() + ".");
-      this.Log.DoLogInfo("");
-      this.Log.DoLogInfo("DO NOT CLOSE THIS WINDOW! THIS IS THE BOT THAT ANALYZES TRENDS AND CHANGES SETTINGS!");
-      this.Log.DoLogInfo("");
-      this.Log.DoLogInfo("#********************************************************#");
-      this.Log.DoLogInfo("##########################################################");
-      this.Log.DoLogInfo("");
     }
 
     private void Cleanup()
     {
+      // Clear down memory
       this.GlobalSettingWritten = false;
-      this.SingleMarketSettingWritten = false;
+      this.SingleMarketSettingChanged = false;
       this.EnforceSettingsReapply = false;
 
       this.PairsLines = null;
@@ -2488,6 +2594,14 @@ namespace Core.Main
       this.ExchangeMarketList = null;
       this.MarketList = new List<string>();
       this.LastRuntimeSummary = null;
+
+      // Cleanup log files
+      string logsPath = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathLogs + Path.DirectorySeparatorChar;
+      if (Directory.Exists(logsPath))
+      {
+        FileHelper.CleanupFiles(logsPath, 24 * 3);
+        this.Log.DoLogInfo("Cleaned up logfiles.");
+      }
     }
     #endregion
   }

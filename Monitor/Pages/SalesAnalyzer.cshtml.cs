@@ -14,6 +14,7 @@ namespace Monitor.Pages
     public ProfitTrailerData PTData = null;
     public string TradesChartDataJSON = "";
     public string ProfitChartDataJSON = "";
+    public string BalanceChartDataJSON = "";
     public IEnumerable<KeyValuePair<string, double>> TopMarkets = null;
     public DateTime MinSellLogDate = Constants.confMinDate;
     public Dictionary<DateTime, double> DailyGains = new Dictionary<DateTime, double>();
@@ -57,26 +58,32 @@ namespace Monitor.Pages
       if (PTData.SellLog.Count > 0)
       {
         MinSellLogDate = PTData.SellLog.OrderBy(sl => sl.SoldDate).First().SoldDate.Date;
-        DateTime graphStartDate = DateTimeNow.DateTime.Date.AddDays(-30);
+        DateTime graphStartDate = DateTimeNow.DateTime.Date.AddDays(-1850);
         if (MinSellLogDate > graphStartDate) graphStartDate = MinSellLogDate;
 
         int tradeDayIndex = 0;
         string tradesPerDayJSON = "";
         string profitPerDayJSON = "";
+        string balancePerDayJSON = "";
+        double balance = 0.0;
         for (DateTime salesDate = graphStartDate; salesDate <= DateTimeNow.DateTime.Date; salesDate = salesDate.AddDays(1))
         {
+         
           if (tradeDayIndex > 0)
           {
             tradesPerDayJSON += ",\n";
             profitPerDayJSON += ",\n";
+            balancePerDayJSON += ",\n";
           }
 
           int trades = PTData.SellLog.FindAll(t => t.SoldDate.Date == salesDate.Date).Count;
           double profit = PTData.SellLog.FindAll(t => t.SoldDate.Date == salesDate.Date).Sum(t => t.Profit);
           double profitFiat = Math.Round(profit * Summary.MainMarketPrice, 2);
+          balance += profitFiat; 
 
           tradesPerDayJSON += "{x: new Date('" + salesDate.Date.ToString("yyyy-MM-dd") + "'), y: " + trades + "}";
           profitPerDayJSON += "{x: new Date('" + salesDate.Date.ToString("yyyy-MM-dd") + "'), y: " + profitFiat.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "}";
+          balancePerDayJSON += "{x: new Date('" + salesDate.Date.ToString("yyyy-MM-dd") + "'), y: " + balance.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "}";
 
           tradeDayIndex++;
         }
@@ -96,6 +103,14 @@ namespace Monitor.Pages
         ProfitChartDataJSON += "values: [" + profitPerDayJSON + "]";
         ProfitChartDataJSON += "}";
         ProfitChartDataJSON += "]";
+
+        BalanceChartDataJSON = "[";
+        BalanceChartDataJSON += "{";
+        BalanceChartDataJSON += "key: 'Profit in " + Summary.MainFiatCurrency + "',";
+        BalanceChartDataJSON += "color: '" + Constants.ChartLineColors[1] + "',";
+        BalanceChartDataJSON += "values: [" + balancePerDayJSON + "]";
+        BalanceChartDataJSON += "}";
+        BalanceChartDataJSON += "]";
 
         for (DateTime salesDate = DateTimeNow.DateTime.Date; salesDate >= MinSellLogDate; salesDate = salesDate.AddDays(-1))
         {

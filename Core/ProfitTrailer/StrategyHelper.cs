@@ -140,6 +140,15 @@ namespace Core.ProfitTrailer
         case "max cost reached":
           result = "COST";
           break;
+        case "rebuy timeout":
+          result = "TIMEOUT";
+          break;
+        case "min/max change perc":
+          result = "MIN/MAX";
+          break;
+        case "buy value below dust":
+          result = "MIN DUST";
+          break;
         default:
           break;
       }
@@ -271,13 +280,18 @@ namespace Core.ProfitTrailer
     }
 
     public static string GetStrategyText(Summary summary, List<Strategy> strategies, string strategyText, bool isTrue, bool isTrailingBuyActive)
-    {
+    {     
+      bool isValidStrategy = false;
+
       if (strategies.Count > 0)
       {
         foreach (Strategy strategy in strategies)
         {
           string textClass = (strategy.IsTrue) ? "label-success" : "label-danger";
-          if (!StrategyHelper.IsValidStrategy(strategy.Name))
+
+          isValidStrategy = StrategyHelper.IsValidStrategy(strategy.Name);
+
+          if (!isValidStrategy)
           {
             strategyText += "<span class=\"label label-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategy.Name + "\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, false) + "</span> ";
           }
@@ -305,14 +319,17 @@ namespace Core.ProfitTrailer
         }
         else
         {
-          if (StrategyHelper.IsValidStrategy(strategyText))
+          
+          isValidStrategy = StrategyHelper.IsValidStrategy(strategyText);
+
+          if (isValidStrategy)
           {
             strategyText = "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategyText + "\">" + StrategyHelper.GetStrategyShortcut(strategyText, true) + "</span>";
           }
-          else if (strategyText.Equals(""))
+          
+          else if (strategyText.Equals("") && isValidStrategy == false)
           {
-            strategyText = summary.DCABuyStrategy;
-            strategyText = "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategyText + "\">" + StrategyHelper.GetStrategyShortcut(strategyText, true) + "</span>";
+            strategyText = "<span class=\"label label-muted\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Not Applicable: Not using DCA!\"></span>";
           }
           else
           {

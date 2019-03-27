@@ -71,12 +71,6 @@
   font-size: 0.78571rem;
 }
 
-@media only screen and (max-width: 991px) {
-  .ticker-widgets {
-    display:none;
-  }
-}
-
 .ticker-widgets div {
   display: inline-block;
   margin-top: 12px;
@@ -141,6 +135,16 @@
   display: none;
 }
 
+.errorRow
+{
+  background-color: #550000;
+}
+
+.errorRow a
+{
+  color: white;
+}
+
 .table-scroll-hori {
   display: block;
   width: 100%;
@@ -150,7 +154,8 @@
 
 .trend-chart .nvd3.nv-line .nvd3.nv-scatter .nv-groups .nv-point,
 .trades-chart .nvd3.nv-line .nvd3.nv-scatter .nv-groups .nv-point,
-.profit-chart .nvd3.nv-line .nvd3.nv-scatter .nv-groups .nv-point {
+.profit-chart .nvd3.nv-line .nvd3.nv-scatter .nv-groups .nv-point,
+.balance-chart .nvd3.nv-line .nvd3.nv-scatter .nv-groups .nv-point {
   fill-opacity: 1 !important;
   stroke-opacity: 1 !important;
 }

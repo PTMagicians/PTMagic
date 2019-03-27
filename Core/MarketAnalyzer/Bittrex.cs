@@ -8,6 +8,8 @@ using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
 using Newtonsoft.Json;
 using Core.ProfitTrailer;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Core.MarketAnalyzer
 {
@@ -105,7 +107,7 @@ namespace Core.MarketAnalyzer
                     marketInfos.Add(marketName, marketInfo);
                   }
                   if (currencyTicker["Summary"]["Created"].Type == Newtonsoft.Json.Linq.JTokenType.Date) marketInfo.FirstSeen = (DateTime)currencyTicker["Summary"]["Created"];
-                  marketInfo.LastSeen = DateTime.Now.ToUniversalTime();
+                  marketInfo.LastSeen = DateTime.UtcNow;
                 }
               }
 
@@ -113,7 +115,7 @@ namespace Core.MarketAnalyzer
 
               Bittrex.CheckForMarketDataRecreation(mainMarket, markets, systemConfiguration, log);
 
-              DateTime fileDateTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, 0).ToUniversalTime();
+              DateTime fileDateTime = DateTime.UtcNow;
 
               FileHelper.WriteTextToFile(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathExchange + Path.DirectorySeparatorChar, "MarketData_" + fileDateTime.ToString("yyyy-MM-dd_HH.mm") + ".json", JsonConvert.SerializeObject(markets), fileDateTime, fileDateTime);
 
@@ -203,13 +205,13 @@ namespace Core.MarketAnalyzer
         latestMarketDataFileDateTime = latestMarketDataFile.LastWriteTimeUtc;
       }
 
-      if (latestMarketDataFileDateTime < DateTime.Now.ToUniversalTime().AddMinutes(-20))
+      if (latestMarketDataFileDateTime < DateTime.UtcNow.AddMinutes(-20))
       {
-        int lastMarketDataAgeInSeconds = (int)Math.Ceiling(DateTime.Now.ToUniversalTime().Subtract(latestMarketDataFileDateTime).TotalSeconds);
+        int lastMarketDataAgeInSeconds = (int)Math.Ceiling(DateTime.UtcNow.Subtract(latestMarketDataFileDateTime).TotalSeconds);
 
         // Go back in time and create market data
-        DateTime startDateTime = DateTime.Now.ToUniversalTime();
-        DateTime endDateTime = DateTime.Now.ToUniversalTime().AddHours(-systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours);
+        DateTime startDateTime = DateTime.UtcNow;
+        DateTime endDateTime = DateTime.UtcNow.AddHours(-systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours);
         if (latestMarketDataFileDateTime != Constants.confMinDate && latestMarketDataFileDateTime > endDateTime)
         {
           // Existing market files too old => Recreate market data for configured timeframe
@@ -232,15 +234,22 @@ namespace Core.MarketAnalyzer
         // Get Ticks for all markets
         log.DoLogDebug("Bittrex - Getting ticks for '" + markets.Count + "' markets");
         Dictionary<string, List<MarketTick>> marketTicks = new Dictionary<string, List<MarketTick>>();
-        foreach (string key in markets.Keys)
+
+        Parallel.ForEach(markets.Keys,
+                          new ParallelOptions { MaxDegreeOfParallelism = 5 },
+                          (key) =>
         {
-          marketTicks.Add(key, Bittrex.GetMarketTicks(key, systemConfiguration, log));
+          if (!marketTicks.TryAdd(key, Bittrex.GetMarketTicks(key, systemConfiguration, log)))
+          {
+            // Failed to add ticks to dictionary
+            throw new Exception("Failed to add ticks for " + key + " to the memory dictionary, results may be incorrectly calculated!");
+          }
 
           if ((marketTicks.Count % 10) == 0)
           {
             log.DoLogInfo("Bittrex - No worries, I am still alive... " + marketTicks.Count + "/" + markets.Count + " markets done...");
           }
-        }
+        });
 
         log.DoLogInfo("Bittrex - Ticks completed.");
 

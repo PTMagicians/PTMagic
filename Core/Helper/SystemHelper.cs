@@ -373,7 +373,7 @@ namespace Core.Helper
       {
         for (int i = 0; i < tokenList.Count; i++)
         {
-          result += tokenList[i].Trim() + separator;
+          result += tokenList[i].Trim() + (i < (tokenList.Count - 1) ? separator : "");
         }
 
         if (cropDoubleSeparators) result = result.Replace(separator + separator, "");
@@ -611,6 +611,13 @@ namespace Core.Helper
 			return result;
 			}
 
+    public static string GetMainCurrencySymbol(string tvSymbol)
+			{
+			string result = tvSymbol;
+
+			return result;
+			}
+
     public static string GetCurrencySymbol(string code)
     {
       string result = code;
@@ -637,14 +644,11 @@ namespace Core.Helper
 
       if (!property.ToString().Equals("true", StringComparison.InvariantCultureIgnoreCase) && !property.ToString().Equals("false", StringComparison.InvariantCultureIgnoreCase))
       {
-        try
-        {
-          double resultDouble = Convert.ToDouble(property);
-          result = resultDouble.ToString(new System.Globalization.CultureInfo("en-US"));
-        }
-        catch
-        {
-        }
+          double resultDouble;
+          if (double.TryParse(property.ToString(), out resultDouble))
+          {
+            result = ((decimal)resultDouble).ToString();
+          }
       }
       else
       {

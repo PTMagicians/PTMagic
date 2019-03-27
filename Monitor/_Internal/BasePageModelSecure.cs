@@ -33,7 +33,7 @@ namespace Monitor._Internal
             string encryptedPassword = EncryptionHelper.Decrypt(Request.Cookies["PTMRememberMeKey"]);
             if (encryptedPassword.Equals(PTMagicConfiguration.SecureSettings.MonitorPassword))
             {
-              HttpContext.Session.SetString("LoggedIn" + PTMagicConfiguration.GeneralSettings.Monitor.Port.ToString(), DateTime.Now.ToUniversalTime().ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'"));
+              HttpContext.Session.SetString("LoggedIn" + PTMagicConfiguration.GeneralSettings.Monitor.Port.ToString(), DateTime.UtcNow.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'"));
               redirectToLogin = false;
             }
           }

@@ -9,6 +9,9 @@ using Core.Main.DataObjects.PTMagicData;
 using Newtonsoft.Json;
 using Core.ProfitTrailer;
 using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 namespace Core.MarketAnalyzer
 {
@@ -73,24 +76,24 @@ namespace Core.MarketAnalyzer
               float marketVolume = currencyTicker["volume"].ToObject<float>();
               if (marketName.EndsWith(mainMarket, StringComparison.InvariantCultureIgnoreCase))
               {
-                if(marketLastPrice > 0 && marketVolume > 0 )
+                if (marketLastPrice > 0 && marketVolume > 0)
                 {
 
-                // Set last values in case any error occurs
-                lastMarket = marketName;
-                lastTicker = currencyTicker;
+                  // Set last values in case any error occurs
+                  lastMarket = marketName;
+                  lastTicker = currencyTicker;
 
-                Market market = new Market();
-                market.Position = markets.Count + 1;
-                market.Name = marketName;
-                market.Symbol = currencyTicker["symbol"].ToString();
-                market.Price = SystemHelper.TextToDouble(currencyTicker["lastPrice"].ToString(), 0, "en-US");
-                market.Volume24h = SystemHelper.TextToDouble(currencyTicker["quoteVolume"].ToString(), 0, "en-US");
-                market.MainCurrencyPriceUSD = mainCurrencyPrice;
+                  Market market = new Market();
+                  market.Position = markets.Count + 1;
+                  market.Name = marketName;
+                  market.Symbol = currencyTicker["symbol"].ToString();
+                  market.Price = SystemHelper.TextToDouble(currencyTicker["lastPrice"].ToString(), 0, "en-US");
+                  market.Volume24h = SystemHelper.TextToDouble(currencyTicker["quoteVolume"].ToString(), 0, "en-US");
+                  market.MainCurrencyPriceUSD = mainCurrencyPrice;
 
-                markets.Add(market.Name, market);
+                  markets.Add(market.Name, market);
 
-                result.Add(market.Name);
+                  result.Add(market.Name);
                 }
                 else
                 {
@@ -106,7 +109,7 @@ namespace Core.MarketAnalyzer
 
             Binance.CheckForMarketDataRecreation(mainMarket, markets, systemConfiguration, log);
 
-            DateTime fileDateTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, 0).ToUniversalTime();
+            DateTime fileDateTime = DateTime.UtcNow;
 
             FileHelper.WriteTextToFile(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathExchange + Path.DirectorySeparatorChar, "MarketData_" + fileDateTime.ToString("yyyy-MM-dd_HH.mm") + ".json", JsonConvert.SerializeObject(markets), fileDateTime, fileDateTime);
 
@@ -165,6 +168,7 @@ namespace Core.MarketAnalyzer
       log.DoLogInfo("Binance - Checking first seen dates for " + markets.Count + " markets. This may take a while...");
 
       int marketsChecked = 0;
+
       foreach (string key in markets.Keys)
       {
         // Save market info
@@ -188,7 +192,7 @@ namespace Core.MarketAnalyzer
             marketInfo.FirstSeen = Binance.GetFirstSeenDate(key, systemConfiguration, log);
           }
         }
-        marketInfo.LastSeen = DateTime.Now.ToUniversalTime();
+        marketInfo.LastSeen = DateTime.UtcNow;
 
         marketsChecked++;
 
@@ -223,7 +227,7 @@ namespace Core.MarketAnalyzer
 
       try
       {
-        Int64 endTime = (Int64)Math.Ceiling(DateTime.Now.ToUniversalTime().Subtract(Constants.Epoch).TotalMilliseconds);
+        Int64 endTime = (Int64)Math.Ceiling(DateTime.UtcNow.Subtract(Constants.Epoch).TotalMilliseconds);
         int ticksLimit = 500;
         string baseUrl = "";
         int ticksFetched = 0;
@@ -327,13 +331,13 @@ namespace Core.MarketAnalyzer
         latestMarketDataFileDateTime = latestMarketDataFile.LastWriteTimeUtc;
       }
 
-      if (latestMarketDataFileDateTime < DateTime.Now.ToUniversalTime().AddMinutes(-20))
+      if (latestMarketDataFileDateTime < DateTime.UtcNow.AddMinutes(-20))
       {
-        int lastMarketDataAgeInSeconds = (int)Math.Ceiling(DateTime.Now.ToUniversalTime().Subtract(latestMarketDataFileDateTime).TotalSeconds);
+        int lastMarketDataAgeInSeconds = (int)Math.Ceiling(DateTime.UtcNow.Subtract(latestMarketDataFileDateTime).TotalSeconds);
 
         // Go back in time and create market data
-        DateTime startDateTime = DateTime.Now.ToUniversalTime();
-        DateTime endDateTime = DateTime.Now.ToUniversalTime().AddHours(-systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours);
+        DateTime startDateTime = DateTime.UtcNow;
+        DateTime endDateTime = DateTime.UtcNow.AddHours(-systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours);
         if (latestMarketDataFileDateTime != Constants.confMinDate && latestMarketDataFileDateTime > endDateTime)
         {
           // Existing market files too old => Recreate market data for configured timeframe
@@ -357,16 +361,23 @@ namespace Core.MarketAnalyzer
 
         // Get Ticks for all markets
         log.DoLogDebug("Binance - Getting ticks for '" + markets.Count + "' markets");
-        Dictionary<string, List<MarketTick>> marketTicks = new Dictionary<string, List<MarketTick>>();
-        foreach (string key in markets.Keys)
+        ConcurrentDictionary<string, List<MarketTick>> marketTicks = new ConcurrentDictionary<string, List<MarketTick>>();
+
+        Parallel.ForEach(markets.Keys,
+                          new ParallelOptions { MaxDegreeOfParallelism = 5 },
+                          (key) =>
         {
-          marketTicks.Add(key, Binance.GetMarketTicks(key, totalTicks, systemConfiguration, log));
+          if (!marketTicks.TryAdd(key, GetMarketTicks(key, totalTicks, systemConfiguration, log)))
+          {
+            // Failed to add ticks to dictionary
+            throw new Exception("Failed to add ticks for " + key + " to the memory dictionary, results may be incorrectly calculated!");
+          }
 
           if ((marketTicks.Count % 10) == 0)
           {
             log.DoLogInfo("Binance - No worries, I am still alive... " + marketTicks.Count + "/" + markets.Count + " markets done...");
           }
-        }
+        });
 
         log.DoLogInfo("Binance - Ticks completed.");
 

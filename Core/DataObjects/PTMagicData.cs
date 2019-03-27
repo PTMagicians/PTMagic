@@ -40,7 +40,6 @@ namespace Core.Main.DataObjects.PTMagicData
     public string ProfitTrailerServerAPIToken { get; set; }
     public string ProfitTrailerMonitorURL { get; set; } = "http://localhost:8081/";
     public string ProfitTrailerDefaultSettingName { get; set; } = "default";
-    public bool AlwaysLoadDefaultBeforeSwitch { get; set; } = true;
     public int FloodProtectionMinutes { get; set; } = 15;
     public string Exchange { get; set; }
     public double StartBalance { get; set; } = 0;
@@ -76,7 +75,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public string TvStudyB { get; set; } = "";
     public string TvStudyC { get; set; } = "";
     public string TvStudyD { get; set; } = "";
-    
+
     public string RootUrl
     {
       get
@@ -401,26 +400,6 @@ namespace Core.Main.DataObjects.PTMagicData
 
   #region Profit Trailer JSON Objects
 
-  public class PTData
-  {
-    public List<sellLogData> SellLogData { get; set; } = new List<sellLogData>();
-    public List<dcaLogData> DCALogData { get; set; } = new List<dcaLogData>();
-    public List<dcaLogData> GainLogData { get; set; } = new List<dcaLogData>();
-    public List<buyLogData> bbBuyLogData { get; set; } = new List<buyLogData>();
-  }
-
-  public class sellLogData
-  {
-    public double soldAmount { get; set; }
-    public double soldDate { get; set; }
-    public int boughtTimes { get; set; }
-    public string market { get; set; }
-    public double profit { get; set; }
-    public double avgPrice { get; set; }
-    public double currentPrice { get; set; }
-    public double fee { get; set; }
-  }
-
   public class SellLogData
   {
     public double SoldAmount { get; set; }
@@ -435,13 +414,6 @@ namespace Core.Main.DataObjects.PTMagicData
     public double SoldValue { get; set; }
   }
 
-  public class AverageCalculator
-  {
-    public double totalAmountWithSold { get; set; }
-    public double avgCost { get; set; }
-    public double totalWeightedPrice { get; set; }
-  }
-
   public class PTStrategy
   {
     public string type { get; set; }
@@ -453,29 +425,6 @@ namespace Core.Main.DataObjects.PTMagicData
     public double currentValuePercentage { get; set; }
     public int decimals { get; set; }
     public string positive { get; set; }
-  }
-
-  public class dcaLogData
-  {
-    public int boughtTimes { get; set; } = 0;
-    public string market { get; set; }
-    public string positive { get; set; }
-    public double buyProfit { get; set; }
-    public double BBLow { get; set; }
-    public double BBTrigger { get; set; }
-    public double highbb { get; set; }
-    public double profit { get; set; }
-    public double avgPrice { get; set; }
-    public double totalCost { get; set; }
-    public double totalAmount { get; set; }
-    public int firstBoughtDate { get; set; }
-    public double currentPrice { get; set; }
-    public string sellStrategy { get; set; }
-    public string buyStrategy { get; set; }
-    public double triggerValue { get; set; }
-    public double percChange { get; set; }
-    public List<PTStrategy> buyStrategies { get; set; }
-    public List<PTStrategy> sellStrategies { get; set; }
   }
 
   public class Strategy
@@ -505,6 +454,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public double ProfitPercent { get; set; }
     public double AverageBuyPrice { get; set; }
     public double TotalCost { get; set; }
+    public double CurrentValue { get; set; }
     public double Amount { get; set; }
     public double CurrentPrice { get; set; }
     public double SellTrigger { get; set; }
@@ -516,38 +466,35 @@ namespace Core.Main.DataObjects.PTMagicData
     public List<Strategy> SellStrategies { get; set; } = new List<Strategy>();
   }
 
-  public class buyLogData
-  {
-    public string market { get; set; }
-    public string positive { get; set; }
-    public double BBLow { get; set; }
-    public double BBHigh { get; set; }
-    public double BBTrigger { get; set; }
-    public double profit { get; set; }
-    public double currentPrice { get; set; }
-    public double currentValue { get; set; }
-    public string buyStrategy { get; set; }
-    public double triggerValue { get; set; }
-    public double percChange { get; set; }
-    public List<PTStrategy> buyStrategies { get; set; }
-  }
-
   public class BuyLogData
   {
     public double CurrentLowBBValue { get; set; }
     public double CurrentHighBBValue { get; set; }
     public double BBTrigger { get; set; }
+    public double CurrentValue { get; set; }
+    public double TriggerValue { get; set; }
+    public string BuyStrategy { get; set; }
     public bool IsTrailing { get; set; }
     public bool IsTrue { get; set; }
+    public bool IsSom { get; set; }
+    public int TrueStrategyCount { get; set; }
     public string Market { get; set; }
     public double ProfitPercent { get; set; }
     public double CurrentPrice { get; set; }
-    public double CurrentValue { get; set; }
-    public double TriggerValue { get; set; }
+    public int BoughtTimes { get; set; }
     public double PercChange { get; set; }
-    public string BuyStrategy { get; set; }
     public List<Strategy> BuyStrategies { get; set; } = new List<Strategy>();
   }
 
+  public class SummaryData
+  {
+    public double Balance { get; set; }
+    public double StartBalance { get; set; }
+    public double PairsValue { get; set; }
+    public double DCAValue { get; set; }
+    public double PendingValue { get; set; }
+    public double DustValue { get; set; }
+    public string Market { get; set; }
+  }
   #endregion
 }

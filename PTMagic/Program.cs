@@ -7,7 +7,7 @@ using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
 using Microsoft.Extensions.DependencyInjection;
 
-[assembly: AssemblyVersion("2.1.2")]
+[assembly: AssemblyVersion("2.2.1")]
 [assembly: AssemblyProduct("PT Magic")]
 
 namespace PTMagic
@@ -26,7 +26,7 @@ namespace PTMagic
       // Keep the app running
       for (; ; )
       {
-        Thread.Sleep(100);
+        Thread.Sleep(10000);
       }
     }
   }

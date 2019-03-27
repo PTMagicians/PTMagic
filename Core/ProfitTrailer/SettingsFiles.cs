@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Security.Permissions;
 using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
@@ -17,39 +18,25 @@ namespace Core.ProfitTrailer
 {
   public static class SettingsFiles
   {
-    public static string GetActiveSetting(PTMagicConfiguration systemConfiguration, string pairsFileName, string dcaFileName, string indicatorsFileName, LogHelper log)
+    private static FileSystemWatcher _presetFileWatcher;
+
+    public static FileSystemWatcher PresetFileWatcher
     {
-      string pairsPropertiesPath = systemConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + pairsFileName;
-
-      string result = SettingsFiles.GetActiveSettingFromFile(pairsPropertiesPath, systemConfiguration, log);
-
-      if (result.Equals(""))
+      get
       {
-        SettingsFiles.WriteHeaderLines(pairsPropertiesPath, "Default", systemConfiguration);
+        if (_presetFileWatcher == null)
+        {
+          _presetFileWatcher = new FileSystemWatcher()
+          {
+            Path = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathPresets,
+            NotifyFilter = NotifyFilters.LastWrite,
+            Filter = "",
+            IncludeSubdirectories = true
+          };
+        }
 
-        string dcaPropertiesPath = systemConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + dcaFileName;
-        SettingsFiles.WriteHeaderLines(dcaPropertiesPath, "Default", systemConfiguration);
-
-        string inditactorsPropertiesPath = systemConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + indicatorsFileName;
-        SettingsFiles.WriteHeaderLines(inditactorsPropertiesPath, "Default", systemConfiguration);
+        return _presetFileWatcher;
       }
-
-
-      return result;
-    }
-
-    public static void WriteHeaderLines(string filePath, string settingName, PTMagicConfiguration systemConfiguration)
-    {
-      // Writing Header lines
-      List<string> lines = File.ReadAllLines(filePath).ToList();
-      lines.Insert(0, "");
-      lines.Insert(0, "# ####################################");
-      lines.Insert(0, "# PTMagic_LastChanged = " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString());
-      lines.Insert(0, "# PTMagic_ActiveSetting = " + SystemHelper.StripBadCode(settingName, Constants.WhiteListProperties));
-      lines.Insert(0, "# ####### PTMagic Current Setting ########");
-      lines.Insert(0, "# ####################################");
-
-      if (!systemConfiguration.GeneralSettings.Application.TestMode) File.WriteAllLines(filePath, lines);
     }
 
     public static string GetActiveSettingFromFile(string filePath, PTMagicConfiguration systemConfiguration, LogHelper log)
@@ -117,7 +104,7 @@ namespace Core.ProfitTrailer
           if (presetFilePath.IndexOf(".properties", StringComparison.InvariantCultureIgnoreCase) > -1)
           {
             FileInfo presetFile = new FileInfo(presetFilePath);
-            if (presetFile.LastWriteTime > DateTime.Now.AddMinutes(-systemConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes).AddSeconds(2))
+            if (presetFile.LastWriteTime > DateTime.UtcNow.AddMinutes(-systemConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes).AddSeconds(2))
             {
 
               // File has changed recently, force preparation check
@@ -128,7 +115,6 @@ namespace Core.ProfitTrailer
           }
         }
       }
-
 
       if (forceCheck)
       {
@@ -146,11 +132,7 @@ namespace Core.ProfitTrailer
               string headerPairsSetting = SettingsFiles.GetActiveSettingFromFile(settingPairsPropertiesPath, systemConfiguration, log);
               if (headerPairsSetting.Equals(""))
               {
-                if (File.Exists(settingPairsPropertiesPath))
-                {
-                  SettingsFiles.WriteHeaderLines(settingPairsPropertiesPath, setting.SettingName, systemConfiguration);
-                }
-                else
+                if (!File.Exists(settingPairsPropertiesPath))
                 {
                   Exception ex = new Exception("Not able to find preset file " + SystemHelper.PropertyToString(setting.PairsProperties["File"]) + " for '" + setting.SettingName + "'");
                   log.DoLogCritical("Not able to find preset file " + SystemHelper.PropertyToString(setting.PairsProperties["File"]) + " for '" + setting.SettingName + "'", ex);
@@ -174,11 +156,7 @@ namespace Core.ProfitTrailer
               string headerDCASetting = SettingsFiles.GetActiveSettingFromFile(settingDCAPropertiesPath, systemConfiguration, log);
               if (headerDCASetting.Equals(""))
               {
-                if (File.Exists(settingDCAPropertiesPath))
-                {
-                  SettingsFiles.WriteHeaderLines(settingDCAPropertiesPath, setting.SettingName, systemConfiguration);
-                }
-                else
+                if (!File.Exists(settingDCAPropertiesPath))
                 {
                   Exception ex = new Exception("Not able to find preset file " + SystemHelper.PropertyToString(setting.DCAProperties["File"]) + " for '" + setting.SettingName + "'");
                   log.DoLogCritical("Not able to find preset file " + SystemHelper.PropertyToString(setting.DCAProperties["File"]) + " for '" + setting.SettingName + "'", ex);
@@ -201,11 +179,7 @@ namespace Core.ProfitTrailer
               string headerIndicatorsSetting = SettingsFiles.GetActiveSettingFromFile(settingIndicatorsPropertiesPath, systemConfiguration, log);
               if (headerIndicatorsSetting.Equals(""))
               {
-                if (File.Exists(settingIndicatorsPropertiesPath))
-                {
-                  SettingsFiles.WriteHeaderLines(settingIndicatorsPropertiesPath, setting.SettingName, systemConfiguration);
-                }
-                else
+                if (!File.Exists(settingIndicatorsPropertiesPath))
                 {
                   Exception ex = new Exception("Not able to find preset file " + SystemHelper.PropertyToString(setting.IndicatorsProperties["File"]) + " for '" + setting.SettingName + "'");
                   log.DoLogCritical("Not able to find preset file " + SystemHelper.PropertyToString(setting.IndicatorsProperties["File"]) + " for '" + setting.SettingName + "'", ex);

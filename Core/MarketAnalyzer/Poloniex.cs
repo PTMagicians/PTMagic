@@ -8,6 +8,8 @@ using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
 using Newtonsoft.Json;
 using Core.ProfitTrailer;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Core.MarketAnalyzer
 {
@@ -97,7 +99,7 @@ namespace Core.MarketAnalyzer
 
             Poloniex.CheckForMarketDataRecreation(mainMarket, markets, systemConfiguration, log);
 
-            DateTime fileDateTime = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, DateTime.Now.Hour, DateTime.Now.Minute, 0).ToUniversalTime();
+            DateTime fileDateTime = DateTime.UtcNow;
 
             FileHelper.WriteTextToFile(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathExchange + Path.DirectorySeparatorChar, "MarketData_" + fileDateTime.ToString("yyyy-MM-dd_HH.mm") + ".json", JsonConvert.SerializeObject(markets), fileDateTime, fileDateTime);
 
@@ -150,7 +152,7 @@ namespace Core.MarketAnalyzer
             marketInfo.FirstSeen = Poloniex.GetFirstSeenDate(key, systemConfiguration, log);
           }
         }
-        marketInfo.LastSeen = DateTime.Now.ToUniversalTime();
+        marketInfo.LastSeen = DateTime.UtcNow;
 
         marketsChecked++;
 
@@ -165,7 +167,7 @@ namespace Core.MarketAnalyzer
     {
       DateTime result = Constants.confMinDate;
 
-      Int64 startTime = (Int64)Math.Ceiling(DateTime.Now.ToUniversalTime().AddDays(-100).Subtract(Constants.Epoch).TotalSeconds);
+      Int64 startTime = (Int64)Math.Ceiling(DateTime.UtcNow.AddDays(-100).Subtract(Constants.Epoch).TotalSeconds);
       string baseUrl = "https://poloniex.com/public?command=returnChartData&period=14400&start=" + startTime.ToString() + "&end=9999999999&currencyPair=" + marketName;
 
       log.DoLogDebug("Poloniex - Getting first seen date for '" + marketName + "'...");
@@ -188,7 +190,7 @@ namespace Core.MarketAnalyzer
 
       try
       {
-        Int64 startTime = (Int64)Math.Ceiling(DateTime.Now.ToUniversalTime().AddHours(-systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours).Subtract(Constants.Epoch).TotalSeconds);
+        Int64 startTime = (Int64)Math.Ceiling(DateTime.UtcNow.AddHours(-systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours).Subtract(Constants.Epoch).TotalSeconds);
         string baseUrl = "https://poloniex.com/public?command=returnChartData&period=300&start=" + startTime.ToString() + "&end=9999999999&currencyPair=" + marketName;
 
         log.DoLogDebug("Poloniex - Getting ticks for '" + marketName + "'...");
@@ -237,13 +239,13 @@ namespace Core.MarketAnalyzer
         latestMarketDataFileDateTime = latestMarketDataFile.LastWriteTimeUtc;
       }
 
-      if (latestMarketDataFileDateTime < DateTime.Now.ToUniversalTime().AddMinutes(-(systemConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 3)))
+      if (latestMarketDataFileDateTime < DateTime.UtcNow.AddMinutes(-(systemConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 3)))
       {
-        int lastMarketDataAgeInSeconds = (int)Math.Ceiling(DateTime.Now.ToUniversalTime().Subtract(latestMarketDataFileDateTime).TotalSeconds);
+        int lastMarketDataAgeInSeconds = (int)Math.Ceiling(DateTime.UtcNow.Subtract(latestMarketDataFileDateTime).TotalSeconds);
 
         // Go back in time and create market data
-        DateTime startDateTime = DateTime.Now.ToUniversalTime();
-        DateTime endDateTime = DateTime.Now.ToUniversalTime().AddHours(-systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours);
+        DateTime startDateTime = DateTime.UtcNow;
+        DateTime endDateTime = DateTime.UtcNow.AddHours(-systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours);
         if (latestMarketDataFileDateTime != Constants.confMinDate && latestMarketDataFileDateTime > endDateTime)
         {
           // Existing market files too old => Recreate market data for configured timeframe
@@ -266,15 +268,22 @@ namespace Core.MarketAnalyzer
         // Get Ticks for all markets
         log.DoLogDebug("Poloniex - Getting ticks for '" + markets.Count + "' markets");
         Dictionary<string, List<MarketTick>> marketTicks = new Dictionary<string, List<MarketTick>>();
-        foreach (string key in markets.Keys)
+
+        Parallel.ForEach(markets.Keys,
+                          new ParallelOptions { MaxDegreeOfParallelism = 5 },
+                          (key) =>
         {
-          marketTicks.Add(key, Poloniex.GetMarketTicks(key, systemConfiguration, log));
+          if (!marketTicks.TryAdd(key, Poloniex.GetMarketTicks(key, systemConfiguration, log)))
+          {
+            // Failed to add ticks to dictionary
+            throw new Exception("Failed to add ticks for " + key + " to the memory dictionary, results may be incorrectly calculated!");
+          }
 
           if ((marketTicks.Count % 10) == 0)
           {
             log.DoLogInfo("Poloniex - No worries, I am still alive... " + marketTicks.Count + "/" + markets.Count + " markets done...");
           }
-        }
+        });
 
         log.DoLogInfo("Poloniex - Ticks completed.");
 
