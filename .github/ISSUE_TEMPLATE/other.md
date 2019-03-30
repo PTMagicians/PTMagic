@@ -1,6 +1,6 @@
 ---
 name: Other
-about: Other issues
+about: 'For trouble-shooting and other questions, visit our Discord server:  https://discord.gg/KYmHMfk'
 title: ''
 labels: ''
 assignees: ''
