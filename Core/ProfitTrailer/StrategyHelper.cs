@@ -20,6 +20,23 @@ namespace Core.ProfitTrailer
     public static string GetStrategyShortcut(string strategyName, bool onlyValidStrategies)
     {
       string result = strategyName;
+      string time = "";
+
+      if (result.Contains("FORMULA"))
+      {
+        result = "FORM";
+      }
+
+      if (result.Contains("REBUY"))
+      {
+        time = strategyName.Remove(0,14);
+        result = "REBUY " + time;
+      }
+
+      if (result.Contains("CHANGE PERC"))
+      {
+        result = "CHANGE";
+      }
 
       switch (strategyName.ToLower())
       {
@@ -143,11 +160,8 @@ namespace Core.ProfitTrailer
         case "rebuy timeout":
           result = "TIMEOUT";
           break;
-        case "min/max change perc":
-          result = "MIN/MAX";
-          break;
         case "buy value below dust":
-          result = "MIN DUST";
+          result = "DUST";
           break;
         default:
           break;
