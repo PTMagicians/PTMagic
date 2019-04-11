@@ -22,17 +22,16 @@ namespace Core.ProfitTrailer
       string result = strategyName;
       string time = "";
 
+      // strategy labels that are variable, so can't be caught by the switch statement
       if (result.Contains("FORMULA"))
       {
         result = "FORM";
       }
-
       if (result.Contains("REBUY"))
       {
         time = strategyName.Remove(0,14);
         result = "REBUY " + time;
       }
-
       if (result.Contains("CHANGE PERC"))
       {
         result = "CHANGE";
