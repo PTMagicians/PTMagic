@@ -20,6 +20,22 @@ namespace Core.ProfitTrailer
     public static string GetStrategyShortcut(string strategyName, bool onlyValidStrategies)
     {
       string result = strategyName;
+      string time = "";
+
+      // strategy labels that are variable, so can't be caught by the switch statement
+      if (result.Contains("FORMULA"))
+      {
+        result = "FORM";
+      }
+      if (result.Contains("REBUY"))
+      {
+        time = strategyName.Remove(0,14);
+        result = "REBUY " + time;
+      }
+      if (result.Contains("CHANGE PERC"))
+      {
+        result = "CHANGE";
+      }
 
       switch (strategyName.ToLower())
       {
@@ -140,14 +156,8 @@ namespace Core.ProfitTrailer
         case "max cost reached":
           result = "COST";
           break;
-        case "rebuy timeout":
-          result = "TIMEOUT";
-          break;
-        case "min/max change perc":
-          result = "MIN/MAX";
-          break;
         case "buy value below dust":
-          result = "MIN DUST";
+          result = "DUST";
           break;
         default:
           break;
