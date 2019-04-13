@@ -19,7 +19,6 @@
     </div>
   </div>
 } else {
-
   <div class="row">
     <div class="col-md-12">
       <div class="card-box">
@@ -29,6 +28,7 @@
           <thead>
             <tr>
               <th data-fieldid="Market" data-tablesaw-sortable-col>Market</th>
+              <th data-sortable-numeric="true" data-fieldid="Amount" data-tablesaw-sortable-col>Amount</th>
               <th data-fieldid="TotalCost" data-tablesaw-sortable-col data-sortable-numeric="true" class="text-left" data-toggle="tooltip" data-placement="top" title="Spent total cost in @Model.Summary.MainMarket">Value</th>
               <th data-fieldid="BoughtTimes" data-tablesaw-sortable-col data-sortable-numeric="true" class="text-right" data-toggle="tooltip" data-placement="top" title="Current DCA level">DCA</th>
               <th data-toggle="tooltip" data-placement="top" title="Active buy strategies">Buy Strats</th>
