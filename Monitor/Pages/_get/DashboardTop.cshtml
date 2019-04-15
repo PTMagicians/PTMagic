@@ -88,11 +88,12 @@
         <p>Your Profit Trailer did not buy anything so far that's worth analyzing.</p>
 
       } else {
-
+        
         <table class="table table-sm m-b-0">
           <thead>
             <tr>
-              <th>Market</th>
+              <th>Market</th>             
+              <th class="text-left" data-toggle="tooltip" data-placement="top" title="Market trend last 24 hours">24H Trend</th>
               <th class="text-left" data-toggle="tooltip" data-placement="top" title="Total Bag Value">Value</th>
               <th></th>
               <th class="text-left" data-toggle="tooltip" data-placement="top" title="Active buy strategies">DCA Buy Strats</th>
@@ -154,6 +155,8 @@
                   <th class="align-top"><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, dcaLogEntry.Market, Model.Summary.MainMarket)" target="_blank">@dcaLogEntry.Market</a> <i class="fa fa-exclamation-triangle text-highlight" data-toggle="tooltip" data-placement="top" data-html="true" title="@await Component.InvokeAsync("PairIcon", mps)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner pair-tooltip'></div></div>"></i></th>
                 }
                 
+                <td class="text-autocolor">@Html.Raw(dcaLogEntry.PercChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))%</td>
+
                 <td class="text-left">@Html.Raw(dcaLogEntry.TotalCost.ToString("#,#0.000000", new System.Globalization.CultureInfo("en-US")))</td>
                 
                 <td class="text-right">
@@ -166,14 +169,10 @@
                   }
                 </td>
 
-                @if (buyDisabled) {
-                  <td>@Html.Raw(buyStrategyText)</td>
-                } else {
-                  <td>@Html.Raw(buyStrategyText)</td>
-                }
+                <td>@Html.Raw(buyStrategyText)</td>
+
                 <td>@Html.Raw(sellStrategyText)</td>
                 
-
                 @if(!@lostValue)
                 {
                   <td class="text-autocolor">@dcaLogEntry.ProfitPercent.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
