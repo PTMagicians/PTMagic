@@ -155,7 +155,7 @@
                   <th class="align-top"><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, dcaLogEntry.Market, Model.Summary.MainMarket)" target="_blank">@dcaLogEntry.Market</a> <i class="fa fa-exclamation-triangle text-highlight" data-toggle="tooltip" data-placement="top" data-html="true" title="@await Component.InvokeAsync("PairIcon", mps)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner pair-tooltip'></div></div>"></i></th>
                 }
                 
-                <td class="text-autocolor">@Html.Raw(dcaLogEntry.PercChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))%</td>
+                <td class="text-autocolor">@Html.Raw((dcaLogEntry.PercChange * 100).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))%</td>
 
                 <td class="text-left">@Html.Raw(dcaLogEntry.TotalCost.ToString("#,#0.000000", new System.Globalization.CultureInfo("en-US")))</td>
                 

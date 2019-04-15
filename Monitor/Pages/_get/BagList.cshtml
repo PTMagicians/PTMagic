@@ -90,7 +90,7 @@
     }
 
     // Trend
-    <td class="text-autocolor">@Html.Raw(dcaLogEntry.PercChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))%</td>
+    <td class="text-autocolor">@Html.Raw((dcaLogEntry.PercChange * 100).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))%</td>
 
     // Amount
     <td class="text-left">@Html.Raw(@dcaLogEntry.Amount)</td>
