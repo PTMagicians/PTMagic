@@ -5,8 +5,8 @@
 }
 
 <div class="row">
-  <div class="col-md-6">
-    <div class="card-box">
+  <div class="col-md-6 px-1">
+    <div class="card-box px-2">
       <h4 class="m-t-0 m-b-20 header-title"><b>Market Trends</b><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)MarketAnalyzer">more</a></small></h4>
 
       <table class="table table-sm">
@@ -44,8 +44,8 @@
       </table>
     </div>
   </div>
-  <div class="col-md-6">
-    <div class="card-box">
+  <div class="col-md-6 px-1">
+    <div class="card-box px-2">
       <h4 class="m-t-0 m-b-20 header-title"><b>Sales Overview</b><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)SalesAnalyzer">more</a></small></h4>
       @{
         double totalProfit = Model.PTData.SellLog.Sum(s => s.Profit);
@@ -131,8 +131,8 @@
 </div>
 
 <div class="row">
-   <div class="col-md-6">
-    <div class="card-box" style="height:305px;">
+   <div class="col-md-6 px-1">
+    <div class="card-box px-2" style="height:305px;">
       @if (!Model.TrendChartDataJSON.Equals("")) {
         <div class="trend-chart">
           <svg style="height:305px;width:100%"></svg>
@@ -142,8 +142,8 @@
       }
     </div>
   </div>
-  <div class="col-md-6">
-    <div class="card-box" style="height:305px;">
+  <div class="col-md-6 px-1">
+    <div class="card-box px-2" style="height:305px;">
       @if (!Model.ProfitChartDataJSON.Equals("")) {
         <div class="profit-chart">
           <svg style="height:305px;width:100%"></svg>
