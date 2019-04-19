@@ -58,7 +58,6 @@ namespace Monitor._Internal
         PTMagicBasePath += Path.DirectorySeparatorChar;
       }
 
-
       try
       {
         PTMagicConfiguration = new PTMagicConfiguration(PTMagicBasePath);

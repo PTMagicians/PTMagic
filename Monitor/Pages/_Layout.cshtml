@@ -24,7 +24,7 @@
   <!-- Navigation Bar-->
   <header id="topnav">
     <div class="topbar-main">
-      <div class="container-fluid">
+      <div class="container-fluid px-1">
 
         <!-- Logo container-->
         <div class="logo">
@@ -43,6 +43,9 @@
         <div class="menu-extras topbar-custom">
           <ul class="list-inline float-left mb-0">
             <li id="ticker-widgets" class="list-inline-item ticker-widgets"></li>
+          </ul>
+
+          <ul class="list-inline float-right pt-2">
             <li class="menu-item list-inline-item">
               <!-- Mobile menu toggle-->
               <a class="navbar-toggle nav-link">
@@ -54,8 +57,6 @@
               </a>
               <!-- End mobile menu toggle-->
             </li>
-            
-          </ul>
         </div>
         <!-- end menu-extras -->
 
@@ -66,7 +67,7 @@
     <!-- end topbar-main -->
 
     <div class="navbar-custom">
-      <div class="container-fluid">
+      <div class="container-fluid px-1">
         <div id="navigation">
           <!-- Navigation Menu-->
           <ul class="navigation-menu">
@@ -127,7 +128,7 @@
   <!-- End Navigation Bar-->
 
   <div class="wrapper">
-    <div class="container-fluid">
+    <div class="container-fluid px-1">
 
       @RenderBody()
 
@@ -171,6 +172,13 @@
     var errCount = [];
     var interval;
     var loadWidgets = function () {
+      // Clear exisitng interval to stop multiple attempts to load at the same time.
+      if (interval != null)
+      {
+        clearInterval(interval);
+      }
+
+      // Load widgets
       $('[data-toggle="tooltip"]').tooltip();
       $("#ticker-widgets").load('@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)_get/TickerWidgets', '', function (responseText, textStatus, XMLHttpRequest) {
         if (textStatus == 'error') {
@@ -183,13 +191,15 @@
         } else {
           errCount["TickerWidgets"] = 0;
         }
+
+        // Reinstate the interval.
+        interval = setInterval(function () { loadWidgets(); }, 5000);
       });
     };
 
     $(document).ready(function () {
       errCount["TickerWidgets"] = 0;
       loadWidgets();
-      interval = setInterval(function () { loadWidgets(); }, 5 * 1000);
 
       $('[data-toggle="tooltip"]').tooltip()
       $('.text-autocolor').autocolor(false);

@@ -28,9 +28,16 @@
     var errCountIndex = [];
     var intervalDashboardTop;
     var intervalDashboardBottom;
+
     var loadDashboardTop = function () {
       $("#baglist-refresh-icon").html('<i class="fa fa-circle-o-notch fa-spin fa-fw" data-toggle="tooltip" data-placement="top" title="Loading fresh data..."></i>');
       $("#buylist-refresh-icon").html('<i class="fa fa-circle-o-notch fa-spin fa-fw" data-toggle="tooltip" data-placement="top" title="Loading fresh data..."></i>');
+
+      // Clear exisitng interval to stop multiple attempts to load at the same time.
+      if (intervalDashboardTop != null)
+      {
+        clearInterval(intervalDashboardTop);
+      }
 
       $("#dashboardTop").load('@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)_get/DashboardTop', '', function (responseText, textStatus, XMLHttpRequest) {
         $("#baglist-refresh-icon").html('');
@@ -49,6 +56,9 @@
         } else {
           errCountIndex["DashboardTop"] = 0;
         }
+
+        // Reinstate interval
+        intervalDashboardTop = setInterval(function () { loadDashboardTop(); }, 5 * 1000);
       });
     };
 
@@ -62,6 +72,13 @@
       nv.logs = {};
       nv.tooltip = {};
 
+      // Clear exisitng interval to stop multiple attempts to load at the same time.
+      if (intervalDashboardBottom != null)
+      {
+        clearInterval(intervalDashboardBottom);
+      }
+
+      // Load dashboard
       $("#dashboardBottom").load('@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)_get/DashboardBottom', '', function (responseText, textStatus, XMLHttpRequest) {
         if (textStatus == 'error') {
           errCountIndex["DashboardBottom"]++;
@@ -73,17 +90,18 @@
         } else {
           errCountIndex["DashboardBottom"] = 0;
         }
+
+        // Reinstate the interval.
+        intervalDashboardBottom = setInterval(function () { loadDashboardBottom(); }, @Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000);
       });
     };
 
     $(document).ready(function () {
       errCountIndex["DashboardTop"] = 0;
-      loadDashboardTop();
-      intervalDashboardTop = setInterval(function () { loadDashboardTop(); }, 5 * 1000);
+      loadDashboardTop();      
 
       errCountIndex["DashboardBottom"] = 0;
       loadDashboardBottom();
-      intervalDashboardBottom = setInterval(function () { loadDashboardBottom(); }, @Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000);
     });
   </script>
 }
