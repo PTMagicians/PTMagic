@@ -183,6 +183,12 @@ namespace Core.ProfitTrailer
     {
       bool result = false;
 
+      // Custom Strategy Labels in PT - add *
+      if (strategyName.Contains("*"))
+      {
+        result = true;
+      }
+
       if (!checkForAnyInvalid)
       {
         switch (strategyName.ToLower())
