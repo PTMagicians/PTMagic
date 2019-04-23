@@ -21,10 +21,8 @@ namespace Core.ProfitTrailer
     {
       string result = strategyName;
       string time = "";
-      int strategyLength = strategyName.Length-3;
-      string strategyLetter = strategyName.Remove(3, strategyLength);
-      string strategyNameOnly = strategyName.Remove(0, 3);
-      
+      string strategyLetter = "";
+      string strategyNameOnly = strategyName;
 
       // strategy labels that are variable, so can't be caught by the switch statement
       if (result.Contains("REBUY"))
@@ -37,6 +35,15 @@ namespace Core.ProfitTrailer
         result = "CHANGE";
       }
 
+      // buy/sell strategies beginning with PT 2.3.3 contain the stragegy designation letter followed by a colon and space.
+
+      // remove the letter and colon, change to shortcut, then reapply the letter and colon
+      if (strategyName.Contains(":"))
+      {
+        int strategyLength = strategyName.Length-3;
+        strategyLetter = strategyName.Remove(3, strategyLength);
+        strategyNameOnly = strategyName.Remove(0, 3);
+      }
       switch (strategyNameOnly.ToLower())
       {
         case "lowbb":
@@ -183,7 +190,7 @@ namespace Core.ProfitTrailer
     {
       bool result = false;
 
-      // Strategy Labels in PT 2.3.3 -- all valid strategies are a letter followed by a colon.
+      // buy/sell strategies beginning with PT 2.3.3 contain the letter followed by a colon and space.
       if (strategyName.Contains(":"))
       {
         result = true;
