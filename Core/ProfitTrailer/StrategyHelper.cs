@@ -317,6 +317,7 @@ namespace Core.ProfitTrailer
 
           if (!isValidStrategy )
           {
+            // Temporary until a fix for formula true/false
             if (strategy.Name.Contains("FORMULA"))
             {
               strategyText += "<span class=\"label label-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"AND/OR FORMULA\">FORM</span> ";
