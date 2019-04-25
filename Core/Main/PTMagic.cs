@@ -981,23 +981,23 @@ namespace Core.Main
       {
         if (this.RunCount > 1)
         {
-          Log.DoLogWarn("PTMagic already raiding since " + this.LastRuntime.ToLocalTime().ToString() + " - Process frozen? Checking things...");
+          Log.DoLogWarn("PTMagic has been raiding since " + this.LastRuntime.ToLocalTime().ToString() + ".  Checking things...");
 
           if (File.Exists(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "LastRuntimeSummary.json"))
           {
             FileInfo fiLastSummary = new FileInfo(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "LastRuntimeSummary.json");
             if (fiLastSummary.LastWriteTimeUtc < DateTime.UtcNow.AddMinutes(-(this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 2)))
             {
-              Log.DoLogWarn("PTMagic seems to have frozen after raid " + this.RunCount.ToString() + ", but don't worry I will sacrifice some Magicbots to get this running again...");
+              Log.DoLogWarn("PTMagic raid " + this.RunCount.ToString() + " is taking longer than expected.  Consider increasing your "\"IntervalMinues"\" setting, reducing other processes on your PC, or raising PTMagic's priority.");
               this.State = Constants.PTMagicBotState_Idle;
-              Log.DoLogInfo("PTMagic status resetted, waiting for the next raid to be good to go again.");
+              Log.DoLogInfo("PTMagic status reset, waiting for the next raid to be good to go again.");
             }
           }
           else
           {
             Log.DoLogWarn("No LastRuntimeSummary.json found after raid " + this.RunCount.ToString() + ", trying to reset PT Magic status...");
             this.State = Constants.PTMagicBotState_Idle;
-            Log.DoLogInfo("PTMagic status resetted, waiting for the next raid to be good to go again.");
+            Log.DoLogInfo("PTMagic status reset, waiting for the next raid to be good to go again.");
           }
         }
       }
