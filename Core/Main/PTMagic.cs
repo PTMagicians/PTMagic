@@ -988,7 +988,7 @@ namespace Core.Main
             FileInfo fiLastSummary = new FileInfo(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "LastRuntimeSummary.json");
             if (fiLastSummary.LastWriteTimeUtc < DateTime.UtcNow.AddMinutes(-(this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 2)))
             {
-              Log.DoLogWarn("PTMagic raid " + this.RunCount.ToString() + " is taking longer than expected.  Consider increasing your "\"IntervalMinues"\" setting, reducing other processes on your PC, or raising PTMagic's priority.");
+              Log.DoLogWarn("PTMagic raid " + this.RunCount.ToString() + " is taking longer than expected.  Consider increasing your IntervalMinues setting, reducing other processes on your PC, or raising PTMagic's priority.");
               this.State = Constants.PTMagicBotState_Idle;
               Log.DoLogInfo("PTMagic status reset, waiting for the next raid to be good to go again.");
             }
