@@ -20,134 +20,151 @@ namespace Core.ProfitTrailer
     public static string GetStrategyShortcut(string strategyName, bool onlyValidStrategies)
     {
       string result = strategyName;
+      string time = "";
+      string strategyLetter = "";
+      string strategyNameOnly = strategyName;
 
-      switch (strategyName.ToLower())
+      // strategy labels that are variable, so can't be caught by the switch statement
+      if (result.Contains("REBUY"))
+      {
+        time = strategyName.Remove(0,14);
+        result = "REBUY " + time;
+      }
+      if (result.Contains("CHANGE PERC"))
+      {
+        result = "CHANGE";
+      }
+
+      // buy/sell strategies beginning with PT 2.3.3 contain the stragegy designation letter followed by a colon and space.
+
+      // remove the letter and colon, change to shortcut, then reapply the letter and colon
+      if (strategyName.Contains(":"))
+      {
+        int strategyLength = strategyName.Length-3;
+        strategyLetter = strategyName.Remove(3, strategyLength);
+        strategyNameOnly = strategyName.Remove(0, 3);
+      }
+      switch (strategyNameOnly.ToLower())
       {
         case "lowbb":
-          result = "LBB";
+          result = String.Concat(strategyLetter, "LBB");
           break;
         case "highbb":
-          result = "HBB";
+          result = String.Concat(strategyLetter, "HBB");
           break;
         case "gain":
-          result = "G";
+          result = String.Concat(strategyLetter, "GAIN");
           break;
         case "loss":
-          result = "L";
+          result = String.Concat(strategyLetter, "LOSS");
           break;
         case "smagain":
-          result = "SG";
+          result = String.Concat(strategyLetter, "SG");
           break;
         case "emagain":
-          result = "EG";
+          result = String.Concat(strategyLetter, "EG");
           break;
         case "hmagain":
-          result = "EG";
+          result = String.Concat(strategyLetter, "EG");
           break;
         case "dmagain":
-          result = "EG";
+          result = String.Concat(strategyLetter, "EG");
           break;
         case "smaspread":
-          result = "SS";
+          result = String.Concat(strategyLetter, "SS");
           break;
         case "emaspread":
-          result = "ES";
+          result = String.Concat(strategyLetter, "ES");
           break;
         case "hmaspread":
-          result = "ES";
+          result = String.Concat(strategyLetter, "HES");
           break;
         case "dmaspread":
-          result = "ES";
+          result = String.Concat(strategyLetter, "DES");
           break;
         case "smacross":
-          result = "SC";
+          result = String.Concat(strategyLetter, "SC");
           break;
         case "emacross":
-          result = "EC";
+          result = String.Concat(strategyLetter, "EC");
           break;
         case "hmacross":
-          result = "SC";
+          result = String.Concat(strategyLetter, "HSC");
           break;
         case "dmacross":
-          result = "EC";
+          result = String.Concat(strategyLetter, "DEC");
           break;
         case "rsi":
-          result = "RSI";
+          result = String.Concat(strategyLetter, "RSI");
           break;
         case "stoch":
-          result = "STOCH";
+          result = String.Concat(strategyLetter, "STOCH");
           break;
         case "stochrsi":
-          result = "SRSI";
+          result = String.Concat(strategyLetter, "SRSI");
           break;
         case "stochrsik":
-          result = "SRSIK";
+          result = String.Concat(strategyLetter, "SRSIK");
           break;
         case "stochrsid":
-          result = "SRSID";
+          result = String.Concat(strategyLetter, "SRSID");
           break;
         case "stochrsicross":
-          result = "SRSIC";
+          result = String.Concat(strategyLetter, "SRSIC");
           break;
         case "macd":
-          result = "MACD";
+          result = String.Concat(strategyLetter, "MACD");
           break;
         case "obv":
-          result = "OBV";
+          result = String.Concat(strategyLetter, "OBV");
           break;
         case "bbwidth":
-          result = "BBW";
+          result = String.Concat(strategyLetter, "BBW");
           break;
         case "pdhigh":
-          result = "PDH";
+          result = String.Concat(strategyLetter, "PDH");
           break;
         case "anderson":
-          result = "AND";
+          result = String.Concat(strategyLetter, "AND");
           break;
         case "som enabled":
-          result = "SOM";
+          result = String.Concat(strategyLetter, "SOM");
           break;
         case "max buy times":
-          result = "DCAMAX";
+          result = String.Concat(strategyLetter, "DCAMAX");
           break;
         case "max pairs":
-          result = "PAIRS";
+          result = String.Concat(strategyLetter, "PAIRS");
           break;
         case "max spread":
-          result = "SPREAD";
+          result = String.Concat(strategyLetter, "SPREAD");
           break;
         case "price increase":
-          result = "PIN";
+          result = String.Concat(strategyLetter, "INC");
           break;
         case "min buy volume":
-          result = "VOL";
+          result = String.Concat(strategyLetter, "VOL");
           break;
         case "min buy balance":
-          result = "MIN";
+          result = String.Concat(strategyLetter, "MIN");
           break;
         case "coin age":
-          result = "AGE";
+          result = String.Concat(strategyLetter, "AGE");
           break;
         case "too new":
-          result = "NEW";
+          result = String.Concat(strategyLetter, "NEW");
           break;
         case "blacklisted":
-          result = "BLACK";
+          result = String.Concat(strategyLetter, "BLACK");
           break;
         case "insufficient balance":
-          result = "BAL";
+          result = String.Concat(strategyLetter, "BAL");
           break;
         case "max cost reached":
-          result = "COST";
-          break;
-        case "rebuy timeout":
-          result = "TIMEOUT";
-          break;
-        case "min/max change perc":
-          result = "MIN/MAX";
+          result = String.Concat(strategyLetter, "COST");
           break;
         case "buy value below dust":
-          result = "MIN DUST";
+          result = String.Concat(strategyLetter, "DUST");
           break;
         default:
           break;
@@ -173,6 +190,13 @@ namespace Core.ProfitTrailer
     {
       bool result = false;
 
+      // buy/sell strategies beginning with PT 2.3.3 contain the letter followed by a colon and space.
+      if (strategyName.Contains(":"))
+      {
+        result = true;
+      }
+
+      // Prior to PT 2.3.3
       if (!checkForAnyInvalid)
       {
         switch (strategyName.ToLower())
@@ -291,9 +315,17 @@ namespace Core.ProfitTrailer
 
           isValidStrategy = StrategyHelper.IsValidStrategy(strategy.Name);
 
-          if (!isValidStrategy)
+          if (!isValidStrategy )
           {
-            strategyText += "<span class=\"label label-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategy.Name + "\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, false) + "</span> ";
+            // Temporary until a fix for formula true/false
+            if (strategy.Name.Contains("FORMULA"))
+            {
+              strategyText += "<span class=\"label label-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"AND/OR FORMULA\">FORM</span> ";
+            }
+            else
+            {
+              strategyText += "<span class=\"label label-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategy.Name + "\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, false) + "</span> ";
+            }
           }
           else
           {
