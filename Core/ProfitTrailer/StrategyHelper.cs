@@ -320,7 +320,8 @@ namespace Core.ProfitTrailer
             // Temporary until a fix for formula true/false
             if (strategy.Name.Contains("FORMULA"))
             {
-              strategyText += "<span class=\"label label-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"AND/OR FORMULA\">FORM</span> ";
+              // PT passes us HTML, so reparse the classes to work with PTM
+              strategyText += "<span class=\"label label-warning\" >" + strategy.Name.Replace("class=\"red\"","class=\"label-danger\"").Replace("class=\"tdgreen\"","class=\"label-success\"") + "</span> ";
             }
             else
             {
