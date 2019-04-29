@@ -364,7 +364,7 @@
       /**/
       lineChart.useInteractiveGuideline(true);
       lineChart.xAxis.tickFormat(function (d) { return d3.time.format('%Y/%m/%d')(new Date(d)); });
-      lineChart.yAxis.axisLabel('Sales').tickFormat(d3.format(','));
+      lineChart.yAxis.axisLabel('Daily Sales').tickFormat(d3.format(','));
       d3.select('.trades-chart svg').attr('perserveAspectRatio', 'xMinYMid').datum(chartData).transition().duration(500).call(lineChart);
       nv.utils.windowResize(lineChart.update);
 
@@ -379,7 +379,7 @@
       /**/
       lineChart.useInteractiveGuideline(true);
       lineChart.xAxis.tickFormat(function (d) { return d3.time.format('%Y/%m/%d')(new Date(d)); });
-      lineChart.yAxis.axisLabel('Profit').tickFormat(d3.format(',.2f'));
+      lineChart.yAxis.axisLabel('Daily Profit').tickFormat(d3.format(',.2f'));
       d3.select('.profit-chart svg').attr('perserveAspectRatio', 'xMinYMid').datum(chartData).transition().duration(500).call(lineChart);
       nv.utils.windowResize(lineChart.update);
 
