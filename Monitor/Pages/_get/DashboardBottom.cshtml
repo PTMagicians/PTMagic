@@ -9,6 +9,41 @@
   <link href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/tablesaw/css/tablesaw.css" rel="stylesheet" type="text/css" />
 }
 
+
+<div class="row">
+  <div class="col-md-5 px-1">
+    <div class="card-box px-2" style="height:305px;">
+      @if (!Model.TrendChartDataJSON.Equals("")) {
+        <div class="trend-chart">
+          <svg style="height:300px;width:100%"></svg>
+        </div>
+      } else {
+        <p>Unable to load graph, no market trend data found.</p>
+      }
+    </div>
+  </div>
+  <div class="col-md-2 px-1">
+    <div class="card-box px-2" style="height:305px;">
+      <h4 class="m-t-0 header-title">Asset Distribution</h4>
+      <div id="AssetDistribution">
+        <svg style="height:290px;width:100%"></svg>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-5 px-1">
+    <div class="card-box px-2" style="height:305px;">
+      @if (!Model.ProfitChartDataJSON.Equals("")) {
+        <div class="profit-chart">
+          <svg style="height:300px;width:100%"></svg>
+        </div>
+      } else {
+        <p>Unable to load graph, no sales data found.</p>
+      }
+    </div>
+  </div>
+</div>
+
+
 <div class="row">
   <div class="col-md-6 px-1">
     <div class="card-box px-2">
@@ -130,38 +165,6 @@
           </tr>
         </tbody>
       </table>
-    </div>
-  </div>
-</div>
-<div class="row">
-  <div class="col-md-6 px-1">
-    <div class="card-box px-2" style="height:305px;">
-      @if (!Model.TrendChartDataJSON.Equals("")) {
-        <div class="trend-chart">
-          <svg style="height:300px;width:100%"></svg>
-        </div>
-      } else {
-        <p>Unable to load graph, no market trend data found.</p>
-      }
-    </div>
-  </div>
-  <div class="col-md-2 px-1">
-    <div class="card-box px-2" style="height:305px;">
-      <h4 class="m-t-0 header-title">Asset Distribution</h4>
-      <div id="AssetDistribution">
-        <svg style="height:290px;width:100%"></svg>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-4 px-1">
-    <div class="card-box px-2" style="height:305px;">
-      @if (!Model.ProfitChartDataJSON.Equals("")) {
-        <div class="profit-chart">
-          <svg style="height:300px;width:100%"></svg>
-        </div>
-      } else {
-        <p>Unable to load graph, no sales data found.</p>
-      }
     </div>
   </div>
 </div>
