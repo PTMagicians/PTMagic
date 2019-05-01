@@ -115,7 +115,7 @@ namespace Monitor.Pages {
       string profitPerDayJSON = "";
       if (PTData.SellLog.Count > 0) {
         DateTime minSellLogDate = PTData.SellLog.OrderBy(sl => sl.SoldDate).First().SoldDate.Date;
-        DateTime graphStartDate = DateTime.UtcNow.Date.AddDays(-10);
+        DateTime graphStartDate = DateTime.UtcNow.Date.AddDays(-30);
         if (minSellLogDate > graphStartDate) graphStartDate = minSellLogDate;
         for (DateTime salesDate = graphStartDate; salesDate <= DateTime.UtcNow.Date; salesDate = salesDate.AddDays(1)) {
           if (tradeDayIndex > 0) {
