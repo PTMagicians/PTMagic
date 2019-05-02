@@ -161,6 +161,28 @@ namespace Core.Main.DataObjects
       this.Summary.PendingValue +
       this.Summary.DustValue);
     }
+     public double GetPairsBalance()
+    {
+      return 
+      (this.Summary.PairsValue);
+    }
+     public double GetDCABalance()
+    {
+      return 
+      (this.Summary.DCAValue);
+    }
+     public double GetPendingBalance()
+    {
+      return 
+      (this.Summary.PendingValue);
+    }
+    public double GetDustBalance()
+    {
+      return 
+      (this.Summary.DustValue);
+    }
+
+
 
     public double GetSnapshotBalance(DateTime snapshotDateTime)
     {
