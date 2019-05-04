@@ -17,6 +17,8 @@ namespace Monitor.Pages {
     public string LastGlobalSetting = "Default";
     public DateTimeOffset DateTimeNow = Constants.confMinDate;
     public string AssetDistributionData = "";
+    public double currentBalance = 0;
+    public string currentBalanceString = "";
     public void OnGet() {
       // Initialize Config
       base.Init();
@@ -149,7 +151,6 @@ namespace Monitor.Pages {
       AssetDistributionData += "{label: 'Pairs',color: '#82E0AA',value: " + PairsBalance.ToString() + "},";
       AssetDistributionData += "{label: 'DCA',color: '#D98880',value: " + DCABalance.ToString() + "},";
       AssetDistributionData += "{label: 'Pending',color: '#F5B041',value: " + PendingBalance.ToString() + "},";
-      AssetDistributionData += "{label: 'Dust',color: '#BB8FCE',value: " + DustBalance.ToString() + "},";
       AssetDistributionData += "{label: 'Balance',color: '#85C1E9',value: " + AvailableBalance.ToString() + "}]";
     }
   }
