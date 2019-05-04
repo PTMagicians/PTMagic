@@ -9,7 +9,6 @@
   <link href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/tablesaw/css/tablesaw.css" rel="stylesheet" type="text/css" />
 }
 
-
 <div class="row">
   <div class="col-md-5 px-1">
     <div class="card-box px-2" style="height:305px;">
@@ -24,7 +23,14 @@
   </div>
   <div class="col-md-2 px-1">
     <div class="card-box px-2" style="height:305px;">
-      <h4 class="m-t-0 header-title">Asset Distribution</h4>
+      @{
+        double currentBalance = Model.PTData.GetCurrentBalance();
+        string currentBalanceString = currentBalance.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
+        if (currentBalance > 100) {
+          currentBalanceString = Math.Round(currentBalance, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
+        }
+      }
+      <div class="text-center"><small>TCV: &nbsp; <text class="text-autocolor"> @currentBalanceString &nbsp; @Model.Summary.MainMarket &nbsp; </text> </small></div>
       <div id="AssetDistribution">
         <svg style="height:290px;width:100%"></svg>
       </div>
