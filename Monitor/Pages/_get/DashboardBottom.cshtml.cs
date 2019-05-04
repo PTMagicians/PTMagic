@@ -16,12 +16,15 @@ namespace Monitor.Pages {
     public string ProfitChartDataJSON = "";
     public string LastGlobalSetting = "Default";
     public DateTimeOffset DateTimeNow = Constants.confMinDate;
-
+    public string AssetDistributionData = "";
+    public double currentBalance = 0;
+    public string currentBalanceString = "";
     public void OnGet() {
       // Initialize Config
       base.Init();
 
       BindData();
+      BuildAssetDistributionData();
     }
 
     private void BindData() {
@@ -87,7 +90,6 @@ namespace Monitor.Pages {
                     trendChartTicks++;
                   }
                 }
-
                 // Add most recent tick
                 List<MarketTrendChange> latestTickRange = marketTrendChangeSummaries.OrderByDescending(m => m.TrendDateTime).ToList();
                 if (latestTickRange.Count > 0) {
@@ -121,16 +123,12 @@ namespace Monitor.Pages {
           if (tradeDayIndex > 0) {
             profitPerDayJSON += ",\n";
           }
-
           int trades = PTData.SellLog.FindAll(t => t.SoldDate.Date == salesDate).Count;
           double profit = PTData.SellLog.FindAll(t => t.SoldDate.Date == salesDate).Sum(t => t.Profit);
           double profitFiat = Math.Round(profit * Summary.MainMarketPrice, 2);
-
           profitPerDayJSON += "{x: new Date('" + salesDate.ToString("yyyy-MM-dd") + "'), y: " + profitFiat.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "}";
-
           tradeDayIndex++;
         }
-
         ProfitChartDataJSON = "[";
         ProfitChartDataJSON += "{";
         ProfitChartDataJSON += "key: 'Profit in " + Summary.MainFiatCurrency + "',";
@@ -139,6 +137,21 @@ namespace Monitor.Pages {
         ProfitChartDataJSON += "}";
         ProfitChartDataJSON += "]";
       }
+    }
+    private void BuildAssetDistributionData()
+    {
+      double PairsBalance = PTData.GetPairsBalance();
+      double DCABalance = PTData.GetDCABalance();
+      double PendingBalance = PTData.GetPendingBalance();
+      double DustBalance = PTData.GetDustBalance();
+      double TotalValue = PTData.GetCurrentBalance();
+      double AvailableBalance = (TotalValue - PairsBalance - DCABalance - PendingBalance - DustBalance);
+      
+      AssetDistributionData = "[";
+      AssetDistributionData += "{label: 'Pairs',color: '#82E0AA',value: " + PairsBalance.ToString() + "},";
+      AssetDistributionData += "{label: 'DCA',color: '#D98880',value: " + DCABalance.ToString() + "},";
+      AssetDistributionData += "{label: 'Pending',color: '#F5B041',value: " + PendingBalance.ToString() + "},";
+      AssetDistributionData += "{label: 'Balance',color: '#85C1E9',value: " + AvailableBalance.ToString() + "}]";
     }
   }
 }

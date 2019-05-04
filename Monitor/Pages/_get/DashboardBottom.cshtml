@@ -4,6 +4,52 @@
   Layout = null;
 }
 
+@section Styles {
+  <link href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/nvd3/nv.d3.min.css" rel="stylesheet" type="text/css" />
+  <link href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/tablesaw/css/tablesaw.css" rel="stylesheet" type="text/css" />
+}
+
+<div class="row">
+  <div class="col-md-5 px-1">
+    <div class="card-box px-2" style="height:305px;">
+      @if (!Model.TrendChartDataJSON.Equals("")) {
+        <div class="trend-chart">
+          <svg style="height:300px;width:100%"></svg>
+        </div>
+      } else {
+        <p>Unable to load graph, no market trend data found.</p>
+      }
+    </div>
+  </div>
+  <div class="col-md-2 px-1">
+    <div class="card-box px-2" style="height:305px;">
+      @{
+      double currentBalance = Model.PTData.GetCurrentBalance();
+      string currentBalanceString = currentBalance.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
+      if (currentBalance > 100) {
+        currentBalanceString = Math.Round(currentBalance, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
+        }
+      }
+      <div class="text-center"><small>TCV: &nbsp; <text class="text-autocolor"> @currentBalanceString &nbsp; @Model.Summary.MainMarket &nbsp; </text> </small></div>      
+      <div id="AssetDistribution">
+        <svg style="height:290px;width:100%"></svg>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-5 px-1">
+    <div class="card-box px-2" style="height:305px;">
+      @if (!Model.ProfitChartDataJSON.Equals("")) {
+        <div class="profit-chart">
+          <svg style="height:300px;width:100%"></svg>
+        </div>
+      } else {
+        <p>Unable to load graph, no sales data found.</p>
+      }
+    </div>
+  </div>
+</div>
+
+
 <div class="row">
   <div class="col-md-6 px-1">
     <div class="card-box px-2">
@@ -44,6 +90,7 @@
       </table>
     </div>
   </div>
+  
   <div class="col-md-6 px-1">
     <div class="card-box px-2">
       <h4 class="m-t-0 m-b-20 header-title"><b>Sales Overview</b><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)SalesAnalyzer">more</a></small></h4>
@@ -76,7 +123,6 @@
         double last30DaysProfitFiat = Math.Round(last30DaysProfit * Model.Summary.MainMarketPrice, 2);
         double last30DaysPercentGain = Math.Round(last30DaysProfit / last30DaysStartBalance * 100, 2);
       }
-
       <table class="table table-sm">
         <thead>
           <tr>
@@ -127,81 +173,84 @@
       </table>
     </div>
   </div>
-
 </div>
 
-<div class="row">
-   <div class="col-md-6 px-1">
-    <div class="card-box px-2" style="height:305px;">
-      @if (!Model.TrendChartDataJSON.Equals("")) {
-        <div class="trend-chart">
-          <svg style="height:305px;width:100%"></svg>
-        </div>
-      } else {
-        <p>Not able to load graph, no market trend data found.<br />If you still do not see a graph after more than hour, report an issue.</p>
-      }
-    </div>
-  </div>
-  <div class="col-md-6 px-1">
-    <div class="card-box px-2" style="height:305px;">
-      @if (!Model.ProfitChartDataJSON.Equals("")) {
-        <div class="profit-chart">
-          <svg style="height:305px;width:100%"></svg>
-        </div>
-      } else {
-        <p>Not able to load graph, no sales data found.<br />If you still do not see a graph after you made your first sale, report an issue.</p>
-      }
-    </div>
-  </div>
- 
-</div>
-
+<script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/d3/d3.min.js"></script>
+<script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/nvd3/nv.d3.min.js"></script>
+<script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/tablesaw/js/tablesaw.js"></script>
+<script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/tablesaw/js/tablesaw-init.js"></script>
 <script type="text/javascript">
+   $(document).ready(function () {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('.text-autocolor').autocolor(false);
+
+      @if (!Model.AssetDistributionData.Equals("")) {
+      <text>
+        nv.addGraph(function() {
+          var chart = nv.models.pieChart()
+            .x(function(d) { return d.label })
+            .y(function(d) { return d.value })
+            .showLabels(true)     //Display pie labels
+            .labelThreshold(.1)  //Configure the minimum slice size for labels to show up
+            .labelType("percent") //Configure what type of data to show in the label. Can be "key", "value" or "percent"
+            .donut(true)          //Turn on Donut mode. Makes pie chart look tasty!
+            .donutRatio(0.3)     //Configure how big you want the donut hole size to be.
+            ;
+
+        d3.select("#AssetDistribution svg")
+          .datum(@Html.Raw(Model.AssetDistributionData))
+          .transition().duration(350)
+          .call(chart);
+
+        return chart;
+      });
+      </text>
+      }
+    });
+
   (function ($) {
     'use strict';
     $('[role="tooltip"]').remove();
     $('[data-toggle="tooltip"]').tooltip();
     $('.text-autocolor').autocolor(false);
 
-@if (!Model.Summary.CurrentGlobalSetting.SettingName.Equals(Model.LastGlobalSetting)) {
-<text>
-  $.Notification.notify('success', 'top left', '@Core.Helper.SystemHelper.SplitCamelCase(Model.Summary.CurrentGlobalSetting.SettingName) now active!', 'PTMagic switched Profit Trailer settings to "@Core.Helper.SystemHelper.SplitCamelCase(Model.Summary.CurrentGlobalSetting.SettingName)".');
-</text>
-}
+    @if (!Model.Summary.CurrentGlobalSetting.SettingName.Equals(Model.LastGlobalSetting)) {
+      <text>
+        $.Notification.notify('success', 'top left', '@Core.Helper.SystemHelper.SplitCamelCase(Model.Summary.CurrentGlobalSetting.SettingName) now active!', 'PTMagic switched Profit Trailer settings to "@Core.Helper.SystemHelper.SplitCamelCase(Model.Summary.CurrentGlobalSetting.SettingName)".');
+      </text>
+    }
 
-@if (!Model.TrendChartDataJSON.Equals("")) {
-  <text>
-    nv.addGraph(function () {
-      var lineChart = nv.models.lineChart();
-      var height = 300;
-      var chartData = @Html.Raw(Model.TrendChartDataJSON);
-    lineChart.useInteractiveGuideline(true);
-    lineChart.xAxis.tickFormat(function (d) { return d3.time.format('%H:%M')(new Date(d)); });
-    lineChart.yAxis.axisLabel('Trend %').tickFormat(d3.format(',.2f'));
-    d3.select('.trend-chart svg').attr('perserveAspectRatio', 'xMinYMid').datum(chartData).transition().duration(500).call(lineChart);
-    //nv.utils.windowResize(lineChart.update); v1.3.0 => Removed this line to prevent memory leak
+    @if (!Model.TrendChartDataJSON.Equals("")) {
+      <text>
+        nv.addGraph(function () {
+          var lineChart = nv.models.lineChart();
+          var height = 300;
+          var chartData = @Html.Raw(Model.TrendChartDataJSON);
+        lineChart.useInteractiveGuideline(true);
+        lineChart.xAxis.tickFormat(function (d) { return d3.time.format('%H:%M')(new Date(d)); });
+        lineChart.yAxis.axisLabel('Trend %').tickFormat(d3.format(',.2f'));
+        d3.select('.trend-chart svg').attr('perserveAspectRatio', 'xMinYMid').datum(chartData).transition().duration(500).call(lineChart);
+        //nv.utils.windowResize(lineChart.update); v1.3.0 => Removed this line to prevent memory leak
+        return lineChart;
+      });
+      </text>
+    }
 
-    return lineChart;
-  });
-  </text>
-}
+    @if (!Model.ProfitChartDataJSON.Equals("")) {
+      <text>
+        nv.addGraph(function () {
+          var lineChart = nv.models.lineChart();
+          var height = 300;
+          var chartData = @Html.Raw(Model.ProfitChartDataJSON);
+        lineChart.useInteractiveGuideline(true);
+        lineChart.xAxis.tickFormat(function (d) { return d3.time.format('%Y/%m/%d')(new Date(d)); });
+        lineChart.yAxis.axisLabel('Daily Profit').tickFormat(d3.format(',.2f'));
+        d3.select('.profit-chart svg').attr('perserveAspectRatio', 'xMinYMid').datum(chartData).transition().duration(500).call(lineChart);
+        //nv.utils.windowResize(lineChart.update); v1.3.0 => Removed this line to prevent memory leak
 
-@if (!Model.ProfitChartDataJSON.Equals("")) {
-  <text>
-    nv.addGraph(function () {
-      var lineChart = nv.models.lineChart();
-      var height = 300;
-      var chartData = @Html.Raw(Model.ProfitChartDataJSON);
-    lineChart.useInteractiveGuideline(true);
-    lineChart.xAxis.tickFormat(function (d) { return d3.time.format('%Y/%m/%d')(new Date(d)); });
-    lineChart.yAxis.axisLabel('Profit').tickFormat(d3.format(',.2f'));
-    d3.select('.profit-chart svg').attr('perserveAspectRatio', 'xMinYMid').datum(chartData).transition().duration(500).call(lineChart);
-    //nv.utils.windowResize(lineChart.update); v1.3.0 => Removed this line to prevent memory leak
-
-    return lineChart;
-  });
-  </text>
-}
-})(jQuery);
-
+        return lineChart;
+      });
+      </text>
+    }
+    })(jQuery);
 </script>
