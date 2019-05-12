@@ -71,7 +71,7 @@ namespace Core.Main.DataObjects
       {
         if (rawPTData.dcaLogData != null)
         {
-          this.BuildDCALogData(rawPTData.dcaLogData, rawPTData.gainLogData, rawPTData.pendingLogData, _systemConfiguration);
+          this.BuildDCALogData(rawPTData.dcaLogData, rawPTData.gainLogData, rawPTData.pendingLogData, rawPTData.watchModeLogData, _systemConfiguration);
         }
       });
 
@@ -245,7 +245,7 @@ namespace Core.Main.DataObjects
       }
     }
 
-    private void BuildDCALogData(dynamic rawDCALogData, dynamic rawPairsLogData, dynamic rawPendingLogData, PTMagicConfiguration systemConfiguration)
+    private void BuildDCALogData(dynamic rawDCALogData, dynamic rawPairsLogData, dynamic rawPendingLogData, dynamic rawWatchModeLogData, PTMagicConfiguration systemConfiguration)
     {
       foreach (var rdld in rawDCALogData)
       {
@@ -459,6 +459,69 @@ namespace Core.Main.DataObjects
 
         _dcaLog.Add(dcaLogData);
       }
+
+      foreach (var rpld in rawWatchModeLogData)
+      {
+        DCALogData dcaLogData = new DCALogData();
+        dcaLogData.Amount = rpld.totalAmount;
+        dcaLogData.BoughtTimes = 0;
+        dcaLogData.Market = rpld.market;
+        dcaLogData.ProfitPercent = rpld.profit;
+        dcaLogData.AverageBuyPrice = rpld.avgPrice;
+        dcaLogData.TotalCost = rpld.totalCost;
+        dcaLogData.BuyTriggerPercent = rpld.buyProfit;
+        dcaLogData.CurrentPrice = rpld.currentPrice;
+        dcaLogData.SellTrigger = rpld.triggerValue == null ? 0 : rpld.triggerValue;
+        dcaLogData.PercChange = rpld.percChange;
+        dcaLogData.BuyStrategy = rpld.buyStrategy == null ? "" : rpld.buyStrategy;
+        dcaLogData.SellStrategy = rpld.sellStrategy == null ? "" : rpld.sellStrategy;
+        dcaLogData.IsTrailing = false;
+
+        if (rpld.sellStrategies != null)
+        {
+          foreach (var ss in rpld.sellStrategies)
+          {
+            Strategy sellStrategy = new Strategy();
+            sellStrategy.Type = ss.type;
+            sellStrategy.Name = ss.name;
+            sellStrategy.EntryValue = ss.entryValue;
+            sellStrategy.EntryValueLimit = ss.entryValueLimit;
+            sellStrategy.TriggerValue = ss.triggerValue;
+            sellStrategy.CurrentValue = ss.currentValue;
+            sellStrategy.CurrentValuePercentage = ss.currentValuePercentage;
+            sellStrategy.Decimals = ss.decimals;
+            sellStrategy.IsTrailing = ((string)ss.positive).IndexOf("trailing", StringComparison.InvariantCultureIgnoreCase) > -1;
+            sellStrategy.IsTrue = ((string)ss.positive).IndexOf("true", StringComparison.InvariantCultureIgnoreCase) > -1;
+
+            dcaLogData.SellStrategies.Add(sellStrategy);
+          }
+        }
+
+        //Convert Unix Timestamp to Datetime
+        System.DateTime rpldDateTime = new DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
+        rpldDateTime = rpldDateTime.AddSeconds((double)rpld.firstBoughtDate).ToUniversalTime();
+
+        // Profit Trailer bought times are saved in UTC
+        if (rpld.firstBoughtDate > 0)
+        {
+          DateTimeOffset ptFirstBoughtDate = DateTimeOffset.Parse(rpldDateTime.Year.ToString() + "-" + rpldDateTime.Month.ToString("00") + "-" + rpldDateTime.Day.ToString("00") + "T" + rpldDateTime.Hour.ToString("00") + ":" + rpldDateTime.Minute.ToString("00") + ":" + rpldDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+
+          // Convert UTC bought time to local offset time
+          TimeSpan offsetTimeSpan = TimeSpan.Parse(systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
+          ptFirstBoughtDate = ptFirstBoughtDate.ToOffset(offsetTimeSpan);
+
+          dcaLogData.FirstBoughtDate = ptFirstBoughtDate.DateTime;
+        }
+        else
+        {
+          dcaLogData.FirstBoughtDate = Constants.confMinDate;
+        }
+
+        _dcaLog.Add(dcaLogData);
+      }
+
+
+
     }
 
     private void BuildBuyLogData(dynamic rawBuyLogData)
