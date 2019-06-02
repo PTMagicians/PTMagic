@@ -4,7 +4,10 @@
   Layout = null;
 }
 
-
+@section Styles {
+  <link href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/nvd3/nv.d3.min.css" rel="stylesheet" type="text/css" />
+  <link href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/tablesaw/css/tablesaw.css" rel="stylesheet" type="text/css" />
+}
 
 <div class="row">
   <div class="col-md-5 px-1">
@@ -172,7 +175,10 @@
   </div>
 </div>
 
-
+<script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/d3/d3.min.js"></script>
+<script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/nvd3/nv.d3.min.js"></script>
+<script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/tablesaw/js/tablesaw.js"></script>
+<script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/tablesaw/js/tablesaw-init.js"></script>
 <script type="text/javascript">
    $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
