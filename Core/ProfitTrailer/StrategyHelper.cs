@@ -227,6 +227,13 @@ namespace Core.ProfitTrailer
       string strategyLetter = "";
       string strategyNameOnly = strategyName;
 
+      // PT allows for "advanced_stats" to be turned on in the application settings, to show details of the trailing logic.
+      // This code ensures PTM doesn't generate an unnecessary shortcut for this information
+      if (result.Contains("STATS"))
+      {
+        result = "";
+      }
+
       // strategy labels that are variable, so can't be caught by the switch statement
       if (result.Contains("REBUY"))
       {
