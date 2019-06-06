@@ -1,9 +1,8 @@
-**This release addresses upcoming changes to PT 2.3.3's strategy naming convention, custom stratgey labels, as well as other various improvements and fixes.**
+**This release...**
 
 #  Update Instructions
 ### General
 - Always follow [these update instructions](https://github.com/PTMagicians/PTMagic/wiki/Updating-PT-Magic) when updating to a new version of PT Magic.
-- PTMagic 2.1 only works with Profit Trailer v2.2.  
 
 ### .Net
 - You must upgrade .Net runtime on your operating system to version 2.1.7 or higher at 
@@ -13,17 +12,5 @@ https://dotnet.microsoft.com/download/thank-you/dotnet-runtime-2.1.7-windows-hos
 - If you are updating from an earlier version of PTMagic, check any releases since your version, or the default settings included with this release, for new lines that must be added to your settings file.
 
 # Changes  
-- Added strategy shortcut for "Rebuy Timeout" and "Min/Max Change percent"
-- Added a temporary shortcut for PT's new Formula strategy.  Later versions should disply "Formula" as green/red for true/false.
-- Added a fix to stop mis-detection of preset file changes due to daylight savings.
-- Amount of coins held now shows in the Bag Analyzer page.
-- Fixed an issue with Dashboard refreshing that was causing browser and server issues
-- Updated some JS dependencies
-- Fix to ensure a correct value for 24Hour trend
-- Bag Analyzer page is now sortable by 24Hour Trend
-- Fixes for mobile view and SSV added to bags list
-- Fixed an issue that causeed the TickerWidge to make repeated calls
-- Removed PTData from ticker as it is no longer used
-- Implemented changes to strategy shortcuts for compatibility with the upcoming release of PT 2.3.3, this will also ensure custom strategy labels are recognized by PTM as buy/sell strategies.
-- Altered potential frozen process warning for clarity, and to include suggested remedies
+- 
 
