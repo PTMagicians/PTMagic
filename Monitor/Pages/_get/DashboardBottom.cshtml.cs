@@ -148,10 +148,10 @@ namespace Monitor.Pages {
       double AvailableBalance = (TotalValue - PairsBalance - DCABalance - PendingBalance - DustBalance);
       
       AssetDistributionData = "[";
-      AssetDistributionData += "{label: 'Pairs',color: '#82E0AA',value: " + PairsBalance.ToString() + "},";
-      AssetDistributionData += "{label: 'DCA',color: '#D98880',value: " + DCABalance.ToString() + "},";
-      AssetDistributionData += "{label: 'Pending',color: '#F5B041',value: " + PendingBalance.ToString() + "},";
-      AssetDistributionData += "{label: 'Balance',color: '#85C1E9',value: " + AvailableBalance.ToString() + "}]";
+      AssetDistributionData += "{label: 'Pairs',color: '#82E0AA',value: '" + PairsBalance.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "'},";
+      AssetDistributionData += "{label: 'DCA',color: '#D98880',value: '" + DCABalance.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "'},";
+      AssetDistributionData += "{label: 'Pending',color: '#F5B041',value: '" + PendingBalance.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "'},";
+      AssetDistributionData += "{label: 'Balance',color: '#85C1E9',value: '" + AvailableBalance.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "'}]";
     }
   }
 }
