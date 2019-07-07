@@ -375,6 +375,12 @@ namespace Core.ProfitTrailer
         case "buy value below dust":
           result = String.Concat(strategyLetter, "DUST");
           break;
+        case "sell wall detected":
+          result = String.Concat(strategyLetter, "WALL");
+          break;
+        case "ignoring buy trigger":
+          result = String.Concat(strategyLetter, "TRIG");
+          break;
         default:
           break;
       }
