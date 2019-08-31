@@ -26,6 +26,7 @@ namespace Core.MarketAnalyzer
       request.ContentType = "application/json";
       request.UserAgent = "PTMagic.Import";
       request.KeepAlive = true;
+      request.Timeout = 60000;
 
       HttpWebResponse httpResponse = null;
 

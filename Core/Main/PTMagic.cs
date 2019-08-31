@@ -63,7 +63,7 @@ namespace Core.Main
     private Dictionary<string, List<MarketTrendChange>> _globalMarketTrendChanges = new Dictionary<string, List<MarketTrendChange>>();
     private Dictionary<string, int> _singleMarketSettingsCount = new Dictionary<string, int>();
     Dictionary<string, List<SingleMarketSetting>> _triggeredSingleMarketSettings = new Dictionary<string, List<SingleMarketSetting>>();
-    private static readonly object _lockObj = new object();
+    private static volatile object _lockObj = new object();
 
     public LogHelper Log
     {
