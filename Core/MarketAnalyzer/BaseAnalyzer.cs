@@ -29,14 +29,17 @@ namespace Core.MarketAnalyzer
       request.Timeout = 60000;
 
       HttpWebResponse httpResponse = null;
+      string jsonString = string.Empty;
 
       try
       {
         httpResponse = (HttpWebResponse)request.GetResponse();
 
-        StreamReader jsonReader = new StreamReader(httpResponse.GetResponseStream());
-        string jsonString = jsonReader.ReadToEnd();
-        jsonReader.Close();
+        using (StreamReader jsonReader = new StreamReader(httpResponse.GetResponseStream()))
+        {
+          jsonString = jsonReader.ReadToEnd();
+          jsonReader.Close();
+        }
 
         jsonObject = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(jsonString);
 
@@ -44,6 +47,7 @@ namespace Core.MarketAnalyzer
       }
       catch (WebException ex)
       {
+        log.DoLogCritical(string.Format("Error whilst calling {0} \nError: {1}", url, ex.Message), ex);
         // Error calling the service but we got a response so dump it.
         string responseString = string.Empty;
         var encoding = httpResponse.CharacterSet == "" ? Encoding.UTF8 : Encoding.GetEncoding(httpResponse.CharacterSet);
