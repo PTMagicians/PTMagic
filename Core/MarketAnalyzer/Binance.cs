@@ -416,7 +416,7 @@ namespace Core.MarketAnalyzer
             Dictionary<string, Market> tickMarkets = new Dictionary<string, Market>();
             foreach (string key in markets.Keys)
             {
-              List<MarketTick> tickRange = marketTicks[key].FindAll(t => t.Time <= tickTime);
+              List<MarketTick> tickRange = marketTicks[key] != null ? marketTicks[key].FindAll(t => t.Time <= tickTime) : new List<MarketTick>();
 
               if (tickRange.Count > 0)
               {

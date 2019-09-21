@@ -48,26 +48,31 @@ namespace Core.MarketAnalyzer
       catch (WebException ex)
       {
         log.DoLogCritical(string.Format("Error whilst calling {0} \nError: {1}", url, ex.Message), ex);
-        // Error calling the service but we got a response so dump it.
-        string responseString = string.Empty;
-        var encoding = httpResponse.CharacterSet == "" ? Encoding.UTF8 : Encoding.GetEncoding(httpResponse.CharacterSet);
 
-        using (var stream = httpResponse.GetResponseStream())
+        if (ex.Response != null)
         {
-          var reader = new StreamReader(stream, encoding);
-          responseString = reader.ReadToEnd();
+          // Error calling the service but we got a response so dump it.
+          string responseString = string.Empty;
+          var response = ((HttpWebResponse)ex.Response);
+          var encoding = response.CharacterSet == "" ? Encoding.UTF8 : Encoding.GetEncoding(response.CharacterSet);
+
+          using (var stream = response.GetResponseStream())
+          {
+            var reader = new StreamReader(stream, encoding);
+            responseString = reader.ReadToEnd();
+          }
+
+          log.DoLogCritical(String.Format("{0} - Response: ({1}) {2} : {3}", ex.Message, response.StatusCode, response.StatusDescription, responseString), ex);
         }
 
-        log.DoLogCritical(String.Format("{0} - Response: ({1}) {2} : {3}", ex.Message, httpResponse.StatusCode, httpResponse.StatusDescription, responseString), ex);
-
-        throw ex;
+        throw;
       }
       catch (Exception ex)
       {
         log.DoLogCritical(ex.Message, ex);
-      }
 
-      return jsonObject;
+        throw;
+      }
     }
 
     public static Newtonsoft.Json.Linq.JObject GetSimpleJsonObjectFromURL(string url, LogHelper log, bool swallowException)
@@ -351,15 +356,15 @@ namespace Core.MarketAnalyzer
     }
 
     public static List<MarketTrendChange> GetMarketTrendChanges(
-      string platform, 
-      string mainMarket, 
-      MarketTrend marketTrend, 
-      List<string> marketList, 
-      Dictionary<string, Market> recentMarkets, 
-      Dictionary<string, Market> trendMarkets, 
-      string sortBy, 
-      bool isGlobal, 
-      PTMagicConfiguration systemConfiguration, 
+      string platform,
+      string mainMarket,
+      MarketTrend marketTrend,
+      List<string> marketList,
+      Dictionary<string, Market> recentMarkets,
+      Dictionary<string, Market> trendMarkets,
+      string sortBy,
+      bool isGlobal,
+      PTMagicConfiguration systemConfiguration,
       LogHelper log)
     {
       List<MarketTrendChange> result = new List<MarketTrendChange>();
