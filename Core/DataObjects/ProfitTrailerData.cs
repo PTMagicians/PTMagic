@@ -4,12 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Core.Main.DataObjects.PTMagicData;
 
@@ -31,48 +26,21 @@ namespace Core.Main.DataObjects
     {
       _systemConfiguration = systemConfiguration;
 
-      string html = "";
-      string url = systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL + "api/data?token=" + systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken;
-
-      // Get the data from PT
-      HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-      request.AutomaticDecompression = DecompressionMethods.GZip;
-      request.KeepAlive = true;
-
-      WebResponse response = request.GetResponse();
-      Stream dataStream = response.GetResponseStream();
-      StreamReader reader = new StreamReader(dataStream);
-      html = reader.ReadToEnd();
-      reader.Close();
-      response.Close();
-
-      // Parse the JSON and build the data sets
-      dynamic rawPTData = JObject.Parse(html);
-
       Parallel.Invoke(() =>
-      {
-        _summary = BuildSummaryData(rawPTData);
+      {        
+        _summary = BuildSummaryData(GetDataFromProfitTrailer("api/v2/data/misc"));
       },
       () =>
       {
-        if (rawPTData.sellLogData != null)
-        {
-          this.BuildSellLogData(rawPTData.sellLogData, _systemConfiguration);
-        }
+          this.BuildSellLogData(GetDataFromProfitTrailer("/api/v2/data/sales"));
       },
       () =>
       {
-        if (rawPTData.bbBuyLogData != null)
-        {
-          this.BuildBuyLogData(rawPTData.bbBuyLogData);
-        }
+          this.BuildBuyLogData(GetDataFromProfitTrailer("/api/v2/data/pbl", true));
       },
       () =>
       {
-        if (rawPTData.dcaLogData != null)
-        {
-          this.BuildDCALogData(rawPTData.dcaLogData, rawPTData.gainLogData, rawPTData.pendingLogData, rawPTData.watchModeLogData, _systemConfiguration);
-        }
+          this.BuildDCALogData(GetDataFromProfitTrailer("/api/v2/data/dca", true), GetDataFromProfitTrailer("/api/v2/data/pairs", true), GetDataFromProfitTrailer("/api/v2/data/pending", true), GetDataFromProfitTrailer("/api/v2/data/watchmode", true));
       });
 
       // Convert local offset time to UTC
@@ -182,8 +150,6 @@ namespace Core.Main.DataObjects
       (this.Summary.DustValue);
     }
 
-
-
     public double GetSnapshotBalance(DateTime snapshotDateTime)
     {
       double result = _systemConfiguration.GeneralSettings.Application.StartBalance;
@@ -195,6 +161,38 @@ namespace Core.Main.DataObjects
       result += this.DCALog.FindAll(pairs => pairs.FirstBoughtDate <= snapshotDateTime).Sum(pairs => pairs.CurrentValue);
 
       return result;
+    }
+
+    private dynamic GetDataFromProfitTrailer(string callPath, bool arrayReturned = false)
+    {
+      string rawBody = "";
+      string url = string.Format("{0}{1}?token={2}", _systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL, callPath, _systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken);
+
+      // Get the data from PT
+      HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+      request.AutomaticDecompression = DecompressionMethods.GZip;
+      request.KeepAlive = true;
+
+      WebResponse response = request.GetResponse();
+
+      using (Stream dataStream = response.GetResponseStream())
+      {
+        StreamReader reader = new StreamReader(dataStream);
+        rawBody = reader.ReadToEnd();
+        reader.Close();
+      }
+
+      response.Close();
+
+      // Parse the JSON and build the data sets
+      if (!arrayReturned)
+      {
+        return JObject.Parse(rawBody);
+      }
+      else
+      {
+        return JArray.Parse(rawBody);
+      }
     }
 
     private SummaryData BuildSummaryData(dynamic PTData)
@@ -210,9 +208,9 @@ namespace Core.Main.DataObjects
       };
     }
 
-    private void BuildSellLogData(dynamic rawSellLogData, PTMagicConfiguration systemConfiguration)
+    private void BuildSellLogData(dynamic rawSellLogData)
     {
-      foreach (var rsld in rawSellLogData)
+      foreach (var rsld in rawSellLogData.data)
       {
         SellLogData sellLogData = new SellLogData();
         sellLogData.SoldAmount = rsld.soldAmount;
@@ -236,7 +234,7 @@ namespace Core.Main.DataObjects
         DateTimeOffset ptSoldDate = DateTimeOffset.Parse(dtDateTime.Year.ToString() + "-" + dtDateTime.Month.ToString("00") + "-" + dtDateTime.Day.ToString("00") + "T" + dtDateTime.Hour.ToString("00") + ":" + dtDateTime.Minute.ToString("00") + ":" + dtDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
 
         // Convert UTC sales time to local offset time
-        TimeSpan offsetTimeSpan = TimeSpan.Parse(systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
+        TimeSpan offsetTimeSpan = TimeSpan.Parse(_systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
         ptSoldDate = ptSoldDate.ToOffset(offsetTimeSpan);
 
         sellLogData.SoldDate = ptSoldDate.DateTime;
@@ -245,7 +243,7 @@ namespace Core.Main.DataObjects
       }
     }
 
-    private void BuildDCALogData(dynamic rawDCALogData, dynamic rawPairsLogData, dynamic rawPendingLogData, dynamic rawWatchModeLogData, PTMagicConfiguration systemConfiguration)
+    private void BuildDCALogData(dynamic rawDCALogData, dynamic rawPairsLogData, dynamic rawPendingLogData, dynamic rawWatchModeLogData)
     {
       foreach (var rdld in rawDCALogData)
       {
@@ -327,7 +325,7 @@ namespace Core.Main.DataObjects
           DateTimeOffset ptFirstBoughtDate = DateTimeOffset.Parse(rdldDateTime.Year.ToString() + "-" + rdldDateTime.Month.ToString("00") + "-" + rdldDateTime.Day.ToString("00") + "T" + rdldDateTime.Hour.ToString("00") + ":" + rdldDateTime.Minute.ToString("00") + ":" + rdldDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
 
           // Convert UTC bought time to local offset time
-          TimeSpan offsetTimeSpan = TimeSpan.Parse(systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
+          TimeSpan offsetTimeSpan = TimeSpan.Parse(_systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
           ptFirstBoughtDate = ptFirstBoughtDate.ToOffset(offsetTimeSpan);
 
           dcaLogData.FirstBoughtDate = ptFirstBoughtDate.DateTime;
@@ -387,7 +385,7 @@ namespace Core.Main.DataObjects
           DateTimeOffset ptFirstBoughtDate = DateTimeOffset.Parse(rpldDateTime.Year.ToString() + "-" + rpldDateTime.Month.ToString("00") + "-" + rpldDateTime.Day.ToString("00") + "T" + rpldDateTime.Hour.ToString("00") + ":" + rpldDateTime.Minute.ToString("00") + ":" + rpldDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
 
           // Convert UTC bought time to local offset time
-          TimeSpan offsetTimeSpan = TimeSpan.Parse(systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
+          TimeSpan offsetTimeSpan = TimeSpan.Parse(_systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
           ptFirstBoughtDate = ptFirstBoughtDate.ToOffset(offsetTimeSpan);
 
           dcaLogData.FirstBoughtDate = ptFirstBoughtDate.DateTime;
@@ -447,7 +445,7 @@ namespace Core.Main.DataObjects
           DateTimeOffset ptFirstBoughtDate = DateTimeOffset.Parse(rpldDateTime.Year.ToString() + "-" + rpldDateTime.Month.ToString("00") + "-" + rpldDateTime.Day.ToString("00") + "T" + rpldDateTime.Hour.ToString("00") + ":" + rpldDateTime.Minute.ToString("00") + ":" + rpldDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
 
           // Convert UTC bought time to local offset time
-          TimeSpan offsetTimeSpan = TimeSpan.Parse(systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
+          TimeSpan offsetTimeSpan = TimeSpan.Parse(_systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
           ptFirstBoughtDate = ptFirstBoughtDate.ToOffset(offsetTimeSpan);
 
           dcaLogData.FirstBoughtDate = ptFirstBoughtDate.DateTime;
@@ -507,7 +505,7 @@ namespace Core.Main.DataObjects
           DateTimeOffset ptFirstBoughtDate = DateTimeOffset.Parse(rpldDateTime.Year.ToString() + "-" + rpldDateTime.Month.ToString("00") + "-" + rpldDateTime.Day.ToString("00") + "T" + rpldDateTime.Hour.ToString("00") + ":" + rpldDateTime.Minute.ToString("00") + ":" + rpldDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
 
           // Convert UTC bought time to local offset time
-          TimeSpan offsetTimeSpan = TimeSpan.Parse(systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
+          TimeSpan offsetTimeSpan = TimeSpan.Parse(_systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
           ptFirstBoughtDate = ptFirstBoughtDate.ToOffset(offsetTimeSpan);
 
           dcaLogData.FirstBoughtDate = ptFirstBoughtDate.DateTime;
@@ -519,9 +517,6 @@ namespace Core.Main.DataObjects
 
         _dcaLog.Add(dcaLogData);
       }
-
-
-
     }
 
     private void BuildBuyLogData(dynamic rawBuyLogData)
