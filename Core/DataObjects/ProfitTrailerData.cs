@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using System.Diagnostics;
 using Newtonsoft.Json.Linq;
 using Core.Main.DataObjects.PTMagicData;
 
@@ -21,27 +22,12 @@ namespace Core.Main.DataObjects
     private PTMagicConfiguration _systemConfiguration = null;
     private TransactionData _transactionData = null;
     private DateTimeOffset _dateTimeNow = Constants.confMinDate;
+    private DateTime _buyLogRefresh = DateTime.UtcNow, _sellLogRefresh = DateTime.UtcNow, _dcaLogRefresh = DateTime.UtcNow, _summaryRefresh = DateTime.UtcNow;
+    private volatile object _buyLock = new object(), _sellLock = new object(), _dcaLock = new object(), _summaryLock = new object();
 
     public ProfitTrailerData(PTMagicConfiguration systemConfiguration)
     {
       _systemConfiguration = systemConfiguration;
-
-      Parallel.Invoke(() =>
-      {        
-        _summary = BuildSummaryData(GetDataFromProfitTrailer("api/v2/data/misc"));
-      },
-      () =>
-      {
-          this.BuildSellLogData(GetDataFromProfitTrailer("/api/v2/data/sales"));
-      },
-      () =>
-      {
-          this.BuildBuyLogData(GetDataFromProfitTrailer("/api/v2/data/pbl", true));
-      },
-      () =>
-      {
-          this.BuildDCALogData(GetDataFromProfitTrailer("/api/v2/data/dca", true), GetDataFromProfitTrailer("/api/v2/data/pairs", true), GetDataFromProfitTrailer("/api/v2/data/pending", true), GetDataFromProfitTrailer("/api/v2/data/watchmode", true));
-      });
 
       // Convert local offset time to UTC
       TimeSpan offsetTimeSpan = TimeSpan.Parse(systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
@@ -52,6 +38,19 @@ namespace Core.Main.DataObjects
     {
       get
       {
+        if (_summary == null || (DateTime.UtcNow > _summaryRefresh))
+        {
+          lock (_summaryLock)
+          {
+            // Thread double locking
+            if (_summary == null || (DateTime.UtcNow > _summaryRefresh))
+            {
+              _summary = BuildSummaryData(GetDataFromProfitTrailer("api/v2/data/misc"));
+              _summaryRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+            }
+          }
+        }
+
         return _summary;
       }
     }
@@ -59,6 +58,20 @@ namespace Core.Main.DataObjects
     {
       get
       {
+        if (_sellLog == null || (DateTime.UtcNow > _sellLogRefresh))
+        {
+          lock (_sellLock)
+          {
+            // Thread double locking
+            if (_sellLog == null || (DateTime.UtcNow > _sellLogRefresh))
+            {
+              _sellLog.Clear();
+              this.BuildSellLogData(GetDataFromProfitTrailer("/api/v2/data/sales"));
+              _sellLogRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+            }
+          }
+        }
+
         return _sellLog;
       }
     }
@@ -67,7 +80,7 @@ namespace Core.Main.DataObjects
     {
       get
       {
-        return _sellLog.FindAll(sl => sl.SoldDate.Date == _dateTimeNow.DateTime.Date);
+        return SellLog.FindAll(sl => sl.SoldDate.Date == _dateTimeNow.DateTime.Date);
       }
     }
 
@@ -75,7 +88,7 @@ namespace Core.Main.DataObjects
     {
       get
       {
-        return _sellLog.FindAll(sl => sl.SoldDate.Date == _dateTimeNow.DateTime.AddDays(-1).Date);
+        return SellLog.FindAll(sl => sl.SoldDate.Date == _dateTimeNow.DateTime.AddDays(-1).Date);
       }
     }
 
@@ -83,7 +96,7 @@ namespace Core.Main.DataObjects
     {
       get
       {
-        return _sellLog.FindAll(sl => sl.SoldDate.Date >= _dateTimeNow.DateTime.AddDays(-7).Date);
+        return SellLog.FindAll(sl => sl.SoldDate.Date >= _dateTimeNow.DateTime.AddDays(-7).Date);
       }
     }
 
@@ -91,7 +104,7 @@ namespace Core.Main.DataObjects
     {
       get
       {
-        return _sellLog.FindAll(sl => sl.SoldDate.Date >= _dateTimeNow.DateTime.AddDays(-30).Date);
+        return SellLog.FindAll(sl => sl.SoldDate.Date >= _dateTimeNow.DateTime.AddDays(-30).Date);
       }
     }
 
@@ -99,6 +112,40 @@ namespace Core.Main.DataObjects
     {
       get
       {
+        if (_dcaLog == null || (DateTime.UtcNow > _dcaLogRefresh))
+        {
+          lock (_dcaLock)
+          {
+            // Thread double locking
+            if (_dcaLog == null || (DateTime.UtcNow > _dcaLogRefresh))
+            {
+              dynamic dcaData = null, pairsData = null, pendingData = null, watchData = null;
+              _dcaLog.Clear();
+
+              Parallel.Invoke(() =>
+              {
+                dcaData = GetDataFromProfitTrailer("/api/v2/data/dca", true);
+              },
+              () =>
+              {
+                pairsData = GetDataFromProfitTrailer("/api/v2/data/pairs", true);
+              },
+              () =>
+              {
+                pendingData = GetDataFromProfitTrailer("/api/v2/data/pending", true);
+
+              },
+              () =>
+              {
+                watchData = GetDataFromProfitTrailer("/api/v2/data/watchmode", true);
+              });
+
+              this.BuildDCALogData(dcaData, pairsData, pendingData, watchData);
+              _dcaLogRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.BagAnalyzerRefreshSeconds - 1);
+            }
+          }
+        }
+
         return _dcaLog;
       }
     }
@@ -107,6 +154,20 @@ namespace Core.Main.DataObjects
     {
       get
       {
+        if (_buyLog == null || (DateTime.UtcNow > _buyLogRefresh))
+        {
+          lock (_buyLock)
+          {
+            // Thread double locking
+            if (_buyLog == null || (DateTime.UtcNow > _buyLogRefresh))
+            {
+              _buyLog.Clear();
+              this.BuildBuyLogData(GetDataFromProfitTrailer("/api/v2/data/pbl", true));
+              _buyLogRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.BuyAnalyzerRefreshSeconds - 1);
+            }
+          }
+        }
+
         return _buyLog;
       }
     }
@@ -122,31 +183,31 @@ namespace Core.Main.DataObjects
 
     public double GetCurrentBalance()
     {
-      return 
+      return
       (this.Summary.Balance +
       this.Summary.PairsValue +
       this.Summary.DCAValue +
       this.Summary.PendingValue +
       this.Summary.DustValue);
     }
-     public double GetPairsBalance()
+    public double GetPairsBalance()
     {
-      return 
+      return
       (this.Summary.PairsValue);
     }
-     public double GetDCABalance()
+    public double GetDCABalance()
     {
-      return 
+      return
       (this.Summary.DCAValue);
     }
-     public double GetPendingBalance()
+    public double GetPendingBalance()
     {
-      return 
+      return
       (this.Summary.PendingValue);
     }
     public double GetDustBalance()
     {
-      return 
+      return
       (this.Summary.DustValue);
     }
 
@@ -169,6 +230,7 @@ namespace Core.Main.DataObjects
       string url = string.Format("{0}{1}?token={2}", _systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL, callPath, _systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken);
 
       // Get the data from PT
+      Debug.WriteLine(String.Format("{0} - Calling '{1}'", DateTime.UtcNow, url));
       HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
       request.AutomaticDecompression = DecompressionMethods.GZip;
       request.KeepAlive = true;

@@ -10,6 +10,7 @@ using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
 using Core.MarketAnalyzer;
 using System.Diagnostics;
+using Core.Main.DataObjects;
 
 namespace Monitor._Internal
 {
@@ -28,6 +29,25 @@ namespace Monitor._Internal
     public string NotifyType = "";
 
     public string MainFiatCurrencySymbol = "$";
+    private volatile object _ptDataLock = new object();
+    private static ProfitTrailerData _ptData = null;
+
+    // Profit Trailer data accessor object
+    public ProfitTrailerData PtDataObject
+    {
+      get
+      {
+        if (_ptData == null)
+        {
+          lock (_ptDataLock)
+          {
+            _ptData = new ProfitTrailerData(PTMagicConfiguration);
+          }
+        }
+
+        return _ptData;
+      }
+    }
 
     public void PreInit()
     {
