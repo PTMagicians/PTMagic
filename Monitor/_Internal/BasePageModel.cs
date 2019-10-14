@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,9 +9,8 @@ using Core.Main;
 using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
 using Core.MarketAnalyzer;
-using Core.ProfitTrailer;
-using Microsoft.Extensions.Primitives;
 using System.Diagnostics;
+using Core.Main.DataObjects;
 
 namespace Monitor._Internal
 {
@@ -22,7 +20,6 @@ namespace Monitor._Internal
     public string PTMagicBasePath = "";
     public string PTMagicMonitorBasePath = "";
     public PTMagicConfiguration PTMagicConfiguration = null;
-
     public Summary Summary { get; set; } = new Summary();
     public LogHelper Log = null;
     public string LatestVersion = "";
@@ -32,6 +29,25 @@ namespace Monitor._Internal
     public string NotifyType = "";
 
     public string MainFiatCurrencySymbol = "$";
+    private volatile object _ptDataLock = new object();
+    private static ProfitTrailerData _ptData = null;
+
+    // Profit Trailer data accessor object
+    public ProfitTrailerData PtDataObject
+    {
+      get
+      {
+        if (_ptData == null)
+        {
+          lock (_ptDataLock)
+          {
+            _ptData = new ProfitTrailerData(PTMagicConfiguration);
+          }
+        }
+
+        return _ptData;
+      }
+    }
 
     public void PreInit()
     {
@@ -58,14 +74,7 @@ namespace Monitor._Internal
         PTMagicBasePath += Path.DirectorySeparatorChar;
       }
 
-      try
-      {
-        PTMagicConfiguration = new PTMagicConfiguration(PTMagicBasePath);
-      }
-      catch (Exception ex)
-      {
-        throw ex;
-      }
+      PTMagicConfiguration = new PTMagicConfiguration(PTMagicBasePath);
 
       IServiceProvider logProvider = ServiceHelper.BuildLoggerService(PTMagicBasePath);
       Log = logProvider.GetRequiredService<LogHelper>();
