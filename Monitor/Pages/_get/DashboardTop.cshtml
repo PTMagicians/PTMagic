@@ -94,7 +94,7 @@
               <tr>
                 <th>Market</th>             
                 <th class="text-left" data-toggle="tooltip" data-placement="top" title="Market trend last 24 hours">24H Trend</th>
-                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Total Buy Value">Value</th>
+                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Total Buy Cost">Cost</th>
                 <th></th>
                 <th class="text-left" data-toggle="tooltip" data-placement="top" title="Active buy strategies">DCA Buy Strats</th>
                 <th class="text-left" data-toggle="tooltip" data-placement="top" title="Active sell strategies">Sell Strats</th>
@@ -147,6 +147,11 @@
                 bool lostValue = false;
                 lostValue = (dcaLogEntry.TotalCost == 0.0) || (dcaLogEntry.AverageBuyPrice == 0.0);
 
+                // Aggregate totals
+                Model.TotalBagCost = Model.TotalBagCost + dcaLogEntry.TotalCost;
+                double TradingFee = (dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) * 0.002;
+                Model.TotalBagValue = Model.TotalBagValue + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) - TradingFee);
+
                 // Render the row
                 <tr @(lostValue ? "class=errorRow" : "") >
                   @if (mps == null || mps.ActiveSingleSettings == null || mps.ActiveSingleSettings.Count == 0) {
@@ -185,6 +190,12 @@
                   <td class="text-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)_get/BagDetails/?m=@dcaLogEntry.Market" data-remote="false" data-toggle="modal" data-target="#dca-chart"><i class="fa fa-plus-circle"></i></a></td>
                 </tr>
               }
+              
+            <td>Totals:</td><td></td>
+            <td>@Html.Raw(Model.TotalBagCost.ToString("#,#0.000000", new System.Globalization.CultureInfo("en-US")))</td>
+            <td></td><td></td><td></td>
+            <td class="text-autocolor">@Html.Raw((((Model.TotalBagValue - Model.TotalBagCost) / Model.TotalBagCost) * 100).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))%</td>
+
             </tbody>
           </table>
         </div>

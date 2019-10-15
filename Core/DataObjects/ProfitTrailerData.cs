@@ -615,7 +615,7 @@ namespace Core.Main.DataObjects
               buyStrategy.IsTrue = ((string)(bs.positive)).IndexOf("true", StringComparison.InvariantCultureIgnoreCase) > -1;
 
               // Is SOM?
-              buyLogData.IsSom = buyLogData.IsSom || buyStrategy.Name.Equals("som enabled", StringComparison.OrdinalIgnoreCase);
+              buyLogData.IsSom = buyLogData.IsSom || buyStrategy.Name.Contains("som enabled", StringComparison.OrdinalIgnoreCase);
 
               // Is the pair trailing?
               buyLogData.IsTrailing = buyLogData.IsTrailing || buyStrategy.IsTrailing;
