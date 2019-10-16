@@ -150,14 +150,19 @@
                 // Aggregate totals
                 Model.TotalBagCost = Model.TotalBagCost + dcaLogEntry.TotalCost;
 
+                double ExchangeFee = 0;
+
                 if (Model.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Binance")) {
-                  double ExchangeFee = 0.002;
+                  ExchangeFee = 0.002;
+                }
+                if (Model.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceUS")) {
+                  ExchangeFee = 0.002;
                 }
                 if (Model.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Bittrex")) {
-                  double ExchangeFee = 0.0025;
+                  ExchangeFee = 0.0025;
                 }
                 if (Model.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Poloniex")) {
-                  double ExchangeFee = 0.0025;
+                  ExchangeFee = 0.0025;
                 }
 
                 double TradingFee = (dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) * ExchangeFee;
