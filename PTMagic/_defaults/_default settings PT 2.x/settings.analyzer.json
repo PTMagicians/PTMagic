@@ -1,7 +1,8 @@
 ﻿//
-//  The settings below offer a basic example of some of the options available when using PTMagic.
+//  The settings below offer a simple example of some of the options available when using PTMagic.
 //  You should take your time and adjust these settings according to your own personal preferences.
-//  Always test your PTMagic settings by running a Profit Trailer bot in TESTMODE, to make sure 
+//
+//  ALWAYS test your PTMagic settings by running a Profit Trailer bot in TESTMODE, to make sure 
 //  it is performing as you expect. 
 //
 //  For more information on these settings, see the wiki at: https://github.com/PTMagicians/PTMagic/wiki/settings.analyzer  
@@ -31,6 +32,15 @@
           "MaxMarkets": 50,
           "TrendMinutes": 60,
           "TrendCurrency": "Market",
+		  "DisplayGraph": false,  
+		  "DisplayOnMarketAnalyzerList": true 
+        },
+        {
+          "Name": "3h",
+          "Platform": "Exchange",
+          "MaxMarkets": 50,
+          "TrendMinutes": 180,
+          "TrendCurrency": "Market",
 		  "DisplayGraph": true,  
 		  "DisplayOnMarketAnalyzerList": true 
         },
@@ -58,7 +68,16 @@
           "MaxMarkets": 50,
           "TrendMinutes": 1440,
           "TrendCurrency": "Market",
-		  "DisplayGraph": true,  
+		  "DisplayGraph": false,  
+		  "DisplayOnMarketAnalyzerList": true 
+        },
+        {
+          "Name": "3d",
+          "Platform": "Exchange",
+          "MaxMarkets": 50,
+          "TrendMinutes": 4320,
+          "TrendCurrency": "Market",
+		  "DisplayGraph": false,  
 		  "DisplayOnMarketAnalyzerList": true 
         }
       ]
@@ -86,7 +105,7 @@
           }
         ],
         "PairsProperties": { // Properties for PAIRS.PROPERTIES
-		  // Any valid setting from https://wiki.profittrailer.com/doku.php?id=pairs.properties can be used here.
+		  // Any valid setting from https://wiki.profittrailer.com/doku.php?id=pairs_config can be used here.
           // You can use a specific value, or apply a discrete OFFSET or OFFSETPERCENT to the value in your default PAIRS setting.		  
           "DEFAULT_sell_only_mode_enabled": true,
           "DEFAULT_trailing_profit_OFFSETPERCENT": -50
@@ -249,7 +268,7 @@
 	// ================================  COIN-SPECIFIC SETTINGS  ================================ 
 	// 
     "SingleMarketSettings": [ // Single market/pair settings for Profit Trailer properties
-	                          // Any setting from https://wiki.profittrailer.com/doku.php?id=pairs.properties 
+	                          // Any setting from https://wiki.profittrailer.com/doku.php?id=pairs_config
 							  // marked as CS (coin-specific) can be used here.
 							  // Only coins that meet the triggered conditions will have the settings applied.
       {
@@ -292,7 +311,7 @@
 		"OffTriggers": [
 		  {
             "HoursSinceTriggered": 3 //  Any coin that triggers this setting, will remain under this setting
-                                     //	 for 3 hours, since the last time it triggered.
+                                     //	 for 3 hours even if the trends are no longer true.
           }
         ],
         "PairsProperties": {
