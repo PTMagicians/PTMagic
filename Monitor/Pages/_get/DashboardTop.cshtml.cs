@@ -11,7 +11,7 @@ namespace Monitor.Pages {
   public class DashboardTopModel : _Internal.BasePageModelSecureAJAX {
     public ProfitTrailerData PTData = null;
     public DateTimeOffset DateTimeNow = Constants.confMinDate;
-
+   
     public void OnGet() {
       // Initialize Config
       base.Init();
@@ -19,8 +19,10 @@ namespace Monitor.Pages {
       BindData();
     }
 
+    public double TotalBagCost = 0;
+    public double TotalBagValue = 0;
     private void BindData() {
-      PTData = new ProfitTrailerData(PTMagicConfiguration);
+      PTData = this.PtDataObject;
 
       // Convert local offset time to UTC
       TimeSpan offsetTimeSpan = TimeSpan.Parse(PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));

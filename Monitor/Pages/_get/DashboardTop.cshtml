@@ -51,9 +51,7 @@
               string buyStrategyText = Core.ProfitTrailer.StrategyHelper.GetStrategyText(Model.Summary, buyLogEntry.BuyStrategies, buyLogEntry.BuyStrategy, isBuyStrategyTrue, isTrailingBuyActive);
               if (!Core.ProfitTrailer.StrategyHelper.IsValidStrategy(buyStrategyText, true)) {
                 buyDisabled = true;
-              }
-              
-              buyLogEntry.PercChange = @buyLogEntry.PercChange * 100;
+              }              
 
               <tr>
                 @if (mps == null || mps.ActiveSingleSettings == null || mps.ActiveSingleSettings.Count == 0) {
@@ -61,7 +59,7 @@
                 } else {
                   <th class="align-top"><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, buyLogEntry.Market, Model.Summary.MainMarket)" target="_blank">@buyLogEntry.Market</a> <i class="fa fa-exclamation-triangle text-highlight" data-toggle="tooltip" data-placement="top" data-html="true" title="@await Component.InvokeAsync("PairIcon", mps)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner pair-tooltip'></div></div>"></i></th>
                 }
-                <td class="text-autocolor">@buyLogEntry.PercChange.ToString("#,#0.00")%</td>
+                <td class="text-autocolor">@string.Format("{0}%", (buyLogEntry.PercChange * 100).ToString("#,#0.00"))</td>
                 @if (buyDisabled) {
                   <td>@Html.Raw(buyStrategyText)</td>
                 } else {
@@ -96,7 +94,7 @@
               <tr>
                 <th>Market</th>             
                 <th class="text-left" data-toggle="tooltip" data-placement="top" title="Market trend last 24 hours">24H Trend</th>
-                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Total Buy Value">Value</th>
+                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Total Buy Cost">Cost</th>
                 <th></th>
                 <th class="text-left" data-toggle="tooltip" data-placement="top" title="Active buy strategies">DCA Buy Strats</th>
                 <th class="text-left" data-toggle="tooltip" data-placement="top" title="Active sell strategies">Sell Strats</th>
@@ -149,6 +147,31 @@
                 bool lostValue = false;
                 lostValue = (dcaLogEntry.TotalCost == 0.0) || (dcaLogEntry.AverageBuyPrice == 0.0);
 
+                // Aggregate totals
+                Model.TotalBagCost = Model.TotalBagCost + dcaLogEntry.TotalCost;
+                double ExchangeFee = 0;
+
+                switch (Model.PTMagicConfiguration.GeneralSettings.Application.Exchange.ToLower())
+                {
+                  case "binance":
+                    ExchangeFee = 0.002;
+                    break;
+                  case "binanceus":
+                    ExchangeFee = 0.002;
+                    break;
+                  case "bittrex":
+                    ExchangeFee = 0.0025;
+                    break;
+                  case "poloniex":
+                    ExchangeFee = 0.0025;
+                    break;
+                  default:
+                    break;
+                }
+
+                double TradingFee = (dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) * ExchangeFee;
+                Model.TotalBagValue = Model.TotalBagValue + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) - TradingFee);
+
                 // Render the row
                 <tr @(lostValue ? "class=errorRow" : "") >
                   @if (mps == null || mps.ActiveSingleSettings == null || mps.ActiveSingleSettings.Count == 0) {
@@ -187,6 +210,12 @@
                   <td class="text-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)_get/BagDetails/?m=@dcaLogEntry.Market" data-remote="false" data-toggle="modal" data-target="#dca-chart"><i class="fa fa-plus-circle"></i></a></td>
                 </tr>
               }
+              
+            <td>Totals:</td><td></td>
+            <td>@Html.Raw(Model.TotalBagCost.ToString("#,#0.000000", new System.Globalization.CultureInfo("en-US")))</td>
+            <td></td><td></td><td></td>
+            <td class="text-autocolor">@Html.Raw((((Model.TotalBagValue - Model.TotalBagCost) / Model.TotalBagCost) * 100).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))%</td>
+
             </tbody>
           </table>
         </div>

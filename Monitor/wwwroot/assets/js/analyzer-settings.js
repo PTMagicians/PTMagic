@@ -93,7 +93,7 @@ const PropertyTemplate = ({ settingType, settingName, propertyType, propertyKey,
   <div class="form-group row">
     <div class="col-md-4">
       <input type="text" class="form-control" placeholder="Profit Trailer setting" name="MarketAnalyzer_${settingType}_${settingName}|${propertyType}Property_${propertyKeySimple}" value="${propertyKeySimple}">
-      <span class="help-block"><small>Any <a href="https://wiki.profittrailer.com/doku.php?id=${propertyType}.properties" target="_blank">variable from PT's settings</a> may be used!</small></span>
+      <span class="help-block"><small>Any <a href="https://wiki.profittrailer.com/doku.php?id=${propertyType}_config" target="_blank">variable from PT's settings</a> may be used!</small></span>
     </div>
     <div class="col-md-3">
       <input type="text" class="form-control" placeholder="Value" name="MarketAnalyzer_${settingType}_${settingName}|${propertyType}Property_${propertyKeySimple}|Value" value="${value}">

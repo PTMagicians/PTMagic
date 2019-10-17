@@ -15,7 +15,7 @@ using System.Collections.Concurrent;
 
 namespace Core.MarketAnalyzer
 {
-  public class Binance : BaseAnalyzer
+  public class BinanceUS : BaseAnalyzer
   {
     public static double GetMainCurrencyPrice(string mainMarket, PTMagicConfiguration systemConfiguration, LogHelper log)
     {
@@ -23,16 +23,16 @@ namespace Core.MarketAnalyzer
 
       try
       {
-        string baseUrl = "https://api.binance.com/api/v1/ticker/24hr?symbol=" + mainMarket + "USDT";
+        string baseUrl = "https://api.binance.us/api/v1/ticker/24hr?symbol=" + mainMarket + "USDT";
 
-        log.DoLogInfo("Binance - Getting main market price...");
+        log.DoLogInfo("BinanceUS - Getting main market price...");
         Newtonsoft.Json.Linq.JObject jsonObject = GetSimpleJsonObjectFromURL(baseUrl, log, false);
         if (jsonObject != null)
         {
-          log.DoLogInfo("Binance - Market data received for " + mainMarket + "USDT");
+          log.DoLogInfo("BinanceUS - Market data received for " + mainMarket + "USDT");
 
           result = (double)jsonObject.GetValue("lastPrice");
-          log.DoLogInfo("Binance - Current price for " + mainMarket + "USDT: " + result.ToString("#,#0.00") + " USD");
+          log.DoLogInfo("BinanceUS - Current price for " + mainMarket + "USDT: " + result.ToString("#,#0.00") + " USD");
         }
       }
       catch (Exception ex)
@@ -51,19 +51,19 @@ namespace Core.MarketAnalyzer
       Newtonsoft.Json.Linq.JObject lastTicker = null;
       try
       {
-        string baseUrl = "https://api.binance.com/api/v1/ticker/24hr";
+        string baseUrl = "https://api.binance.us/api/v1/ticker/24hr";
 
-        log.DoLogInfo("Binance - Getting market data...");
+        log.DoLogInfo("BinanceUS - Getting market data...");
         Newtonsoft.Json.Linq.JArray jsonArray = GetSimpleJsonArrayFromURL(baseUrl, log);
         if (jsonArray.Count > 0)
         {
           double mainCurrencyPrice = 1;
           if (!mainMarket.Equals("USDT", StringComparison.InvariantCultureIgnoreCase))
           {
-            mainCurrencyPrice = Binance.GetMainCurrencyPrice(mainMarket, systemConfiguration, log);
+            mainCurrencyPrice = BinanceUS.GetMainCurrencyPrice(mainMarket, systemConfiguration, log);
           }
 
-          log.DoLogInfo("Binance - Market data received for " + jsonArray.Count.ToString() + " currencies");
+          log.DoLogInfo("BinanceUS - Market data received for " + jsonArray.Count.ToString() + " currencies");
 
           if (mainCurrencyPrice > 0)
           {
@@ -98,29 +98,29 @@ namespace Core.MarketAnalyzer
                 else
                 {
                   //Let the user know that the problem market was ignored.
-                  log.DoLogInfo("Binance - Ignoring bad market data for " + marketName);
+                  log.DoLogInfo("BinanceUS - Ignoring bad market data for " + marketName);
                 }
               }
             }
 
-            Binance.CheckFirstSeenDates(markets, ref marketInfos, systemConfiguration, log);
+            BinanceUS.CheckFirstSeenDates(markets, ref marketInfos, systemConfiguration, log);
 
             BaseAnalyzer.SaveMarketInfosToFile(marketInfos, systemConfiguration, log);
 
-            Binance.CheckForMarketDataRecreation(mainMarket, markets, systemConfiguration, log);
+            BinanceUS.CheckForMarketDataRecreation(mainMarket, markets, systemConfiguration, log);
 
             DateTime fileDateTime = DateTime.UtcNow;
 
             FileHelper.WriteTextToFile(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathExchange + Path.DirectorySeparatorChar, "MarketData_" + fileDateTime.ToString("yyyy-MM-dd_HH.mm") + ".json", JsonConvert.SerializeObject(markets), fileDateTime, fileDateTime);
 
-            log.DoLogInfo("Binance - Market data saved for " + markets.Count.ToString() + " markets with " + mainMarket + ".");
+            log.DoLogInfo("BinanceUS - Market data saved for " + markets.Count.ToString() + " markets with " + mainMarket + ".");
 
             FileHelper.CleanupFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathExchange + Path.DirectorySeparatorChar, systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours);
-            log.DoLogInfo("Binance - Market data cleaned.");
+            log.DoLogInfo("BinanceUS - Market data cleaned.");
           }
           else
           {
-            log.DoLogError("Binance - Failed to get main market price for " + mainMarket + ".");
+            log.DoLogError("BinanceUS - Failed to get main market price for " + mainMarket + ".");
             result = null;
           }
         }
@@ -136,7 +136,7 @@ namespace Core.MarketAnalyzer
               Dictionary<string, string> errorData = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.ReadToEnd());
               if (errorData != null)
               {
-                string errorMessage = "Unable to get data from Binance with URL '" + errorResponse.ResponseUri + "'!";
+                string errorMessage = "Unable to get data from BinanceUS with URL '" + errorResponse.ResponseUri + "'!";
                 if (errorData.ContainsKey("code"))
                 {
                   errorMessage += " - Code: " + errorData["code"];
@@ -165,7 +165,7 @@ namespace Core.MarketAnalyzer
 
     public static void CheckFirstSeenDates(Dictionary<string, Market> markets, ref Dictionary<string, MarketInfo> marketInfos, PTMagicConfiguration systemConfiguration, LogHelper log)
     {
-      log.DoLogInfo("Binance - Checking first seen dates for " + markets.Count + " markets. This may take a while...");
+      log.DoLogInfo("BinanceUS - Checking first seen dates for " + markets.Count + " markets. This may take a while...");
 
       int marketsChecked = 0;
 
@@ -183,13 +183,13 @@ namespace Core.MarketAnalyzer
           marketInfo = new MarketInfo();
           marketInfo.Name = key;
           marketInfos.Add(key, marketInfo);
-          marketInfo.FirstSeen = Binance.GetFirstSeenDate(key, systemConfiguration, log);
+          marketInfo.FirstSeen = BinanceUS.GetFirstSeenDate(key, systemConfiguration, log);
         }
         else
         {
           if (marketInfo.FirstSeen == Constants.confMinDate)
           {
-            marketInfo.FirstSeen = Binance.GetFirstSeenDate(key, systemConfiguration, log);
+            marketInfo.FirstSeen = BinanceUS.GetFirstSeenDate(key, systemConfiguration, log);
           }
         }
         marketInfo.LastSeen = DateTime.UtcNow;
@@ -198,7 +198,7 @@ namespace Core.MarketAnalyzer
 
         if ((marketsChecked % 20) == 0)
         {
-          log.DoLogInfo("Binance - Yes, I am still checking first seen dates... " + marketsChecked + "/" + markets.Count + " markets done...");
+          log.DoLogInfo("BinanceUS - Yes, I am still checking first seen dates... " + marketsChecked + "/" + markets.Count + " markets done...");
         }
       }
     }
@@ -207,15 +207,15 @@ namespace Core.MarketAnalyzer
     {
       DateTime result = Constants.confMinDate;
 
-      string baseUrl = "https://api.binance.com/api/v1/klines?interval=1d&symbol=" + marketName + "&limit=100";
+      string baseUrl = "https://api.binance.us/api/v1/klines?interval=1d&symbol=" + marketName + "&limit=100";
 
-      log.DoLogDebug("Binance - Getting first seen date for '" + marketName + "'...");
+      log.DoLogDebug("BinanceUS - Getting first seen date for '" + marketName + "'...");
 
       Newtonsoft.Json.Linq.JArray jsonArray = GetSimpleJsonArrayFromURL(baseUrl, log);
       if (jsonArray.Count > 0)
       {
         result = Constants.Epoch.AddMilliseconds((Int64)jsonArray[0][0]);
-        log.DoLogDebug("Binance - First seen date for '" + marketName + "' set to " + result.ToString());
+        log.DoLogDebug("BinanceUS - First seen date for '" + marketName + "' set to " + result.ToString());
       }
 
       return result;
@@ -240,13 +240,13 @@ namespace Core.MarketAnalyzer
         bool go = true;
         while (ticksFetched < ticksNeeded && go)
         {
-          baseUrl = "https://api.binance.com/api/v1/klines?interval=1m&symbol=" + marketName + "&endTime=" + endTime.ToString() + "&limit=" + ticksLimit.ToString();
+          baseUrl = "https://api.binance.us/api/v1/klines?interval=1m&symbol=" + marketName + "&endTime=" + endTime.ToString() + "&limit=" + ticksLimit.ToString();
 
-          log.DoLogDebug("Binance - Getting " + ticksLimit.ToString() + " ticks for '" + marketName + "'...");
+          log.DoLogDebug("BinanceUS - Getting " + ticksLimit.ToString() + " ticks for '" + marketName + "'...");
           Newtonsoft.Json.Linq.JArray jsonArray = GetSimpleJsonArrayFromURL(baseUrl, log);
           if (jsonArray.Count > 0)
           {
-            log.DoLogDebug("Binance - " + jsonArray.Count.ToString() + " ticks received.");
+            log.DoLogDebug("BinanceUS - " + jsonArray.Count.ToString() + " ticks received.");
 
             foreach (Newtonsoft.Json.Linq.JArray marketTick in jsonArray)
             {
@@ -268,7 +268,7 @@ namespace Core.MarketAnalyzer
           }
           else
           {
-            log.DoLogDebug("Binance - No ticks received.");
+            log.DoLogDebug("BinanceUS - No ticks received.");
             go = false;
           }
         }
@@ -284,7 +284,7 @@ namespace Core.MarketAnalyzer
               Dictionary<string, string> errorData = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.ReadToEnd());
               if (errorData != null)
               {
-                string errorMessage = "Unable to get data from Binance with URL '" + errorResponse.ResponseUri + "'!";
+                string errorMessage = "Unable to get data from BinanceUS with URL '" + errorResponse.ResponseUri + "'!";
                 if (errorData.ContainsKey("code"))
                 {
                   errorMessage += " - Code: " + errorData["code"];
@@ -312,14 +312,14 @@ namespace Core.MarketAnalyzer
 
     public static void CheckForMarketDataRecreation(string mainMarket, Dictionary<string, Market> markets, PTMagicConfiguration systemConfiguration, LogHelper log)
     {
-      string binanceDataDirectoryPath = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathExchange + Path.DirectorySeparatorChar;
+      string binanceUSDataDirectoryPath = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathExchange + Path.DirectorySeparatorChar;
 
-      if (!Directory.Exists(binanceDataDirectoryPath))
+      if (!Directory.Exists(binanceUSDataDirectoryPath))
       {
-        Directory.CreateDirectory(binanceDataDirectoryPath);
+        Directory.CreateDirectory(binanceUSDataDirectoryPath);
       }
 
-      DirectoryInfo dataDirectory = new DirectoryInfo(binanceDataDirectoryPath);
+      DirectoryInfo dataDirectory = new DirectoryInfo(binanceUSDataDirectoryPath);
 
       // Check for existing market files
       DateTime latestMarketDataFileDateTime = Constants.confMinDate;
@@ -341,13 +341,13 @@ namespace Core.MarketAnalyzer
         if (latestMarketDataFileDateTime != Constants.confMinDate && latestMarketDataFileDateTime > endDateTime)
         {
           // Existing market files too old => Recreate market data for configured timeframe
-          log.DoLogInfo("Binance - Recreating market data for " + markets.Count + " markets over " + SystemHelper.GetProperDurationTime(lastMarketDataAgeInSeconds) + ". This may take a while...");
+          log.DoLogInfo("BinanceUS - Recreating market data for " + markets.Count + " markets over " + SystemHelper.GetProperDurationTime(lastMarketDataAgeInSeconds) + ". This may take a while...");
           endDateTime = latestMarketDataFileDateTime;
         }
         else
         {
           // No existing market files found => Recreate market data for configured timeframe
-          log.DoLogInfo("Binance - Recreating market data for " + markets.Count + " markets over " + systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours + " hours. This may take a while...");
+          log.DoLogInfo("BinanceUS - Recreating market data for " + markets.Count + " markets over " + systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours + " hours. This may take a while...");
         }
 
         int totalTicks = (int)Math.Ceiling(startDateTime.Subtract(endDateTime).TotalMinutes);
@@ -356,11 +356,11 @@ namespace Core.MarketAnalyzer
         List<MarketTick> mainMarketTicks = new List<MarketTick>();
         if (!mainMarket.Equals("USDT", StringComparison.InvariantCultureIgnoreCase))
         {
-          mainMarketTicks = Binance.GetMarketTicks(mainMarket + "USDT", totalTicks, systemConfiguration, log);
+          mainMarketTicks = BinanceUS.GetMarketTicks(mainMarket + "USDT", totalTicks, systemConfiguration, log);
         }
 
         // Get Ticks for all markets
-        log.DoLogDebug("Binance - Getting ticks for '" + markets.Count + "' markets");
+        log.DoLogDebug("BinanceUS - Getting ticks for '" + markets.Count + "' markets");
         ConcurrentDictionary<string, List<MarketTick>> marketTicks = new ConcurrentDictionary<string, List<MarketTick>>();
 
         int ParallelThrottle = 4;
@@ -386,13 +386,13 @@ namespace Core.MarketAnalyzer
 
           if ((marketTicks.Count % 10) == 0)
           {
-            log.DoLogInfo("Binance - No worries, I am still alive... " + marketTicks.Count + "/" + markets.Count + " markets done...");
+            log.DoLogInfo("BinanceUS - No worries, I am still alive... " + marketTicks.Count + "/" + markets.Count + " markets done...");
           }
         });
 
-        log.DoLogInfo("Binance - Ticks completed.");
+        log.DoLogInfo("BinanceUS - Ticks completed.");
 
-        log.DoLogInfo("Binance - Creating initial market data ticks. This may take another while...");
+        log.DoLogInfo("BinanceUS - Creating initial market data ticks. This may take another while...");
 
         // Go back in time and create market data
         int completedTicks = 0;
@@ -438,16 +438,16 @@ namespace Core.MarketAnalyzer
 
             FileHelper.WriteTextToFile(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathExchange + Path.DirectorySeparatorChar, "MarketData_" + fileDateTime.ToString("yyyy-MM-dd_HH.mm") + ".json", JsonConvert.SerializeObject(tickMarkets), fileDateTime, fileDateTime);
 
-            log.DoLogDebug("Binance - Market data saved for tick " + fileDateTime.ToString() + " - MainCurrencyPrice=" + mainCurrencyPrice.ToString("#,#0.00") + " USD.");
+            log.DoLogDebug("BinanceUS - Market data saved for tick " + fileDateTime.ToString() + " - MainCurrencyPrice=" + mainCurrencyPrice.ToString("#,#0.00") + " USD.");
 
             if ((completedTicks % 100) == 0)
             {
-              log.DoLogInfo("Binance - Our magicbots are still at work, hang on... " + completedTicks + "/" + totalTicks + " ticks done...");
+              log.DoLogInfo("BinanceUS - Our magicbots are still at work, hang on... " + completedTicks + "/" + totalTicks + " ticks done...");
             }
           }
         }
 
-        log.DoLogInfo("Binance - Initial market data created. Ready to go!");
+        log.DoLogInfo("BinanceUS - Initial market data created. Ready to go!");
       }
 
     }

@@ -2,17 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using System.Security.Permissions;
-using System.Net;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
-using System.Net.Http;
-using System.Text;
-using System.Threading.Tasks;
 using Core.Main;
 using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
-using Newtonsoft.Json;
 
 namespace Core.ProfitTrailer
 {

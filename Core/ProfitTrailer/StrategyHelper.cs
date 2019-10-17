@@ -336,7 +336,7 @@ namespace Core.ProfitTrailer
         case "anderson":
           result = String.Concat(strategyLetter, "AND");
           break;
-        case "som enabled":
+        case "config som enabled":
           result = String.Concat(strategyLetter, "SOM");
           break;
         case "max buy times":

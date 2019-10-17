@@ -1,21 +1,10 @@
 ﻿using System;
-using System.IO;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 using Core.Main;
 using Core.Helper;
-using Core.Main.DataObjects.PTMagicData;
-using Core.MarketAnalyzer;
-using Core.ProfitTrailer;
-using Microsoft.Extensions.Primitives;
 
 namespace Monitor._Internal
 {
-
   public class BasePageModelSecure : BasePageModel
   {
     public void Init()
