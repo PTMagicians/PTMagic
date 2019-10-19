@@ -21,17 +21,38 @@ namespace Core.Main.DataObjects
     private string _ptmBasePath = "";
     private PTMagicConfiguration _systemConfiguration = null;
     private TransactionData _transactionData = null;
-    private DateTimeOffset _dateTimeNow = Constants.confMinDate;
     private DateTime _buyLogRefresh = DateTime.UtcNow, _sellLogRefresh = DateTime.UtcNow, _dcaLogRefresh = DateTime.UtcNow, _summaryRefresh = DateTime.UtcNow;
     private volatile object _buyLock = new object(), _sellLock = new object(), _dcaLock = new object(), _summaryLock = new object();
+    private TimeSpan? _offsetTimeSpan = null;
 
+    // Constructor
     public ProfitTrailerData(PTMagicConfiguration systemConfiguration)
     {
       _systemConfiguration = systemConfiguration;
+    }
 
-      // Convert local offset time to UTC
-      TimeSpan offsetTimeSpan = TimeSpan.Parse(systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
-      _dateTimeNow = DateTimeOffset.UtcNow.ToOffset(offsetTimeSpan);
+    // Get a time span for the UTC offset from the settings
+    private TimeSpan OffsetTimeSpan
+    {
+      get
+      {
+        if (!_offsetTimeSpan.HasValue)
+        {
+          // Get offset for settings.
+          _offsetTimeSpan = TimeSpan.Parse(_systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
+        }
+
+        return _offsetTimeSpan.Value;
+      }
+    }
+
+    // Get the time with the settings UTC offset applied
+    private DateTimeOffset LocalizedTime
+    {
+      get
+      {
+        return DateTimeOffset.UtcNow.ToOffset(OffsetTimeSpan);
+      }
     }
 
     public SummaryData Summary
@@ -80,7 +101,7 @@ namespace Core.Main.DataObjects
     {
       get
       {
-        return SellLog.FindAll(sl => sl.SoldDate.Date == _dateTimeNow.DateTime.Date);
+        return SellLog.FindAll(sl => sl.SoldDate.Date == LocalizedTime.DateTime.Date);
       }
     }
 
@@ -88,7 +109,7 @@ namespace Core.Main.DataObjects
     {
       get
       {
-        return SellLog.FindAll(sl => sl.SoldDate.Date == _dateTimeNow.DateTime.AddDays(-1).Date);
+        return SellLog.FindAll(sl => sl.SoldDate.Date == LocalizedTime.DateTime.AddDays(-1).Date);
       }
     }
 
@@ -96,7 +117,7 @@ namespace Core.Main.DataObjects
     {
       get
       {
-        return SellLog.FindAll(sl => sl.SoldDate.Date >= _dateTimeNow.DateTime.AddDays(-7).Date);
+        return SellLog.FindAll(sl => sl.SoldDate.Date >= LocalizedTime.DateTime.AddDays(-7).Date);
       }
     }
 
@@ -104,7 +125,7 @@ namespace Core.Main.DataObjects
     {
       get
       {
-        return SellLog.FindAll(sl => sl.SoldDate.Date >= _dateTimeNow.DateTime.AddDays(-30).Date);
+        return SellLog.FindAll(sl => sl.SoldDate.Date >= LocalizedTime.DateTime.AddDays(-30).Date);
       }
     }
 
@@ -296,8 +317,7 @@ namespace Core.Main.DataObjects
         DateTimeOffset ptSoldDate = DateTimeOffset.Parse(dtDateTime.Year.ToString() + "-" + dtDateTime.Month.ToString("00") + "-" + dtDateTime.Day.ToString("00") + "T" + dtDateTime.Hour.ToString("00") + ":" + dtDateTime.Minute.ToString("00") + ":" + dtDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
 
         // Convert UTC sales time to local offset time
-        TimeSpan offsetTimeSpan = TimeSpan.Parse(_systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
-        ptSoldDate = ptSoldDate.ToOffset(offsetTimeSpan);
+        ptSoldDate = ptSoldDate.ToOffset(OffsetTimeSpan);
 
         sellLogData.SoldDate = ptSoldDate.DateTime;
 
@@ -387,8 +407,7 @@ namespace Core.Main.DataObjects
           DateTimeOffset ptFirstBoughtDate = DateTimeOffset.Parse(rdldDateTime.Year.ToString() + "-" + rdldDateTime.Month.ToString("00") + "-" + rdldDateTime.Day.ToString("00") + "T" + rdldDateTime.Hour.ToString("00") + ":" + rdldDateTime.Minute.ToString("00") + ":" + rdldDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
 
           // Convert UTC bought time to local offset time
-          TimeSpan offsetTimeSpan = TimeSpan.Parse(_systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
-          ptFirstBoughtDate = ptFirstBoughtDate.ToOffset(offsetTimeSpan);
+          ptFirstBoughtDate = ptFirstBoughtDate.ToOffset(OffsetTimeSpan);
 
           dcaLogData.FirstBoughtDate = ptFirstBoughtDate.DateTime;
         }
@@ -447,8 +466,7 @@ namespace Core.Main.DataObjects
           DateTimeOffset ptFirstBoughtDate = DateTimeOffset.Parse(rpldDateTime.Year.ToString() + "-" + rpldDateTime.Month.ToString("00") + "-" + rpldDateTime.Day.ToString("00") + "T" + rpldDateTime.Hour.ToString("00") + ":" + rpldDateTime.Minute.ToString("00") + ":" + rpldDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
 
           // Convert UTC bought time to local offset time
-          TimeSpan offsetTimeSpan = TimeSpan.Parse(_systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
-          ptFirstBoughtDate = ptFirstBoughtDate.ToOffset(offsetTimeSpan);
+          ptFirstBoughtDate = ptFirstBoughtDate.ToOffset(OffsetTimeSpan);
 
           dcaLogData.FirstBoughtDate = ptFirstBoughtDate.DateTime;
         }
@@ -507,8 +525,7 @@ namespace Core.Main.DataObjects
           DateTimeOffset ptFirstBoughtDate = DateTimeOffset.Parse(rpldDateTime.Year.ToString() + "-" + rpldDateTime.Month.ToString("00") + "-" + rpldDateTime.Day.ToString("00") + "T" + rpldDateTime.Hour.ToString("00") + ":" + rpldDateTime.Minute.ToString("00") + ":" + rpldDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
 
           // Convert UTC bought time to local offset time
-          TimeSpan offsetTimeSpan = TimeSpan.Parse(_systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
-          ptFirstBoughtDate = ptFirstBoughtDate.ToOffset(offsetTimeSpan);
+          ptFirstBoughtDate = ptFirstBoughtDate.ToOffset(OffsetTimeSpan);
 
           dcaLogData.FirstBoughtDate = ptFirstBoughtDate.DateTime;
         }
@@ -567,8 +584,7 @@ namespace Core.Main.DataObjects
           DateTimeOffset ptFirstBoughtDate = DateTimeOffset.Parse(rpldDateTime.Year.ToString() + "-" + rpldDateTime.Month.ToString("00") + "-" + rpldDateTime.Day.ToString("00") + "T" + rpldDateTime.Hour.ToString("00") + ":" + rpldDateTime.Minute.ToString("00") + ":" + rpldDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
 
           // Convert UTC bought time to local offset time
-          TimeSpan offsetTimeSpan = TimeSpan.Parse(_systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
-          ptFirstBoughtDate = ptFirstBoughtDate.ToOffset(offsetTimeSpan);
+          ptFirstBoughtDate = ptFirstBoughtDate.ToOffset(OffsetTimeSpan);
 
           dcaLogData.FirstBoughtDate = ptFirstBoughtDate.DateTime;
         }
