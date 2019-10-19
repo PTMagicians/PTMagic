@@ -59,8 +59,16 @@ namespace Core.ProfitTrailer
             double offsetValue = SystemHelper.TextToDouble(newValueString, 0, "en-US");
             if (offsetValue != 0)
             {
+              bool ContainsPercent = false;
+              if (oldValueString.Contains("%")) {
+                ContainsPercent = true;
+                oldValueString = oldValueString.Substring(0, oldValueString.Length - 1);
+              }
               double oldValue = SystemHelper.TextToDouble(oldValueString, 0, "en-US");
               result = Math.Round((oldValue + offsetValue), 8).ToString(new System.Globalization.CultureInfo("en-US"));
+              if (ContainsPercent){
+                result = result +"%";
+              }
             }
             break;
 
@@ -69,11 +77,16 @@ namespace Core.ProfitTrailer
             double offsetValuePercent = SystemHelper.TextToDouble(newValueString, 0, "en-US");
             if (offsetValuePercent != 0)
             {
+              bool ContainsPercent = false;
+              if (oldValueString.Contains("%")) {
+                ContainsPercent = true;
+                oldValueString = oldValueString.Substring(0, oldValueString.Length - 1);
+              } 
               double oldValue = SystemHelper.TextToDouble(oldValueString, 0, "en-US");
               if (oldValue < 0) offsetValuePercent = offsetValuePercent * -1;
               double oldValueOffset = (oldValue * (offsetValuePercent / 100));
 
-              // Use integers for timeout and pairs properties, otherwise double
+              // Ensure integers for timeout and pairs properties, otherwise double
               if (configPropertyKey.Contains("timeout", StringComparison.InvariantCultureIgnoreCase) 
                 || configPropertyKey.Contains("trading_pairs", StringComparison.InvariantCultureIgnoreCase)
                 || configPropertyKey.Contains("buy_volume", StringComparison.InvariantCultureIgnoreCase)
@@ -82,7 +95,6 @@ namespace Core.ProfitTrailer
                 || configPropertyKey.Contains("rebuy_count", StringComparison.InvariantCultureIgnoreCase)
                 || configPropertyKey.Contains("buy_volume", StringComparison.InvariantCultureIgnoreCase))
               {
-                // Ensure some values are rounded up to integers for PT comaptability 
                 result = ((int)(Math.Round((oldValue + oldValueOffset), MidpointRounding.AwayFromZero) + .5)).ToString(new System.Globalization.CultureInfo("en-US"));
               }
               else
@@ -90,6 +102,9 @@ namespace Core.ProfitTrailer
                 // Use double to calculate
                 result = Math.Round((oldValue + oldValueOffset), 8).ToString(new System.Globalization.CultureInfo("en-US"));
               }
+              if (ContainsPercent){
+                result = result +"%";
+              } 
             }
             break;
           default:
