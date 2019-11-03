@@ -336,6 +336,45 @@ namespace Core.ProfitTrailer
         case "anderson":
           result = String.Concat(strategyLetter, "AND");
           break;
+        case "pdlow":
+          result = String.Concat(strategyLetter, "PDL");
+          break;
+        case "pdclose":
+          result = String.Concat(strategyLetter, "PDC");
+          break;
+        case "signal":
+          result = String.Concat(strategyLetter, "SIG");
+          break;
+        case "changepercentage":
+          result = String.Concat(strategyLetter, "CHGPCT");
+          break;
+        case "profitpercentage":
+          result = String.Concat(strategyLetter, "PPCT");
+          break;
+        case "lastdcabuy":
+          result = String.Concat(strategyLetter, "LASTDCA");
+          break;
+        case "fixedprice":
+          result = String.Concat(strategyLetter, "FIXED");
+          break;
+        case "lowatrband":
+          result = String.Concat(strategyLetter, "LATR");
+          break;
+        case "highatrband":
+          result = String.Concat(strategyLetter, "HATR");
+          break;
+        case "atrpercentage":
+          result = String.Concat(strategyLetter, "ATRPCT");
+          break;
+        case "vwappercentage":
+          result = String.Concat(strategyLetter, "VWAP");
+          break;
+        case "mvwappercentage":
+          result = String.Concat(strategyLetter, "MVWAP");
+          break;
+        case "btcdominance":
+          result = String.Concat(strategyLetter, "BTCDOM");
+          break;
         case "config som enabled":
           result = String.Concat(strategyLetter, "SOM");
           break;
@@ -445,7 +484,19 @@ namespace Core.ProfitTrailer
           case "dema":
           case "hma":
           case "pdhigh":
+          case "pdlow":
+          case "pdclose":
           case "signal":
+          case "changepercentage":
+          case "profitpercentage":
+          case "lastdcabuy":
+          case "fixedprice":
+          case "lowatrband":
+          case "highatrband":
+          case "atrpercentage":
+          case "vwappercentage":
+          case "mvwappercentage":
+          case "btcdominance":
             result = true;
             break;
           default:
