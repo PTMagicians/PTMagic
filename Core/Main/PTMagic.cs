@@ -2313,10 +2313,26 @@ namespace Core.Main
 
       this.LastRuntimeSummary.DCATrigger = dcaDefaultTrigger;
 
+
+      // Get PROFITPERCENTAGE strategy label
+      string ProfitPercentageLabel = "";
+      for (char c = 'A'; c <= 'Z'; c++)
+      {
+        
+        string buyStrategyName = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_" + c + "_buy_strategy", "");
+        if (buyStrategyName.Contains("PROFITPERCENTAGE"))
+        {
+          
+          ProfitPercentageLabel = "" + c;
+        }
+      }
+
+      this.Log.DoLogInfo("DCA ProfitPercentage Label:" + ProfitPercentageLabel);
+
       // Get configured DCA triggers
       for (int dca = 1; dca <= maxDCALevel; dca++)
       {
-        string dcaTriggerString = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "buy_trigger_" + dca.ToString(), "DEFAULT_DCA_buy_trigger_" + dca.ToString());
+        string dcaTriggerString = SettingsHandler.GetCurrentPropertyValue(dcaProperties, ProfitPercentageLabel + "buy_value_" + dca.ToString(), "DEFAULT_DCA_" + ProfitPercentageLabel + "_buy_value_" + dca.ToString());
         if (!String.IsNullOrEmpty(dcaTriggerString))
         {
           double dcaTrigger = SystemHelper.TextToDouble(dcaTriggerString, 0, "en-US");
