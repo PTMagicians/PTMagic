@@ -420,6 +420,9 @@ namespace Core.ProfitTrailer
         case "ignoring buy trigger":
           result = String.Concat(strategyLetter, "TRIG");
           break;
+        case "no dca buy logic":
+          result = String.Concat(strategyLetter, "NODCA");
+          break;
         default:
           break;
       }
