@@ -421,7 +421,7 @@ namespace Core.ProfitTrailer
           result = String.Concat(strategyLetter, "TRIG");
           break;
         case "no dca buy logic":
-          result = String.Concat(strategyLetter, "NO DCA");
+          result = String.Concat(strategyLetter, "NODCA");
           break;
         default:
           break;
