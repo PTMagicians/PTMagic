@@ -14,8 +14,3 @@
         <strong>Request ID:</strong> <code>@Model.RequestId</code>
     </p>
 }
-
-@if (Model.Exception != null) { 
-      <h2>@Model.Exception.Error.Message</h2>
-      <p>@Model.Exception.Error.StackTrace</p>
-}

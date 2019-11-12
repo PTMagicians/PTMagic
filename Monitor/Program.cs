@@ -11,10 +11,6 @@ namespace Monitor
 {
   public class Program
   {
-
-    // Create a logger
-    private static LogHelper _log = ServiceHelper.BuildLoggerService().GetRequiredService<LogHelper>();
-
     // Main entry point
     [SecurityPermission(SecurityAction.Demand, Flags = SecurityPermissionFlag.ControlAppDomain)]
     public static void Main(string[] args)
@@ -23,10 +19,10 @@ namespace Monitor
       AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(GlobalUnhandledExceptionHandler);
 
       // Start
-      WriteConsoleLogLine("##########################################################");
-      WriteConsoleLogLine("#********************************************************#");
-      WriteConsoleLogLine("INFO: Starting PT Magic Monitor...");
-      WriteConsoleLogLine("INFO: Beginning startup checks...");
+      Logger.WriteLine("##########################################################");
+      Logger.WriteLine("#********************************************************#");
+      Logger.WriteLine("INFO: Starting PT Magic Monitor...");
+      Logger.WriteLine("INFO: Beginning startup checks...");
 
       string monitorBasePath = Directory.GetCurrentDirectory();
       if (!System.IO.File.Exists(monitorBasePath + Path.DirectorySeparatorChar + "appsettings.json"))
@@ -38,12 +34,12 @@ namespace Monitor
       string appsettingsJson = monitorBasePath + Path.DirectorySeparatorChar + "appsettings.json";
       if (!File.Exists(appsettingsJson))
       {
-        WriteConsoleLogLine("ERROR: appsettings.json not found: '" + appsettingsJson + "'. Please check if the file exists. If not, review the PT Magic setup steps listed on the wiki!");
+        Logger.WriteLine("ERROR: appsettings.json not found: '" + appsettingsJson + "'. Please check if the file exists. If not, review the PT Magic setup steps listed on the wiki!");
         if (!Console.IsInputRedirected) Console.ReadKey();
       }
       else
       {
-        WriteConsoleLogLine("INFO: appsettings.json found in " + monitorBasePath);
+        Logger.WriteLine("INFO: appsettings.json found in " + monitorBasePath);
 
         IConfiguration config = new ConfigurationBuilder()
                 .SetBasePath(monitorBasePath)
@@ -61,34 +57,34 @@ namespace Monitor
         // Check if PT Magic directoy is correctly configured
         if (!Directory.Exists(ptMagicBasePath))
         {
-          WriteConsoleLogLine("ERROR: PT Magic directory not found: '" + ptMagicBasePath + "'. Please check your setting for 'PTMagicBasePath' in 'Monitor/appsettings.json'");
+          Logger.WriteLine("ERROR: PT Magic directory not found: '" + ptMagicBasePath + "'. Please check your setting for 'PTMagicBasePath' in 'Monitor/appsettings.json'");
           if (!Console.IsInputRedirected) Console.ReadKey();
         }
         else
         {
-          WriteConsoleLogLine("INFO: PT Magic directory found at " + ptMagicBasePath);
+          Logger.WriteLine("INFO: PT Magic directory found at " + ptMagicBasePath);
 
           // Check if PT Magic settings file exists
           string settingsGeneralJson = ptMagicBasePath + "settings.general.json";
           if (!File.Exists(settingsGeneralJson))
           {
-            WriteConsoleLogLine("ERROR: PT Magic settings not found: '" + settingsGeneralJson + "'. Please check if you setup PT Magic correctly!");
+            Logger.WriteLine("ERROR: PT Magic settings not found: '" + settingsGeneralJson + "'. Please check if you setup PT Magic correctly!");
             if (!Console.IsInputRedirected) Console.ReadKey();
           }
           else
           {
-            WriteConsoleLogLine("INFO: settings.general.json found at " + settingsGeneralJson);
+            Logger.WriteLine("INFO: settings.general.json found at " + settingsGeneralJson);
 
             // Check if PT Magic settings file exists
             string lastRuntimeSummaryJson = ptMagicBasePath + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "LastRuntimeSummary.json";
             if (!File.Exists(lastRuntimeSummaryJson))
             {
-              WriteConsoleLogLine("ERROR: PT Magic runtime summary not found: '" + lastRuntimeSummaryJson + "'. Please wait for PT Magic to complete its first run!");
+              Logger.WriteLine("ERROR: PT Magic runtime summary not found: '" + lastRuntimeSummaryJson + "'. Please wait for PT Magic to complete its first run!");
               if (!Console.IsInputRedirected) Console.ReadKey();
             }
             else
             {
-              WriteConsoleLogLine("INFO: LastRuntimeSummary.json found at " + lastRuntimeSummaryJson);
+              Logger.WriteLine("INFO: LastRuntimeSummary.json found at " + lastRuntimeSummaryJson);
 
               PTMagicConfiguration ptMagicConfiguration = null;
               try
@@ -103,29 +99,29 @@ namespace Monitor
               string wwwrootPath = monitorBasePath + Path.DirectorySeparatorChar + "wwwroot";
               if (!Directory.Exists(wwwrootPath))
               {
-                WriteConsoleLogLine("ERROR: wwwroot directory not found: '" + wwwrootPath + "'. Did you copy all files as instructed on the wiki?");
+                Logger.WriteLine("ERROR: wwwroot directory not found: '" + wwwrootPath + "'. Did you copy all files as instructed on the wiki?");
                 if (!Console.IsInputRedirected) Console.ReadKey();
               }
               else
               {
-                WriteConsoleLogLine("INFO: wwwroot directory found at " + wwwrootPath);
+                Logger.WriteLine("INFO: wwwroot directory found at " + wwwrootPath);
 
                 string assetsPath = wwwrootPath + Path.DirectorySeparatorChar + "assets";
                 if (!Directory.Exists(assetsPath))
                 {
-                  WriteConsoleLogLine("ERROR: assets directory not found: '" + assetsPath + "'. Did you copy all files as instructed on the wiki?");
+                  Logger.WriteLine("ERROR: assets directory not found: '" + assetsPath + "'. Did you copy all files as instructed on the wiki?");
                   if (!Console.IsInputRedirected) Console.ReadKey();
                 }
                 else
                 {
-                  WriteConsoleLogLine("INFO: assets directory found at " + assetsPath);
-                  WriteConsoleLogLine("INFO: ALL CHECKS COMPLETED - ATTEMPTING TO START WEBSERVER...");
-                  WriteConsoleLogLine("#********************************************************#");
-                  WriteConsoleLogLine("");
-                  WriteConsoleLogLine("DO NOT CLOSE THIS WINDOW! THIS IS THE WEBSERVER FOR YOUR MONITOR!");
-                  WriteConsoleLogLine("");
-                  WriteConsoleLogLine("##########################################################");
-                  WriteConsoleLogLine("");
+                  Logger.WriteLine("INFO: assets directory found at " + assetsPath);
+                  Logger.WriteLine("INFO: ALL CHECKS COMPLETED - ATTEMPTING TO START WEBSERVER...");
+                  Logger.WriteLine("#********************************************************#");
+                  Logger.WriteLine("");
+                  Logger.WriteLine("DO NOT CLOSE THIS WINDOW! THIS IS THE WEBSERVER FOR YOUR MONITOR!");
+                  Logger.WriteLine("");
+                  Logger.WriteLine("##########################################################");
+                  Logger.WriteLine("");
 
                   BuildWebHost(args, monitorBasePath, monitorBasePath + Path.DirectorySeparatorChar + "wwwroot", ptMagicConfiguration.GeneralSettings.Monitor.Port).Run();
                 }
@@ -146,29 +142,12 @@ namespace Monitor
         .UseWebRoot(webroot)
         .Build();
 
-    // Log writer
-    private static void WriteConsoleLogLine(string line)
-    {
-      // Write to console and log
-      Console.WriteLine(line);
-      _log.DoLogInfo(line);
-    }
-
     // Global unhandled exception handler
     private static void GlobalUnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs args)
     {
       Exception e = (Exception)args.ExceptionObject;
 
-      Console.WriteLine("Unhandled exception occurred: " + e.ToString());
-
-      if (args.IsTerminating)
-      {        
-        _log.DoLogCritical("Unhandled fatal exception occurred: ", e);
-      }
-      else
-      {
-        _log.DoLogError("Unhandled fatal exception occurred: " + e.ToString());
-      }
+      Logger.WriteException(e, "An unhandled fatal exception occurred");
     }
   }
 
