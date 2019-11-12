@@ -3,10 +3,14 @@ using System.Collections.Generic;
 using System.Threading;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using Core.Main;
 using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
 using Core.MarketAnalyzer;
 using Core.ProfitTrailer;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
 namespace Core.Main
@@ -533,7 +537,7 @@ namespace Core.Main
     public bool StartProcess()
     {
       bool result = true;
-      
+
       this.Log.DoLogInfo("");
       this.Log.DoLogInfo("  ██████╗ ████████╗    ███╗   ███╗ █████╗  ██████╗ ██╗ ██████╗");
       this.Log.DoLogInfo("  ██╔══██╗╚══██╔══╝    ████╗ ████║██╔══██╗██╔════╝ ██║██╔════╝");
