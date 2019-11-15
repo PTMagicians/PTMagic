@@ -7,11 +7,14 @@ namespace Monitor.Pages
   public class ErrorModel : PageModel
   {
     public string RequestId { get; set; }
+    public IExceptionHandlerFeature Exception = null;
 
     public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
 
     public void OnGet()
     {
+      Exception = HttpContext.Features.Get<IExceptionHandlerFeature>();
+      
       var exceptionFeature = HttpContext.Features.Get<IExceptionHandlerPathFeature>();
 
       RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
