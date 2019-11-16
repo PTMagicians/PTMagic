@@ -20,7 +20,7 @@ namespace Monitor.Pages
       RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
 
       string errorString = exceptionFeature.Error.ToString();
-      if (!errorString.Contains("is being used")) {
+      if (!(errorString.Contains("is being used") || errorString.Contains("an unexpected character was encountered"))) {
         Logger.WriteException(exceptionFeature.Error, "An error occurred whilst requesting " + exceptionFeature.Path);
       }
     }
