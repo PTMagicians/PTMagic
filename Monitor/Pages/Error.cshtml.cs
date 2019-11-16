@@ -19,7 +19,10 @@ namespace Monitor.Pages
 
       RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
 
-      Logger.WriteException(exceptionFeature.Error, "An error occurred whilst requesting " + exceptionFeature.Path);
+      string errorString = exceptionFeature.Error.ToString();
+      if (!errorString.Contains("is being used")) {
+        Logger.WriteException(exceptionFeature.Error, "An error occurred whilst requesting " + exceptionFeature.Path);
+      }
     }
   }
 }
