@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNetCore.Http;
 using Core.Main;
 using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
@@ -16,7 +15,6 @@ namespace Monitor.Pages
     public void OnGet()
     {
       base.Init();
-
       BindData();
     }
 
