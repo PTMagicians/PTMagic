@@ -2323,8 +2323,6 @@ namespace Core.Main
         }
       }
 
-      this.Log.DoLogInfo("DCA ProfitPercentage Label:" + ProfitPercentageLabel);
-
       // Get configured DCA triggers
       for (int dca = 1; dca <= maxDCALevel; dca++)
       {
