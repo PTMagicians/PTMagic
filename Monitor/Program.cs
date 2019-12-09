@@ -4,8 +4,6 @@ using System.Security.Permissions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Core.Main;
-using Core.Helper;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Monitor
 {

@@ -1,11 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.AspNetCore.Http;
 using Core.Main;
 using Core.Main.DataObjects;
-using Core.Main.DataObjects.PTMagicData;
-using Core.MarketAnalyzer;
 
 namespace Monitor.Pages {
   public class DashboardTopModel : _Internal.BasePageModelSecureAJAX {

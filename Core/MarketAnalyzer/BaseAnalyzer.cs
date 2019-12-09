@@ -26,13 +26,14 @@ namespace Core.MarketAnalyzer
       request.ContentType = "application/json";
       request.UserAgent = "PTMagic.Import";
       request.KeepAlive = true;
-      request.Timeout = 60000;
+      request.Timeout = 10000;
 
       HttpWebResponse httpResponse = null;
       string jsonString = string.Empty;
 
       try
       {
+        log.DoLogInfo("Calling URL: " + url);
         httpResponse = (HttpWebResponse)request.GetResponse();
 
         using (StreamReader jsonReader = new StreamReader(httpResponse.GetResponseStream()))
@@ -72,6 +73,11 @@ namespace Core.MarketAnalyzer
         log.DoLogCritical(ex.Message, ex);
 
         throw;
+      }
+      finally
+      {
+        // Do any necessary clean up.
+        if (httpResponse != null) httpResponse.Dispose();
       }
     }
 

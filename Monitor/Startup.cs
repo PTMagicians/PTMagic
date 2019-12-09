@@ -3,9 +3,9 @@ using System.IO;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Core.Main;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
@@ -41,16 +41,9 @@ namespace Monitor
         ptMagicBasePath += Path.DirectorySeparatorChar;
       }
 
-      try
-      {
-        systemConfiguration = new PTMagicConfiguration(ptMagicBasePath);
-      }
-      catch (Exception ex)
-      {
-        throw ex;
-      }
+      systemConfiguration = new PTMagicConfiguration(ptMagicBasePath);
 
-      services.AddMvc();
+      services.AddMvc(option => option.EnableEndpointRouting = false);
       services.AddAntiforgery(o => o.HeaderName = "XSRF-TOKEN");
       services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
       services.AddDistributedMemoryCache();
@@ -60,13 +53,18 @@ namespace Monitor
         options.Cookie.HttpOnly = true;
         options.Cookie.Name = "PTMagicMonitor" + systemConfiguration.GeneralSettings.Monitor.Port.ToString();
       });
+
+      services.Configure<KestrelServerOptions>(options =>
+      {
+        options.AllowSynchronousIO = true;
+      });
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-    public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
       // Register global exception handler
-      if (env.IsDevelopment())
+      if (env.EnvironmentName == "Development")
       {
         app.UseBrowserLink();
         app.UseDeveloperExceptionPage();
@@ -79,7 +77,7 @@ namespace Monitor
       // Configure request pipeline
       app.UseStaticFiles();
       app.UseSession();
-      app.UseMvc();
+      app.UseMvcWithDefaultRoute();
 
       // Open the browser
       if (systemConfiguration.GeneralSettings.Monitor.OpenBrowserOnStart) OpenBrowser("http://localhost:" + systemConfiguration.GeneralSettings.Monitor.Port.ToString());
