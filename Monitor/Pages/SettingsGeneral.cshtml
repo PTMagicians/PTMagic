@@ -185,7 +185,7 @@
               <div class="form-group row">
                 <label class="col-md-4 col-form-label">Port <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The port you want to run your monitor on"></i></label>
                 <div class="col-md-8">
-                   <input type="text" class="form-control" name="Monitor_Port" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.Port.ToString(new System.Globalization.CultureInfo("en-US"))">
+                  @Model.PTMagicConfiguration.GeneralSettings.Monitor.Port
                 </div>
               </div>
 
