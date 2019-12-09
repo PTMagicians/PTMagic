@@ -90,7 +90,14 @@
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Profit Trailer Default Setting Name <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Your Profit Trailer default setting name (needed to change your settings for PT 2.0 and above)"></i></label>
+                <label class="col-md-4 col-form-label">Profit Trailer Server API Token <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The API token needed to communicate with Profit Trailer - set in Profit Trailer Server Settings"></i></label>
+                <div class="col-md-8">
+                  <input type="text" class="form-control" name="Application_ProfitTrailerServerAPIToken" value="@Model.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken">
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label class="col-md-4 col-form-label">Profit Trailer Default Setting Name <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Your Profit Trailer default configuration name (needed to change your settings for PT 2.0 and above)"></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Application_ProfitTrailerDefaultSettingName" value="@Model.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName">
                 </div>
@@ -104,9 +111,30 @@
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Instance Name <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The name of the instance of this bot. This will be used in your monitor and your Telegram messages. In case you are running more than one bot, you may set different names to separate them."></i></label>
+                <label class="col-md-4 col-form-label">Bot Instance Name <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The name of this bot. This will be used in your monitor and your Telegram messages. In case you are running more than one bot, you may set different names to separate them."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Application_InstanceName" value="@Model.PTMagicConfiguration.GeneralSettings.Application.InstanceName">
+                </div>
+              </div>
+
+               <div class="form-group row">
+                <label class="col-md-4 col-form-label">Timezone Offset <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The time difference between your current location and UTC time. Examples: +7:00, -3:00"></i></label>
+                <div class="col-md-8">
+                  <input type="text" class="form-control" name="Application_TimezoneOffset" value="@Model.PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset">
+                </div>
+              </div>
+
+               <div class="form-group row">
+                <label class="col-md-4 col-form-label">Main Fiat Currency <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is the local currency you want PTM to use when showing your sales and account value in fiat."></i></label>
+                <div class="col-md-8">
+                  <input type="text" class="form-control" name="Application_MainFiatCurrency" value="@Model.PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency">
+                </div>
+              </div>
+
+               <div class="form-group row">
+                <label class="col-md-4 col-form-label">Starting Balance <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="PTM will use this to calculate total profits to date, and projected profits."></i></label>
+                <div class="col-md-8">
+                  <input type="text" class="form-control" name="Application_StartBalance" value="@Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance">
                 </div>
               </div>
 
@@ -157,7 +185,7 @@
               <div class="form-group row">
                 <label class="col-md-4 col-form-label">Port <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The port you want to run your monitor on"></i></label>
                 <div class="col-md-8">
-                  @Model.PTMagicConfiguration.GeneralSettings.Monitor.Port
+                   <input type="text" class="form-control" name="Monitor_Port" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.Port.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>
               </div>
 
