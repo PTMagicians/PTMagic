@@ -268,40 +268,40 @@ namespace Core.ProfitTrailer
           result = String.Concat(strategyLetter, "LOSS");
           break;
         case "smagain":
-          result = String.Concat(strategyLetter, "SG");
+          result = String.Concat(strategyLetter, "SMAG");
           break;
         case "emagain":
-          result = String.Concat(strategyLetter, "EG");
+          result = String.Concat(strategyLetter, "EMAG");
           break;
         case "hmagain":
-          result = String.Concat(strategyLetter, "EG");
+          result = String.Concat(strategyLetter, "HMAG");
           break;
         case "dmagain":
-          result = String.Concat(strategyLetter, "EG");
+          result = String.Concat(strategyLetter, "DMAG");
           break;
         case "smaspread":
-          result = String.Concat(strategyLetter, "SS");
+          result = String.Concat(strategyLetter, "SMAS");
           break;
         case "emaspread":
-          result = String.Concat(strategyLetter, "ES");
+          result = String.Concat(strategyLetter, "EMAS");
           break;
         case "hmaspread":
-          result = String.Concat(strategyLetter, "HES");
+          result = String.Concat(strategyLetter, "HMAS");
           break;
         case "dmaspread":
-          result = String.Concat(strategyLetter, "DES");
+          result = String.Concat(strategyLetter, "DMAS");
           break;
         case "smacross":
-          result = String.Concat(strategyLetter, "SC");
+          result = String.Concat(strategyLetter, "SMAC");
           break;
         case "emacross":
-          result = String.Concat(strategyLetter, "EC");
+          result = String.Concat(strategyLetter, "EMAC");
           break;
         case "hmacross":
-          result = String.Concat(strategyLetter, "HSC");
+          result = String.Concat(strategyLetter, "HMAC");
           break;
         case "dmacross":
-          result = String.Concat(strategyLetter, "DEC");
+          result = String.Concat(strategyLetter, "DMAC");
           break;
         case "rsi":
           result = String.Concat(strategyLetter, "RSI");
