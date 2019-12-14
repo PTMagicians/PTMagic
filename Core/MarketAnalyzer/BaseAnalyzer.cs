@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Core.Main;
 using Core.Helper;
@@ -13,119 +15,94 @@ namespace Core.MarketAnalyzer
 {
   public class BaseAnalyzer
   {
-    public static Dictionary<string, dynamic> GetJsonFromURL(string url, LogHelper log, string api)
+    public static string GetJsonStringFromURL(string url, LogHelper log, (string header, string value)[] headers = null)
     {
-      Dictionary<string, dynamic> jsonObject = null;
+      HttpClient webClient = null;
 
-      HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-      if (api != "")
+      if (webClient == null)
       {
-        request.Headers.Add("X-CMC_PRO_API_KEY", api);
+        webClient = new HttpClient();
+
+        // Setup the one time conneciton characteristics
+        webClient.Timeout = new TimeSpan(0, 0, 30); // 30 second call timeout
+        webClient.DefaultRequestHeaders.ConnectionClose = false; // Keep alives        
+      }
+      else
+      {
+        webClient.DefaultRequestHeaders.Clear();
       }
 
-      request.ContentType = "application/json";
-      request.UserAgent = "PTMagic.Import";
-      request.KeepAlive = true;
-      request.Timeout = 10000;
+      // Accept JSON and Text
+      webClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+      webClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/plain"));
 
-      HttpWebResponse httpResponse = null;
-      string jsonString = string.Empty;
+      // Setup the keep alive timeout
+      ServicePointManager.FindServicePoint(new Uri(url)).ConnectionLeaseTimeout = 300000; // 5 mins for keep alives     
+
+      // Add any custom headers     
+      if (headers != null)
+      {
+        foreach (var header in headers)
+        {
+          webClient.DefaultRequestHeaders.Add(header.header, header.value);
+        }
+      }
 
       try
       {
         log.DoLogInfo("Calling URL: " + url);
-        httpResponse = (HttpWebResponse)request.GetResponse();
+        var response = webClient.GetAsync(url).Result;
 
-        using (StreamReader jsonReader = new StreamReader(httpResponse.GetResponseStream()))
+        string repsonseString = response.Content.ReadAsStringAsync().Result;
+
+        if (response.IsSuccessStatusCode)
         {
-          jsonString = jsonReader.ReadToEnd();
-          jsonReader.Close();
+          return repsonseString;
         }
+        else
+        {
+          // Error
+          var message = string.Format("Error whilst calling {0} - {1}", url, repsonseString);
 
-        jsonObject = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(jsonString);
+          log.DoLogError(message);
 
-        return jsonObject;
+          throw new Exception(message);
+        }
       }
-      catch (WebException ex)
+      catch (TaskCanceledException tcEx)
       {
-        log.DoLogCritical(string.Format("Error whilst calling {0} \nError: {1}", url, ex.Message), ex);
-
-        if (ex.Response != null)
-        {
-          // Error calling the service but we got a response so dump it.
-          string responseString = string.Empty;
-          var response = ((HttpWebResponse)ex.Response);
-          var encoding = response.CharacterSet == "" ? Encoding.UTF8 : Encoding.GetEncoding(response.CharacterSet);
-
-          using (var stream = response.GetResponseStream())
-          {
-            var reader = new StreamReader(stream, encoding);
-            responseString = reader.ReadToEnd();
-          }
-
-          log.DoLogCritical(String.Format("{0} - Response: ({1}) {2} : {3}", ex.Message, response.StatusCode, response.StatusDescription, responseString), ex);
-        }
+        // Conneciton timeout
+        log.DoLogError(string.Format("Timeout whilst calling {0} - {1}", url, tcEx.Message));
 
         throw;
       }
       catch (Exception ex)
       {
-        log.DoLogCritical(ex.Message, ex);
+        log.DoLogError(string.Format("Error whilst calling {0} \nError: {1}", url, ex.Message));
 
         throw;
-      }
-      finally
-      {
-        // Do any necessary clean up.
-        if (httpResponse != null) httpResponse.Dispose();
       }
     }
 
-    public static Newtonsoft.Json.Linq.JObject GetSimpleJsonObjectFromURL(string url, LogHelper log, bool swallowException)
+    public static Dictionary<string, dynamic> GetJsonFromURL(string url, LogHelper log, (string header, string value)[] headers = null)
+    {
+      Dictionary<string, dynamic> jsonObject = null;
+
+      string jsonString = GetJsonStringFromURL(url, log, headers);
+
+      // Convert the response to JSON
+      jsonObject = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(jsonString);
+
+      return jsonObject;
+    }
+
+    public static Newtonsoft.Json.Linq.JObject GetSimpleJsonObjectFromURL(string url, LogHelper log, (string header, string value)[] headers = null)
     {
       Newtonsoft.Json.Linq.JObject jsonObject = null;
 
-      HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-      request.ContentType = "application/json";
-      request.UserAgent = "PTMagic.Import";
-      request.KeepAlive = true;
+      string jsonString = GetJsonStringFromURL(url, log, headers);
 
-      try
-      {
-        HttpWebResponse httpResponse = (HttpWebResponse)request.GetResponse();
-
-        StreamReader jsonReader = new StreamReader(httpResponse.GetResponseStream());
-        string jsonString = jsonReader.ReadToEnd();
-        jsonReader.Close();
-
-        jsonObject = JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JObject>(jsonString);
-
-        return jsonObject;
-      }
-      catch (WebException ex)
-      {
-        if (swallowException)
-        {
-          // Do nothing, as we do not want to get this logged. Only uncritical functions uses this
-        }
-        else
-        {
-          log.DoLogCritical("Url: " + url + " Message: " + ex.Message, ex);
-          throw ex;
-        }
-      }
-      catch (Exception ex)
-      {
-        if (swallowException)
-        {
-          // Do nothing, as we do not want to get this logged. Only uncritical functions uses this
-        }
-        else
-        {
-          log.DoLogCritical("Url: " + url + " Message: " + ex.Message, ex);
-          throw ex;
-        }
-      }
+      jsonObject = JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JObject>(jsonString);
 
       return jsonObject;
     }
@@ -134,32 +111,9 @@ namespace Core.MarketAnalyzer
     {
       List<dynamic> jsonObject = null;
 
-      HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-      request.ContentType = "application/json";
-      request.UserAgent = "PTMagic.Import";
-      request.KeepAlive = true;
+      string jsonString = GetJsonStringFromURL(url, log, null);
 
-      try
-      {
-        HttpWebResponse httpResponse = (HttpWebResponse)request.GetResponse();
-
-        StreamReader jsonReader = new StreamReader(httpResponse.GetResponseStream());
-        string jsonString = jsonReader.ReadToEnd();
-        jsonReader.Close();
-
-        jsonObject = JsonConvert.DeserializeObject<List<dynamic>>(jsonString);
-
-        return jsonObject;
-      }
-      catch (WebException ex)
-      {
-        log.DoLogCritical(ex.Message, ex);
-        throw ex;
-      }
-      catch (Exception ex)
-      {
-        log.DoLogCritical(ex.Message, ex);
-      }
+      jsonObject = JsonConvert.DeserializeObject<List<dynamic>>(jsonString);
 
       return jsonObject;
     }
@@ -168,32 +122,9 @@ namespace Core.MarketAnalyzer
     {
       Newtonsoft.Json.Linq.JArray jsonObject = null;
 
-      HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-      request.ContentType = "application/json";
-      request.UserAgent = "PTMagic.Import";
-      request.KeepAlive = true;
+      string jsonString = GetJsonStringFromURL(url, log, null);
 
-      try
-      {
-        HttpWebResponse httpResponse = (HttpWebResponse)request.GetResponse();
-
-        StreamReader jsonReader = new StreamReader(httpResponse.GetResponseStream());
-        string jsonString = jsonReader.ReadToEnd();
-        jsonReader.Close();
-
-        jsonObject = JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JArray>(jsonString);
-
-        return jsonObject;
-      }
-      catch (WebException ex)
-      {
-        log.DoLogCritical(ex.Message, ex);
-        throw ex;
-      }
-      catch (Exception ex)
-      {
-        log.DoLogCritical(ex.Message, ex);
-      }
+      jsonObject = JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JArray>(jsonString);
 
       return jsonObject;
     }
@@ -206,7 +137,8 @@ namespace Core.MarketAnalyzer
       {
         string baseUrl = "https://api.github.com/repos/PTMagicians/PTMagic/releases/latest";
 
-        Newtonsoft.Json.Linq.JObject jsonObject = GetSimpleJsonObjectFromURL(baseUrl, log, true);
+        Newtonsoft.Json.Linq.JObject jsonObject = GetSimpleJsonObjectFromURL(baseUrl, log, new (string header, string value)[] { ("User-Agent", "PTMagic.Import") });
+        
         if (jsonObject != null)
         {
           result = jsonObject.GetValue("tag_name").ToString();
@@ -231,7 +163,7 @@ namespace Core.MarketAnalyzer
       string baseUrl = "http://free.currencyconverterapi.com/api/v5/convert?q=USD_" + currency + "&compact=y&apiKey=" + FreeCurrencyAPI;
 
       log.DoLogDebug("http://free.currencyconverterapi.com - Getting latest exchange rates...");
-      Newtonsoft.Json.Linq.JObject jsonObject = GetSimpleJsonObjectFromURL(baseUrl, log, false);
+      Newtonsoft.Json.Linq.JObject jsonObject = GetSimpleJsonObjectFromURL(baseUrl, log, null);
       if (jsonObject != null)
       {
         log.DoLogDebug("http://free.currencyconverterapi.com - Received latest exchange rates.");
