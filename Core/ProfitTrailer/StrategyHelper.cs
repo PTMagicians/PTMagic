@@ -587,7 +587,7 @@ namespace Core.ProfitTrailer
           if (!isValidStrategy )
           {
             // Parse Formulas
-            if (strategy.Name.Contains("FORMULA"))
+            if (strategy.Name.Contains("FORMULA") && !strategy.Name.Contains("STATS"))
             {
               string expression = strategy.Name.Remove(0, 10);
               expression = expression.Replace("<span class=\"tdgreen\">","true").Replace("<span class=\"red\">","false").Replace("</span>","").Replace("&&","and").Replace("||","or");

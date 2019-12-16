@@ -5,6 +5,7 @@ using System.Security.Permissions;
 using Core.Helper;
 using Microsoft.Extensions.DependencyInjection;
 
+
 [assembly: AssemblyVersion("3.0.0")]
 [assembly: AssemblyProduct("PT Magic")]
 
