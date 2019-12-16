@@ -26,7 +26,7 @@ namespace Core.MarketAnalyzer
         string baseUrl = "https://api.binance.com/api/v1/ticker/24hr?symbol=" + mainMarket + "USDT";
 
         log.DoLogInfo("Binance - Getting main market price...");
-        Newtonsoft.Json.Linq.JObject jsonObject = GetSimpleJsonObjectFromURL(baseUrl, log, false);
+        Newtonsoft.Json.Linq.JObject jsonObject = GetSimpleJsonObjectFromURL(baseUrl, log, null);
         if (jsonObject != null)
         {
           log.DoLogInfo("Binance - Market data received for " + mainMarket + "USDT");

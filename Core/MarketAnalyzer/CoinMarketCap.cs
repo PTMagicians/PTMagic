@@ -22,7 +22,7 @@ namespace Core.MarketAnalyzer
 
         log.DoLogInfo("CoinMarketCap - Getting market data...");
 
-        Dictionary<string, dynamic> jsonObject = GetJsonFromURL(baseUrl, log, cmcAPI);
+        Dictionary<string, dynamic> jsonObject = GetJsonFromURL(baseUrl, log, new (string header, string value)[] { ("X-CMC_PRO_API_KEY", cmcAPI) });
 
         if (jsonObject.Count > 0)
         {

@@ -36,7 +36,6 @@ namespace Core.Main
     private DateTime _lastSettingFileCheck = Constants.confMinDate;
     private DateTime _lastVersionCheck = Constants.confMinDate;
     private DateTime _lastFiatCurrencyCheck = Constants.confMinDate;
-    private string _lastSetting = "";
     private string _activeSettingName = "";
     private GlobalSetting _activeSetting = null;
     private string _defaultSettingName = "";

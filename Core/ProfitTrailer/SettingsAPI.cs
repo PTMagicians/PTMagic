@@ -51,12 +51,14 @@ namespace Core.ProfitTrailer
           log.DoLogDebug("Built POST request for Properties");
 
           log.DoLogInfo("Sending Properties...");
-          HttpWebResponse httpResponse = (HttpWebResponse)httpWebRequest.GetResponse();
-          log.DoLogInfo("Properties sent!");
-          httpResponse.Close();
-          log.DoLogDebug("Properties response object closed.");
+          using (HttpWebResponse httpResponse = (HttpWebResponse)httpWebRequest.GetResponse())
+          {
+            log.DoLogInfo("Properties sent!");
+            httpResponse.Close();
+            log.DoLogDebug("Properties response object closed.");
+          }
+          
           transferCompleted = true;
-
         }
         catch (WebException ex)
         {
