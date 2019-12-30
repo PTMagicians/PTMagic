@@ -50,7 +50,7 @@ namespace Core.MarketAnalyzer
 
       try
       {
-        log.DoLogInfo("Calling URL: " + url);
+        // log.DoLogInfo("Calling URL: " + url);
         var response = webClient.GetAsync(url).Result;
 
         string repsonseString = response.Content.ReadAsStringAsync().Result;
