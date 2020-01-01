@@ -224,6 +224,7 @@ namespace Core.ProfitTrailer
     {
       string result = strategyName;
       string time = "";
+      string leverage = "";
       string strategyLetter = "";
       string strategyNameOnly = strategyName;
 
@@ -243,6 +244,12 @@ namespace Core.ProfitTrailer
       if (result.Contains("CHANGE PERC"))
       {
         result = "CHANGE";
+      }
+      if (result.Contains("LEVERAGE"))
+      {
+        leverage = strategyName.Remove(0,10);
+        leverage = leverage.Remove(leverage.Length -1, 1);
+        result = leverage + " X";
       }
 
       // buy/sell strategies beginning with PT 2.3.3 contain the stragegy designation letter followed by a colon and space.
