@@ -57,6 +57,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public bool IsPasswordProtected { get; set; } = true;
     public bool OpenBrowserOnStart { get; set; } = false;
     public int Port { get; set; } = 5000;
+    public string AnalyzerChart { get; set; } = "";
     public int GraphIntervalMinutes { get; set; } = 60;
     public int GraphMaxTimeframeHours { get; set; } = 24;
     public int RefreshSeconds { get; set; } = 30;
