@@ -82,6 +82,7 @@ namespace Monitor.Pages
       // 
       PTMagicConfiguration.GeneralSettings.Monitor.IsPasswordProtected = HttpContext.Request.Form["Monitor_IsPasswordProtected"].Equals("on");
       PTMagicConfiguration.GeneralSettings.Monitor.OpenBrowserOnStart = HttpContext.Request.Form["Monitor_OpenBrowserOnStart"].Equals("on");
+      PTMagicConfiguration.GeneralSettings.Monitor.DefaultDCAMode = HttpContext.Request.Form["Monitor_AnalyzerChart"];
       PTMagicConfiguration.GeneralSettings.Monitor.GraphIntervalMinutes = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_GraphIntervalMinutes"], PTMagicConfiguration.GeneralSettings.Monitor.GraphIntervalMinutes);
       PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_GraphMaxTimeframeHours"], PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours);
       PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_RefreshSeconds"], PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds);

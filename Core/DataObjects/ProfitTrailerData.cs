@@ -304,10 +304,22 @@ namespace Core.Main.DataObjects
         sellLogData.AverageBuyPrice = rsld.avgPrice;
         sellLogData.TotalCost = sellLogData.SoldAmount * sellLogData.AverageBuyPrice;
 
-        double soldValueRaw = (sellLogData.SoldAmount * sellLogData.SoldPrice);
-        double soldValueAfterFees = soldValueRaw - (soldValueRaw * ((double)rsld.fee / 100));
-        sellLogData.SoldValue = soldValueAfterFees;
-        sellLogData.Profit = Math.Round(sellLogData.SoldValue - sellLogData.TotalCost, 8);
+        
+
+        if (sellLogData.ProfitPercent >0)
+        {
+          double soldValueRaw = (sellLogData.SoldAmount * sellLogData.SoldPrice);
+          double soldValueAfterFees = soldValueRaw + (soldValueRaw * ((double)rsld.fee / 100));
+          sellLogData.SoldValue = soldValueAfterFees;
+          sellLogData.Profit = Math.Abs(Math.Round(sellLogData.SoldValue - sellLogData.TotalCost, 8));
+        }
+        else
+        {
+          double soldValueRaw = (sellLogData.SoldAmount * sellLogData.SoldPrice);
+          double soldValueAfterFees = soldValueRaw - (soldValueRaw * ((double)rsld.fee / 100));
+          sellLogData.SoldValue = soldValueAfterFees;
+          sellLogData.Profit = Math.Round(sellLogData.SoldValue - sellLogData.TotalCost, 8);
+        }
 
         //Convert Unix Timestamp to Datetime
         System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
