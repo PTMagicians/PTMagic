@@ -36,7 +36,6 @@ namespace Core.Main
     private DateTime _lastSettingFileCheck = Constants.confMinDate;
     private DateTime _lastVersionCheck = Constants.confMinDate;
     private DateTime _lastFiatCurrencyCheck = Constants.confMinDate;
-    private string _lastSetting = "";
     private string _activeSettingName = "";
     private GlobalSetting _activeSetting = null;
     private string _defaultSettingName = "";
@@ -692,6 +691,7 @@ namespace Core.Main
       if (!this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Binance", StringComparison.InvariantCultureIgnoreCase)
         && !this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Bittrex", StringComparison.InvariantCultureIgnoreCase)
         && !this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceUS", StringComparison.InvariantCultureIgnoreCase)
+        && !this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceFutures", StringComparison.InvariantCultureIgnoreCase)
         && !this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Poloniex", StringComparison.InvariantCultureIgnoreCase))
       {
         this.Log.DoLogError("Exchange '" + this.PTMagicConfiguration.GeneralSettings.Application.Exchange + "' specified in settings.general.json is invalid! Terminating process...");
@@ -1088,7 +1088,7 @@ namespace Core.Main
         }
         else
         {
-          if (!this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Binance", StringComparison.InvariantCultureIgnoreCase) && !this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceUS", StringComparison.InvariantCultureIgnoreCase) && !this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Bittrex", StringComparison.InvariantCultureIgnoreCase) && !this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Poloniex", StringComparison.InvariantCultureIgnoreCase))
+          if (!this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Binance", StringComparison.InvariantCultureIgnoreCase) && !this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceUS", StringComparison.InvariantCultureIgnoreCase) && !this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceFutures", StringComparison.InvariantCultureIgnoreCase) && !this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Bittrex", StringComparison.InvariantCultureIgnoreCase) && !this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Poloniex", StringComparison.InvariantCultureIgnoreCase))
           {
             Log.DoLogError("Your setting for Application.Exchange in settings.general.json is invalid (" + this.PTMagicConfiguration.GeneralSettings.Application.Exchange + ")! Terminating process.");
             this.Timer.Stop();
@@ -1246,6 +1246,11 @@ namespace Core.Main
       {
         // Get most recent market data from BinanceUS
         this.ExchangeMarketList = BinanceUS.GetMarketData(this.LastRuntimeSummary.MainMarket, this.MarketInfos, this.PTMagicConfiguration, this.Log);
+      }
+      else if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceFutures", StringComparison.InvariantCultureIgnoreCase))
+      {
+        // Get most recent market data from BinanceFutures
+        this.ExchangeMarketList = BinanceFutures.GetMarketData(this.LastRuntimeSummary.MainMarket, this.MarketInfos, this.PTMagicConfiguration, this.Log);
       }
       else if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Poloniex", StringComparison.InvariantCultureIgnoreCase))
       {

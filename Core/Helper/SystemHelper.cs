@@ -560,6 +560,9 @@ namespace Core.Helper
           case "BinanceUS":
             result = "https://www.binance.us/trade.html?symbol=" + market;
             break;
+          case "BinanceFutures":
+            result = "https://www.binance.com/en/futures/" + market;
+            break;
           case "Poloniex":
             result = "https://poloniex.com/exchange#" + market.ToLower();
             break;
@@ -583,6 +586,9 @@ namespace Core.Helper
           break;
         case "BinanceUS":
           result = market + mainMarket;
+          break;
+        case "BinanceFutures":
+          result = market + "_" + mainMarket;
           break;
         case "Poloniex":
           result = mainMarket + "_" + market;
