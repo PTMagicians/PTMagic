@@ -304,9 +304,8 @@ namespace Core.Main.DataObjects
         sellLogData.AverageBuyPrice = rsld.avgPrice;
         sellLogData.TotalCost = sellLogData.SoldAmount * sellLogData.AverageBuyPrice;
 
-        
-
-        if (sellLogData.ProfitPercent >0)
+        // check if sale was a short position
+        if ((sellLogData.ProfitPercent > 0) && (sellLogData.AverageBuyPrice > sellLogData.SoldPrice))
         {
           double soldValueRaw = (sellLogData.SoldAmount * sellLogData.SoldPrice);
           double soldValueAfterFees = soldValueRaw + (soldValueRaw * ((double)rsld.fee / 100));
