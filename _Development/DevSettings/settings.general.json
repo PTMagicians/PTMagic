@@ -19,7 +19,7 @@
     "Monitor": {
       "IsPasswordProtected": true, // Defines if your monitor will be asking to setup a password on its first start
       "OpenBrowserOnStart": false, // If active, a browser window will open as soon as you start the monitor
-      "Port": 5000, // The port you want to run your monitor on
+      "Port": 8080, // The port you want to run your monitor on
       "RootUrl": "/", // The root Url of your monitor
       "AnalyzerChart": "", // By default the chart on the Market Analyzer page will use your default currency against USD.  You can change that here. (eg., BTCEUR)
       "GraphIntervalMinutes": 60, // The interval for the monitor market trend graph to draw points
