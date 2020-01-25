@@ -22,7 +22,7 @@
       "OpenBrowserOnStart": false, // If active, a browser window will open as soon as you start the monitor
       "Port": 5000, // The port you want to run your monitor on
       "RootUrl": "/", // The root Url of your monitor
-      "AnalyzerChart":, // By default the chart on the market analyzer page displays your base currency against USD.  You may change this if you like (eg., BTCEUR)
+      "AnalyzerChart":"", // By default the chart on the market analyzer page displays your base currency against USD.  You may change this if you like (eg., BTCEUR)
       "GraphIntervalMinutes": 60, // The interval for the monitor market trend graph to draw points
       "GraphMaxTimeframeHours": 24, // This will enable you to define the timeframe that your graph for market trends covers
       "RefreshSeconds": 30, // The refresh interval of your monitor main page
