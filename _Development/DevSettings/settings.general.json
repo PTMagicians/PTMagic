@@ -14,13 +14,15 @@
       "MainFiatCurrency": "USD", // Your main fiat currency that will be used in the monitor
       "FloodProtectionMinutes": 0, // If a price trend is just zig-zagging around its trigger, you may want to protect your settings from getting switched back and forth every minute
       "InstanceName": "PT Magic", // The name of the instance of this bot. This will be used in your monitor and your Telegram messages. In case you are running more than one bot, you may set different names to separate them
-      "CoinMarketCapAPIKey": "" //CoinMarketCap Api
+      "CoinMarketCapAPIKey": "", //CoinMarketCap Api
+      "FreeCurrencyConverterAPIKey": "" // If "MainFiatCurrency" above is anything other than USD, you must obtain an API key from https://free.currencyconverterapi.com/free-api-key 
     },
     "Monitor": {
       "IsPasswordProtected": true, // Defines if your monitor will be asking to setup a password on its first start
       "OpenBrowserOnStart": false, // If active, a browser window will open as soon as you start the monitor
-      "Port": 5000, // The port you want to run your monitor on
+      "Port": 8080, // The port you want to run your monitor on
       "RootUrl": "/", // The root Url of your monitor
+      "AnalyzerChart": "", // By default the chart on the Market Analyzer page will use your default currency against USD.  You can change that here. (eg., BTCEUR)
       "GraphIntervalMinutes": 60, // The interval for the monitor market trend graph to draw points
       "GraphMaxTimeframeHours": 24, // This will enable you to define the timeframe that your graph for market trends covers
       "RefreshSeconds": 30, // The refresh interval of your monitor main page
