@@ -30,9 +30,17 @@
         currentBalanceString = Math.Round(currentBalance, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
         }
       }
-      <div class="text-center"><small>TCV: &nbsp; <text class="text-autocolor"> @currentBalanceString &nbsp; @Model.Summary.MainMarket &nbsp; </text> </small></div>      
+      <div class="text-center">
+        <small>
+          Start balence: &nbsp; <text class="text-autocolor"> @Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance @Model.Summary.MainMarket</text>
+          <br>
+          Current value: &nbsp; <text class="text-autocolor"> @currentBalanceString @Model.Summary.MainMarket</text>
+          <br>
+          Gain: &nbsp; <text class="text-autocolor"> @Math.Round(((currentBalance - Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance) / Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance) * 100, 2) %</text>
+       </small>
+      </div>      
       <div id="AssetDistribution">
-        <svg style="height:290px;width:100%"></svg>
+        <svg style="height:230px;width:100%"></svg>
       </div>
     </div>
   </div>
