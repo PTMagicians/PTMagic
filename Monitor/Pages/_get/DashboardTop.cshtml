@@ -98,6 +98,7 @@
                 <th></th>
                 <th class="text-left" data-toggle="tooltip" data-placement="top" title="Active buy strategies">DCA Buy Strats</th>
                 <th class="text-left" data-toggle="tooltip" data-placement="top" title="Active sell strategies">Sell Strats</th>
+                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Target Profit for sale">Target Profit</th>
                 <th class="text-left" data-toggle="tooltip" data-placement="top" title="Current Profit">Profit</th>
                 <th></th>
               </tr>
@@ -201,6 +202,8 @@
 
                   <td>@Html.Raw(sellStrategyText)</td>
                   
+                  <td class="@Html.Raw((dcaLogEntry.TargetGainValue.HasValue && (dcaLogEntry.ProfitPercent > dcaLogEntry.TargetGainValue.Value)) ? "text-success" : "text-danger")">@Html.Raw(dcaLogEntry.TargetGainValue.HasValue ? dcaLogEntry.TargetGainValue.Value.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%" : "&nbsp")</td>
+
                   @if(!@lostValue)
                   {
                     <td class="text-autocolor">@dcaLogEntry.ProfitPercent.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
@@ -214,9 +217,13 @@
                 </tr>
               }
               
-            <td>Totals:</td><td></td>
+            <td>Totals:</td>
+            <td></td>
             <td>@Html.Raw(Model.TotalBagCost.ToString("#,#0.000000", new System.Globalization.CultureInfo("en-US")))</td>
-            <td></td><td></td><td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
             <td class="text-autocolor">@Html.Raw((((Model.TotalBagValue - Model.TotalBagCost) / Model.TotalBagCost) * 100).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))%</td>
 
             </tbody>
