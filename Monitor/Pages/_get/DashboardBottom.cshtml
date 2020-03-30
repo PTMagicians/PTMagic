@@ -12,9 +12,11 @@
 <div class="row">
   <div class="col-md-5 px-1">
     <div class="card-box px-2" style="height:305px;">
+      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
+  
       @if (!Model.TrendChartDataJSON.Equals("")) {
         <div class="trend-chart">
-          <svg style="height:300px;width:100%"></svg>
+          <svg style="height: 300px;width: 100%;"></svg>
         </div>
       } else {
         <p>Unable to load graph, no market trend data found.</p>
@@ -23,6 +25,7 @@
   </div>
   <div class="col-md-2 px-1">
     <div class="card-box px-2" style="height:305px;">
+      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
       @{
       double currentBalance = Model.PTData.GetCurrentBalance();
       string currentBalanceString = currentBalance.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
@@ -45,6 +48,8 @@
     </div>
   </div>
   <div class="col-md-5 px-1">
+    <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
+
     <div class="card-box px-2" style="height:305px;">
       @if (!Model.ProfitChartDataJSON.Equals("")) {
         <div class="profit-chart">
@@ -60,7 +65,10 @@
 
 <div class="row">
   <div class="col-md-6 px-1">
+    <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
+
     <div class="card-box px-2">
+      <br/>
       <h4 class="m-t-0 m-b-20 header-title"><b>Market Trends at @Model.PTMagicConfiguration.GeneralSettings.Application.Exchange</b><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)MarketAnalyzer">more</a></small></h4>
 
       <table class="table table-sm">
@@ -100,7 +108,10 @@
   </div>
   
   <div class="col-md-6 px-1">
+    <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
+
     <div class="card-box px-2">
+      <br/>
       <h4 class="m-t-0 m-b-20 header-title"><b>Sales Overview</b><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)SalesAnalyzer">more</a></small></h4>
       @{
         double totalProfit = Model.PTData.SellLog.Sum(s => s.Profit);
@@ -189,6 +200,7 @@
 <script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/tablesaw/js/tablesaw-init.js"></script>
 <script type="text/javascript">
    $(document).ready(function () {
+      $(".cdev").circlos();
       $('[data-toggle="tooltip"]').tooltip();
       $('.text-autocolor').autocolor(false);
 

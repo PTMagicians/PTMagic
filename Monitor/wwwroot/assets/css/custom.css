@@ -173,6 +173,10 @@ a:active {
   stroke-opacity: 1 !important;
 }
 
+.trend-chart
+{
+  clear: none;
+}
 
 /* Custom menu styles */
 #topnav .navigation-menu {
@@ -211,4 +215,69 @@ a:active {
 
 #topnav .has-submenu.active>a {
   color: #50cefc;
+}
+
+/* Circolus */
+.cdev {
+  position: absolute;
+  height  : 30px;
+  width   : 30px;
+  top: 5px;
+  left: 0;
+  margin  : 0 0 0 10px;
+  display: inline;
+}
+
+.cdev div {
+  position     : absolute;
+  height       : 30px;
+  width        : 30px;
+  border-radius: 50%;
+}
+
+.cdev div span {
+  position        : absolute;
+  font-family     : Arial;
+  font-size       : 5px;
+  line-height     : 7px;
+  height          : 20px;
+  width           : 20px;
+  left            : 5px;
+  top             : 5px;
+  text-align      : center;
+  border-radius   : 50%;
+  background-color: #36404a;
+  color: #36404a;
+}
+
+.cdev .background {
+  background-color: #b3cef6;
+}
+
+.cdev .rotate {
+  clip            : rect(0 15px 30px 0);
+  background-color: #4b86db;
+}
+
+.cdev .left {
+  clip            : rect(0 15px 30px 0);
+  opacity         : 1;
+  background-color: #b3cef6;
+}
+
+.cdev .right {
+  clip            : rect(0 15px 30px 0);
+  transform       : rotate(180deg);
+  opacity         : 0;
+  background-color: #4b86db;
+}
+
+@keyframes toggle {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
 }
