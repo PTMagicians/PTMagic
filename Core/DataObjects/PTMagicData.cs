@@ -456,6 +456,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public double AverageBuyPrice { get; set; }
     public double TotalCost { get; set; }
     public double CurrentValue { get; set; }
+    public double? TargetGainValue { get; set; }
     public double Amount { get; set; }
     public double CurrentPrice { get; set; }
     public double SellTrigger { get; set; }

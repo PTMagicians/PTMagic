@@ -10,16 +10,12 @@
     <None Remove="wwwroot\assets\**" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="wwwroot\assets\css\custom.css" CopyToOutputDirectory="Always" />
-    <Content Include="wwwroot\assets\img\qr-btc.png" CopyToOutputDirectory="Always" />
-    <Content Include="wwwroot\assets\img\qr-eth.png" CopyToOutputDirectory="Always" />
-    <Content Include="wwwroot\assets\img\qr-ltc.png" CopyToOutputDirectory="Always" />
-    <Content Include="wwwroot\assets\img\qr-neo.png" CopyToOutputDirectory="Always" />
-    <Content Include="wwwroot\assets\js\custom.js" CopyToOutputDirectory="Always" />
-    <Content Include="wwwroot\assets\js\analyzer-settings.js">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="wwwroot\assets\js\dca.js" CopyToOutputDirectory="Always" />
+    <Content Include="wwwroot\assets\img\**" CopyToOutputDirectory="Always" />
+    <Content Include="wwwroot\assets\css\**" CopyToOutputDirectory="Always" />
+    <Content Include="wwwroot\assets\fonts\**" CopyToOutputDirectory="Always" />
+    <Content Include="wwwroot\assets\pages\**" CopyToOutputDirectory="Always" />
+    <Content Include="wwwroot\assets\plugins\**" CopyToOutputDirectory="Always" />
+    <Content Include="wwwroot\assets\js\**" CopyToOutputDirectory="Always" />
     <None Include="nlog.config" CopyToOutputDirectory="Always" />
   </ItemGroup>
   <ItemGroup>

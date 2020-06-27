@@ -2564,7 +2564,7 @@ namespace Core.Main
           }
         }
 
-        this.LastRuntimeSummary.MarketSummary.Add(marketPair, mpSummary);
+        this.LastRuntimeSummary.MarketSummary.TryAdd(marketPair, mpSummary);
       }
 
       this.Log.DoLogInfo("Summary: Current single market properties saved.");

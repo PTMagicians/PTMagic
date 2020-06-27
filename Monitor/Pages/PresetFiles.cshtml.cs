@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.AspNetCore.Http;
+﻿using System.Collections.Generic;
 using Core.Main;
-using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
-using System.Globalization;
 
 namespace Monitor.Pages
 {
