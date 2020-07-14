@@ -438,7 +438,6 @@ namespace Core.ProfitTrailer
         default:
           break;
       }
-
       if (onlyValidStrategies)
       {
         if (strategyName.IndexOf("SOM") > -1 || strategyName.IndexOf("MAX") > -1 || strategyName.IndexOf("MIN") > -1 || strategyName.IndexOf("PRICE") > -1 || strategyName.IndexOf("BLACK") > -1 || strategyName.IndexOf("INSUFFICIENT") > -1 || strategyName.IndexOf("COST") > -1)
@@ -446,7 +445,6 @@ namespace Core.ProfitTrailer
           result = "";
         }
       }
-
       return result;
     }
 
@@ -458,13 +456,11 @@ namespace Core.ProfitTrailer
     public static bool IsValidStrategy(string strategyName, bool checkForAnyInvalid)
     {
       bool result = false;
-
       // buy/sell strategies beginning with PT 2.3.3 contain the letter followed by a colon and space.
       if (strategyName.Contains(":"))
       {
         result = true;
       }
-
       // Prior to PT 2.3.3
       if (!checkForAnyInvalid)
       {
@@ -534,14 +530,11 @@ namespace Core.ProfitTrailer
           result = true;
         }
       }
-
       return result;
     }
-
     public static int GetStrategyValueDecimals(string strategyName)
     {
       int result = 0;
-
       switch (strategyName.ToLower())
       {
         case "lowbb":
@@ -580,10 +573,8 @@ namespace Core.ProfitTrailer
         default:
           break;
       }
-
       return result;
     }
-
     public static string GetStrategyText(Summary summary, List<Strategy> strategies, string strategyText, bool isTrue, bool isTrailingBuyActive)
     {
       bool isValidStrategy = false;
@@ -594,9 +585,7 @@ namespace Core.ProfitTrailer
         foreach (Strategy strategy in strategies)
         {
           string textClass = (strategy.IsTrue) ? "label-success" : "label-danger";
-
           isValidStrategy = StrategyHelper.IsValidStrategy(strategy.Name);
-
           if (!isValidStrategy)
           {
             // Parse Formulas
@@ -615,14 +604,7 @@ namespace Core.ProfitTrailer
               {
                 strategyText += "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">(FORM)</span> ";
               }
-
             }
-            //else
-            //{
-            //  strategyText += "<span class=\"label label-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategy.Name + "\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, false) + "</span> ";
-            //}
-
-
             if (strategy.Name.Contains("LEVEL") && !strategy.Name.Contains("TRIGGERED"))
             {
               string level = strategy.Name.Substring(5, 2);
@@ -641,26 +623,17 @@ namespace Core.ProfitTrailer
               }
 
             }
-            //else
-            //{
-            //  strategyText += "<span class=\"label label-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategy.Name + "\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, false) + "</span> ";
-            //}
-
             if (strategy.Name.Contains("LEVEL") && strategy.Name.Contains("TRIGGERED"))
             {
               string level = strategy.Name.Substring(5, 2);
               strategyText += "<span class=\"label label-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">LEVEL " + level + "TRIG</span> ";
             }
-
-
-
           }
           else
           {
             strategyText += "<span class=\"label " + textClass + "\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategy.Name + "\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, false) + "</span> ";
           }
         }
-
         if (isTrailingBuyActive)
         {
           strategyText += " <i class=\"fa fa-flag text-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Trailing active!\"></i>";
@@ -679,14 +652,11 @@ namespace Core.ProfitTrailer
         }
         else
         {
-
           isValidStrategy = StrategyHelper.IsValidStrategy(strategyText);
-
           if (isValidStrategy)
           {
             strategyText = "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategyText + "\">" + StrategyHelper.GetStrategyShortcut(strategyText, true) + "</span>";
           }
-
           else if (strategyText.Equals("") && isValidStrategy == false)
           {
             strategyText = "<span class=\"label label-muted\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Not Applicable: Not using DCA!\"></span>";
@@ -697,10 +667,8 @@ namespace Core.ProfitTrailer
           }
         }
       }
-
       return strategyText;
     }
-
     public static string GetCurrentValueText(List<Strategy> strategies, string strategyText, double bbValue, double simpleValue, bool includeShortcut)
     {
       string result = "";
