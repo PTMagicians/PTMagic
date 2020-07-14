@@ -228,7 +228,7 @@ namespace Core.ProfitTrailer
         result = "";
       }
 
-      // strategy labels that are variable, so can't be caught by the switch statement
+      // strategy labels that are variable value
       if (result.Contains("REBUY"))
       {
         time = strategyName.Remove(0, 14);
@@ -423,6 +423,18 @@ namespace Core.ProfitTrailer
         case "no dca buy logic":
           result = String.Concat(strategyLetter, "NODCA");
           break;
+        case "combimagain":
+          result = String.Concat(strategyLetter, "COMBIG");
+          break;
+        case "combimaspread":
+          result = String.Concat(strategyLetter, "COMBIS");
+          break;
+        case "combimacross":
+          result = String.Concat(strategyLetter, "COMBIC");
+          break;
+        case "macdpercentage":
+          result = String.Concat(strategyLetter, "MACDPERC");
+          break;
         default:
           break;
       }
@@ -588,7 +600,7 @@ namespace Core.ProfitTrailer
           if (!isValidStrategy)
           {
             // Parse Formulas
-            if (strategy.Name.Contains("FORMULA") && !strategy.Name.Contains("STATS"))
+            if (strategy.Name.Contains("FORMULA") && !strategy.Name.Contains("STATS") && !strategy.Name.Contains("LEVEL"))
             {
               string expression = strategy.Name.Remove(0, 10);
               expression = expression.Replace("<span class=\"tdgreen\">", "true").Replace("<span class=\"red\">", "false").Replace("</span>", "").Replace("&&", "and").Replace("||", "or");
@@ -605,10 +617,43 @@ namespace Core.ProfitTrailer
               }
 
             }
-            else
+            //else
+            //{
+            //  strategyText += "<span class=\"label label-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategy.Name + "\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, false) + "</span> ";
+            //}
+
+
+            if (strategy.Name.Contains("LEVEL") && !strategy.Name.Contains("TRIGGERED"))
             {
-              strategyText += "<span class=\"label label-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategy.Name + "\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, false) + "</span> ";
+              string level = strategy.Name.Substring(5, 2);
+              string expression = strategy.Name.Remove(0, 17);
+              expression = expression.Replace("<span class=\"tdgreen\">", "true").Replace("<span class=\"red\">", "false").Replace("</span>", "").Replace("&&", "and").Replace("||", "or");
+              expression = regx.Replace(expression, String.Empty);
+              var tokens = new Tokenizer(expression).Tokenize();
+              var parser = new Parser(tokens);
+              if (parser.Parse())
+              {
+                strategyText += "<span class=\"label label-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"LEVEL FORMULA\">LEVEL" + level + "</span> ";
+              }
+              else
+              {
+                strategyText += "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"LEVEL FORMULA\">LEVEL" + level + "</span> ";
+              }
+
             }
+            //else
+            //{
+            //  strategyText += "<span class=\"label label-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategy.Name + "\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, false) + "</span> ";
+            //}
+
+            if (strategy.Name.Contains("LEVEL") && strategy.Name.Contains("TRIGGERED"))
+            {
+              string level = strategy.Name.Substring(5, 2);
+              strategyText += "<span class=\"label label-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">LEVEL " + level + "TRIG</span> ";
+            }
+
+
+
           }
           else
           {

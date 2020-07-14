@@ -224,8 +224,9 @@
             <td></td>
             <td></td>
             <td></td>
-            <td class="text-autocolor">@Html.Raw((((Model.TotalBagValue - Model.TotalBagCost) / Model.TotalBagCost) * 100).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))%</td>
 
+            <td class="text-autocolor">@Html.Raw( (((Model.TotalBagValue - Model.TotalBagCost) / Model.TotalBagCost) * 100).ToString("#0.00", new System.Globalization.CultureInfo("en-US")))%</td>
+            
             </tbody>
           </table>
         </div>
