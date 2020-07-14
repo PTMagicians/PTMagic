@@ -168,12 +168,9 @@ namespace Core.ProfitTrailer
             boolean = boolean && nextBoolean;
           else
             boolean = boolean || nextBoolean;
-
         }
-
         return boolean;
       }
-
       throw new Exception("Empty expression");
     }
 
@@ -227,7 +224,6 @@ namespace Core.ProfitTrailer
       {
         result = "";
       }
-
       // strategy labels that are variable value
       if (result.Contains("REBUY"))
       {
@@ -244,7 +240,6 @@ namespace Core.ProfitTrailer
         leverage = leverage.Remove(leverage.Length - 1, 1);
         result = leverage + " X";
       }
-
       // buy/sell strategies beginning with PT 2.3.3 contain the strategy designation letter followed by a colon and space.
       // remove the letter and colon, change to shortcut, then reapply the letter and colon
       if (strategyName.Contains(":"))
@@ -446,7 +441,6 @@ namespace Core.ProfitTrailer
           result = "";
         }
       }
-
       return result;
     }
 
@@ -534,14 +528,12 @@ namespace Core.ProfitTrailer
           result = true;
         }
       }
-
       return result;
     }
 
     public static int GetStrategyValueDecimals(string strategyName)
     {
       int result = 0;
-
       switch (strategyName.ToLower())
       {
         case "lowbb":
@@ -580,7 +572,6 @@ namespace Core.ProfitTrailer
         default:
           break;
       }
-
       return result;
     }
 
@@ -615,14 +606,7 @@ namespace Core.ProfitTrailer
               {
                 strategyText += "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">(FORM)</span> ";
               }
-
             }
-            //else
-            //{
-            //  strategyText += "<span class=\"label label-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategy.Name + "\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, false) + "</span> ";
-            //}
-
-
             if (strategy.Name.Contains("LEVEL") && !strategy.Name.Contains("TRIGGERED"))
             {
               string level = strategy.Name.Substring(5, 2);
@@ -639,21 +623,12 @@ namespace Core.ProfitTrailer
               {
                 strategyText += "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"LEVEL FORMULA\">LEVEL" + level + "</span> ";
               }
-
             }
-            //else
-            //{
-            //  strategyText += "<span class=\"label label-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategy.Name + "\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, false) + "</span> ";
-            //}
-
             if (strategy.Name.Contains("LEVEL") && strategy.Name.Contains("TRIGGERED"))
             {
               string level = strategy.Name.Substring(5, 2);
               strategyText += "<span class=\"label label-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">LEVEL " + level + "TRIG</span> ";
             }
-
-
-
           }
           else
           {
@@ -761,14 +736,12 @@ namespace Core.ProfitTrailer
           result = simpleValue.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
         }
       }
-
       return result;
     }
 
     public static string GetTriggerValueText(Summary summary, List<Strategy> strategies, string strategyText, double bbValue, double simpleValue, int buyLevel, bool includeShortcut)
     {
       string result = "";
-
       if (strategies.Count > 0)
       {
         foreach (Strategy strategy in strategies)
@@ -783,12 +756,10 @@ namespace Core.ProfitTrailer
             {
               decimalFormat += "0";
             }
-
             if (includeShortcut)
             {
               result += "<span class=\"text-muted\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, true) + "</span> ";
             }
-
             if (StrategyHelper.GetStrategyShortcut(strategy.Name, true).IndexOf("and", StringComparison.InvariantCultureIgnoreCase) > -1)
             {
               result += strategy.TriggerValue.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
@@ -832,7 +803,6 @@ namespace Core.ProfitTrailer
           result = simpleValue.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
         }
       }
-
       return result;
     }
   }
