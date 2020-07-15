@@ -238,7 +238,7 @@ namespace Core.ProfitTrailer
       {
         leverage = strategyName.Remove(0, 9);
         leverage = leverage.Remove(leverage.Length - 1, 1);
-        result = "CROSS" + leverage + "X";
+        result = "CROSS " + leverage + "X";
       }
       if (result.Contains("ISOLATED"))
       {
