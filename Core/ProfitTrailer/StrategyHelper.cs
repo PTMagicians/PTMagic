@@ -234,11 +234,17 @@ namespace Core.ProfitTrailer
       {
         result = "CHANGE";
       }
-      if (result.Contains("LEVERAGE"))
+      if (result.Contains("CROSSED"))
+      {
+        leverage = strategyName.Remove(0, 9);
+        leverage = leverage.Remove(leverage.Length - 1, 1);
+        result = "CROSS" + leverage + "X";
+      }
+      if (result.Contains("ISOLATED"))
       {
         leverage = strategyName.Remove(0, 10);
         leverage = leverage.Remove(leverage.Length - 1, 1);
-        result = leverage + " X";
+        result = "ISOL " + leverage + "X";
       }
       // buy/sell strategies beginning with PT 2.3.3 contain the strategy designation letter followed by a colon and space.
       // remove the letter and colon, change to shortcut, then reapply the letter and colon
@@ -456,7 +462,6 @@ namespace Core.ProfitTrailer
       {
         result = true;
       }
-      // Prior to PT 2.3.3
       if (!checkForAnyInvalid)
       {
         switch (strategyName.ToLower())
@@ -503,6 +508,10 @@ namespace Core.ProfitTrailer
           case "vwappercentage":
           case "mvwappercentage":
           case "btcdominance":
+          case "combimagain":
+          case "combimaspread":
+          case "combimacross":
+          case "macdpercentage":
             result = true;
             break;
           default:
@@ -583,51 +592,68 @@ namespace Core.ProfitTrailer
           isValidStrategy = StrategyHelper.IsValidStrategy(strategy.Name);
           if (!isValidStrategy)
           {
-            // Parse Formulas
-            if (strategy.Name.Contains("FORMULA") && !strategy.Name.Contains("STATS") && !strategy.Name.Contains("LEVEL"))
+            
+            if (strategy.Name.Contains("TRIGGERED"))
+              // remove levels already triggered, to show only currently waiting trigger
             {
-              string expression = strategy.Name.Remove(0, 10);
-              expression = expression.Replace("<span class=\"tdgreen\">", "true").Replace("<span class=\"red\">", "false").Replace("</span>", "").Replace("&&", "and").Replace("||", "or");
-              expression = regx.Replace(expression, String.Empty);
-              var tokens = new Tokenizer(expression).Tokenize();
-              var parser = new Parser(tokens);
-              if (parser.Parse())
+              strategyText += "";
+            }
+            else if (strategy.Name.Contains("STATS"))
+            // avoid parsing advanced buy stats
+            {
+              strategyText += "";
+            }
+            else if (strategy.Name.Contains("FORMULA"))
+            // Parse Various PT Formulas
+            {
+              if (strategy.Name.Contains("LEVEL"))
+              // level X
               {
-                strategyText += "<span class=\"label label-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">(FORM)</span> ";
+                string level = strategy.Name.Substring(5, 2);
+                string expression = strategy.Name.Remove(0, 17);
+                expression = expression.Replace("<span class=\"tdgreen\">", "true").Replace("<span class=\"red\">", "false").Replace("</span>", "").Replace("&&", "and").Replace("||", "or");
+                expression = regx.Replace(expression, String.Empty);
+                var tokens = new Tokenizer(expression).Tokenize();
+                var parser = new Parser(tokens);
+                if (parser.Parse())
+                {
+                  strategyText += "<span class=\"label label-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"LEVEL FORMULA\">L " + level + "</span> ";
+                }
+                else
+                {
+                  strategyText += "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"LEVEL FORMULA\">L " + level + "</span> ";
+                }
               }
               else
+              // standard formula
               {
-                strategyText += "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">(FORM)</span> ";
+                string expression = strategy.Name.Remove(0, 10);
+                expression = expression.Replace("<span class=\"tdgreen\">", "true").Replace("<span class=\"red\">", "false").Replace("</span>", "").Replace("&&", "and").Replace("||", "or");
+                expression = regx.Replace(expression, String.Empty);
+                var tokens = new Tokenizer(expression).Tokenize();
+                var parser = new Parser(tokens);
+                if (parser.Parse())
+                {
+                  strategyText += "<span class=\"label label-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">FORM</span> ";
+                }
+                else
+                {
+                  strategyText += "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">FORM</span> ";
+                }
               }
             }
-            if (strategy.Name.Contains("LEVEL") && !strategy.Name.Contains("TRIGGERED"))
+            else
             {
-              string level = strategy.Name.Substring(5, 2);
-              string expression = strategy.Name.Remove(0, 17);
-              expression = expression.Replace("<span class=\"tdgreen\">", "true").Replace("<span class=\"red\">", "false").Replace("</span>", "").Replace("&&", "and").Replace("||", "or");
-              expression = regx.Replace(expression, String.Empty);
-              var tokens = new Tokenizer(expression).Tokenize();
-              var parser = new Parser(tokens);
-              if (parser.Parse())
-              {
-                strategyText += "<span class=\"label label-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"LEVEL FORMULA\">LEVEL" + level + "</span> ";
-              }
-              else
-              {
-                strategyText += "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"LEVEL FORMULA\">LEVEL" + level + "</span> ";
-              }
+              strategyText += "<span class=\"label label-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategy.Name + "\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, false) + "</span> ";
             }
-            if (strategy.Name.Contains("LEVEL") && strategy.Name.Contains("TRIGGERED"))
-            {
-              string level = strategy.Name.Substring(5, 2);
-              strategyText += "<span class=\"label label-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">LEVEL " + level + "TRIG</span> ";
-            }
+
           }
           else
           {
             strategyText += "<span class=\"label " + textClass + "\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategy.Name + "\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, false) + "</span> ";
           }
         }
+
         if (isTrailingBuyActive)
         {
           strategyText += " <i class=\"fa fa-flag text-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Trailing active!\"></i>";
