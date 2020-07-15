@@ -601,7 +601,7 @@ namespace Core.ProfitTrailer
             else if (strategy.Name.Contains("STATS"))
             // avoid parsing advanced buy stats
             {
-              strategyText += "";
+              strategy.Name = "";
             }
             else if (strategy.Name.Contains("FORMULA"))
             // Parse Various PT Formulas
