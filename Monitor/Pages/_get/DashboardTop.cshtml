@@ -147,25 +147,20 @@
                   buyDisabled = true;
                 }
 
-
-
+                // if leverage, recalculate profit target
                 if (buyStrategyText.Contains("CROSSED"))
                 {
                   string leverageText = buyStrategyText.Remove(0, buyStrategyText.IndexOf("CROSSED")+9);
                   leverage = leverageText.Remove(leverageText.IndexOf(".0)"), leverageText.Length - leverageText.IndexOf(".0)"));
                   leverageValue = double.Parse(leverage);
-                  Write(leverageValue); 
                 }
                 if (buyStrategyText.Contains("ISOLATED"))
                 {
-                  leverage = buyStrategyText.Remove(0, 10);
-                  leverage = leverage.Remove(leverage.Length - 3, 3);
-                  //leverageValue = double.Parse(leverage);
-                  Write(leverage); 
+                  string leverageText = buyStrategyText.Remove(0, buyStrategyText.IndexOf("ISOLATED")+10);
+                  leverage = leverageText.Remove(leverageText.IndexOf(".0)"), leverageText.Length - leverageText.IndexOf(".0)"));
+                  leverageValue = double.Parse(leverage);
                 }
-
-
-
+                
                 string sellStrategyText = Core.ProfitTrailer.StrategyHelper.GetStrategyText(Model.Summary, dcaLogEntry.SellStrategies, dcaLogEntry.SellStrategy, isSellStrategyTrue, isTrailingSellActive);
 
                 // Check for when PT loses the value of a pair
