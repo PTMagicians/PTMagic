@@ -205,11 +205,7 @@ namespace Core.Main.DataObjects
     public double GetCurrentBalance()
     {
       return
-      (this.Summary.Balance +
-      this.Summary.PairsValue +
-      this.Summary.DCAValue +
-      this.Summary.PendingValue +
-      this.Summary.DustValue);
+      (this.Summary.Balance);
     }
     public double GetPairsBalance()
     {
@@ -365,6 +361,7 @@ namespace Core.Main.DataObjects
         dcaLogData.CurrentPrice = pair.currentPrice;
         dcaLogData.SellTrigger = pair.triggerValue == null ? 0 : pair.triggerValue;
         dcaLogData.PercChange = pair.percChange;
+        dcaLogData.Leverage = pair.leverage;
         dcaLogData.BuyStrategy = pair.buyStrategy == null ? "" : pair.buyStrategy;
         dcaLogData.SellStrategy = pair.sellStrategy == null ? "" : pair.sellStrategy;
         dcaLogData.IsTrailing = false;

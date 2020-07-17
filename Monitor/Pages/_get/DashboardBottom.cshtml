@@ -26,18 +26,17 @@
     <div class="card-box px-3" style="height:305px;">
       <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
       @{
-      double currentBalance = Model.PTData.GetCurrentBalance();
-      string currentBalanceString = currentBalance.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
-      if (currentBalance > 100) {
-        currentBalanceString = Math.Round(currentBalance, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
+      string totalCurrentValueString = Model.totalCurrentValue.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
+      if (Model.totalCurrentValue > 100) {
+        totalCurrentValueString = Math.Round(Model.totalCurrentValue, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
         }
       }
-      <div class="text-center"><small>TCV: &nbsp; <text class="text-autocolor"> @currentBalanceString &nbsp; @Model.Summary.MainMarket &nbsp; </text> </small></div>   
+      <div class="text-center"><small>TCV: &nbsp; <text class="text-autocolor"> @totalCurrentValueString &nbsp; @Model.Summary.MainMarket &nbsp; </text> </small></div>   
       <div id="AssetDistribution">
         <svg style="height:230px;width:100%"></svg>
         <div class="text">
           <small>Start: &nbsp; <text class="text-autocolor"> @Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance @Model.Summary.MainMarket </text>
-          <text class="pull-right">Gain: &nbsp; <text class="text-autocolor"> @Math.Round(((currentBalance - Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance) / Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance) * 100, 2) %</text></small>
+          <text class="pull-right">Gain: &nbsp; <text class="text-autocolor"> @Math.Round(((Model.totalCurrentValue - Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance) / Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance) * 100, 2) %</text></small>
         </div>
       </div>
     </div>

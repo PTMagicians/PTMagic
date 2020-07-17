@@ -21,6 +21,7 @@ namespace Monitor.Pages {
     public string currentBalanceString = "";
     public double TotalBagCost = 0;
     public double TotalBagValue = 0;
+    public double totalCurrentValue = 0;
     public void OnGet() {
       // Initialize Config
       base.Init();
@@ -160,24 +161,52 @@ namespace Monitor.Pages {
           dcaEnabled = mps.IsDCAEnabled;
         }
         // Aggregate totals
-        if (sellStrategyText.Contains("PENDING"))
+        if (dcaLogEntry.Leverage == 0)
         {
-        PendingBalance = PendingBalance + (dcaLogEntry.Amount * dcaLogEntry.CurrentPrice); 
-        }
-        else if (dcaEnabled) 
-        {
-        DCABalance = DCABalance + (dcaLogEntry.Amount * dcaLogEntry.CurrentPrice);          
+          if (sellStrategyText.Contains("PENDING"))
+          {
+          PendingBalance = PendingBalance + (dcaLogEntry.Amount * dcaLogEntry.CurrentPrice); 
+          }
+          else if (dcaEnabled) 
+          {
+          DCABalance = DCABalance + (dcaLogEntry.Amount * dcaLogEntry.CurrentPrice);          
+          }
+          else
+          {
+          PairsBalance = PairsBalance + (dcaLogEntry.Amount * dcaLogEntry.CurrentPrice);
+          }
         }
         else
         {
-        PairsBalance = PairsBalance + (dcaLogEntry.Amount * dcaLogEntry.CurrentPrice);
+          if (sellStrategyText.Contains("PENDING"))
+          {
+          PendingBalance = PendingBalance + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / dcaLogEntry.Leverage); 
+          }
+          else if (dcaEnabled) 
+          {
+          DCABalance = DCABalance + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / dcaLogEntry.Leverage);          
+          }
+          else
+          {
+          PairsBalance = PairsBalance + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / dcaLogEntry.Leverage);
+          }
         }
+       
       }
+      
+      totalCurrentValue = PendingBalance + DCABalance + PairsBalance + AvailableBalance;
+
       AssetDistributionData = "[";
       AssetDistributionData += "{label: 'Pairs',color: '#82E0AA',value: '" + PairsBalance.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "'},";
       AssetDistributionData += "{label: 'DCA',color: '#D98880',value: '" + DCABalance.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "'},";
       AssetDistributionData += "{label: 'Pending',color: '#F5B041',value: '" + PendingBalance.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "'},";
       AssetDistributionData += "{label: 'Balance',color: '#85C1E9',value: '" + AvailableBalance.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "'}]";
     }
+
+
+
+
+
+
   }
 }
