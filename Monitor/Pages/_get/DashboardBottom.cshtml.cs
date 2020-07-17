@@ -153,17 +153,13 @@ namespace Monitor.Pages {
       {
         // Loop through the pairs preparing the data for display
         Core.Main.DataObjects.PTMagicData.MarketPairSummary mps = null;
-        
         string sellStrategyText = Core.ProfitTrailer.StrategyHelper.GetStrategyText(Summary, dcaLogEntry.SellStrategies, dcaLogEntry.SellStrategy, isSellStrategyTrue, isTrailingSellActive);
-
         bool dcaEnabled = true;
         if (mps != null) 
         {
           dcaEnabled = mps.IsDCAEnabled;
         }
-
         // Aggregate totals
-
         if (sellStrategyText.Contains("PENDING"))
         {
         PendingBalance = PendingBalance + (dcaLogEntry.Amount * dcaLogEntry.CurrentPrice); 
