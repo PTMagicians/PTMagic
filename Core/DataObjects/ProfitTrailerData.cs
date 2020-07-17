@@ -361,7 +361,7 @@ namespace Core.Main.DataObjects
         dcaLogData.CurrentPrice = pair.currentPrice;
         dcaLogData.SellTrigger = pair.triggerValue == null ? 0 : pair.triggerValue;
         dcaLogData.PercChange = pair.percChange;
-        dcaLogData.Leverage = pair.leverage;
+        dcaLogData.Leverage = pair.leverage == null ? 0 : pair.leverage;
         dcaLogData.BuyStrategy = pair.buyStrategy == null ? "" : pair.buyStrategy;
         dcaLogData.SellStrategy = pair.sellStrategy == null ? "" : pair.sellStrategy;
         dcaLogData.IsTrailing = false;

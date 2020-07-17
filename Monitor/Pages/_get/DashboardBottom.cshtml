@@ -107,7 +107,8 @@
         double totalProfitFiat = Math.Round(totalProfit * Model.Summary.MainMarketPrice, 2);
         double percentGain = Math.Round(totalProfit / Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance * 100, 2);
         string percentGainText = percentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
-        if (Model.PTData.TransactionData.Transactions.Count > 0) {
+        if (Model.PTData.TransactionData.Transactions.Count > 0) 
+        {
           percentGainText = "<i class=\"fa fa-info-circle text-muted\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"You have added at least one manual transaction, so the total gain percentage cannot be calculated.\"></i>";
         }
 
@@ -205,12 +206,10 @@
             .donut(true)          //Turn on Donut mode. Makes pie chart look tasty!
             .donutRatio(0.3)     //Configure how big you want the donut hole size to be.
             ;
-
         d3.select("#AssetDistribution svg")
           .datum(@Html.Raw(Model.AssetDistributionData))
           .transition().duration(350)
           .call(chart);
-
         return chart;
       });
       </text>
@@ -228,7 +227,6 @@
         $.Notification.notify('success', 'top left', '@Core.Helper.SystemHelper.SplitCamelCase(Model.Summary.CurrentGlobalSetting.SettingName) now active!', 'PTMagic switched Profit Trailer settings to "@Core.Helper.SystemHelper.SplitCamelCase(Model.Summary.CurrentGlobalSetting.SettingName)".');
       </text>
     }
-
     @if (!Model.TrendChartDataJSON.Equals("")) {
       <text>
         nv.addGraph(function () {
@@ -244,7 +242,6 @@
       });
       </text>
     }
-
     @if (!Model.ProfitChartDataJSON.Equals("")) {
       <text>
         nv.addGraph(function () {
@@ -256,7 +253,6 @@
         lineChart.yAxis.axisLabel('Daily Profit').tickFormat(d3.format(',.2f'));
         d3.select('.profit-chart svg').attr('perserveAspectRatio', 'xMinYMid').datum(chartData).transition().duration(500).call(lineChart);
         //nv.utils.windowResize(lineChart.update); v1.3.0 => Removed this line to prevent memory leak
-
         return lineChart;
       });
       </text>

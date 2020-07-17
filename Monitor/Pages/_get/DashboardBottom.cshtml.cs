@@ -52,7 +52,6 @@ namespace Monitor.Pages {
       BuildMarketTrendChartData();
       BuildProfitChartData();
     }
-
     private void BuildMarketTrendChartData() {
       if (MarketTrends.Count > 0) {
         TrendChartDataJSON = "[";
@@ -99,13 +98,10 @@ namespace Monitor.Pages {
                   MarketTrendChange mtc = latestTickRange.First();
                   if (trendChartTicks > 0) TrendChartDataJSON += ",\n";
                   if (Double.IsInfinity(mtc.TrendChange)) mtc.TrendChange = 0;
-
                   TrendChartDataJSON += "{ x: new Date('" + mtc.TrendDateTime.ToString("yyyy-MM-ddTHH:mm:ss").Replace(".", ":") + "'), y: " + mtc.TrendChange.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "}";
                 }
-
                 TrendChartDataJSON += "]";
                 TrendChartDataJSON += "}";
-
                 mtIndex++;
               }
             }
@@ -143,6 +139,7 @@ namespace Monitor.Pages {
     }
     private void BuildAssetDistributionData()
     {
+      // the per PT-Eelroy, the PT API doesn't provide these values when using leverage, so they are calculated here to cover either case.
       double PairsBalance = 0.0;
       double DCABalance = 0.0;
       double PendingBalance = 0.0;
@@ -152,14 +149,9 @@ namespace Monitor.Pages {
         
       foreach (Core.Main.DataObjects.PTMagicData.DCALogData dcaLogEntry in PTData.DCALog) 
       {
-        // Loop through the pairs preparing the data for display
         Core.Main.DataObjects.PTMagicData.MarketPairSummary mps = null;
         string sellStrategyText = Core.ProfitTrailer.StrategyHelper.GetStrategyText(Summary, dcaLogEntry.SellStrategies, dcaLogEntry.SellStrategy, isSellStrategyTrue, isTrailingSellActive);
-        bool dcaEnabled = true;
-        if (mps != null) 
-        {
-          dcaEnabled = mps.IsDCAEnabled;
-        }
+
         // Aggregate totals
         if (dcaLogEntry.Leverage == 0)
         {
@@ -167,7 +159,7 @@ namespace Monitor.Pages {
           {
           PendingBalance = PendingBalance + (dcaLogEntry.Amount * dcaLogEntry.CurrentPrice); 
           }
-          else if (dcaEnabled) 
+          else if (dcaLogEntry.BuyStrategies.Count > 0) 
           {
           DCABalance = DCABalance + (dcaLogEntry.Amount * dcaLogEntry.CurrentPrice);          
           }
@@ -182,7 +174,7 @@ namespace Monitor.Pages {
           {
           PendingBalance = PendingBalance + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / dcaLogEntry.Leverage); 
           }
-          else if (dcaEnabled) 
+          else if (dcaLogEntry.BuyStrategies.Count > 0) 
           {
           DCABalance = DCABalance + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / dcaLogEntry.Leverage);          
           }
@@ -191,22 +183,13 @@ namespace Monitor.Pages {
           PairsBalance = PairsBalance + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / dcaLogEntry.Leverage);
           }
         }
-       
       }
-      
       totalCurrentValue = PendingBalance + DCABalance + PairsBalance + AvailableBalance;
-
       AssetDistributionData = "[";
       AssetDistributionData += "{label: 'Pairs',color: '#82E0AA',value: '" + PairsBalance.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "'},";
       AssetDistributionData += "{label: 'DCA',color: '#D98880',value: '" + DCABalance.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "'},";
       AssetDistributionData += "{label: 'Pending',color: '#F5B041',value: '" + PendingBalance.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "'},";
       AssetDistributionData += "{label: 'Balance',color: '#85C1E9',value: '" + AvailableBalance.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "'}]";
     }
-
-
-
-
-
-
   }
 }
