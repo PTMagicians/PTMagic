@@ -19,6 +19,9 @@ namespace Monitor.Pages {
     public string AssetDistributionData = "";
     public double currentBalance = 0;
     public string currentBalanceString = "";
+    public double TotalBagCost = 0;
+    public double TotalBagValue = 0;
+    public double totalCurrentValue = 0;
     public void OnGet() {
       // Initialize Config
       base.Init();
@@ -49,7 +52,6 @@ namespace Monitor.Pages {
       BuildMarketTrendChartData();
       BuildProfitChartData();
     }
-
     private void BuildMarketTrendChartData() {
       if (MarketTrends.Count > 0) {
         TrendChartDataJSON = "[";
@@ -96,13 +98,10 @@ namespace Monitor.Pages {
                   MarketTrendChange mtc = latestTickRange.First();
                   if (trendChartTicks > 0) TrendChartDataJSON += ",\n";
                   if (Double.IsInfinity(mtc.TrendChange)) mtc.TrendChange = 0;
-
                   TrendChartDataJSON += "{ x: new Date('" + mtc.TrendDateTime.ToString("yyyy-MM-ddTHH:mm:ss").Replace(".", ":") + "'), y: " + mtc.TrendChange.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "}";
                 }
-
                 TrendChartDataJSON += "]";
                 TrendChartDataJSON += "}";
-
                 mtIndex++;
               }
             }
@@ -140,13 +139,52 @@ namespace Monitor.Pages {
     }
     private void BuildAssetDistributionData()
     {
-      double PairsBalance = PTData.GetPairsBalance();
-      double DCABalance = PTData.GetDCABalance();
-      double PendingBalance = PTData.GetPendingBalance();
-      double DustBalance = PTData.GetDustBalance();
-      double TotalValue = PTData.GetCurrentBalance();
-      double AvailableBalance = (TotalValue - PairsBalance - DCABalance - PendingBalance - DustBalance);
-      
+      // the per PT-Eelroy, the PT API doesn't provide these values when using leverage, so they are calculated here to cover either case.
+      double PairsBalance = 0.0;
+      double DCABalance = 0.0;
+      double PendingBalance = 0.0;
+      double AvailableBalance = PTData.GetCurrentBalance();
+      bool isSellStrategyTrue =false;
+      bool isTrailingSellActive =false;
+        
+      foreach (Core.Main.DataObjects.PTMagicData.DCALogData dcaLogEntry in PTData.DCALog) 
+      {
+        Core.Main.DataObjects.PTMagicData.MarketPairSummary mps = null;
+        string sellStrategyText = Core.ProfitTrailer.StrategyHelper.GetStrategyText(Summary, dcaLogEntry.SellStrategies, dcaLogEntry.SellStrategy, isSellStrategyTrue, isTrailingSellActive);
+
+        // Aggregate totals
+        if (dcaLogEntry.Leverage == 0)
+        {
+          if (sellStrategyText.Contains("PENDING"))
+          {
+          PendingBalance = PendingBalance + (dcaLogEntry.Amount * dcaLogEntry.CurrentPrice); 
+          }
+          else if (dcaLogEntry.BuyStrategies.Count > 0) 
+          {
+          DCABalance = DCABalance + (dcaLogEntry.Amount * dcaLogEntry.CurrentPrice);          
+          }
+          else
+          {
+          PairsBalance = PairsBalance + (dcaLogEntry.Amount * dcaLogEntry.CurrentPrice);
+          }
+        }
+        else
+        {
+          if (sellStrategyText.Contains("PENDING"))
+          {
+          PendingBalance = PendingBalance + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / dcaLogEntry.Leverage); 
+          }
+          else if (dcaLogEntry.BuyStrategies.Count > 0) 
+          {
+          DCABalance = DCABalance + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / dcaLogEntry.Leverage);          
+          }
+          else
+          {
+          PairsBalance = PairsBalance + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / dcaLogEntry.Leverage);
+          }
+        }
+      }
+      totalCurrentValue = PendingBalance + DCABalance + PairsBalance + AvailableBalance;
       AssetDistributionData = "[";
       AssetDistributionData += "{label: 'Pairs',color: '#82E0AA',value: '" + PairsBalance.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "'},";
       AssetDistributionData += "{label: 'DCA',color: '#D98880',value: '" + DCABalance.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "'},";

@@ -10,10 +10,9 @@
 }
 
 <div class="row">
-  <div class="col-md-5 px-1">
+  <div class="col-md-4 px-1">
     <div class="card-box px-2" style="height:305px;">
       <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
-  
       @if (!Model.TrendChartDataJSON.Equals("")) {
         <div class="trend-chart">
           <svg style="height: 300px;width: 100%;"></svg>
@@ -23,33 +22,27 @@
       }
     </div>
   </div>
-  <div class="col-md-2 px-1">
-    <div class="card-box px-2" style="height:305px;">
+  <div class="col-md-3 px-1">
+    <div class="card-box px-3" style="height:305px;">
       <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
       @{
-      double currentBalance = Model.PTData.GetCurrentBalance();
-      string currentBalanceString = currentBalance.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
-      if (currentBalance > 100) {
-        currentBalanceString = Math.Round(currentBalance, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
+      string totalCurrentValueString = Model.totalCurrentValue.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
+      if (Model.totalCurrentValue > 100) {
+        totalCurrentValueString = Math.Round(Model.totalCurrentValue, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
         }
       }
-      <div class="text-center">
-        <small>
-          Start balence: &nbsp; <text class="text-autocolor"> @Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance @Model.Summary.MainMarket</text>
-          <br>
-          Current value: &nbsp; <text class="text-autocolor"> @currentBalanceString @Model.Summary.MainMarket</text>
-          <br>
-          Gain: &nbsp; <text class="text-autocolor"> @Math.Round(((currentBalance - Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance) / Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance) * 100, 2) %</text>
-       </small>
-      </div>      
+      <div class="text-center"><small>TCV: &nbsp; <text class="text-autocolor"> @totalCurrentValueString &nbsp; @Model.Summary.MainMarket &nbsp; </text> </small></div>   
       <div id="AssetDistribution">
         <svg style="height:230px;width:100%"></svg>
+        <div class="text">
+          <small>Start: &nbsp; <text class="text-autocolor"> @Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance @Model.Summary.MainMarket </text>
+          <text class="pull-right">Gain: &nbsp; <text class="text-autocolor"> @Math.Round(((Model.totalCurrentValue - Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance) / Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance) * 100, 2) %</text></small>
+        </div>
       </div>
     </div>
   </div>
   <div class="col-md-5 px-1">
     <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
-
     <div class="card-box px-2" style="height:305px;">
       @if (!Model.ProfitChartDataJSON.Equals("")) {
         <div class="profit-chart">
@@ -61,16 +54,13 @@
     </div>
   </div>
 </div>
-
-
 <div class="row">
   <div class="col-md-6 px-1">
-    <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
-
     <div class="card-box px-2">
-      <br/>
-      <h4 class="m-t-0 m-b-20 header-title"><b>Market Trends at @Model.PTMagicConfiguration.GeneralSettings.Application.Exchange</b><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)MarketAnalyzer">more</a></small></h4>
-
+      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
+      <br>
+      <h4 class="m-t-0 m-b-20 header-title"><b>Market Trends at @Model.PTMagicConfiguration.GeneralSettings.Application.Exchange</b>
+      <small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)MarketAnalyzer">more</a></small></h4>
       <table class="table table-sm">
         <thead>
           <tr>
@@ -108,17 +98,17 @@
   </div>
   
   <div class="col-md-6 px-1">
-    <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
-
     <div class="card-box px-2">
-      <br/>
+      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
+      <br>
       <h4 class="m-t-0 m-b-20 header-title"><b>Sales Overview</b><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)SalesAnalyzer">more</a></small></h4>
-      @{
+     @{
         double totalProfit = Model.PTData.SellLog.Sum(s => s.Profit);
         double totalProfitFiat = Math.Round(totalProfit * Model.Summary.MainMarketPrice, 2);
         double percentGain = Math.Round(totalProfit / Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance * 100, 2);
         string percentGainText = percentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
-        if (Model.PTData.TransactionData.Transactions.Count > 0) {
+        if (Model.PTData.TransactionData.Transactions.Count > 0) 
+        {
           percentGainText = "<i class=\"fa fa-info-circle text-muted\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"You have added at least one manual transaction, so the total gain percentage cannot be calculated.\"></i>";
         }
 
@@ -211,17 +201,15 @@
             .x(function(d) { return d.label })
             .y(function(d) { return d.value })
             .showLabels(true)     //Display pie labels
-            .labelThreshold(.1)  //Configure the minimum slice size for labels to show up
+            .labelThreshold(.1)   //Configure the minimum slice size for labels to show up
             .labelType("percent") //Configure what type of data to show in the label. Can be "key", "value" or "percent"
             .donut(true)          //Turn on Donut mode. Makes pie chart look tasty!
             .donutRatio(0.3)     //Configure how big you want the donut hole size to be.
             ;
-
         d3.select("#AssetDistribution svg")
           .datum(@Html.Raw(Model.AssetDistributionData))
           .transition().duration(350)
           .call(chart);
-
         return chart;
       });
       </text>
@@ -239,7 +227,6 @@
         $.Notification.notify('success', 'top left', '@Core.Helper.SystemHelper.SplitCamelCase(Model.Summary.CurrentGlobalSetting.SettingName) now active!', 'PTMagic switched Profit Trailer settings to "@Core.Helper.SystemHelper.SplitCamelCase(Model.Summary.CurrentGlobalSetting.SettingName)".');
       </text>
     }
-
     @if (!Model.TrendChartDataJSON.Equals("")) {
       <text>
         nv.addGraph(function () {
@@ -255,7 +242,6 @@
       });
       </text>
     }
-
     @if (!Model.ProfitChartDataJSON.Equals("")) {
       <text>
         nv.addGraph(function () {
@@ -267,7 +253,6 @@
         lineChart.yAxis.axisLabel('Daily Profit').tickFormat(d3.format(',.2f'));
         d3.select('.profit-chart svg').attr('perserveAspectRatio', 'xMinYMid').datum(chartData).transition().duration(500).call(lineChart);
         //nv.utils.windowResize(lineChart.update); v1.3.0 => Removed this line to prevent memory leak
-
         return lineChart;
       });
       </text>

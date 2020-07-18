@@ -464,6 +464,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public DateTime FirstBoughtDate { get; set; }
     public string SellStrategy { get; set; }
     public string BuyStrategy { get; set; }
+    public double Leverage { get; set; }
     public List<Strategy> BuyStrategies { get; set; } = new List<Strategy>();
     public List<Strategy> SellStrategies { get; set; } = new List<Strategy>();
   }

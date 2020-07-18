@@ -168,12 +168,9 @@ namespace Core.ProfitTrailer
             boolean = boolean && nextBoolean;
           else
             boolean = boolean || nextBoolean;
-
         }
-
         return boolean;
       }
-
       throw new Exception("Empty expression");
     }
 
@@ -227,8 +224,7 @@ namespace Core.ProfitTrailer
       {
         result = "";
       }
-
-      // strategy labels that are variable, so can't be caught by the switch statement
+      // strategy labels that are variable value
       if (result.Contains("REBUY"))
       {
         time = strategyName.Remove(0, 14);
@@ -238,13 +234,18 @@ namespace Core.ProfitTrailer
       {
         result = "CHANGE";
       }
-      if (result.Contains("LEVERAGE"))
+      if (result.Contains("CROSSED"))
+      {
+        leverage = strategyName.Remove(0, 9);
+        leverage = leverage.Remove(leverage.Length - 1, 1);
+        result = "CROSS " + leverage + "X";
+      }
+      if (result.Contains("ISOLATED"))
       {
         leverage = strategyName.Remove(0, 10);
         leverage = leverage.Remove(leverage.Length - 1, 1);
-        result = leverage + " X";
+        result = "ISOL " + leverage + "X";
       }
-
       // buy/sell strategies beginning with PT 2.3.3 contain the strategy designation letter followed by a colon and space.
       // remove the letter and colon, change to shortcut, then reapply the letter and colon
       if (strategyName.Contains(":"))
@@ -423,10 +424,21 @@ namespace Core.ProfitTrailer
         case "no dca buy logic":
           result = String.Concat(strategyLetter, "NODCA");
           break;
+        case "combimagain":
+          result = String.Concat(strategyLetter, "COMBIG");
+          break;
+        case "combimaspread":
+          result = String.Concat(strategyLetter, "COMBIS");
+          break;
+        case "combimacross":
+          result = String.Concat(strategyLetter, "COMBIC");
+          break;
+        case "macdpercentage":
+          result = String.Concat(strategyLetter, "MACDPERC");
+          break;
         default:
           break;
       }
-
       if (onlyValidStrategies)
       {
         if (strategyName.IndexOf("SOM") > -1 || strategyName.IndexOf("MAX") > -1 || strategyName.IndexOf("MIN") > -1 || strategyName.IndexOf("PRICE") > -1 || strategyName.IndexOf("BLACK") > -1 || strategyName.IndexOf("INSUFFICIENT") > -1 || strategyName.IndexOf("COST") > -1)
@@ -434,7 +446,6 @@ namespace Core.ProfitTrailer
           result = "";
         }
       }
-
       return result;
     }
 
@@ -446,14 +457,11 @@ namespace Core.ProfitTrailer
     public static bool IsValidStrategy(string strategyName, bool checkForAnyInvalid)
     {
       bool result = false;
-
       // buy/sell strategies beginning with PT 2.3.3 contain the letter followed by a colon and space.
       if (strategyName.Contains(":"))
       {
         result = true;
       }
-
-      // Prior to PT 2.3.3
       if (!checkForAnyInvalid)
       {
         switch (strategyName.ToLower())
@@ -500,6 +508,10 @@ namespace Core.ProfitTrailer
           case "vwappercentage":
           case "mvwappercentage":
           case "btcdominance":
+          case "combimagain":
+          case "combimaspread":
+          case "combimacross":
+          case "macdpercentage":
             result = true;
             break;
           default:
@@ -522,14 +534,11 @@ namespace Core.ProfitTrailer
           result = true;
         }
       }
-
       return result;
     }
-
     public static int GetStrategyValueDecimals(string strategyName)
     {
       int result = 0;
-
       switch (strategyName.ToLower())
       {
         case "lowbb":
@@ -568,10 +577,8 @@ namespace Core.ProfitTrailer
         default:
           break;
       }
-
       return result;
     }
-
     public static string GetStrategyText(Summary summary, List<Strategy> strategies, string strategyText, bool isTrue, bool isTrailingBuyActive)
     {
       bool isValidStrategy = false;
@@ -582,33 +589,64 @@ namespace Core.ProfitTrailer
         foreach (Strategy strategy in strategies)
         {
           string textClass = (strategy.IsTrue) ? "label-success" : "label-danger";
-
           isValidStrategy = StrategyHelper.IsValidStrategy(strategy.Name);
-
           if (!isValidStrategy)
           {
-            // Parse Formulas
-            if (strategy.Name.Contains("FORMULA") && !strategy.Name.Contains("STATS"))
+            
+            if (strategy.Name.Contains("TRIGGERED"))
+              // remove levels already triggered, to show only currently waiting trigger
             {
-              string expression = strategy.Name.Remove(0, 10);
-              expression = expression.Replace("<span class=\"tdgreen\">", "true").Replace("<span class=\"red\">", "false").Replace("</span>", "").Replace("&&", "and").Replace("||", "or");
-              expression = regx.Replace(expression, String.Empty);
-              var tokens = new Tokenizer(expression).Tokenize();
-              var parser = new Parser(tokens);
-              if (parser.Parse())
+              strategyText += "";
+            }
+            else if (strategy.Name.Contains("STATS"))
+            // avoid parsing advanced buy stats
+            {
+              strategy.Name = "";
+            }
+            else if (strategy.Name.Contains("FORMULA"))
+            // Parse Various PT Formulas
+            {
+              if (strategy.Name.Contains("LEVEL"))
+              // level X
               {
-                strategyText += "<span class=\"label label-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">(FORM)</span> ";
+                string level = strategy.Name.Substring(5, 2);
+                string expression = strategy.Name.Remove(0, 17);
+                expression = expression.Replace("<span class=\"tdgreen\">", "true").Replace("<span class=\"red\">", "false").Replace("</span>", "").Replace("&&", "and").Replace("||", "or");
+                expression = regx.Replace(expression, String.Empty);
+                var tokens = new Tokenizer(expression).Tokenize();
+                var parser = new Parser(tokens);
+                if (parser.Parse())
+                {
+                  strategyText += "<span class=\"label label-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"LEVEL FORMULA\">L " + level + "</span> ";
+                }
+                else
+                {
+                  strategyText += "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"LEVEL FORMULA\">L " + level + "</span> ";
+                }
               }
               else
+              // standard formula
               {
-                strategyText += "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">(FORM)</span> ";
+                string expression = strategy.Name.Remove(0, 10);
+                expression = expression.Replace("<span class=\"tdgreen\">", "true").Replace("<span class=\"red\">", "false").Replace("</span>", "").Replace("&&", "and").Replace("||", "or");
+                expression = regx.Replace(expression, String.Empty);
+                var tokens = new Tokenizer(expression).Tokenize();
+                var parser = new Parser(tokens);
+                if (parser.Parse())
+                {
+                  strategyText += "<span class=\"label label-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">FORM</span> ";
+                }
+                else
+                {
+                  strategyText += "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">FORM</span> ";
+                }
               }
-
             }
             else
             {
               strategyText += "<span class=\"label label-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategy.Name + "\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, false) + "</span> ";
             }
+
           }
           else
           {
@@ -634,14 +672,11 @@ namespace Core.ProfitTrailer
         }
         else
         {
-
           isValidStrategy = StrategyHelper.IsValidStrategy(strategyText);
-
           if (isValidStrategy)
           {
             strategyText = "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategyText + "\">" + StrategyHelper.GetStrategyShortcut(strategyText, true) + "</span>";
           }
-
           else if (strategyText.Equals("") && isValidStrategy == false)
           {
             strategyText = "<span class=\"label label-muted\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Not Applicable: Not using DCA!\"></span>";
@@ -652,10 +687,8 @@ namespace Core.ProfitTrailer
           }
         }
       }
-
       return strategyText;
     }
-
     public static string GetCurrentValueText(List<Strategy> strategies, string strategyText, double bbValue, double simpleValue, bool includeShortcut)
     {
       string result = "";
@@ -716,14 +749,12 @@ namespace Core.ProfitTrailer
           result = simpleValue.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
         }
       }
-
       return result;
     }
 
     public static string GetTriggerValueText(Summary summary, List<Strategy> strategies, string strategyText, double bbValue, double simpleValue, int buyLevel, bool includeShortcut)
     {
       string result = "";
-
       if (strategies.Count > 0)
       {
         foreach (Strategy strategy in strategies)
@@ -738,12 +769,10 @@ namespace Core.ProfitTrailer
             {
               decimalFormat += "0";
             }
-
             if (includeShortcut)
             {
               result += "<span class=\"text-muted\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, true) + "</span> ";
             }
-
             if (StrategyHelper.GetStrategyShortcut(strategy.Name, true).IndexOf("and", StringComparison.InvariantCultureIgnoreCase) > -1)
             {
               result += strategy.TriggerValue.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
@@ -787,7 +816,6 @@ namespace Core.ProfitTrailer
           result = simpleValue.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
         }
       }
-
       return result;
     }
   }

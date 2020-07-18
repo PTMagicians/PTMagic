@@ -205,11 +205,7 @@ namespace Core.Main.DataObjects
     public double GetCurrentBalance()
     {
       return
-      (this.Summary.Balance +
-      this.Summary.PairsValue +
-      this.Summary.DCAValue +
-      this.Summary.PendingValue +
-      this.Summary.DustValue);
+      (this.Summary.Balance);
     }
     public double GetPairsBalance()
     {
@@ -304,21 +300,13 @@ namespace Core.Main.DataObjects
         sellLogData.AverageBuyPrice = rsld.avgPrice;
         sellLogData.TotalCost = sellLogData.SoldAmount * sellLogData.AverageBuyPrice;
 
-        // check if sale was a short position
-        if ((sellLogData.ProfitPercent > 0) && (sellLogData.AverageBuyPrice > sellLogData.SoldPrice))
-        {
-          double soldValueRaw = (sellLogData.SoldAmount * sellLogData.SoldPrice);
-          double soldValueAfterFees = soldValueRaw + (soldValueRaw * ((double)rsld.fee / 100));
-          sellLogData.SoldValue = soldValueAfterFees;
-          sellLogData.Profit = Math.Abs(Math.Round(sellLogData.SoldValue - sellLogData.TotalCost, 8));
-        }
-        else
-        {
-          double soldValueRaw = (sellLogData.SoldAmount * sellLogData.SoldPrice);
-          double soldValueAfterFees = soldValueRaw - (soldValueRaw * ((double)rsld.fee / 100));
-          sellLogData.SoldValue = soldValueAfterFees;
-          sellLogData.Profit = Math.Round(sellLogData.SoldValue - sellLogData.TotalCost, 8);
-        }
+        // check if bot is a shortbot via PT API.  Losses on short bot currently showing as gains. Issue #195
+        // code removed
+        
+        double soldValueRaw = (sellLogData.SoldAmount * sellLogData.SoldPrice);
+        double soldValueAfterFees = soldValueRaw - (soldValueRaw * ((double)rsld.fee / 100));
+        sellLogData.SoldValue = soldValueAfterFees;
+        sellLogData.Profit = Math.Round(sellLogData.SoldValue - sellLogData.TotalCost, 8);
 
         //Convert Unix Timestamp to Datetime
         System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
@@ -373,6 +361,7 @@ namespace Core.Main.DataObjects
         dcaLogData.CurrentPrice = pair.currentPrice;
         dcaLogData.SellTrigger = pair.triggerValue == null ? 0 : pair.triggerValue;
         dcaLogData.PercChange = pair.percChange;
+        dcaLogData.Leverage = pair.leverage == null ? 0 : pair.leverage;
         dcaLogData.BuyStrategy = pair.buyStrategy == null ? "" : pair.buyStrategy;
         dcaLogData.SellStrategy = pair.sellStrategy == null ? "" : pair.sellStrategy;
         dcaLogData.IsTrailing = false;

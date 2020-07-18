@@ -93,12 +93,12 @@
             <thead>
               <tr>
                 <th>Market</th>             
-                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Market trend last 24 hours">24H Trend</th>
+                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Market trend last 24 hours">24H</th>
                 <th class="text-left" data-toggle="tooltip" data-placement="top" title="Total Buy Cost">Cost</th>
                 <th></th>
-                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Active buy strategies">DCA Buy Strats</th>
-                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Active sell strategies">Sell Strats</th>
-                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Target Profit for sale">Target Profit</th>
+                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Active buy strategies">DCA</th>
+                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Active sell strategies">Sell</th>
+                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Target profit to sell">Target</th>
                 <th class="text-left" data-toggle="tooltip" data-placement="top" title="Current Profit">Profit</th>
                 <th></th>
               </tr>
@@ -137,11 +137,30 @@
                 }
 
                 bool buyDisabled = false;
+                string leverage = "";
+                double leverageValue = 0;
+
                 string buyStrategyText = Core.ProfitTrailer.StrategyHelper.GetStrategyText(Model.Summary, dcaLogEntry.BuyStrategies, dcaLogEntry.BuyStrategy, isBuyStrategyTrue, isTrailingBuyActive);
-                if (!Core.ProfitTrailer.StrategyHelper.IsValidStrategy(buyStrategyText, true)) {
+
+                if (!Core.ProfitTrailer.StrategyHelper.IsValidStrategy(buyStrategyText, true)) 
+                {
                   buyDisabled = true;
                 }
 
+                // if leverage, recalculate profit target
+                if (buyStrategyText.Contains("CROSSED"))
+                {
+                  string leverageText = buyStrategyText.Remove(0, buyStrategyText.IndexOf("CROSSED")+9);
+                  leverage = leverageText.Remove(leverageText.IndexOf(".0)"), leverageText.Length - leverageText.IndexOf(".0)"));
+                  leverageValue = double.Parse(leverage);
+                }
+                if (buyStrategyText.Contains("ISOLATED"))
+                {
+                  string leverageText = buyStrategyText.Remove(0, buyStrategyText.IndexOf("ISOLATED")+10);
+                  leverage = leverageText.Remove(leverageText.IndexOf(".0)"), leverageText.Length - leverageText.IndexOf(".0)"));
+                  leverageValue = double.Parse(leverage);
+                }
+                
                 string sellStrategyText = Core.ProfitTrailer.StrategyHelper.GetStrategyText(Model.Summary, dcaLogEntry.SellStrategies, dcaLogEntry.SellStrategy, isSellStrategyTrue, isTrailingSellActive);
 
                 // Check for when PT loses the value of a pair
@@ -197,13 +216,20 @@
                       <span data-toggle="tooltip" data-placement="top" title="DCA is disabled"><i class="fa fa-ban text-highlight"></i></span>
                     }
                   </td>
-
                   <td>@Html.Raw(buyStrategyText)</td>
-
                   <td>@Html.Raw(sellStrategyText)</td>
                   
-                  <td class="@Html.Raw((dcaLogEntry.TargetGainValue.HasValue && (dcaLogEntry.ProfitPercent > dcaLogEntry.TargetGainValue.Value)) ? "text-success" : "text-danger")">@Html.Raw(dcaLogEntry.TargetGainValue.HasValue ? dcaLogEntry.TargetGainValue.Value.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%" : "&nbsp")</td>
-
+                  
+                  @if (leverageValue == 0)
+                  {
+                    <td class="@Html.Raw((dcaLogEntry.TargetGainValue.HasValue && (dcaLogEntry.ProfitPercent > dcaLogEntry.TargetGainValue.Value)) ? "text-success" : "text-danger")">@Html.Raw(dcaLogEntry.TargetGainValue.HasValue ? dcaLogEntry.TargetGainValue.Value.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%" : "&nbsp")</td>
+                  }
+                  else
+                  {
+                    double leverageTargetGain = leverageValue * dcaLogEntry.TargetGainValue.Value;
+                    <td class="@Html.Raw((dcaLogEntry.TargetGainValue.HasValue && (dcaLogEntry.ProfitPercent > dcaLogEntry.TargetGainValue.Value)) ? "text-success" : "text-danger")">@Html.Raw(dcaLogEntry.TargetGainValue.HasValue ? leverageTargetGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%" : "&nbsp")</td>
+                  }
+                  
                   @if(!@lostValue)
                   {
                     <td class="text-autocolor">@dcaLogEntry.ProfitPercent.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
@@ -224,8 +250,9 @@
             <td></td>
             <td></td>
             <td></td>
-            <td class="text-autocolor">@Html.Raw((((Model.TotalBagValue - Model.TotalBagCost) / Model.TotalBagCost) * 100).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))%</td>
 
+            <td class="text-autocolor">@Html.Raw( (((Model.TotalBagValue - Model.TotalBagCost) / Model.TotalBagCost) * 100).ToString("#0.00", new System.Globalization.CultureInfo("en-US")))%</td>
+            
             </tbody>
           </table>
         </div>
