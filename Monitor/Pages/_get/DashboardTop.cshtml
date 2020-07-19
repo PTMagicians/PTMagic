@@ -18,9 +18,10 @@
           <thead>
             <tr>
               <th>Market</th>
-              <th>24H Trend</th>
+              <th class="text-right" data-toggle="tooltip" data-placement="top" title="Current ask price for this market">Ask</th>
+              <th class="text-right" data-toggle="tooltip" data-placement="top" title="Current Volume">Volume</th>
+              <th class="text-right" data-toggle="tooltip" data-placement="top" title="24 Hour Trend">24H</th>
               <th>Buy Strategies</th>
-              <th class="text-right" data-toggle="tooltip" data-placement="top" title="Current ask price for this market">Ask Price</th>
             </tr>
           </thead>
           <tbody>
@@ -28,7 +29,6 @@
                         ThenByDescending(b => b.IsTrailing).
                         ThenByDescending(b => b.IsTrue).
                         ThenByDescending(b => b.TrueStrategyCount).
-                        
                         ThenByDescending(b => b.PercChange).
                         Take(Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxDashboardBuyEntries)) {
                           
@@ -59,13 +59,14 @@
                 } else {
                   <th class="align-top"><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, buyLogEntry.Market, Model.Summary.MainMarket)" target="_blank">@buyLogEntry.Market</a> <i class="fa fa-exclamation-triangle text-highlight" data-toggle="tooltip" data-placement="top" data-html="true" title="@await Component.InvokeAsync("PairIcon", mps)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner pair-tooltip'></div></div>"></i></th>
                 }
+                <td class="text-right">@buyLogEntry.CurrentPrice.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
+                <td class="text">@string.Format("{0}", (buyLogEntry.Volume).ToString())</td>
                 <td class="text-autocolor">@string.Format("{0}%", (buyLogEntry.PercChange * 100).ToString("#,#0.00"))</td>
                 @if (buyDisabled) {
                   <td>@Html.Raw(buyStrategyText)</td>
                 } else {
                   <td>@Html.Raw(buyStrategyText)</td>
                 }
-                <td class="text-right">@buyLogEntry.CurrentPrice.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
               </tr>
             }
           </tbody>
@@ -82,18 +83,18 @@
     <div class="card-box px-2">
       <h4 class="m-t-0 m-b-20 header-title"><b>Pairs / DCA / Pending (@Model.PTData.DCALog.Count)</b><small id="baglist-refresh-icon"></small><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)BagAnalyzer">more</a></small></h4>
 
-      @if (Model.PTData.DCALog.Count == 0) {
-
+      @if (Model.PTData.DCALog.Count == 0) 
+      {
         <p>Profit Trailer is not reporting any holdings on your exchange.</p>
-
-      } else {
-        
+      } 
+      else 
+      {
         <div class="table-responsive">
           <table class="table table-sm m-b-0">
             <thead>
               <tr>
                 <th>Market</th>             
-                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Market trend last 24 hours">24H</th>
+                <th class="text-left" data-toggle="tooltip" data-placement="top" title="24 Hour Trend">24H</th>
                 <th class="text-left" data-toggle="tooltip" data-placement="top" title="Total Buy Cost">Cost</th>
                 <th></th>
                 <th class="text-left" data-toggle="tooltip" data-placement="top" title="Active buy strategies">DCA</th>
@@ -110,6 +111,8 @@
                 if (Model.Summary.MarketSummary.ContainsKey(dcaLogEntry.Market)) {
                   mps = Model.Summary.MarketSummary[dcaLogEntry.Market];
                 }
+
+                // bool shorting = Model.PTProperties.Shorting;
 
                 bool dcaEnabled = true;
                 if (mps != null) {
