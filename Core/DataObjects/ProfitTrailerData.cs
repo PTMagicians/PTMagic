@@ -15,14 +15,15 @@ namespace Core.Main.DataObjects
   public class ProfitTrailerData
   {
     private SummaryData _summary = null;
+    private PropertiesData _properties = null;
     private List<SellLogData> _sellLog = new List<SellLogData>();
     private List<DCALogData> _dcaLog = new List<DCALogData>();
     private List<BuyLogData> _buyLog = new List<BuyLogData>();
     private string _ptmBasePath = "";
     private PTMagicConfiguration _systemConfiguration = null;
     private TransactionData _transactionData = null;
-    private DateTime _buyLogRefresh = DateTime.UtcNow, _sellLogRefresh = DateTime.UtcNow, _dcaLogRefresh = DateTime.UtcNow, _summaryRefresh = DateTime.UtcNow;
-    private volatile object _buyLock = new object(), _sellLock = new object(), _dcaLock = new object(), _summaryLock = new object();
+    private DateTime _buyLogRefresh = DateTime.UtcNow, _sellLogRefresh = DateTime.UtcNow, _dcaLogRefresh = DateTime.UtcNow, _summaryRefresh = DateTime.UtcNow, _propertiesRefresh = DateTime.UtcNow;
+    private volatile object _buyLock = new object(), _sellLock = new object(), _dcaLock = new object(), _summaryLock = new object(), _propertiesLock = new object();
     private TimeSpan? _offsetTimeSpan = null;
 
     // Constructor
@@ -73,6 +74,26 @@ namespace Core.Main.DataObjects
         }
 
         return _summary;
+      }
+    }
+    public PropertiesData Properties
+    {
+      get
+      {
+        if (_properties == null || (DateTime.UtcNow > _propertiesRefresh))
+        {
+          lock (_propertiesLock)
+          {
+            // Thread double locking
+            if (_properties == null || (DateTime.UtcNow > _propertiesRefresh))
+            {
+              _properties = BuildSummaryData(GetDataFromProfitTrailer("api/v2/data/properties"));
+              _propertiesRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+            }
+          }
+        }
+
+        return _properties;
       }
     }
     public List<SellLogData> SellLog
@@ -286,7 +307,19 @@ namespace Core.Main.DataObjects
         DustValue = PTData.totalDustCurrentValue
       };
     }
-
+    private PropertiesData BuildProptertiesData(dynamic PTProperties)
+    {
+      return new PropertiesData()
+      {
+        Currency = PTProperties.currency,
+        Shorting = PTProperties.shorting,
+        Margin = PTProperties.margin,
+        UpTime = PTProperties.upTime,
+        Port = PTProperties.port,
+        IsLeverageExchange = PTProperties.isLeverageExchange,
+        BaseUrl = PTProperties.baseUrl
+      };
+    }
     private void BuildSellLogData(dynamic rawSellLogData)
     {
       foreach (var rsld in rawSellLogData.data)
@@ -453,6 +486,7 @@ namespace Core.Main.DataObjects
         buyLogData.ProfitPercent = rbld.profit;
         buyLogData.CurrentPrice = rbld.currentPrice;
         buyLogData.PercChange = rbld.percChange;
+        buyLogData.Volume = rbld.volume;
 
         if (rbld.positive != null)
         {

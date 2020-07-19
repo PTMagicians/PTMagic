@@ -361,6 +361,19 @@ namespace Core.Main.DataObjects.PTMagicData
   }
   #endregion
 
+  #region Properties Objects
+  public class Properties
+  {
+    public string Currency { get; set; } = "";
+    public bool Shorting { get; set; } = false;
+    public bool Margin { get; set; } = false;
+    public string UpTime { get; set; } = "";
+    public int Port { get; set; } = 0;
+    public bool IsLeverageExchange { get; set; } = false;
+    public string BaseUrl { get; set; } = "";
+  }
+  #endregion
+
   #region Transaction Objects
   public class Transaction
   {
@@ -486,6 +499,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public double CurrentPrice { get; set; }
     public int BoughtTimes { get; set; }
     public double PercChange { get; set; }
+    public double Volume { get; set; }
     public List<Strategy> BuyStrategies { get; set; } = new List<Strategy>();
   }
 
@@ -498,6 +512,16 @@ namespace Core.Main.DataObjects.PTMagicData
     public double PendingValue { get; set; }
     public double DustValue { get; set; }
     public string Market { get; set; }
+  }
+  public class PropertiesData
+  {
+    public string Currency { get; set; }
+    public bool Shorting { get; set; }
+    public bool Margin { get; set; }
+    public string UpTime { get; set; }
+    public int Port { get; set; }
+    public bool IsLeverageExchange { get; set; }
+    public string BaseUrl { get; set; }
   }
   #endregion
 }
