@@ -547,6 +547,19 @@ namespace Core.Helper
 
         result += pairName;
       }
+      else if (platform.Equals("TradingViewFutures"))
+      {
+        result = "https://www.tradingview.com/chart/?symbol=";
+
+        string pairName = SystemHelper.StripBadCode(market, Constants.WhiteListMinimal);
+
+        if (pairName.StartsWith(mainMarket))
+        {
+          pairName = pairName.Replace(mainMarket, "") + mainMarket;
+        }
+
+        result += pairName + "PERP";
+      }
       else
       {
         switch (exchange)
