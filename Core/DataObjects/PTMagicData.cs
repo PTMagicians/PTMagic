@@ -486,6 +486,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public double CurrentPrice { get; set; }
     public int BoughtTimes { get; set; }
     public double PercChange { get; set; }
+    public double Volume24h { get; set; }
     public List<Strategy> BuyStrategies { get; set; } = new List<Strategy>();
   }
 
