@@ -30,13 +30,15 @@
       if (Model.totalCurrentValue > 100) {
         totalCurrentValueString = Math.Round(Model.totalCurrentValue, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
         }
-      }
-      <div class="text-center"><small>TCV: &nbsp; <text class="text-autocolor"> @totalCurrentValueString &nbsp; @Model.Summary.MainMarket &nbsp; </text> </small></div>   
-      <div id="AssetDistribution">
-        <svg style="height:230px;width:100%"></svg>
-        <div class="text">
-          <small>Start: &nbsp; <text class="text-autocolor"> @Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance @Model.Summary.MainMarket </text>
-          <text class="pull-right">Gain: &nbsp; <text class="text-autocolor"> @Math.Round(((Model.totalCurrentValue - Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance) / Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance) * 100, 2) %</text></small>
+      }   
+      <div id="AssetDistribution" class="container">        
+        <div class="row px1">
+          <div class="col-3 px-1 text-center"><small>Start:&nbsp;<text class="text-autocolor">@Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance @Model.Summary.MainMarket</text></small></div>
+          <div class="col-6 px-1 text-center"><small>TCV:&nbsp;<text class="text-autocolor">@totalCurrentValueString @Model.Summary.MainMarket</text></small></div>
+          <div class="col-3 px-1 text-center"><small>Gain:&nbsp;<text class="text-autocolor">@Math.Round(((Model.totalCurrentValue - Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance) / Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance) * 100, 2)%</text></small></div>
+        </div>
+        <div class="row px1">
+          <svg style="height:260px;width:100%"></svg>
         </div>
       </div>
     </div>

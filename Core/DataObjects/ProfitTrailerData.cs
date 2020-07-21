@@ -453,6 +453,7 @@ namespace Core.Main.DataObjects
         buyLogData.ProfitPercent = rbld.profit;
         buyLogData.CurrentPrice = rbld.currentPrice;
         buyLogData.PercChange = rbld.percChange;
+        buyLogData.Volume24h = rbld.volume;
 
         if (rbld.positive != null)
         {
