@@ -110,9 +110,9 @@
 
     // Buy strats
     @if (buyDisabled) {
-      <td class="text-nowrap">@Html.Raw(buyStrategyText)</td>
+      <td class="text">@Html.Raw(buyStrategyText)</td>
     } else {
-      <td class="text-nowrap">@Html.Raw(buyStrategyText)</td>
+      <td class="text">@Html.Raw(buyStrategyText)</td>
     }
 
     // BS Value
@@ -144,7 +144,7 @@
     }
     
     // Sell Strats
-    <td class="text-nowrap">@Html.Raw(sellStrategyText)</td>
+    <td class="text">@Html.Raw(sellStrategyText)</td>
 
     // SSV
     <td class="text-right text-nowrap">@Html.Raw(currentSellValueText)</td>

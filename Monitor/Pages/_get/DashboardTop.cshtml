@@ -18,9 +18,9 @@
           <thead>
             <tr>
               <th>Market</th>
-              <th class="text-left" data-toggle="tooltip" data-placement="top" title="Current ask price for this market">Ask</th>
-              <th class="text-left" data-toggle="tooltip" data-placement="top" title="Current Volume">Volume</th>
-              <th class="text-left" data-toggle="tooltip" data-placement="top" title="24 Hour Trend">24H</th>
+              <th class="text-center" data-toggle="tooltip" data-placement="top" title="24 Hour Trend">24H</th>
+              <th class="text-center" data-toggle="tooltip" data-placement="top" title="Current Volume">Volume</th>
+              <th class="text-center" data-toggle="tooltip" data-placement="top" title="Current ask price for this market">Ask</th>
               <th>Buy Strategies</th>
             </tr>
           </thead>
@@ -59,9 +59,9 @@
                 } else {
                   <th class="align-top"><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, buyLogEntry.Market, Model.Summary.MainMarket)" target="_blank">@buyLogEntry.Market</a> <i class="fa fa-exclamation-triangle text-highlight" data-toggle="tooltip" data-placement="top" data-html="true" title="@await Component.InvokeAsync("PairIcon", mps)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner pair-tooltip'></div></div>"></i></th>
                 }
-                <td class="text-left">@buyLogEntry.CurrentPrice.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
-                <td class="text">@string.Format("{0}", (buyLogEntry.Volume24h).ToString())</td>
                 <td class="text-autocolor">@string.Format("{0}%", (buyLogEntry.PercChange * 100).ToString("#,#0.00"))</td>
+                <td class="text">@string.Format("{0}", (buyLogEntry.Volume24).ToString())</td>
+                <td class="text-right">@buyLogEntry.CurrentPrice.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
                 @if (buyDisabled) {
                   <td>@Html.Raw(buyStrategyText)</td>
                 } else {
