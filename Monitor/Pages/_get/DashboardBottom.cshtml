@@ -32,10 +32,14 @@
         }
       }   
       <div id="AssetDistribution" class="container">        
-        <div class="row px1">
-          <div class="col-3 px-1 text-center"><small>Start:&nbsp;<text class="text-autocolor">@Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance @Model.Summary.MainMarket</text></small></div>
-          <div class="col-6 px-1 text-center"><small>TCV:&nbsp;<text class="text-autocolor">@totalCurrentValueString @Model.Summary.MainMarket</text></small></div>
-          <div class="col-3 px-1 text-center"><small>Gain:&nbsp;<text class="text-autocolor">@Math.Round(((Model.totalCurrentValue - Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance) / Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance) * 100, 2)%</text></small></div>
+        <div class="text-center">
+          <small>
+            <span data-toggle="tooltip" data-placement="top" title="Starting balance from PTM settings">Start: &nbsp; <text class="text-autocolor"> @Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance @Model.Summary.MainMarket </text></span>
+            <span data-toggle="tooltip" data-placement="top" title="TCV gain on starting balance"> &emsp; &emsp; Gain:&nbsp;<text class="text-autocolor">@Math.Round(((Model.totalCurrentValue - Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance) / Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance) * 100, 2)%</text></span>
+          </small>
+        </div>
+        <div class="text-center">
+          <span data-toggle="tooltip" data-placement="top" title="Total current account value">TCV: &nbsp; <text class="text-autocolor"> @totalCurrentValueString @Model.Summary.MainMarket </text> </span>
         </div>
         <div class="row px1">
           <svg style="height:260px;width:100%"></svg>

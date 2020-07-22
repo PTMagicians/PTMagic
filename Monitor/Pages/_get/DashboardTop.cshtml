@@ -18,9 +18,9 @@
           <thead>
             <tr>
               <th>Market</th>
-              <th class="text-center" data-toggle="tooltip" data-placement="top" title="24 Hour Trend">24H</th>
-              <th class="text-center" data-toggle="tooltip" data-placement="top" title="Current Volume">Volume</th>
-              <th class="text-center" data-toggle="tooltip" data-placement="top" title="Current ask price for this market">Ask</th>
+              <th class="text-left" data-toggle="tooltip" data-placement="top" title="24 Hour Trend">24H</th>
+              <th class="text-left" data-toggle="tooltip" data-placement="top" title="Current Volume">Volume</th>
+              <th class="text-left" data-toggle="tooltip" data-placement="top" title="Current ask price for this market">Ask</th>
               <th>Buy Strategies</th>
             </tr>
           </thead>
@@ -61,7 +61,7 @@
                 }
                 <td class="text-autocolor">@string.Format("{0}%", (buyLogEntry.PercChange * 100).ToString("#,#0.00"))</td>
                 <td class="text">@string.Format("{0}", (buyLogEntry.Volume24h).ToString())</td>
-                <td class="text-right">@buyLogEntry.CurrentPrice.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
+                <td class="text-">@buyLogEntry.CurrentPrice.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
                 @if (buyDisabled) {
                   <td>@Html.Raw(buyStrategyText)</td>
                 } else {
