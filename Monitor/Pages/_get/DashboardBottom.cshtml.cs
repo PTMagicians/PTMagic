@@ -19,10 +19,6 @@ namespace Monitor.Pages
     public string LastGlobalSetting = "Default";
     public DateTimeOffset DateTimeNow = Constants.confMinDate;
     public string AssetDistributionData = "";
-    public double currentBalance = 0;
-    public string currentBalanceString = "";
-    public double TotalBagCost = 0;
-    public double TotalBagValue = 0;
     public double totalCurrentValue = 0;
     public void OnGet()
     {
@@ -170,7 +166,6 @@ namespace Monitor.Pages
 
       foreach (Core.Main.DataObjects.PTMagicData.DCALogData dcaLogEntry in PTData.DCALog)
       {
-        Core.Main.DataObjects.PTMagicData.MarketPairSummary mps = null;
         string sellStrategyText = Core.ProfitTrailer.StrategyHelper.GetStrategyText(Summary, dcaLogEntry.SellStrategies, dcaLogEntry.SellStrategy, isSellStrategyTrue, isTrailingSellActive);
 
         // Aggregate totals
