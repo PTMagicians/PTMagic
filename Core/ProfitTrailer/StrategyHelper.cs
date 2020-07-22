@@ -269,40 +269,40 @@ namespace Core.ProfitTrailer
           result = String.Concat(strategyLetter, "LOSS");
           break;
         case "smagain":
-          result = String.Concat(strategyLetter, "SMAG");
+          result = String.Concat(strategyLetter, "SMA-G");
           break;
         case "emagain":
-          result = String.Concat(strategyLetter, "EMAG");
+          result = String.Concat(strategyLetter, "EMA-G");
           break;
         case "hmagain":
-          result = String.Concat(strategyLetter, "HMAG");
+          result = String.Concat(strategyLetter, "HMA-G");
           break;
         case "dmagain":
-          result = String.Concat(strategyLetter, "DMAG");
+          result = String.Concat(strategyLetter, "DMA-G");
           break;
         case "smaspread":
-          result = String.Concat(strategyLetter, "SMAS");
+          result = String.Concat(strategyLetter, "SMA-S");
           break;
         case "emaspread":
-          result = String.Concat(strategyLetter, "EMAS");
+          result = String.Concat(strategyLetter, "EMA-S");
           break;
         case "hmaspread":
-          result = String.Concat(strategyLetter, "HMAS");
+          result = String.Concat(strategyLetter, "HMA-S");
           break;
         case "dmaspread":
-          result = String.Concat(strategyLetter, "DMAS");
+          result = String.Concat(strategyLetter, "DMA-S");
           break;
         case "smacross":
-          result = String.Concat(strategyLetter, "SMAC");
+          result = String.Concat(strategyLetter, "SMA-C");
           break;
         case "emacross":
-          result = String.Concat(strategyLetter, "EMAC");
+          result = String.Concat(strategyLetter, "EMA-C");
           break;
         case "hmacross":
-          result = String.Concat(strategyLetter, "HMAC");
+          result = String.Concat(strategyLetter, "HMA-C");
           break;
         case "dmacross":
-          result = String.Concat(strategyLetter, "DMAC");
+          result = String.Concat(strategyLetter, "DMA-C");
           break;
         case "rsi":
           result = String.Concat(strategyLetter, "RSI");
@@ -314,13 +314,13 @@ namespace Core.ProfitTrailer
           result = String.Concat(strategyLetter, "SRSI");
           break;
         case "stochrsik":
-          result = String.Concat(strategyLetter, "SRSIK");
+          result = String.Concat(strategyLetter, "SRSI-K");
           break;
         case "stochrsid":
-          result = String.Concat(strategyLetter, "SRSID");
+          result = String.Concat(strategyLetter, "SRSI-D");
           break;
         case "stochrsicross":
-          result = String.Concat(strategyLetter, "SRSIC");
+          result = String.Concat(strategyLetter, "SRSI-C");
           break;
         case "macd":
           result = String.Concat(strategyLetter, "MACD");
@@ -359,19 +359,19 @@ namespace Core.ProfitTrailer
           result = String.Concat(strategyLetter, "FIXED");
           break;
         case "lowatrband":
-          result = String.Concat(strategyLetter, "LATR");
+          result = String.Concat(strategyLetter, "L-ATR");
           break;
         case "highatrband":
-          result = String.Concat(strategyLetter, "HATR");
+          result = String.Concat(strategyLetter, "H-ATR");
           break;
         case "atrpercentage":
-          result = String.Concat(strategyLetter, "ATRPCT");
+          result = String.Concat(strategyLetter, "ATR-PCT");
           break;
         case "vwappercentage":
           result = String.Concat(strategyLetter, "VWAP");
           break;
         case "mvwappercentage":
-          result = String.Concat(strategyLetter, "MVWAP");
+          result = String.Concat(strategyLetter, "M-VWAP");
           break;
         case "btcdominance":
           result = String.Concat(strategyLetter, "BTCDOM");
@@ -425,13 +425,13 @@ namespace Core.ProfitTrailer
           result = String.Concat(strategyLetter, "NODCA");
           break;
         case "combimagain":
-          result = String.Concat(strategyLetter, "COMBIG");
+          result = String.Concat(strategyLetter, "COMBI-G");
           break;
         case "combimaspread":
-          result = String.Concat(strategyLetter, "COMBIS");
+          result = String.Concat(strategyLetter, "COMBI-S");
           break;
         case "combimacross":
-          result = String.Concat(strategyLetter, "COMBIC");
+          result = String.Concat(strategyLetter, "COMBI-C");
           break;
         case "macdpercentage":
           result = String.Concat(strategyLetter, "MACDPERC");
