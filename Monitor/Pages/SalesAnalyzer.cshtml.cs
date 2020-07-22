@@ -20,12 +20,13 @@ namespace Monitor.Pages
     public Dictionary<DateTime, double> DailyGains = new Dictionary<DateTime, double>();
     public Dictionary<DateTime, double> MonthlyGains = new Dictionary<DateTime, double>();
     public DateTimeOffset DateTimeNow = Constants.confMinDate;
-
+    public double totalCurrentValue = 0;
     public void OnGet()
     {
       base.Init();
 
       BindData();
+      BuildTCV();
     }
 
     private void BindData()
@@ -135,5 +136,20 @@ namespace Monitor.Pages
         }
       }
     }
+
+    private void BuildTCV()
+    {
+      double AvailableBalance = PTData.GetCurrentBalance();
+      foreach (Core.Main.DataObjects.PTMagicData.DCALogData dcaLogEntry in PTData.DCALog)
+      {
+        totalCurrentValue = totalCurrentValue + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / dcaLogEntry.Leverage);
+      }
+      totalCurrentValue = totalCurrentValue + AvailableBalance;
+    }
+
+
+
+
+
   }
 }
