@@ -62,6 +62,7 @@
                 <td class="text-autocolor">@string.Format("{0}%", (buyLogEntry.PercChange * 100).ToString("#,#0.00"))</td>
                 <td class="text">@string.Format("{0}", (buyLogEntry.Volume24h).ToString())</td>
                 <td class="text-left">@buyLogEntry.CurrentPrice.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
+
                 @if (buyDisabled) {
                   <td>@Html.Raw(buyStrategyText)</td>
                 } else {
