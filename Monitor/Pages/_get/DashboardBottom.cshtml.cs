@@ -128,6 +128,7 @@ namespace Monitor.Pages
     {
       int tradeDayIndex = 0;
       string profitPerDayJSON = "";
+      
       if (PTData.SellLog.Count > 0)
       {
         DateTime minSellLogDate = PTData.SellLog.OrderBy(sl => sl.SoldDate).First().SoldDate.Date;

@@ -513,15 +513,6 @@ namespace Core.Main.DataObjects.PTMagicData
     public double DustValue { get; set; }
     public string Market { get; set; }
   }
-  public class PropertiesData
-  {
-    public string Currency { get; set; }
-    public bool Shorting { get; set; }
-    public bool Margin { get; set; }
-    public string UpTime { get; set; }
-    public int Port { get; set; }
-    public bool IsLeverageExchange { get; set; }
-    public string BaseUrl { get; set; }
-  }
+
   #endregion
 }

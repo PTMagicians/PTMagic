@@ -15,7 +15,7 @@ namespace Core.Main.DataObjects
   public class ProfitTrailerData
   {
     private SummaryData _summary = null;
-    private PropertiesData _properties = null;
+    private Properties _properties = null;
     private List<SellLogData> _sellLog = new List<SellLogData>();
     private List<DCALogData> _dcaLog = new List<DCALogData>();
     private List<BuyLogData> _buyLog = new List<BuyLogData>();
@@ -76,7 +76,7 @@ namespace Core.Main.DataObjects
         return _summary;
       }
     }
-    public PropertiesData Properties
+    public Properties Properties
     {
       get
       {
@@ -87,7 +87,7 @@ namespace Core.Main.DataObjects
             // Thread double locking
             if (_properties == null || (DateTime.UtcNow > _propertiesRefresh))
             {
-              _properties = BuildSummaryData(GetDataFromProfitTrailer("api/v2/data/properties"));
+              _properties = BuildProptertiesData(GetDataFromProfitTrailer("api/v2/data/properties"));
               _propertiesRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
             }
           }
@@ -307,9 +307,9 @@ namespace Core.Main.DataObjects
         DustValue = PTData.totalDustCurrentValue
       };
     }
-    private PropertiesData BuildProptertiesData(dynamic PTProperties)
+    private Properties BuildProptertiesData(dynamic PTProperties)
     {
-      return new PropertiesData()
+      return new Properties()
       {
         Currency = PTProperties.currency,
         Shorting = PTProperties.shorting,
