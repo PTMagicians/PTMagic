@@ -28,7 +28,6 @@ namespace Monitor.Pages
       BindData();
       BuildTCV();
     }
-
     private void BindData()
     {
       PTData = this.PtDataObject;
@@ -40,20 +39,25 @@ namespace Monitor.Pages
       BuildTopMarkets();
       BuildSalesChartData();
     }
-
     private void BuildTopMarkets()
     {
       var markets = PTData.SellLog.GroupBy(m => m.Market);
       Dictionary<string, double> topMarketsDic = new Dictionary<string, double>();
       foreach (var market in markets)
       {
-        double totalProfit = PTData.SellLog.FindAll(m => m.Market == market.Key).Sum(m => m.Profit);
-
+        double totalProfit = 0;
+        if (PTData.Properties.Shorting)
+        {
+          totalProfit = PTData.SellLog.FindAll(m => m.Market == market.Key).Sum(m => m.Profit * (-1));
+        }
+        else
+        {
+          totalProfit = PTData.SellLog.FindAll(m => m.Market == market.Key).Sum(m => m.Profit);
+        }
         topMarketsDic.Add(market.Key, totalProfit);
       }
       TopMarkets = new SortedDictionary<string, double>(topMarketsDic).OrderByDescending(m => m.Value).Take(PTMagicConfiguration.GeneralSettings.Monitor.MaxTopMarkets);
     }
-
     private void BuildSalesChartData()
     {
       if (PTData.SellLog.Count > 0)
@@ -69,26 +73,29 @@ namespace Monitor.Pages
         double balance = 0.0;
         for (DateTime salesDate = graphStartDate; salesDate <= DateTimeNow.DateTime.Date; salesDate = salesDate.AddDays(1))
         {
-         
           if (tradeDayIndex > 0)
           {
             tradesPerDayJSON += ",\n";
             profitPerDayJSON += ",\n";
             balancePerDayJSON += ",\n";
           }
-
+          double profit = 0;
           int trades = PTData.SellLog.FindAll(t => t.SoldDate.Date == salesDate.Date).Count;
-          double profit = PTData.SellLog.FindAll(t => t.SoldDate.Date == salesDate.Date).Sum(t => t.Profit);
+          if (PTData.Properties.Shorting)
+          {
+            profit = PTData.SellLog.FindAll(t => t.SoldDate.Date == salesDate.Date).Sum(t => t.Profit * (-1));
+          }
+          else
+          {
+            profit = PTData.SellLog.FindAll(t => t.SoldDate.Date == salesDate.Date).Sum(t => t.Profit);
+          }
           double profitFiat = Math.Round(profit * Summary.MainMarketPrice, 2);
           balance += profitFiat; 
-
           tradesPerDayJSON += "{x: new Date('" + salesDate.Date.ToString("yyyy-MM-dd") + "'), y: " + trades + "}";
           profitPerDayJSON += "{x: new Date('" + salesDate.Date.ToString("yyyy-MM-dd") + "'), y: " + profitFiat.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "}";
           balancePerDayJSON += "{x: new Date('" + salesDate.Date.ToString("yyyy-MM-dd") + "'), y: " + balance.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "}";
-
           tradeDayIndex++;
         }
-
         TradesChartDataJSON = "[";
         TradesChartDataJSON += "{";
         TradesChartDataJSON += "key: 'Sales',";
@@ -112,31 +119,43 @@ namespace Monitor.Pages
         BalanceChartDataJSON += "values: [" + balancePerDayJSON + "]";
         BalanceChartDataJSON += "}";
         BalanceChartDataJSON += "]";
-
+        
         for (DateTime salesDate = DateTimeNow.DateTime.Date; salesDate >= MinSellLogDate; salesDate = salesDate.AddDays(-1))
         {
           List<SellLogData> salesDateSales = PTData.SellLog.FindAll(sl => sl.SoldDate.Date == salesDate);
-          double salesDateProfit = salesDateSales.Sum(sl => sl.Profit);
+          double salesDateProfit;
+          if (PTData.Properties.Shorting)
+          {
+            salesDateProfit = salesDateSales.Sum(sl => sl.Profit * (-1));
+          }
+          else 
+          {
+            salesDateProfit = salesDateSales.Sum(sl => sl.Profit);
+          }
           double salesDateStartBalance = PTData.GetSnapshotBalance(salesDate);
           double salesDateGain = Math.Round(salesDateProfit / salesDateStartBalance * 100, 2);
-
           DailyGains.Add(salesDate, salesDateGain);
         }
-
         DateTime minSellLogMonthDate = new DateTime(MinSellLogDate.Year, MinSellLogDate.Month, 1).Date;
         DateTime salesMonthStartDate = new DateTime(DateTimeNow.DateTime.Year, DateTimeNow.DateTime.Month, 1).Date;
         for (DateTime salesMonthDate = salesMonthStartDate.Date; salesMonthDate >= minSellLogMonthDate; salesMonthDate = salesMonthDate.AddMonths(-1))
         {
           List<Core.Main.DataObjects.PTMagicData.SellLogData> salesMonthSales = PTData.SellLog.FindAll(sl => sl.SoldDate.Date.Month == salesMonthDate.Month && sl.SoldDate.Date.Year == salesMonthDate.Year);
-          double salesDateProfit = salesMonthSales.Sum(sl => sl.Profit);
+          double salesDateProfit;
+          if (PTData.Properties.Shorting)
+          {
+            salesDateProfit = salesMonthSales.Sum(sl => sl.Profit * (-1));
+          }
+          else
+          {
+            salesDateProfit = salesMonthSales.Sum(sl => sl.Profit);
+          }
           double salesDateStartBalance = PTData.GetSnapshotBalance(salesMonthDate);
           double salesDateGain = Math.Round(salesDateProfit / salesDateStartBalance * 100, 2);
-
           MonthlyGains.Add(salesMonthDate, salesDateGain);
         }
       }
     }
-
     private void BuildTCV()
     {
       double AvailableBalance = PTData.GetCurrentBalance();
@@ -146,10 +165,5 @@ namespace Monitor.Pages
       }
       totalCurrentValue = totalCurrentValue + AvailableBalance;
     }
-
-
-
-
-
   }
 }

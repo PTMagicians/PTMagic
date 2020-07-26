@@ -133,7 +133,10 @@ namespace Monitor.Pages
       {
         DateTime minSellLogDate = PTData.SellLog.OrderBy(sl => sl.SoldDate).First().SoldDate.Date;
         DateTime graphStartDate = DateTime.UtcNow.Date.AddDays(-30);
-        if (minSellLogDate > graphStartDate) graphStartDate = minSellLogDate;
+        if (minSellLogDate > graphStartDate) 
+        {
+          graphStartDate = minSellLogDate;
+        }
         for (DateTime salesDate = graphStartDate; salesDate <= DateTime.UtcNow.Date; salesDate = salesDate.AddDays(1))
         {
           if (tradeDayIndex > 0)
@@ -142,6 +145,10 @@ namespace Monitor.Pages
           }
           int trades = PTData.SellLog.FindAll(t => t.SoldDate.Date == salesDate).Count;
           double profit = PTData.SellLog.FindAll(t => t.SoldDate.Date == salesDate).Sum(t => t.Profit);
+          if (PTData.Properties.Shorting)
+          {
+            profit = profit * (-1);
+          }
           double profitFiat = Math.Round(profit * Summary.MainMarketPrice, 2);
           profitPerDayJSON += "{x: new Date('" + salesDate.ToString("yyyy-MM-dd") + "'), y: " + profitFiat.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "}";
           tradeDayIndex++;
