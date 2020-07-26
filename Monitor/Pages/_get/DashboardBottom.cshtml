@@ -47,6 +47,7 @@
       </div>
     </div>
   </div>
+
   <div class="col-md-5 px-1">
     <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
     <div class="card-box px-2" style="height:305px;">
@@ -108,8 +109,17 @@
       <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
       <br>
       <h4 class="m-t-0 m-b-20 header-title"><b>Sales Overview</b><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)SalesAnalyzer">more</a></small></h4>
-     @{
-        double totalProfit = Model.PTData.SellLog.Sum(s => s.Profit);
+      @{
+
+        double totalProfit = 0;
+        if (Model.PTData.Properties.Shorting)
+        {
+          totalProfit = Model.PTData.SellLog.Sum(s => s.Profit * (-1));
+        }
+        else
+        {
+          totalProfit = Model.PTData.SellLog.Sum(s => s.Profit);
+        }
         double totalProfitFiat = Math.Round(totalProfit * Model.Summary.MainMarketPrice, 2);
         double percentGain = Math.Round(totalProfit / Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance * 100, 2);
         string percentGainText = percentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
@@ -118,23 +128,55 @@
           percentGainText = "<i class=\"fa fa-info-circle text-muted\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"You have added at least one manual transaction, so the total gain percentage cannot be calculated.\"></i>";
         }
 
+        double todaysProfit = 0;
+        if (Model.PTData.Properties.Shorting)
+        {
+          todaysProfit = Model.PTData.SellLogToday.Sum(s => s.Profit * (-1));
+        }
+        else
+        {
+          todaysProfit = Model.PTData.SellLogToday.Sum(s => s.Profit);
+        }
         double todaysStartBalance = Model.PTData.GetSnapshotBalance(Model.DateTimeNow.DateTime);
-        double todaysProfit = Model.PTData.SellLogToday.Sum(s => s.Profit);
         double todaysProfitFiat = Math.Round(todaysProfit * Model.Summary.MainMarketPrice, 2);
         double todaysPercentGain = Math.Round(todaysProfit / todaysStartBalance * 100, 2);
 
+        double yesterdaysProfit = 0;
+        if (Model.PTData.Properties.Shorting)
+        {
+          yesterdaysProfit = Model.PTData.SellLogYesterday.Sum(s => s.Profit * (-1));
+        }
+        else
+        {
+          yesterdaysProfit = Model.PTData.SellLogYesterday.Sum(s => s.Profit);
+        }
         double yesterdaysStartBalance = Model.PTData.GetSnapshotBalance(Model.DateTimeNow.DateTime.AddDays(-1));
-        double yesterdaysProfit = Model.PTData.SellLogYesterday.Sum(s => s.Profit);
         double yesterdaysProfitFiat = Math.Round(yesterdaysProfit * Model.Summary.MainMarketPrice, 2);
         double yesterdaysPercentGain = Math.Round(yesterdaysProfit / yesterdaysStartBalance * 100, 2);
 
+        double last7DaysProfit = 0;
+        if (Model.PTData.Properties.Shorting)
+        {
+          last7DaysProfit = Model.PTData.SellLogLast7Days.Sum(s => s.Profit * (-1));
+        }
+        else
+        {
+          last7DaysProfit = Model.PTData.SellLogLast7Days.Sum(s => s.Profit);
+        }
         double last7DaysStartBalance = Model.PTData.GetSnapshotBalance(Model.DateTimeNow.DateTime.AddDays(-7));
-        double last7DaysProfit = Model.PTData.SellLogLast7Days.Sum(s => s.Profit);
         double last7DaysProfitFiat = Math.Round(last7DaysProfit * Model.Summary.MainMarketPrice, 2);
         double last7DaysPercentGain = Math.Round(last7DaysProfit / last7DaysStartBalance * 100, 2);
 
+        double last30DaysProfit = 0;
+        if (Model.PTData.Properties.Shorting)
+        {
+          last30DaysProfit = Model.PTData.SellLogLast30Days.Sum(s => s.Profit * (-1));
+        }
+        else
+        {
+          last30DaysProfit = Model.PTData.SellLogLast30Days.Sum(s => s.Profit);
+        }
         double last30DaysStartBalance = Model.PTData.GetSnapshotBalance(Model.DateTimeNow.DateTime.AddDays(-30));
-        double last30DaysProfit = Model.PTData.SellLogLast30Days.Sum(s => s.Profit);
         double last30DaysProfitFiat = Math.Round(last30DaysProfit * Model.Summary.MainMarketPrice, 2);
         double last30DaysPercentGain = Math.Round(last30DaysProfit / last30DaysStartBalance * 100, 2);
       }

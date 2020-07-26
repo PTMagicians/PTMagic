@@ -6,16 +6,15 @@ namespace Monitor.Pages {
   public class DashboardTopModel : _Internal.BasePageModelSecureAJAX {
     public ProfitTrailerData PTData = null;
     public DateTimeOffset DateTimeNow = Constants.confMinDate;
-   
     public void OnGet() {
       // Initialize Config
       base.Init();
 
       BindData();
     }
-
     public double TotalBagCost = 0;
     public double TotalBagValue = 0;
+    public double TotalBagGain = 0;
     private void BindData() {
       PTData = this.PtDataObject;
 
