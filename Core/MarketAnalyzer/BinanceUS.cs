@@ -20,27 +20,32 @@ namespace Core.MarketAnalyzer
     public static double GetMainCurrencyPrice(string mainMarket, PTMagicConfiguration systemConfiguration, LogHelper log)
     {
       double result = 0;
-
-      try
+      if (mainMarket != "USD")
       {
-        string baseUrl = "https://api.binance.us/api/v1/ticker/24hr?symbol=" + mainMarket + "USDT";
-
-        log.DoLogInfo("BinanceUS - Getting main market price...");
-        Newtonsoft.Json.Linq.JObject jsonObject = GetSimpleJsonObjectFromURL(baseUrl, log, null);
-        if (jsonObject != null)
+        try
         {
-          log.DoLogInfo("BinanceUS - Market data received for " + mainMarket + "USDT");
+          string baseUrl = "https://api.binance.us/api/v1/ticker/24hr?symbol=" + mainMarket + "USDT";
 
-          result = (double)jsonObject.GetValue("lastPrice");
-          log.DoLogInfo("BinanceUS - Current price for " + mainMarket + "USDT: " + result.ToString("#,#0.00") + " USD");
+          log.DoLogInfo("BinanceUS - Getting main market price...");
+          Newtonsoft.Json.Linq.JObject jsonObject = GetSimpleJsonObjectFromURL(baseUrl, log, null);
+          if (jsonObject != null)
+          {
+            log.DoLogInfo("BinanceUS - Market data received for " + mainMarket + "USDT");
+
+            result = (double)jsonObject.GetValue("lastPrice");
+            log.DoLogInfo("BinanceUS - Current price for " + mainMarket + "USDT: " + result.ToString("#,#0.00") + " USD");
+          }
         }
-      }
-      catch (Exception ex)
+        catch (Exception ex)
+        {
+          log.DoLogCritical(ex.Message, ex);
+        }
+        return result;
+      } 
+      else 
       {
-        log.DoLogCritical(ex.Message, ex);
+        return 1.0;
       }
-
-      return result;
     }
 
     public static List<string> GetMarketData(string mainMarket, Dictionary<string, MarketInfo> marketInfos, PTMagicConfiguration systemConfiguration, LogHelper log)
@@ -58,7 +63,7 @@ namespace Core.MarketAnalyzer
         if (jsonArray.Count > 0)
         {
           double mainCurrencyPrice = 1;
-          if (!mainMarket.Equals("USDT", StringComparison.InvariantCultureIgnoreCase))
+          if (!mainMarket.Equals("USDT", StringComparison.InvariantCultureIgnoreCase) && !mainMarket.Equals("USD", StringComparison.InvariantCultureIgnoreCase))
           {
             mainCurrencyPrice = BinanceUS.GetMainCurrencyPrice(mainMarket, systemConfiguration, log);
           }
@@ -238,40 +243,45 @@ namespace Core.MarketAnalyzer
         }
 
         bool go = true;
-        while (ticksFetched < ticksNeeded && go)
+        if (!(marketName == "USDUSDT"))
         {
-          baseUrl = "https://api.binance.us/api/v1/klines?interval=1m&symbol=" + marketName + "&endTime=" + endTime.ToString() + "&limit=" + ticksLimit.ToString();
-
-          log.DoLogDebug("BinanceUS - Getting " + ticksLimit.ToString() + " ticks for '" + marketName + "'...");
-          Newtonsoft.Json.Linq.JArray jsonArray = GetSimpleJsonArrayFromURL(baseUrl, log);
-          if (jsonArray.Count > 0)
+          while (ticksFetched < ticksNeeded && go)
           {
-            log.DoLogDebug("BinanceUS - " + jsonArray.Count.ToString() + " ticks received.");
+          
+            baseUrl = "https://api.binance.us/api/v1/klines?interval=1m&symbol=" + marketName + "&endTime=" + endTime.ToString() + "&limit=" + ticksLimit.ToString();
 
-            foreach (Newtonsoft.Json.Linq.JArray marketTick in jsonArray)
+            log.DoLogDebug("BinanceUS - Getting " + ticksLimit.ToString() + " ticks for '" + marketName + "'...");
+            Newtonsoft.Json.Linq.JArray jsonArray = GetSimpleJsonArrayFromURL(baseUrl, log);
+            if (jsonArray.Count > 0)
             {
+              log.DoLogDebug("BinanceUS - " + jsonArray.Count.ToString() + " ticks received.");
 
-              MarketTick tick = new MarketTick();
-              tick.Price = (double)marketTick[4];
-              tick.Volume24h = (double)marketTick[7];
-              tick.Time = Constants.Epoch.AddMilliseconds((Int64)marketTick[0]);
+              foreach (Newtonsoft.Json.Linq.JArray marketTick in jsonArray)
+              {
 
-              result.Add(tick);
+                MarketTick tick = new MarketTick();
+                tick.Price = (double)marketTick[4];
+                tick.Volume24h = (double)marketTick[7];
+                tick.Time = Constants.Epoch.AddMilliseconds((Int64)marketTick[0]);
+
+                result.Add(tick);
+              }
+
+              ticksFetched = ticksFetched + jsonArray.Count;
+              endTime = endTime - ticksLimit * 60 * 1000;
+              if (ticksNeeded - ticksFetched < ticksLimit)
+              {
+                ticksLimit = ticksNeeded - ticksFetched;
+              }
             }
-
-            ticksFetched = ticksFetched + jsonArray.Count;
-            endTime = endTime - ticksLimit * 60 * 1000;
-            if (ticksNeeded - ticksFetched < ticksLimit)
+            else
             {
-              ticksLimit = ticksNeeded - ticksFetched;
+              log.DoLogDebug("BinanceUS - No ticks received.");
+              go = false;
             }
-          }
-          else
-          {
-            log.DoLogDebug("BinanceUS - No ticks received.");
-            go = false;
           }
         }
+        
       }
       catch (WebException ex)
       {
