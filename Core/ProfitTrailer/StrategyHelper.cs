@@ -1,222 +1,212 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.IO;
-using System.Net;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
-using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
 using Core.Main;
 using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
-using Newtonsoft.Json;
 using System.Text.RegularExpressions;
 
 namespace Core.ProfitTrailer
 {
   public class OperandToken : Token
+  {
+  }
+  public class OrToken : OperandToken
+  {
+  }
+
+  public class AndToken : OperandToken
+  {
+  }
+
+  public class BooleanValueToken : Token
+  {
+  }
+
+  public class FalseToken : BooleanValueToken
+  {
+  }
+
+  public class TrueToken : BooleanValueToken
+  {
+  }
+
+  public class ParenthesisToken : Token
+  {
+  }
+
+  public class ClosedParenthesisToken : ParenthesisToken
+  {
+  }
+
+  public class OpenParenthesisToken : ParenthesisToken
+  {
+  }
+
+  public class NegationToken : Token
+  {
+  }
+
+  public abstract class Token
+  {
+  }
+
+  public class Tokenizer
+  {
+    private readonly StringReader _reader;
+    private string _text;
+
+    public Tokenizer(string text)
     {
-    }
-    public class OrToken : OperandToken
-    {
+      _text = text;
+      _reader = new StringReader(text);
     }
 
-    public class AndToken : OperandToken
+    public IEnumerable<Token> Tokenize()
     {
-    }
-
-    public class BooleanValueToken : Token
-    { 
-    }
-
-    public class FalseToken : BooleanValueToken
-    {
-    }
-
-    public class TrueToken : BooleanValueToken
-    {
-    }
-
-    public class ParenthesisToken : Token
-    {
-    }
-
-    public class ClosedParenthesisToken : ParenthesisToken
-    {
-    }
-
-    public class OpenParenthesisToken : ParenthesisToken
-    {
-    }
-
-    public class NegationToken : Token
-    {
-    }
-
-    public abstract class Token
-    {
-    }
-
-    public class Tokenizer
-    {
-        private readonly StringReader _reader;
-        private string _text;
-
-        public Tokenizer(string text)
+      var tokens = new List<Token>();
+      while (_reader.Peek() != -1)
+      {
+        while (Char.IsWhiteSpace((char)_reader.Peek()))
         {
-            _text = text;
-            _reader = new StringReader(text);
+          _reader.Read();
         }
 
-        public IEnumerable<Token> Tokenize()
+        if (_reader.Peek() == -1)
+          break;
+
+        var c = (char)_reader.Peek();
+        switch (c)
         {
-            var tokens = new List<Token>();
-            while (_reader.Peek() != -1)
+          case '!':
+            tokens.Add(new NegationToken());
+            _reader.Read();
+            break;
+          case '(':
+            tokens.Add(new OpenParenthesisToken());
+            _reader.Read();
+            break;
+          case ')':
+            tokens.Add(new ClosedParenthesisToken());
+            _reader.Read();
+            break;
+          default:
+            if (Char.IsLetter(c))
             {
-                while (Char.IsWhiteSpace((char) _reader.Peek()))
-                {
-                    _reader.Read();
-                }
-
-                if (_reader.Peek() == -1)
-                    break;
-
-                var c = (char) _reader.Peek();
-                switch (c)
-                {
-                    case '!':
-                        tokens.Add(new NegationToken());
-                        _reader.Read();
-                        break;
-                    case '(':
-                        tokens.Add(new OpenParenthesisToken());
-                        _reader.Read();
-                        break;
-                    case ')':
-                        tokens.Add(new ClosedParenthesisToken());
-                        _reader.Read();
-                        break;
-                    default:
-                        if (Char.IsLetter(c))
-                        {
-                            var token = ParseKeyword();
-                            tokens.Add(token);
-                        }
-                        else
-                        {
-                            var remainingText = _reader.ReadToEnd() ?? string.Empty;
-                            throw new Exception(string.Format("Unknown grammar found at position {0} : '{1}'", _text.Length - remainingText.Length, remainingText));
-                        }
-                        break;
-                }
+              var token = ParseKeyword();
+              tokens.Add(token);
             }
-            return tokens;
+            else
+            {
+              var remainingText = _reader.ReadToEnd() ?? string.Empty;
+              throw new Exception(string.Format("Unknown grammar found at position {0} : '{1}'", _text.Length - remainingText.Length, remainingText));
+            }
+            break;
         }
-
-        private Token ParseKeyword()
-        {
-            var text = new StringBuilder();
-            while (Char.IsLetter((char) _reader.Peek()))
-            {
-                text.Append((char) _reader.Read());
-            }
-
-            var potentialKeyword = text.ToString().ToLower();
-
-            switch (potentialKeyword)
-            {
-                case "true":
-                    return new TrueToken();
-                case "false":
-                    return new FalseToken();
-                case "and":
-                    return new AndToken();
-                case "or":
-                    return new OrToken();
-                default:
-                    throw new Exception("Expected keyword (True, False, and, or) but found "+ potentialKeyword);
-            }
-        }
+      }
+      return tokens;
     }
-    public class Parser
+
+    private Token ParseKeyword()
     {
-        private readonly IEnumerator<Token> _tokens;
+      var text = new StringBuilder();
+      while (Char.IsLetter((char)_reader.Peek()))
+      {
+        text.Append((char)_reader.Read());
+      }
 
-        public Parser(IEnumerable<Token> tokens)
-        {
-            _tokens = tokens.GetEnumerator();
-            _tokens.MoveNext();
-        }
+      var potentialKeyword = text.ToString().ToLower();
 
-        public bool Parse()
-        {
-            while (_tokens.Current != null)
-            {
-                var isNegated = _tokens.Current is NegationToken;
-                if (isNegated)
-                    _tokens.MoveNext();
-
-                var boolean = ParseBoolean();
-                if (isNegated)
-                    boolean = !boolean;
-
-                while (_tokens.Current is OperandToken)
-                {
-                    var operand = _tokens.Current;
-                    if (!_tokens.MoveNext())
-                    {
-                        throw new Exception("Missing expression after operand");
-                    }
-                    var nextBoolean = ParseBoolean();
-
-                    if (operand is AndToken)
-                        boolean = boolean && nextBoolean;
-                    else
-                        boolean = boolean || nextBoolean;
-
-                }
-
-                return boolean;
-            }
-
-            throw new Exception("Empty expression");
-        }
-
-        private bool ParseBoolean()
-        {
-            if (_tokens.Current is BooleanValueToken)
-            {
-                var current = _tokens.Current;
-                _tokens.MoveNext();
-
-                if (current is TrueToken)
-                    return true;
-
-                return false;
-            }
-            if (_tokens.Current is OpenParenthesisToken)
-            {
-                _tokens.MoveNext();
-
-                var expInPars = Parse();
-
-                if (!(_tokens.Current is ClosedParenthesisToken))
-                    throw new Exception("Expecting Closing Parenthesis");
-                    
-                _tokens.MoveNext(); 
-
-                return expInPars;
-            }
-            if (_tokens.Current is ClosedParenthesisToken)
-                throw new Exception("Unexpected Closed Parenthesis");
-
-            // since its not a BooleanConstant or Expression in parenthesis, it must be a expression again
-            var val = Parse();
-            return val;
-        }
+      switch (potentialKeyword)
+      {
+        case "true":
+          return new TrueToken();
+        case "false":
+          return new FalseToken();
+        case "and":
+          return new AndToken();
+        case "or":
+          return new OrToken();
+        default:
+          throw new Exception("Expected keyword (True, False, and, or) but found " + potentialKeyword);
+      }
     }
+  }
+  public class Parser
+  {
+    private readonly IEnumerator<Token> _tokens;
+
+    public Parser(IEnumerable<Token> tokens)
+    {
+      _tokens = tokens.GetEnumerator();
+      _tokens.MoveNext();
+    }
+
+    public bool Parse()
+    {
+      while (_tokens.Current != null)
+      {
+        var isNegated = _tokens.Current is NegationToken;
+        if (isNegated)
+          _tokens.MoveNext();
+
+        var boolean = ParseBoolean();
+        if (isNegated)
+          boolean = !boolean;
+
+        while (_tokens.Current is OperandToken)
+        {
+          var operand = _tokens.Current;
+          if (!_tokens.MoveNext())
+          {
+            throw new Exception("Missing expression after operand");
+          }
+          var nextBoolean = ParseBoolean();
+
+          if (operand is AndToken)
+            boolean = boolean && nextBoolean;
+          else
+            boolean = boolean || nextBoolean;
+        }
+        return boolean;
+      }
+      throw new Exception("Empty expression");
+    }
+
+    private bool ParseBoolean()
+    {
+      if (_tokens.Current is BooleanValueToken)
+      {
+        var current = _tokens.Current;
+        _tokens.MoveNext();
+
+        if (current is TrueToken)
+          return true;
+
+        return false;
+      }
+      if (_tokens.Current is OpenParenthesisToken)
+      {
+        _tokens.MoveNext();
+
+        var expInPars = Parse();
+
+        if (!(_tokens.Current is ClosedParenthesisToken))
+          throw new Exception("Expecting Closing Parenthesis");
+
+        _tokens.MoveNext();
+
+        return expInPars;
+      }
+      if (_tokens.Current is ClosedParenthesisToken)
+        throw new Exception("Unexpected Closed Parenthesis");
+
+      // since its not a BooleanConstant or Expression in parenthesis, it must be a expression again
+      var val = Parse();
+      return val;
+    }
+  }
 
   public static class StrategyHelper
   {
@@ -234,29 +224,33 @@ namespace Core.ProfitTrailer
       {
         result = "";
       }
-
-      // strategy labels that are variable, so can't be caught by the switch statement
+      // strategy labels that are variable value
       if (result.Contains("REBUY"))
       {
-        time = strategyName.Remove(0,14);
+        time = strategyName.Remove(0, 14);
         result = "REBUY " + time;
       }
       if (result.Contains("CHANGE PERC"))
       {
         result = "CHANGE";
       }
-      if (result.Contains("LEVERAGE"))
+      if (result.Contains("CROSSED"))
       {
-        leverage = strategyName.Remove(0,10);
-        leverage = leverage.Remove(leverage.Length -1, 1);
-        result = leverage + " X";
+        leverage = strategyName.Remove(0, 9);
+        leverage = leverage.Remove(leverage.Length - 1, 1);
+        result = "CROSS " + leverage + "X";
       }
-
-      // buy/sell strategies beginning with PT 2.3.3 contain the stragegy designation letter followed by a colon and space.
+      if (result.Contains("ISOLATED"))
+      {
+        leverage = strategyName.Remove(0, 10);
+        leverage = leverage.Remove(leverage.Length - 1, 1);
+        result = "ISOL " + leverage + "X";
+      }
+      // buy/sell strategies beginning with PT 2.3.3 contain the strategy designation letter followed by a colon and space.
       // remove the letter and colon, change to shortcut, then reapply the letter and colon
       if (strategyName.Contains(":"))
       {
-        int strategyLength = strategyName.Length-3;
+        int strategyLength = strategyName.Length - 3;
         strategyLetter = strategyName.Remove(3, strategyLength);
         strategyNameOnly = strategyName.Remove(0, 3);
       }
@@ -275,40 +269,40 @@ namespace Core.ProfitTrailer
           result = String.Concat(strategyLetter, "LOSS");
           break;
         case "smagain":
-          result = String.Concat(strategyLetter, "SMAG");
+          result = String.Concat(strategyLetter, "SMA-G");
           break;
         case "emagain":
-          result = String.Concat(strategyLetter, "EMAG");
+          result = String.Concat(strategyLetter, "EMA-G");
           break;
         case "hmagain":
-          result = String.Concat(strategyLetter, "HMAG");
+          result = String.Concat(strategyLetter, "HMA-G");
           break;
         case "dmagain":
-          result = String.Concat(strategyLetter, "DMAG");
+          result = String.Concat(strategyLetter, "DMA-G");
           break;
         case "smaspread":
-          result = String.Concat(strategyLetter, "SMAS");
+          result = String.Concat(strategyLetter, "SMA-S");
           break;
         case "emaspread":
-          result = String.Concat(strategyLetter, "EMAS");
+          result = String.Concat(strategyLetter, "EMA-S");
           break;
         case "hmaspread":
-          result = String.Concat(strategyLetter, "HMAS");
+          result = String.Concat(strategyLetter, "HMA-S");
           break;
         case "dmaspread":
-          result = String.Concat(strategyLetter, "DMAS");
+          result = String.Concat(strategyLetter, "DMA-S");
           break;
         case "smacross":
-          result = String.Concat(strategyLetter, "SMAC");
+          result = String.Concat(strategyLetter, "SMA-C");
           break;
         case "emacross":
-          result = String.Concat(strategyLetter, "EMAC");
+          result = String.Concat(strategyLetter, "EMA-C");
           break;
         case "hmacross":
-          result = String.Concat(strategyLetter, "HMAC");
+          result = String.Concat(strategyLetter, "HMA-C");
           break;
         case "dmacross":
-          result = String.Concat(strategyLetter, "DMAC");
+          result = String.Concat(strategyLetter, "DMA-C");
           break;
         case "rsi":
           result = String.Concat(strategyLetter, "RSI");
@@ -320,13 +314,13 @@ namespace Core.ProfitTrailer
           result = String.Concat(strategyLetter, "SRSI");
           break;
         case "stochrsik":
-          result = String.Concat(strategyLetter, "SRSIK");
+          result = String.Concat(strategyLetter, "SRSI-K");
           break;
         case "stochrsid":
-          result = String.Concat(strategyLetter, "SRSID");
+          result = String.Concat(strategyLetter, "SRSI-D");
           break;
         case "stochrsicross":
-          result = String.Concat(strategyLetter, "SRSIC");
+          result = String.Concat(strategyLetter, "SRSI-C");
           break;
         case "macd":
           result = String.Concat(strategyLetter, "MACD");
@@ -365,19 +359,19 @@ namespace Core.ProfitTrailer
           result = String.Concat(strategyLetter, "FIXED");
           break;
         case "lowatrband":
-          result = String.Concat(strategyLetter, "LATR");
+          result = String.Concat(strategyLetter, "L-ATR");
           break;
         case "highatrband":
-          result = String.Concat(strategyLetter, "HATR");
+          result = String.Concat(strategyLetter, "H-ATR");
           break;
         case "atrpercentage":
-          result = String.Concat(strategyLetter, "ATRPCT");
+          result = String.Concat(strategyLetter, "ATR-PCT");
           break;
         case "vwappercentage":
           result = String.Concat(strategyLetter, "VWAP");
           break;
         case "mvwappercentage":
-          result = String.Concat(strategyLetter, "MVWAP");
+          result = String.Concat(strategyLetter, "M-VWAP");
           break;
         case "btcdominance":
           result = String.Concat(strategyLetter, "BTCDOM");
@@ -430,10 +424,21 @@ namespace Core.ProfitTrailer
         case "no dca buy logic":
           result = String.Concat(strategyLetter, "NODCA");
           break;
+        case "combimagain":
+          result = String.Concat(strategyLetter, "COMBI-G");
+          break;
+        case "combimaspread":
+          result = String.Concat(strategyLetter, "COMBI-S");
+          break;
+        case "combimacross":
+          result = String.Concat(strategyLetter, "COMBI-C");
+          break;
+        case "macdpercentage":
+          result = String.Concat(strategyLetter, "MACDPERC");
+          break;
         default:
           break;
       }
-
       if (onlyValidStrategies)
       {
         if (strategyName.IndexOf("SOM") > -1 || strategyName.IndexOf("MAX") > -1 || strategyName.IndexOf("MIN") > -1 || strategyName.IndexOf("PRICE") > -1 || strategyName.IndexOf("BLACK") > -1 || strategyName.IndexOf("INSUFFICIENT") > -1 || strategyName.IndexOf("COST") > -1)
@@ -441,7 +446,6 @@ namespace Core.ProfitTrailer
           result = "";
         }
       }
-
       return result;
     }
 
@@ -453,14 +457,11 @@ namespace Core.ProfitTrailer
     public static bool IsValidStrategy(string strategyName, bool checkForAnyInvalid)
     {
       bool result = false;
-
       // buy/sell strategies beginning with PT 2.3.3 contain the letter followed by a colon and space.
       if (strategyName.Contains(":"))
       {
         result = true;
       }
-
-      // Prior to PT 2.3.3
       if (!checkForAnyInvalid)
       {
         switch (strategyName.ToLower())
@@ -507,6 +508,10 @@ namespace Core.ProfitTrailer
           case "vwappercentage":
           case "mvwappercentage":
           case "btcdominance":
+          case "combimagain":
+          case "combimaspread":
+          case "combimacross":
+          case "macdpercentage":
             result = true;
             break;
           default:
@@ -529,14 +534,11 @@ namespace Core.ProfitTrailer
           result = true;
         }
       }
-
       return result;
     }
-
     public static int GetStrategyValueDecimals(string strategyName)
     {
       int result = 0;
-
       switch (strategyName.ToLower())
       {
         case "lowbb":
@@ -575,45 +577,76 @@ namespace Core.ProfitTrailer
         default:
           break;
       }
-
       return result;
     }
-
     public static string GetStrategyText(Summary summary, List<Strategy> strategies, string strategyText, bool isTrue, bool isTrailingBuyActive)
-    {     
+    {
       bool isValidStrategy = false;
+      Regex regx = new Regex(@"[ABCDEFGHIJKLMNOPQRSTUVWXYZ]", RegexOptions.Compiled);
 
       if (strategies.Count > 0)
       {
         foreach (Strategy strategy in strategies)
         {
           string textClass = (strategy.IsTrue) ? "label-success" : "label-danger";
-
           isValidStrategy = StrategyHelper.IsValidStrategy(strategy.Name);
-
-          if (!isValidStrategy )
+          if (!isValidStrategy)
           {
-            // Parse Formulas
-            if (strategy.Name.Contains("FORMULA") && !strategy.Name.Contains("STATS"))
+            
+            if (strategy.Name.Contains("TRIGGERED"))
+              // remove levels already triggered, to show only currently waiting trigger
             {
-              string expression = strategy.Name.Remove(0, 10);
-              expression = expression.Replace("<span class=\"tdgreen\">","true").Replace("<span class=\"red\">","false").Replace("</span>","").Replace("&&","and").Replace("||","or");
-              expression = Regex.Replace(expression, @"[ABCDEFGHIJKLMNOPQRSTUVWXYZ]", String.Empty);
-              var tokens = new Tokenizer(expression).Tokenize();
-              var parser = new Parser(tokens);
-              if (parser.Parse()) {
-                strategyText += "<span class=\"label label-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">(FORM)</span> ";
+              strategyText += "";
+            }
+            else if (strategy.Name.Contains("STATS"))
+            // avoid parsing advanced buy stats
+            {
+              strategy.Name = "";
+            }
+            else if (strategy.Name.Contains("FORMULA"))
+            // Parse Various PT Formulas
+            {
+              if (strategy.Name.Contains("LEVEL"))
+              // level X
+              {
+                string level = strategy.Name.Substring(5, 2);
+                string expression = strategy.Name.Remove(0, 17);
+                expression = expression.Replace("<span class=\"tdgreen\">", "true").Replace("<span class=\"red\">", "false").Replace("</span>", "").Replace("&&", "and").Replace("||", "or");
+                expression = regx.Replace(expression, String.Empty);
+                var tokens = new Tokenizer(expression).Tokenize();
+                var parser = new Parser(tokens);
+                if (parser.Parse())
+                {
+                  strategyText += "<span class=\"label label-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"LEVEL FORMULA\">L " + level + "</span> ";
+                }
+                else
+                {
+                  strategyText += "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"LEVEL FORMULA\">L " + level + "</span> ";
+                }
               }
               else
+              // standard formula
               {
-                strategyText += "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">(FORM)</span> ";  
+                string expression = strategy.Name.Remove(0, 10);
+                expression = expression.Replace("<span class=\"tdgreen\">", "true").Replace("<span class=\"red\">", "false").Replace("</span>", "").Replace("&&", "and").Replace("||", "or");
+                expression = regx.Replace(expression, String.Empty);
+                var tokens = new Tokenizer(expression).Tokenize();
+                var parser = new Parser(tokens);
+                if (parser.Parse())
+                {
+                  strategyText += "<span class=\"label label-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">FORM</span> ";
+                }
+                else
+                {
+                  strategyText += "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">FORM</span> ";
+                }
               }
-              
             }
             else
             {
               strategyText += "<span class=\"label label-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategy.Name + "\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, false) + "</span> ";
             }
+
           }
           else
           {
@@ -639,14 +672,11 @@ namespace Core.ProfitTrailer
         }
         else
         {
-          
           isValidStrategy = StrategyHelper.IsValidStrategy(strategyText);
-
           if (isValidStrategy)
           {
             strategyText = "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategyText + "\">" + StrategyHelper.GetStrategyShortcut(strategyText, true) + "</span>";
           }
-          
           else if (strategyText.Equals("") && isValidStrategy == false)
           {
             strategyText = "<span class=\"label label-muted\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"Not Applicable: Not using DCA!\"></span>";
@@ -657,10 +687,8 @@ namespace Core.ProfitTrailer
           }
         }
       }
-
       return strategyText;
     }
-
     public static string GetCurrentValueText(List<Strategy> strategies, string strategyText, double bbValue, double simpleValue, bool includeShortcut)
     {
       string result = "";
@@ -721,14 +749,12 @@ namespace Core.ProfitTrailer
           result = simpleValue.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
         }
       }
-
       return result;
     }
 
     public static string GetTriggerValueText(Summary summary, List<Strategy> strategies, string strategyText, double bbValue, double simpleValue, int buyLevel, bool includeShortcut)
     {
       string result = "";
-
       if (strategies.Count > 0)
       {
         foreach (Strategy strategy in strategies)
@@ -743,12 +769,10 @@ namespace Core.ProfitTrailer
             {
               decimalFormat += "0";
             }
-
             if (includeShortcut)
             {
               result += "<span class=\"text-muted\">" + StrategyHelper.GetStrategyShortcut(strategy.Name, true) + "</span> ";
             }
-
             if (StrategyHelper.GetStrategyShortcut(strategy.Name, true).IndexOf("and", StringComparison.InvariantCultureIgnoreCase) > -1)
             {
               result += strategy.TriggerValue.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
@@ -792,7 +816,6 @@ namespace Core.ProfitTrailer
           result = simpleValue.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
         }
       }
-
       return result;
     }
   }

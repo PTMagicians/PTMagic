@@ -13,7 +13,7 @@
     indent_size: 2
   };
   editor.setTheme("ace/theme/ptmagic");
-  editor.getSession().setMode("ace/mode/java");
+  editor.getSession().setMode("ace/mode/yaml");
   editor.getSession().setValue(txtArea.val());
   editor.getSession().on('change', function () {
     txtArea.val(editor.getSession().getValue());

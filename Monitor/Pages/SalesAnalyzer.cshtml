@@ -19,13 +19,13 @@
           <thead>
             <tr>
               @{
-                double currentBalance = Model.PTData.GetCurrentBalance();
-                string currentBalanceString = currentBalance.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
-                if (currentBalance > 100) {
-                  currentBalanceString = Math.Round(currentBalance, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
+                string totalCurrentValueString = Model.totalCurrentValue.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
+                if (Model.totalCurrentValue > 100) 
+                {
+                  totalCurrentValueString = Math.Round(Model.totalCurrentValue, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
                 }
               }
-              <th class="m-t-0 header-title text-left">Account Value: &nbsp; <text class="text-autocolor"> @currentBalanceString &nbsp; @Model.Summary.MainMarket </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is based on your sales history, entries on the Transactions page and any currently held positions."></i></small></th>
+              <th class="m-t-0 header-title text-left">Total Account Value: &nbsp; <text class="text-autocolor"> @totalCurrentValueString @Model.Summary.MainMarket </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is based on your sales history, entries on the Transactions page and any currently held positions."></i></small></th>
               <th class="text-right">Starting Value: &nbsp; <text class="text-autocolor"> @Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance &nbsp; @Model.Summary.MainMarket </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is the starting value found in your settings file"></i></small></th>
             </tr>
           </thead>
@@ -59,16 +59,21 @@
   <div class="row">
     <div class="col-md-6">
       <div class="card-box">
-
         <h4 class="m-t-0 header-title">Sales Analysis</h4>
-        
         @{
-          double totalProfit = Model.PTData.SellLog.Sum(s => s.Profit);
+          double totalProfit = 0;
+          if (Model.PTData.Properties.Shorting)
+          {
+            totalProfit = Model.PTData.SellLog.Sum(s => s.Profit * (-1));
+          }
+          else
+          {
+            totalProfit = Model.PTData.SellLog.Sum(s => s.Profit);
+          }
           double totalProfitFiat = Math.Round(totalProfit * Model.Summary.MainMarketPrice, 2);
           double percentGain = Math.Round(totalProfit / Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance * 100, 2);
           double avgDailyGain = Model.DailyGains.Values.Average(dg => dg);
           double avgMonthlyGain = Model.MonthlyGains.Values.Average(dg => dg);
-
           string percentGainText = percentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
           if (Model.PTData.TransactionData.Transactions.Count > 0) {
             percentGainText = "<i class=\"fa fa-info-circle text-muted\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"You have added at least one manual transaction, so the total gain percentage cannot be calculated.\"></i>";
@@ -123,9 +128,7 @@
           double estimatedBalance6Months = Math.Round(currentTotalBalance * Math.Pow((1 + (avgDailyGain / 100)), 180.0), 8);
           double estimatedBalance1Year = Math.Round(currentTotalBalance * Math.Pow((1 + (avgDailyGain / 100)), 365.0), 8);
         }
-
         <h4 class="m-t-0 header-title">Balance Prediction <small><i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The balance prediction is based on your daily average gain of @avgDailyGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))% and your current approximate balance of @currentTotalBalance.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))"></i></small></h4>
-
         <table class="table table-striped table-sm">
           <thead>
             <tr>
@@ -188,7 +191,6 @@
     <div class="col-md-6">
       <div class="card-box">
         <h4 class="m-t-0 header-title">Last @Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxDailySummaries days</h4>
-
         <table class="table table-sm">
           <thead>
             <tr>
@@ -202,7 +204,15 @@
           <tbody>
             @for (DateTime salesDate = Model.DateTimeNow.DateTime.Date; salesDate >= Model.DateTimeNow.DateTime.AddDays(-Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxDailySummaries) && salesDate >= Model.MinSellLogDate; salesDate = salesDate.AddDays(-1)) {
               List<Core.Main.DataObjects.PTMagicData.SellLogData> salesDateSales = Model.PTData.SellLog.FindAll(sl => sl.SoldDate.Date == salesDate);
-              double salesDateProfit = salesDateSales.Sum(sl => sl.Profit);
+              double salesDateProfit = 0;
+              if (Model.PTData.Properties.Shorting)
+              {
+                salesDateProfit = salesDateSales.Sum(sl => sl.Profit * (-1));
+              }
+              else
+              {
+                salesDateProfit = salesDateSales.Sum(sl => sl.Profit);
+              }
               double salesDateProfitFiat = Math.Round(salesDateProfit * Model.Summary.MainMarketPrice, 2);
               double salesDateStartBalance = Model.PTData.GetSnapshotBalance(salesDate);
               double salesDateGain = Math.Round(salesDateProfit / salesDateStartBalance * 100, 2);
@@ -241,11 +251,18 @@
             }
             @for (DateTime salesMonthDate = salesMonthStartDate.Date; salesMonthDate >= Model.DateTimeNow.DateTime.AddMonths(-Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxMonthlySummaries) && salesMonthDate >= minSellLogMonthDate; salesMonthDate = salesMonthDate.AddMonths(-1)) {
               List<Core.Main.DataObjects.PTMagicData.SellLogData> salesMonthSales = Model.PTData.SellLog.FindAll(sl => sl.SoldDate.Date.Month == salesMonthDate.Month && sl.SoldDate.Date.Year == salesMonthDate.Year);
-              double salesDateProfit = salesMonthSales.Sum(sl => sl.Profit);
+              double salesDateProfit = 0;
+              if (Model.PTData.Properties.Shorting)
+              {
+                salesDateProfit = salesMonthSales.Sum(sl => sl.Profit * (-1));
+              }
+              else 
+              {
+                salesDateProfit = salesMonthSales.Sum(sl => sl.Profit);
+              }
               double salesDateProfitFiat = Math.Round(salesDateProfit * Model.Summary.MainMarketPrice, 2);
               double salesDateStartBalance = Model.PTData.GetSnapshotBalance(salesMonthDate);
               double salesDateGain = Math.Round(salesDateProfit / salesDateStartBalance * 100, 2);
-
               double salesDateAVGDailyGain = 0;
               double monthDailyProfit = 0;
               int days = 0;
@@ -254,7 +271,15 @@
                 if (monthDay <= Model.DateTimeNow) {
                   days++;
                   List<Core.Main.DataObjects.PTMagicData.SellLogData> monthDaySales = Model.PTData.SellLog.FindAll(sl => sl.SoldDate.Date == monthDay.Date);
-                  double monthDayProfit = monthDaySales.Sum(sl => sl.Profit);
+                  double monthDayProfit = 0;
+                  if (Model.PTData.Properties.Shorting)
+                  {
+                    monthDayProfit = monthDaySales.Sum(sl => sl.Profit * (-1));
+                  }
+                  else
+                  {
+                    monthDayProfit = monthDaySales.Sum(sl => sl.Profit);
+                  }
                   double monthDayStartBalance = Model.PTData.GetSnapshotBalance(monthDay);
                   monthDailyProfit += Math.Round(monthDayProfit / monthDayStartBalance * 100, 2);
                 }
@@ -278,9 +303,7 @@
   <div class="row">
     <div class="col-sm-12">
       <div class="card-box">
-
         <h4 class="m-t-0 header-title"><b>Top @Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxTopMarkets Sales Market Analysis</b></h4>
-
         <table class="tablesaw table m-b-0" data-tablesaw-sortable data-tablesaw-sortable-switch>
           <thead>
             <tr>
@@ -296,6 +319,10 @@
           <tbody>
             @{
               var topMarkets = Model.PTData.SellLog.GroupBy(m => m.Market).Select(mg => mg.Sum(m => m.Profit));
+              if (Model.PTData.Properties.Shorting)
+              {
+                topMarkets = Model.PTData.SellLog.GroupBy(m => m.Market).Select(mg => mg.Sum(m => m.Profit) * (-1));
+              }
               int marketRank = 0;
             }
             @foreach (KeyValuePair<string, double> marketData in Model.TopMarkets) {
@@ -362,7 +389,6 @@
       lineChart.yAxis.axisLabel('Daily Sales').tickFormat(d3.format(','));
       d3.select('.trades-chart svg').attr('perserveAspectRatio', 'xMinYMid').datum(chartData).transition().duration(500).call(lineChart);
       nv.utils.windowResize(lineChart.update);
-
       return lineChart;
     });
 
@@ -377,7 +403,6 @@
       lineChart.yAxis.axisLabel('Daily Profit').tickFormat(d3.format(',.2f'));
       d3.select('.profit-chart svg').attr('perserveAspectRatio', 'xMinYMid').datum(chartData).transition().duration(500).call(lineChart);
       nv.utils.windowResize(lineChart.update);
-
       return lineChart;
     });
 
@@ -392,7 +417,6 @@
       lineChart.yAxis.axisLabel('Profit').tickFormat(d3.format(',.2f'));
       d3.select('.balance-chart svg').attr('perserveAspectRatio', 'xMinYMid').datum(chartData).transition().duration(500).call(lineChart);
       nv.utils.windowResize(lineChart.update);
-
       return lineChart;
     });
 
