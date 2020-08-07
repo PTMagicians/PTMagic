@@ -219,7 +219,6 @@ namespace Core.ProfitTrailer
       string strategyNameOnly = strategyName;
 
       // PT allows for "advanced_stats" to be turned on in the application settings, to show details of the trailing logic.
-      // This code ensures PTM doesn't generate an unnecessary shortcut for this information
       if (result.Contains("STATS"))
       {
         result = "";
@@ -592,7 +591,6 @@ namespace Core.ProfitTrailer
           isValidStrategy = StrategyHelper.IsValidStrategy(strategy.Name);
           if (!isValidStrategy)
           {
-            
             if (strategy.Name.Contains("TRIGGERED"))
               // remove levels already triggered, to show only currently waiting trigger
             {
@@ -609,37 +607,13 @@ namespace Core.ProfitTrailer
               if (strategy.Name.Contains("LEVEL"))
               // level X
               {
-                string level = strategy.Name.Substring(5, 2);
-                string expression = strategy.Name.Remove(0, 17);
-                expression = expression.Replace("<span class=\"tdgreen\">", "true").Replace("<span class=\"red\">", "false").Replace("</span>", "").Replace("&&", "and").Replace("||", "or");
-                expression = regx.Replace(expression, String.Empty);
-                var tokens = new Tokenizer(expression).Tokenize();
-                var parser = new Parser(tokens);
-                if (parser.Parse())
-                {
-                  strategyText += "<span class=\"label label-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"LEVEL FORMULA\">L " + level + "</span> ";
-                }
-                else
-                {
-                  strategyText += "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"LEVEL FORMULA\">L " + level + "</span> ";
-                }
+                string level = strategy.Name.Substring(5, 1);
+                strategyText += "<span class=\"label label-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"LEVEL FORMULA\">L " + level + "</span> ";
               }
               else
               // standard formula
               {
-                string expression = strategy.Name.Remove(0, 10);
-                expression = expression.Replace("<span class=\"tdgreen\">", "true").Replace("<span class=\"red\">", "false").Replace("</span>", "").Replace("&&", "and").Replace("||", "or");
-                expression = regx.Replace(expression, String.Empty);
-                var tokens = new Tokenizer(expression).Tokenize();
-                var parser = new Parser(tokens);
-                if (parser.Parse())
-                {
-                  strategyText += "<span class=\"label label-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">FORM</span> ";
-                }
-                else
-                {
-                  strategyText += "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">FORM</span> ";
-                }
+                strategyText += "<span class=\"label label-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">FORM</span> ";
               }
             }
             else
@@ -663,7 +637,7 @@ namespace Core.ProfitTrailer
       {
         if (isTrue)
         {
-          strategyText = "<span class=\"label label-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategyText + "\">" + StrategyHelper.GetStrategyShortcut(strategyText, true) + "</span>";
+          strategyText = "<span class=\"label label-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategyText + "\">" + StrategyHelper.GetStrategyShortcut(strategyText, true) + "</span> ";
 
           if (isTrailingBuyActive)
           {
@@ -675,7 +649,7 @@ namespace Core.ProfitTrailer
           isValidStrategy = StrategyHelper.IsValidStrategy(strategyText);
           if (isValidStrategy)
           {
-            strategyText = "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategyText + "\">" + StrategyHelper.GetStrategyShortcut(strategyText, true) + "</span>";
+            strategyText = "<span class=\"label label-danger\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategyText + "\">" + StrategyHelper.GetStrategyShortcut(strategyText, true) + "</span> ";
           }
           else if (strategyText.Equals("") && isValidStrategy == false)
           {
