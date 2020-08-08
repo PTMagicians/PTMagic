@@ -19,15 +19,20 @@ namespace Core.ProfitTrailer
       string strategyLetter = "";
       string strategyNameOnly = strategyName;
 
-      // PT allows for "advanced_stats" to be turned on in the application settings, to show details of the trailing logic.
+      // PT allows for "advanced_stats" to show details of the trailing logic.
       if (result.Contains("STATS"))
       {
         result = "";
       }
-      // strategy labels that are variable value
-      if (result.Contains("REBUY"))
+      // strategy labels with variable values
+      if (result.Contains("BUY TIMEOUT AS"))
       {
-        time = strategyName.Remove(0, 14);
+        time = strategyName.Remove(0, 15);
+        result = "REBUY " + time;
+      }
+      if (result.Contains("BUY TIMEOUT"))
+      {
+        time = strategyName.Remove(0, 12);
         result = "REBUY " + time;
       }
       if (result.Contains("CHANGE PERC"))
@@ -46,7 +51,6 @@ namespace Core.ProfitTrailer
         leverage = leverage.Remove(leverage.Length - 1, 1);
         result = "ISOL " + leverage + "X";
       }
-      // buy/sell strategies beginning with PT 2.3.3 contain the strategy designation letter followed by a colon and space.
       // remove the letter and colon, change to shortcut, then reapply the letter and colon
       if (strategyName.Contains(":"))
       {
