@@ -42,7 +42,8 @@ namespace Monitor.Pages
       SaveGlobalSettings(formKeys);
       SaveSingleMarketSettings(formKeys);
 
-      PTMagicConfiguration.WriteAnalyzerSettings(PTMagicBasePath);
+      PTMagicConfiguration.WriteAnalyzerSettings();
+      PTMagicConfiguration.RefreshSettings();
 
       NotifyHeadline = "Settings saved!";
       NotifyMessage = "Settings saved successfully to settings.analyzer.json.";
