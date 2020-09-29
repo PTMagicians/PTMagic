@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -18,6 +19,20 @@ namespace Monitor.Pages
       base.Init();
 
       BindData();
+    }
+
+    public List<string> smsList = new List<string>();
+
+    public void CreateSmsList ()
+    {
+      
+      foreach (Core.Main.DataObjects.PTMagicData.SingleMarketSettingSummary smsSummary in SingleMarketSettingSummaries) 
+      {
+        if (!smsList.Contains(smsSummary.SingleMarketSetting.SettingName))
+        {
+          smsList.Add(smsSummary.SingleMarketSetting.SettingName);
+        }
+      }
     }
 
     private void BindData()
