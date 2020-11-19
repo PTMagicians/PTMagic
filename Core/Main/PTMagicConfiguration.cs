@@ -15,15 +15,23 @@ namespace Core.Main
     private GeneralSettings _generalSettings = null;
     private AnalyzerSettings _analyzerSettings = null;
     private SecureSettings _secureSettings = null;
+    private string _basePath;
 
     public PTMagicConfiguration()
     {
-      LoadSettings(Directory.GetCurrentDirectory());
+      _basePath = Directory.GetCurrentDirectory();
+      LoadSettings(_basePath);
     }
 
     public PTMagicConfiguration(string basePath)
     {
-      LoadSettings(basePath);
+      _basePath = basePath;
+      LoadSettings(_basePath);
+    }
+
+    public void RefreshSettings()
+    {
+      LoadSettings(_basePath);
     }
 
     private void LoadSettings(string basePath)
@@ -100,17 +108,17 @@ namespace Core.Main
       }
     }
 
-    public void WriteGeneralSettings(string basePath)
+    public void WriteGeneralSettings()
     {
       GeneralSettingsWrapper gsWrapper = new GeneralSettingsWrapper();
       gsWrapper.GeneralSettings = this.GeneralSettings;
 
-      FileHelper.CreateBackup(basePath + "settings.general.json", basePath, "settings.general.json.backup");
+      FileHelper.CreateBackup(_basePath + "settings.general.json", _basePath, "settings.general.json.backup");
 
-      FileHelper.WriteTextToFile(basePath, "settings.general.json", JsonConvert.SerializeObject(gsWrapper, Formatting.Indented));
+      FileHelper.WriteTextToFile(_basePath, "settings.general.json", JsonConvert.SerializeObject(gsWrapper, Formatting.Indented));
     }
 
-    public void WriteAnalyzerSettings(string basePath)
+    public void WriteAnalyzerSettings()
     {
       AnalyzerSettingsWrapper asWrapper = new AnalyzerSettingsWrapper();
       asWrapper.AnalyzerSettings = this.AnalyzerSettings;
@@ -119,12 +127,12 @@ namespace Core.Main
       settings.NullValueHandling = NullValueHandling.Ignore;
       settings.DefaultValueHandling = DefaultValueHandling.Ignore;
 
-      FileHelper.CreateBackup(basePath + "settings.analyzer.json", basePath, "settings.analyzer.json.backup");
+      FileHelper.CreateBackup(_basePath + "settings.analyzer.json", _basePath, "settings.analyzer.json.backup");
 
-      FileHelper.WriteTextToFile(basePath, "settings.analyzer.json", JsonConvert.SerializeObject(asWrapper, Formatting.Indented, settings));
+      FileHelper.WriteTextToFile(_basePath, "settings.analyzer.json", JsonConvert.SerializeObject(asWrapper, Formatting.Indented, settings));
     }
 
-    public void WriteSecureSettings(string password, string basePath)
+    public void WriteSecureSettings(string password)
     {
       string passwordEncrypted = EncryptionHelper.Encrypt(password);
 
@@ -133,7 +141,7 @@ namespace Core.Main
       SecureSettingsWrapper ssWrapper = new SecureSettingsWrapper();
       ssWrapper.SecureSettings = this.SecureSettings;
 
-      FileHelper.WriteTextToFile(basePath, "settings.secure.json", JsonConvert.SerializeObject(ssWrapper, Formatting.Indented));
+      FileHelper.WriteTextToFile(_basePath, "settings.secure.json", JsonConvert.SerializeObject(ssWrapper, Formatting.Indented));
     }
   }
 }

@@ -26,7 +26,7 @@ namespace Monitor.Pages
       if (ModelState.IsValid)
       {
         base.PreInit();
-        PTMagicConfiguration.WriteSecureSettings(password, PTMagicBasePath);
+        PTMagicConfiguration.WriteSecureSettings(password);
 
         Response.Redirect(PTMagicConfiguration.GeneralSettings.Monitor.RootUrl + "Login");
       }

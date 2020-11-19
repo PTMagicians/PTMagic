@@ -138,7 +138,7 @@ namespace Core.MarketAnalyzer
         string baseUrl = "https://api.github.com/repos/PTMagicians/PTMagic/releases/latest";
 
         Newtonsoft.Json.Linq.JObject jsonObject = GetSimpleJsonObjectFromURL(baseUrl, log, new (string header, string value)[] { ("User-Agent", "PTMagic.Import") });
-        
+
         if (jsonObject != null)
         {
           result = jsonObject.GetValue("tag_name").ToString();
@@ -335,9 +335,9 @@ namespace Core.MarketAnalyzer
             }
           }
 
-          Market recentMarket = recentMarkets[recentMarketPair.Key];
-
-          if (trendMarkets.ContainsKey(recentMarketPair.Key))
+          Market recentMarket;
+          
+          if (recentMarkets.TryGetValue(recentMarketPair.Key, out recentMarket))
           {
             List<string> ignoredMarkets = SystemHelper.ConvertTokenStringToList(marketTrend.IgnoredMarkets, ",");
             if (ignoredMarkets.Contains(recentMarketPair.Value.Symbol))
@@ -352,40 +352,52 @@ namespace Core.MarketAnalyzer
               log.DoLogDebug(platform + " - Market trend '" + marketTrend.Name + "' for '" + recentMarketPair.Key + "' is not allowed in this trend.");
               continue;
             }
+          }
+          else
+          {
+            // No recent market data
+            log.DoLogDebug(platform + " - Market trend '" + marketTrend.Name + "' for '" + recentMarketPair.Key + "' has no recent market trend data.");
+            continue;
+          }
 
-            Market trendMarket = trendMarkets[recentMarketPair.Key];
+          Market trendMarket;
 
-            if (trendMarket != null)
+          if (trendMarkets.TryGetValue(recentMarketPair.Key, out trendMarket))
+          {
+            double recentMarketPrice = recentMarket.Price;
+            double trendMarketPrice = trendMarket.Price;
+
+            if (!platform.Equals("CoinMarketCap", StringComparison.InvariantCulture) && marketTrend.TrendCurrency.Equals("Fiat", StringComparison.InvariantCultureIgnoreCase))
             {
-              double recentMarketPrice = recentMarket.Price;
-              double trendMarketPrice = trendMarket.Price;
-
-              if (!platform.Equals("CoinMarketCap", StringComparison.InvariantCulture) && marketTrend.TrendCurrency.Equals("Fiat", StringComparison.InvariantCultureIgnoreCase))
+              if (recentMarket.MainCurrencyPriceUSD > 0 && trendMarket.MainCurrencyPriceUSD > 0)
               {
-                if (recentMarket.MainCurrencyPriceUSD > 0 && trendMarket.MainCurrencyPriceUSD > 0)
-                {
-                  recentMarketPrice = recentMarketPrice * recentMarket.MainCurrencyPriceUSD;
-                  trendMarketPrice = trendMarketPrice * trendMarket.MainCurrencyPriceUSD;
-                }
+                recentMarketPrice = recentMarketPrice * recentMarket.MainCurrencyPriceUSD;
+                trendMarketPrice = trendMarketPrice * trendMarket.MainCurrencyPriceUSD;
               }
-
-              double trendMarketChange = (recentMarketPrice - trendMarketPrice) / trendMarketPrice * 100;
-
-              MarketTrendChange mtc = new MarketTrendChange();
-              mtc.MarketTrendName = marketTrend.Name;
-              mtc.TrendMinutes = marketTrend.TrendMinutes;
-              mtc.TrendChange = trendMarketChange;
-              mtc.Market = recentMarket.Name;
-              mtc.LastPrice = recentMarket.Price;
-              mtc.Volume24h = recentMarket.Volume24h;
-              mtc.TrendDateTime = DateTime.UtcNow;
-
-              result.Add(mtc);
-
-              log.DoLogDebug(platform + " - Market trend '" + marketTrend.Name + "' for '" + recentMarketPair.Key + "' (Vol. " + recentMarket.Volume24h.ToString("#,#0.00") + ") is " + trendMarketChange.ToString("#,#0.00") + "% in " + SystemHelper.GetProperDurationTime(marketTrend.TrendMinutes * 60).ToLower() + ".");
-
-              marketCount++;
             }
+
+            double trendMarketChange = (recentMarketPrice - trendMarketPrice) / trendMarketPrice * 100;
+
+            MarketTrendChange mtc = new MarketTrendChange();
+            mtc.MarketTrendName = marketTrend.Name;
+            mtc.TrendMinutes = marketTrend.TrendMinutes;
+            mtc.TrendChange = trendMarketChange;
+            mtc.Market = recentMarket.Name;
+            mtc.LastPrice = recentMarket.Price;
+            mtc.Volume24h = recentMarket.Volume24h;
+            mtc.TrendDateTime = DateTime.UtcNow;
+
+            result.Add(mtc);
+
+            log.DoLogDebug(platform + " - Market trend '" + marketTrend.Name + "' for '" + recentMarketPair.Key + "' (Vol. " + recentMarket.Volume24h.ToString("#,#0.00") + ") is " + trendMarketChange.ToString("#,#0.00") + "% in " + SystemHelper.GetProperDurationTime(marketTrend.TrendMinutes * 60).ToLower() + ".");
+
+            marketCount++;
+          }
+          else
+          {
+            // No data market trend data
+            log.DoLogDebug(platform + " - Market trend '" + marketTrend.Name + "' for '" + recentMarketPair.Key + "' has no market trend data.");
+            continue;
           }
         }
       }

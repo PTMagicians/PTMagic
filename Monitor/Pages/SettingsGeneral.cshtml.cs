@@ -65,6 +65,7 @@ namespace Monitor.Pages
     {
       base.Init();
 
+      // Read the new settings
       PTMagicConfiguration.GeneralSettings.Application.IsEnabled = HttpContext.Request.Form["Application_IsEnabled"].Equals("on");
       PTMagicConfiguration.GeneralSettings.Application.TestMode = HttpContext.Request.Form["Application_TestMode"].Equals("on");
       PTMagicConfiguration.GeneralSettings.Application.StartBalance = SystemHelper.TextToDouble(HttpContext.Request.Form["Application_StartBalance"], PTMagicConfiguration.GeneralSettings.Application.StartBalance, "en-US");
@@ -79,7 +80,7 @@ namespace Monitor.Pages
       PTMagicConfiguration.GeneralSettings.Application.InstanceName = HttpContext.Request.Form["Application_InstanceName"];
       PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey = HttpContext.Request.Form["Application_CoinMarketCapAPIKey"];
       PTMagicConfiguration.GeneralSettings.Application.FreeCurrencyConverterAPIKey = HttpContext.Request.Form["Application_FreeCurrencyConverterAPIKey"];
-      // 
+      
       PTMagicConfiguration.GeneralSettings.Monitor.IsPasswordProtected = HttpContext.Request.Form["Monitor_IsPasswordProtected"].Equals("on");
       PTMagicConfiguration.GeneralSettings.Monitor.OpenBrowserOnStart = HttpContext.Request.Form["Monitor_OpenBrowserOnStart"].Equals("on");
       PTMagicConfiguration.GeneralSettings.Monitor.DefaultDCAMode = HttpContext.Request.Form["Monitor_AnalyzerChart"];
@@ -105,8 +106,11 @@ namespace Monitor.Pages
       PTMagicConfiguration.GeneralSettings.Telegram.ChatId = SystemHelper.TextToInteger64(HttpContext.Request.Form["Telegram_ChatId"], PTMagicConfiguration.GeneralSettings.Telegram.ChatId);
       PTMagicConfiguration.GeneralSettings.Telegram.SilentMode = HttpContext.Request.Form["Telegram_SilentMode"].Equals("on");
 
-      PTMagicConfiguration.WriteGeneralSettings(PTMagicBasePath);
+      // Save and reload the settings
+      PTMagicConfiguration.WriteGeneralSettings();
+      PTMagicConfiguration.RefreshSettings();
 
+      // Notify
       NotifyHeadline = "Settings saved!";
       NotifyMessage = "Settings saved successfully to settings.general.json.";
       NotifyType = "success";
