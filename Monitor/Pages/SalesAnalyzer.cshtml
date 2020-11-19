@@ -122,7 +122,7 @@
     <div class="col-md-6">
       <div class="card-box">
         @{
-          double currentTotalBalance = Model.PTData.GetCurrentBalance();
+          double currentTotalBalance = Model.totalCurrentValue;
           double estimatedBalance1Month = Math.Round(currentTotalBalance * Math.Pow((1 + (avgDailyGain / 100)), 30.0), 8);
           double estimatedBalance3Months = Math.Round(currentTotalBalance * Math.Pow((1 + (avgDailyGain / 100)), 90.0), 8);
           double estimatedBalance6Months = Math.Round(currentTotalBalance * Math.Pow((1 + (avgDailyGain / 100)), 180.0), 8);
