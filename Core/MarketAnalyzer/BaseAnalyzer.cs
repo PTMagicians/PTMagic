@@ -335,25 +335,34 @@ namespace Core.MarketAnalyzer
             }
           }
 
-          Market recentMarket = recentMarkets[recentMarketPair.Key];
-
-          List<string> ignoredMarkets = SystemHelper.ConvertTokenStringToList(marketTrend.IgnoredMarkets, ",");
-          if (ignoredMarkets.Contains(recentMarketPair.Value.Symbol))
+          Market recentMarket;
+          
+          if (recentMarkets.TryGetValue(recentMarketPair.Key, out recentMarket))
           {
-            log.DoLogDebug(platform + " - Market trend '" + marketTrend.Name + "' for '" + recentMarketPair.Key + "' is ignored in this trend.");
+            List<string> ignoredMarkets = SystemHelper.ConvertTokenStringToList(marketTrend.IgnoredMarkets, ",");
+            if (ignoredMarkets.Contains(recentMarketPair.Value.Symbol))
+            {
+              log.DoLogDebug(platform + " - Market trend '" + marketTrend.Name + "' for '" + recentMarketPair.Key + "' is ignored in this trend.");
+              continue;
+            }
+
+            List<string> allowedMarkets = SystemHelper.ConvertTokenStringToList(marketTrend.AllowedMarkets, ",");
+            if (allowedMarkets.Count > 0 && !allowedMarkets.Contains(recentMarketPair.Value.Symbol))
+            {
+              log.DoLogDebug(platform + " - Market trend '" + marketTrend.Name + "' for '" + recentMarketPair.Key + "' is not allowed in this trend.");
+              continue;
+            }
+          }
+          else
+          {
+            // No recent market data
+            log.DoLogDebug(platform + " - Market trend '" + marketTrend.Name + "' for '" + recentMarketPair.Key + "' has no recent market trend data.");
             continue;
           }
 
-          List<string> allowedMarkets = SystemHelper.ConvertTokenStringToList(marketTrend.AllowedMarkets, ",");
-          if (allowedMarkets.Count > 0 && !allowedMarkets.Contains(recentMarketPair.Value.Symbol))
-          {
-            log.DoLogDebug(platform + " - Market trend '" + marketTrend.Name + "' for '" + recentMarketPair.Key + "' is not allowed in this trend.");
-            continue;
-          }
+          Market trendMarket;
 
-          Market trendMarket = trendMarkets[recentMarketPair.Key];
-
-          if (trendMarket != null)
+          if (trendMarkets.TryGetValue(recentMarketPair.Key, out trendMarket))
           {
             double recentMarketPrice = recentMarket.Price;
             double trendMarketPrice = trendMarket.Price;
@@ -383,6 +392,12 @@ namespace Core.MarketAnalyzer
             log.DoLogDebug(platform + " - Market trend '" + marketTrend.Name + "' for '" + recentMarketPair.Key + "' (Vol. " + recentMarket.Volume24h.ToString("#,#0.00") + ") is " + trendMarketChange.ToString("#,#0.00") + "% in " + SystemHelper.GetProperDurationTime(marketTrend.TrendMinutes * 60).ToLower() + ".");
 
             marketCount++;
+          }
+          else
+          {
+            // No data market trend data
+            log.DoLogDebug(platform + " - Market trend '" + marketTrend.Name + "' for '" + recentMarketPair.Key + "' has no market trend data.");
+            continue;
           }
         }
       }
