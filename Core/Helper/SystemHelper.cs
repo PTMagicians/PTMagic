@@ -601,7 +601,7 @@ namespace Core.Helper
           result = market + mainMarket;
           break;
         case "BinanceFutures":
-          result = market + "_" + mainMarket;
+          result = market + mainMarket;
           break;
         case "Poloniex":
           result = mainMarket + "_" + market;
