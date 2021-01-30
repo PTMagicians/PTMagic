@@ -429,7 +429,29 @@ namespace Core.MarketAnalyzer
             if (marketTrendChanges != null && marketTrendChanges.Count > 0)
             {
 
-              double averageTrendChange = marketTrendChanges.Average(mtc => mtc.TrendChange);
+
+            double totalTrendChange = 0;
+
+            foreach (MarketTrendChange marketTrendChange in marketTrendChanges) 
+              {
+                if (marketTrend.IgnoreOutlier != 0) 
+                {
+                  if ((marketTrendChange.TrendChange > marketTrend.IgnoreOutlier) || (marketTrendChange.TrendChange < (marketTrend.IgnoreOutlier * -1)))
+                  {
+                    log.DoLogWarn("Market trend '" + marketTrend.Name + "' is ignoring the outlier '" + marketTrendChange.Market + ".");
+                  }
+                  else
+                  {
+                    totalTrendChange += marketTrendChange.TrendChange;
+                  }
+                }
+                else
+                {
+                    totalTrendChange += marketTrendChange.TrendChange;
+                }
+              }
+
+              double averageTrendChange = totalTrendChange / marketTrendChanges.Count;
 
               result.Add(marketTrend.Name, averageTrendChange);
 
