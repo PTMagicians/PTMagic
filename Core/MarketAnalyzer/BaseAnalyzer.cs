@@ -439,7 +439,7 @@ namespace Core.MarketAnalyzer
                 {
                   if ((marketTrendChange.TrendChange > marketTrend.IgnoreOutlier) || (marketTrendChange.TrendChange < (marketTrend.IgnoreOutlier * -1)))
                   {
-                    log.DoLogWarn("Market trend '" + marketTrend.Name + "' is ignoring " + marketTrendChange.Market + " for exceeding TrendThreshold.");
+                    log.DoLogInfo("Market trend '" + marketTrend.Name + "' is ignoring " + marketTrendChange.Market + " for exceeding TrendThreshold.");
                     trendChangeCount += -1;
                   }
                   else
