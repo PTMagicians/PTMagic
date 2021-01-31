@@ -431,6 +431,7 @@ namespace Core.MarketAnalyzer
 
 
             double totalTrendChange = 0;
+            int trendChangeCount = marketTrendChanges.Count;
 
             foreach (MarketTrendChange marketTrendChange in marketTrendChanges) 
               {
@@ -438,7 +439,8 @@ namespace Core.MarketAnalyzer
                 {
                   if ((marketTrendChange.TrendChange > marketTrend.IgnoreOutlier) || (marketTrendChange.TrendChange < (marketTrend.IgnoreOutlier * -1)))
                   {
-                    log.DoLogWarn("Market trend '" + marketTrend.Name + "' is ignoring the outlier '" + marketTrendChange.Market + ".");
+                    log.DoLogWarn("Market trend '" + marketTrend.Name + "' is ignoring " + marketTrendChange.Market + " for exceeding TrendThreshold.");
+                    trendChangeCount += -1;
                   }
                   else
                   {
@@ -451,7 +453,7 @@ namespace Core.MarketAnalyzer
                 }
               }
 
-              double averageTrendChange = totalTrendChange / marketTrendChanges.Count;
+              double averageTrendChange = totalTrendChange / trendChangeCount;
 
               result.Add(marketTrend.Name, averageTrendChange);
 
