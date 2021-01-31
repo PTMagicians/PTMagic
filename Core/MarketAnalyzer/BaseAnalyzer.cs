@@ -394,9 +394,9 @@ namespace Core.MarketAnalyzer
             int trendChangeCount = marketTrendChanges.Count;
             foreach (MarketTrendChange marketTrendChange in marketTrendChanges) 
               {
-                if (marketTrend.IgnoreOutlier != 0) 
+                if (marketTrend.TrendThreshold != 0) 
                 {
-                  if ((marketTrendChange.TrendChange > marketTrend.IgnoreOutlier) || (marketTrendChange.TrendChange < (marketTrend.IgnoreOutlier * -1)))
+                  if ((marketTrendChange.TrendChange > marketTrend.TrendThreshold) || (marketTrendChange.TrendChange < (marketTrend.TrendThreshold * -1)))
                   {
                     log.DoLogInfo("Market trend '" + marketTrend.Name + "' is ignoring " + marketTrendChange.Market + " for exceeding TrendThreshold.");
                     trendChangeCount += -1;
