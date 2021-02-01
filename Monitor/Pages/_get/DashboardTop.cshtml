@@ -227,9 +227,13 @@
                     }
                     else
                     {
-                      double leverageTargetGain = leverageValue * dcaLogEntry.TargetGainValue.Value;
-                      <td class="@Html.Raw((dcaLogEntry.TargetGainValue.HasValue && (dcaLogEntry.ProfitPercent > dcaLogEntry.TargetGainValue.Value)) ? "text-success" : "text-danger")">@Html.Raw(dcaLogEntry.TargetGainValue.HasValue ? leverageTargetGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%" : "&nbsp")</td>
+                      double TargetGain = leverageValue * dcaLogEntry.TargetGainValue.Value;
+                      <td class="@Html.Raw((dcaLogEntry.TargetGainValue.HasValue && (dcaLogEntry.ProfitPercent > dcaLogEntry.TargetGainValue.Value)) ? "text-success" : "text-danger")">@Html.Raw(dcaLogEntry.TargetGainValue.HasValue ? TargetGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%" : "&nbsp")</td>
                     }
+                  }
+                  else
+                  {
+                    <td class="text-left"></td>
                   }
 
 
