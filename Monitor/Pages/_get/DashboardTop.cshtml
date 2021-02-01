@@ -206,28 +206,34 @@
                   <td>@Html.Raw(buyStrategyText)</td>
                   <td>@Html.Raw(sellStrategyText)</td>
 
-                  @if (sellStrategyText.Contains("CROSSED"))
-                  // if leverage, recalculate profit target
+                  @if (!sellStrategyText.Contains("WATCHMODE"))
                   {
-                    string leverageText = sellStrategyText.Remove(0, sellStrategyText.IndexOf("CROSSED")+9);
-                    leverage = leverageText.Remove(leverageText.IndexOf(".0)"), leverageText.Length - leverageText.IndexOf(".0)"));
-                    leverageValue = double.Parse(leverage);
+                    @if (sellStrategyText.Contains("CROSSED"))
+                    // if leverage, recalculate profit target
+                    {
+                      string leverageText = sellStrategyText.Remove(0, sellStrategyText.IndexOf("CROSSED")+9);
+                      leverage = leverageText.Remove(leverageText.IndexOf(".0)"), leverageText.Length - leverageText.IndexOf(".0)"));
+                      leverageValue = double.Parse(leverage);
+                    }
+                    @if (sellStrategyText.Contains("ISOLATED"))
+                    {
+                      string leverageText = sellStrategyText.Remove(0, sellStrategyText.IndexOf("ISOLATED")+10);
+                      leverage = leverageText.Remove(leverageText.IndexOf(".0)"), leverageText.Length - leverageText.IndexOf(".0)"));
+                      leverageValue = double.Parse(leverage);
+                    }
+                    @if (leverageValue == 1)
+                    {
+                      <td class="@Html.Raw((dcaLogEntry.TargetGainValue.HasValue && (dcaLogEntry.ProfitPercent > dcaLogEntry.TargetGainValue.Value)) ? "text-success" : "text-danger")">@Html.Raw(dcaLogEntry.TargetGainValue.HasValue ? dcaLogEntry.TargetGainValue.Value.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%" : "&nbsp")</td>
+                    }
+                    else
+                    {
+                      double leverageTargetGain = leverageValue * dcaLogEntry.TargetGainValue.Value;
+                      <td class="@Html.Raw((dcaLogEntry.TargetGainValue.HasValue && (dcaLogEntry.ProfitPercent > dcaLogEntry.TargetGainValue.Value)) ? "text-success" : "text-danger")">@Html.Raw(dcaLogEntry.TargetGainValue.HasValue ? leverageTargetGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%" : "&nbsp")</td>
+                    }
                   }
-                  @if (sellStrategyText.Contains("ISOLATED"))
-                  {
-                    string leverageText = sellStrategyText.Remove(0, sellStrategyText.IndexOf("ISOLATED")+10);
-                    leverage = leverageText.Remove(leverageText.IndexOf(".0)"), leverageText.Length - leverageText.IndexOf(".0)"));
-                    leverageValue = double.Parse(leverage);
-                  }
-                  @if (leverageValue == 1)
-                  {
-                    <td class="@Html.Raw((dcaLogEntry.TargetGainValue.HasValue && (dcaLogEntry.ProfitPercent > dcaLogEntry.TargetGainValue.Value)) ? "text-success" : "text-danger")">@Html.Raw(dcaLogEntry.TargetGainValue.HasValue ? dcaLogEntry.TargetGainValue.Value.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%" : "&nbsp")</td>
-                  }
-                  else
-                  {
-                    double leverageTargetGain = leverageValue * dcaLogEntry.TargetGainValue.Value;
-                    <td class="@Html.Raw((dcaLogEntry.TargetGainValue.HasValue && (dcaLogEntry.ProfitPercent > dcaLogEntry.TargetGainValue.Value)) ? "text-success" : "text-danger")">@Html.Raw(dcaLogEntry.TargetGainValue.HasValue ? leverageTargetGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%" : "&nbsp")</td>
-                  }
+
+
+
                   @if (!@lostValue)
                   {
                     <td class="text-autocolor">@dcaLogEntry.ProfitPercent.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
