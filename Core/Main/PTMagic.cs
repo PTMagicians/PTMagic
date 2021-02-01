@@ -1310,7 +1310,7 @@ namespace Core.Main
       // CoinMarketCap
       this.GlobalMarketTrendChanges = BaseAnalyzer.BuildMarketTrends("CoinMarketCap", this.LastRuntimeSummary.MainMarket, new List<string>(), "", true, this.GlobalMarketTrendChanges, this.PTMagicConfiguration, this.Log);
 
-      // Bittrex
+      // Exchange
       foreach (MarketTrend marketTrend in this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends.FindAll(mt => mt.Platform.Equals("Exchange", StringComparison.InvariantCultureIgnoreCase)))
       {
         if (this.SingleMarketTrendChanges.ContainsKey(marketTrend.Name))

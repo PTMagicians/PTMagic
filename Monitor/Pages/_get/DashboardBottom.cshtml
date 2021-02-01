@@ -10,7 +10,7 @@
 }
 
 <div class="row">
-  <div class="col-md-4 px-1">
+  <div class="col-md-5 px-1">
     <div class="card-box px-2" style="height:305px;">
       <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
       @if (!Model.TrendChartDataJSON.Equals("")) {
@@ -48,7 +48,7 @@
     </div>
   </div>
 
-  <div class="col-md-5 px-1">
+  <div class="col-md-4 px-1">
     <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
     <div class="card-box px-2" style="height:305px;">
       @if (!Model.ProfitChartDataJSON.Equals("")) {
@@ -74,6 +74,7 @@
             <th>Name</th>
             <th class="text-right">Markets</th>
             <th class="text-right">Timeframe</th>
+            <th class="text-right" data-toggle="tooltip" data-placement="top" title="Pairs exceeding this threshold are excluded from the trend average.">Threshold %</th>
             <th class="text-right">Change</th>
           </tr>
         </thead>
@@ -95,6 +96,14 @@
                 <td>@Core.Helper.SystemHelper.SplitCamelCase(marketTrend.Name)</td>
                 <td class="text-right">@marketCountString</td>
                 <td class="text-right">@Core.Helper.SystemHelper.GetProperDurationTime(marketTrend.TrendMinutes * 60, false)</td>
+                @if (marketTrend.TrendThreshold == 0)
+                {
+                  <td class="text-right">--</td>
+                }
+                else
+                {
+                  <td class="text-right">@marketTrend.TrendThreshold</td>
+                }
                 <td class="text-right text-autocolor">@trendChangeOutput%</td>
               </tr>
             }

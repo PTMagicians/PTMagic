@@ -146,6 +146,9 @@ namespace Core.Main.DataObjects.PTMagicData
     [DefaultValue("")]
     public string AllowedMarkets { get; set; } = "";
 
+    [DefaultValue(0)]
+    public int TrendThreshold { get; set; } = 0;
+
     [DefaultValue(true)]
     public bool ExcludeMainCurrency { get; set; } = true;
   }

@@ -19,8 +19,8 @@ namespace Core.ProfitTrailer
       string strategyLetter = "";
       string strategyNameOnly = strategyName;
 
-      // PT allows for "advanced_stats" to show details of the trailing logic.
-      if (result.Contains("STATS"))
+      // PT allows for "advanced_stats" to show details of the trailing logic and dynamic formulas.
+      if (result.Contains("STATS") || result.Contains("DYN"))
       {
         result = "";
       }
