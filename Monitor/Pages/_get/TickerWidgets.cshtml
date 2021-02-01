@@ -16,17 +16,17 @@
 
   string iconColor = "text-success";
   string ptMagicHealthIcon = "fa-heartbeat";
-  string ptMagicHealthTooltip = "PT Magic is alive and healthy!";
-  if (elapsedSecondsSinceRuntime > (intervalSeconds + intervalSeconds)) {
+  string ptMagicHealthTooltip = "PT Magic is alive and healthy! <br> Time elapsed since last run:"+ lastRuntime;
+  if (elapsedSecondsSinceRuntime > (intervalSeconds * 2)) {
     ptMagicHealthIcon = "fa-exclamation-triangle";
-    ptMagicHealthTooltip = "PT Magic seems to have problems, check the logs!";
+    ptMagicHealthTooltip = "PT Magic seems to have problems, check the logs!  Time elapsed since last run: "+ Math.Round(elapsedSecondsSinceRuntime / 60, 1) + " mins.";
     iconColor = "text-danger";
   }
 }
 
 <div class="card-box card-box-mini card-box-ptmagic-outlined">
    <span data-toggle="tooltip" data-placement="bottom" title="Active global setting">
-   @Core.Helper.SystemHelper.SplitCamelCase(Model.Summary.CurrentGlobalSetting.SettingName)</span><span class = "header-title"><a href="ManaSettingsAnalyzergeSMS">@Html.Raw(" " + globalSettingInfoIcon)</a></span>
+   @Core.Helper.SystemHelper.SplitCamelCase(Model.Summary.CurrentGlobalSetting.SettingName)</span><span class = "header-title"><a href="StatusSummary">@Html.Raw(" " + globalSettingInfoIcon)</a></span>
 </div>
 
 <div class="card-box card-box-mini card-box-ptmagic-outlined">

@@ -77,6 +77,7 @@ namespace Monitor.Pages
         mt.TrendCurrency = HttpContext.Request.Form[mtFormKey + "TrendCurrency"];
         mt.IgnoredMarkets = HttpContext.Request.Form[mtFormKey + "IgnoredMarkets"];
         mt.AllowedMarkets = HttpContext.Request.Form[mtFormKey + "AllowedMarkets"];
+        mt.TrendThreshold = SystemHelper.TextToInteger(HttpContext.Request.Form[mtFormKey + "TrendThreshold"], mt.TrendThreshold);
         mt.DisplayGraph = HttpContext.Request.Form[mtFormKey + "DisplayGraph"].Equals("on");
         mt.ExcludeMainCurrency = HttpContext.Request.Form[mtFormKey + "ExcludeMainCurrency"].Equals("on");
 

@@ -162,6 +162,7 @@ else
             <th>Name</th>
             <th class="text-right">Markets</th>
             <th class="text-right">Timeframe</th>
+            <th class="text-right">Threshold %</th>
             <th class="text-right">Change</th>
           </tr>
         </thead>
@@ -182,7 +183,14 @@ else
               <tr>
                 <td>@Core.Helper.SystemHelper.SplitCamelCase(marketTrend.Name)</td>
                 <td class="text-right">@marketCountString</td>
-                <td class="text-right">@Core.Helper.SystemHelper.GetProperDurationTime(marketTrend.TrendMinutes * 60, false)</td>
+                <td class="text-right">@Core.Helper.SystemHelper.GetProperDurationTime(marketTrend.TrendMinutes * 60, false)</td> @if (marketTrend.TrendThreshold == 0)
+                {
+                  <td class="text-right">--</td>
+                }
+                else
+                {
+                  <td class="text-right">@marketTrend.TrendThreshold</td>
+                }
                 <td class="text-right text-autocolor">@trendChangeOutput%</td>
               </tr>
             }
