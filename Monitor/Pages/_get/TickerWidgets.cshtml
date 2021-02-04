@@ -16,7 +16,7 @@
 
   string iconColor = "text-success";
   string ptMagicHealthIcon = "fa-heartbeat";
-  string ptMagicHealthTooltip = "PT Magic is alive and healthy! <br> Time elapsed since last run:"+ Math.Round(elapsedSecondsSinceRuntime / 60, 1) + " mins.";
+  string ptMagicHealthTooltip = "PT Magic is alive and healthy!  Time elapsed since last run:"+ Math.Round(elapsedSecondsSinceRuntime / 60, 1) + " mins.";
   if (elapsedSecondsSinceRuntime > (intervalSeconds * 2)) {
     ptMagicHealthIcon = "fa-exclamation-triangle";
     ptMagicHealthTooltip = "PT Magic seems to have problems, check the logs!  Time elapsed since last run: "+ Math.Round(elapsedSecondsSinceRuntime / 60, 1) + " mins.";
