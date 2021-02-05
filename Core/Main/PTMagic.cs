@@ -1635,7 +1635,35 @@ namespace Core.Main
                         List<MarketTrendChange> marketTrendChanges = this.SingleMarketTrendChanges[offTrigger.MarketTrendName];
                         if (marketTrendChanges.Count > 0)
                         {
-                          double averageMarketTrendChange = marketTrendChanges.Average(m => m.TrendChange);
+                          //double averageMarketTrendChange = marketTrendChanges.Average(m => m.TrendChange);
+
+
+
+                          
+                          double totalTrendChange = 0;
+                          int trendsCount = marketTrendChanges.Count;
+                          foreach (MarketTrendChange marketTrendChange in marketTrendChanges) 
+                            {
+                               
+                              if (....TrendThreshold != 0) 
+                              {
+                                if ((marketTrendChange.TrendChange > ....TrendThreshold) || (marketTrendChange.TrendChange < (...TrendThreshold * -1)))
+                                {
+                                  trendsCount += -1;
+                                }
+                                else
+                                {
+                                  totalTrendChange += marketTrendChange.TrendChange;
+                                }
+                              }
+                              else
+                              {
+                                  totalTrendChange += marketTrendChange.TrendChange;
+                              }
+                            }
+                          double averageMarketTrendChange = totalTrendChange / trendsCount;
+
+
 
                           MarketTrendChange mtc = marketTrendChanges.Find(m => m.Market.Equals(marketPair, StringComparison.InvariantCultureIgnoreCase));
                           if (mtc != null)
@@ -1648,6 +1676,9 @@ namespace Core.Main
 
                               // Build pair trend change relative to the global market trend
                               trendChange = trendChange - averageMarketTrendChange;
+
+
+
                             }
                             else if (offTrigger.MarketTrendRelation.Equals(Constants.MarketTrendRelationRelativeTrigger))
                             {
@@ -1819,7 +1850,33 @@ namespace Core.Main
                     List<MarketTrendChange> marketTrendChanges = this.SingleMarketTrendChanges[trigger.MarketTrendName];
                     if (marketTrendChanges.Count > 0)
                     {
-                      double averageMarketTrendChange = marketTrendChanges.Average(m => m.TrendChange);
+                      //double averageMarketTrendChange = marketTrendChanges.Average(m => m.TrendChange);
+
+                      
+                      
+                      double totalTrendChange = 0;
+                      int trendsCount = marketTrendChanges.Count;
+                      foreach (MarketTrendChange marketTrendChange in marketTrendChanges) 
+                        {
+                          if (...TrendThreshold != 0) 
+                          {
+                            if ((....TrendThreshold) || (marketTrendChange.TrendChange < (...TrendThreshold * -1)))
+                            {
+                              trendsCount += -1;
+                            }
+                            else
+                            {
+                              totalTrendChange += marketTrendChange.TrendChange;
+                            }
+                          }
+                          else
+                          {
+                              totalTrendChange += marketTrendChange.TrendChange;
+                          }
+                        }
+                      double averageMarketTrendChange = totalTrendChange / trendsCount;
+
+
 
                       MarketTrendChange mtc = marketTrendChanges.Find(m => m.Market.Equals(marketPair, StringComparison.InvariantCultureIgnoreCase));
                       if (mtc != null)
