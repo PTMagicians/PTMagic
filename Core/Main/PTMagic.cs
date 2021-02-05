@@ -1633,15 +1633,20 @@ namespace Core.Main
                       {
 
                         List<MarketTrendChange> marketTrendChanges = this.SingleMarketTrendChanges[offTrigger.MarketTrendName];
+                        List<MarketTrend> marketTrends = this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends;
                         if (marketTrendChanges.Count > 0)
                         {
                           //double averageMarketTrendChange = marketTrendChanges.Average(m => m.TrendChange);
 
-
-
-                          
                           double totalTrendChange = 0;
                           int trendsCount = marketTrendChanges.Count;
+                          foreach (MarketTrend marketTrend in marketTrends)
+                          {
+                              //EXAMPLE
+                              marketTrend.TrendThreshold = 0;
+                              //EXAMPLE END
+                          }
+
                           foreach (MarketTrendChange marketTrendChange in marketTrendChanges) 
                             {
                                
@@ -1848,14 +1853,21 @@ namespace Core.Main
                   {
 
                     List<MarketTrendChange> marketTrendChanges = this.SingleMarketTrendChanges[trigger.MarketTrendName];
+                    List<MarketTrend> marketTrends = this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends;
                     if (marketTrendChanges.Count > 0)
                     {
                       //double averageMarketTrendChange = marketTrendChanges.Average(m => m.TrendChange);
 
-                      
-                      
                       double totalTrendChange = 0;
                       int trendsCount = marketTrendChanges.Count;
+
+                      foreach (MarketTrend marketTrend in marketTrends)
+                      {
+                          //EXAMPLE
+                          marketTrend.TrendThreshold = 0;
+                          //EXAMPLE END
+                      }
+
                       foreach (MarketTrendChange marketTrendChange in marketTrendChanges) 
                         {
                           if (...TrendThreshold != 0) 
