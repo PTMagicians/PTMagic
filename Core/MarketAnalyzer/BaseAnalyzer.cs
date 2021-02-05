@@ -391,7 +391,7 @@ namespace Core.MarketAnalyzer
             if (marketTrendChanges != null && marketTrendChanges.Count > 0)
             {
             double totalTrendChange = 0;
-            int trendChangeCount = marketTrendChanges.Count;
+            int trendsCount = marketTrendChanges.Count;
             foreach (MarketTrendChange marketTrendChange in marketTrendChanges) 
               {
                 if (marketTrend.TrendThreshold != 0) 
@@ -399,7 +399,7 @@ namespace Core.MarketAnalyzer
                   if ((marketTrendChange.TrendChange > marketTrend.TrendThreshold) || (marketTrendChange.TrendChange < (marketTrend.TrendThreshold * -1)))
                   {
                     log.DoLogInfo("Market trend '" + marketTrend.Name + "' is ignoring " + marketTrendChange.Market + " for exceeding TrendThreshold.");
-                    trendChangeCount += -1;
+                    trendsCount += -1;
                   }
                   else
                   {
@@ -411,7 +411,7 @@ namespace Core.MarketAnalyzer
                     totalTrendChange += marketTrendChange.TrendChange;
                 }
               }
-              double averageTrendChange = totalTrendChange / trendChangeCount;
+              double averageTrendChange = totalTrendChange / trendsCount;
               result.Add(marketTrend.Name, averageTrendChange);
               log.DoLogInfo("Built average market trend change '" + marketTrend.Name + "' (" + averageTrendChange.ToString("#,#0.00") + "% in " + marketTrend.TrendMinutes.ToString() + " minutes) for " + marketTrendChanges.Count.ToString() + " markets.");
             }
