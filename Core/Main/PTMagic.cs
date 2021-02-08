@@ -532,7 +532,7 @@ namespace Core.Main
     public bool StartProcess()
     {
       bool result = true;
-      
+
       this.Log.DoLogInfo("");
       this.Log.DoLogInfo("  ██████╗ ████████╗    ███╗   ███╗ █████╗  ██████╗ ██╗ ██████╗");
       this.Log.DoLogInfo("  ██╔══██╗╚══██╔══╝    ████╗ ████║██╔══██╗██╔════╝ ██║██╔════╝");
@@ -1626,14 +1626,45 @@ namespace Core.Main
                     }
                     else
                     {
-                      // Check for market trend triggers
+                      // Check for market trend Off triggers
                       if (this.SingleMarketTrendChanges.ContainsKey(offTrigger.MarketTrendName))
                       {
                         List<MarketTrendChange> marketTrendChanges = this.SingleMarketTrendChanges[offTrigger.MarketTrendName];
                         List<MarketTrend> marketTrends = this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends;
+
                         if (marketTrendChanges.Count > 0)
                         {
-                          double averageMarketTrendChange = marketTrendChanges.Average(m => m.TrendChange);
+                          double averageMarketTrendChange = 0;
+                          var trendThreshold = (from mt in this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends
+                                                where mt.Name == offTrigger.MarketTrendName
+                                                select new { mt.TrendThreshold }).Single();
+
+                          // Calculate average market change, skip any that are outside the threshold if enabled
+                          if (trendThreshold.TrendThreshold != 0)
+                          {
+                            // Exclude trends outside the threshhold.
+                            var excludedMarkets = from m in marketTrendChanges
+                                                  where m.TrendChange > trendThreshold.TrendThreshold || m.TrendChange < (trendThreshold.TrendThreshold * -1.0)
+                                                  orderby m.Market
+                                                  select m;
+
+                            foreach (var marketTrend in excludedMarkets)
+                            {
+                              this.Log.DoLogInfo(String.Format("SMS Off Trigger for '{0}' is ignoring {1} for exceeding TrendThreshold {2}% with {3} on {4}", marketSetting.SettingName, marketTrend.Market, (double)trendThreshold.TrendThreshold, Math.Round(marketTrend.TrendChange, 3, MidpointRounding.ToEven), offTrigger.MarketTrendName));
+                            }
+
+                            var includedMarkets = from m in marketTrendChanges
+                                                  where m.TrendChange <= trendThreshold.TrendThreshold && m.TrendChange >= (trendThreshold.TrendThreshold * -1.0)
+                                                  orderby m.Market
+                                                  select m;
+
+                            averageMarketTrendChange = includedMarkets.Average(m => m.TrendChange);
+                          }
+                          else
+                          {
+                            // Calculate for whole market
+                            averageMarketTrendChange = marketTrendChanges.Average(m => m.TrendChange);
+                          }
 
                           MarketTrendChange mtc = marketTrendChanges.Find(m => m.Market.Equals(marketPair, StringComparison.InvariantCultureIgnoreCase));
                           if (mtc != null)
@@ -1819,35 +1850,35 @@ namespace Core.Main
                     {
                       double averageMarketTrendChange = 0;
                       var trendThreshold = (from mt in this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends
-                                              where mt.Name == trigger.MarketTrendName
-                                              select new { mt.TrendThreshold }).Single();
-                      
+                                            where mt.Name == trigger.MarketTrendName
+                                            select new { mt.TrendThreshold }).Single();
+
                       // Calculate average market change, skip any that are outside the threshold if enabled
                       if (trendThreshold.TrendThreshold != 0)
                       {
-                          // Exclude trends outside the threshhold.
-                          var excludedMarkets = from m in marketTrendChanges
-                                                where m.TrendChange > trendThreshold.TrendThreshold
-                                                orderby m.Market
-                                                select m;
-                          
-                          foreach (var marketTrend in excludedMarkets)
-                          {
-                            this.Log.DoLogInfo("SMS Trigger for '" + marketSetting.SettingName + "' is ignoring " + marketTrend.Market + " for exceeding TrendThreshold " + trendThreshold.TrendThreshold + " on " +  trigger.MarketTrendName);
-                          }
+                        // Exclude trends outside the threshhold.
+                        var excludedMarkets = from m in marketTrendChanges
+                                              where m.TrendChange > trendThreshold.TrendThreshold || m.TrendChange < (trendThreshold.TrendThreshold * -1.0)
+                                              orderby m.Market
+                                              select m;
 
-                          var includedMarkets = from m in marketTrendChanges
-                                                where m.TrendChange <= trendThreshold.TrendThreshold
-                                                orderby m.Market
-                                                select m;
+                        foreach (var marketTrend in excludedMarkets)
+                        {
+                          this.Log.DoLogInfo(String.Format("SMS Trigger for '{0}' is ignoring {1} for exceeding TrendThreshold {2}% with {3} on {4}", marketSetting.SettingName, marketTrend.Market, (double)trendThreshold.TrendThreshold, Math.Round(marketTrend.TrendChange, 3, MidpointRounding.ToEven), trigger.MarketTrendName));
+                        }
 
-                          averageMarketTrendChange = includedMarkets.Average(m => m.TrendChange);
+                        var includedMarkets = from m in marketTrendChanges
+                                              where m.TrendChange <= trendThreshold.TrendThreshold && m.TrendChange >= (trendThreshold.TrendThreshold * -1.0)
+                                              orderby m.Market
+                                              select m;
+
+                        averageMarketTrendChange = includedMarkets.Average(m => m.TrendChange);
                       }
                       else
                       {
-                          // Calculate for whole market
-                          averageMarketTrendChange = marketTrendChanges.Average(m => m.TrendChange);
-                      }                      
+                        // Calculate for whole market
+                        averageMarketTrendChange = marketTrendChanges.Average(m => m.TrendChange);
+                      }
 
                       MarketTrendChange mtc = marketTrendChanges.Find(m => m.Market.Equals(marketPair, StringComparison.InvariantCultureIgnoreCase));
                       if (mtc != null)
@@ -2348,11 +2379,11 @@ namespace Core.Main
       string ProfitPercentageLabel = "";
       for (char c = 'A'; c <= 'Z'; c++)
       {
-        
+
         string buyStrategyName = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_" + c + "_buy_strategy", "");
         if (buyStrategyName.Contains("PROFITPERCENTAGE"))
         {
-          
+
           ProfitPercentageLabel = "" + c;
         }
       }
