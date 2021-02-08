@@ -1650,7 +1650,7 @@ namespace Core.Main
 
                             foreach (var marketTrend in excludedMarkets)
                             {
-                              this.Log.DoLogInfo(String.Format("SMS Off Trigger for '{0}' is ignoring {1} for exceeding TrendThreshold {2}% with {3} on {4}", marketSetting.SettingName, marketTrend.Market, (double)trendThreshold.TrendThreshold, Math.Round(marketTrend.TrendChange, 3, MidpointRounding.ToEven), offTrigger.MarketTrendName));
+                              this.Log.DoLogInfo(String.Format("SMS Off Trigger for '{0}' is ignoring {1} for exceeding TrendThreshold {2}% with {3}% on {4}", marketSetting.SettingName, marketTrend.Market, (double)trendThreshold.TrendThreshold, Math.Round(marketTrend.TrendChange, 3, MidpointRounding.ToEven), offTrigger.MarketTrendName));
                             }
 
                             var includedMarkets = from m in marketTrendChanges
@@ -1864,7 +1864,7 @@ namespace Core.Main
 
                         foreach (var marketTrend in excludedMarkets)
                         {
-                          this.Log.DoLogInfo(String.Format("SMS Trigger for '{0}' is ignoring {1} for exceeding TrendThreshold {2}% with {3} on {4}", marketSetting.SettingName, marketTrend.Market, (double)trendThreshold.TrendThreshold, Math.Round(marketTrend.TrendChange, 3, MidpointRounding.ToEven), trigger.MarketTrendName));
+                          this.Log.DoLogInfo(String.Format("SMS Trigger for '{0}' is ignoring {1} for exceeding TrendThreshold {2}% with {3}% on {4}", marketSetting.SettingName, marketTrend.Market, (double)trendThreshold.TrendThreshold, Math.Round(marketTrend.TrendChange, 3, MidpointRounding.ToEven), trigger.MarketTrendName));
                         }
 
                         var includedMarkets = from m in marketTrendChanges
