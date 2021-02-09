@@ -1857,11 +1857,6 @@ namespace Core.Main
                                               orderby m.Market
                                               select m;
 
-                        foreach (var marketTrend in excludedMarkets)
-                        {
-                          this.Log.DoLogInfo(String.Format("SMS Trigger for '{0}' is ignoring {1} for exceeding TrendThreshold {2}% with {3}% on {4}", marketSetting.SettingName, marketTrend.Market, (double)trendThreshold.TrendThreshold, Math.Round(marketTrend.TrendChange, 3, MidpointRounding.ToEven), trigger.MarketTrendName));
-                        }
-
                         var includedMarkets = from m in marketTrendChanges
                                               where m.TrendChange <= trendThreshold.TrendThreshold && m.TrendChange >= (trendThreshold.TrendThreshold * -1.0)
                                               orderby m.Market
