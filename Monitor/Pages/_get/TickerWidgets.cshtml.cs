@@ -21,14 +21,23 @@ namespace Monitor.Pages {
 
     private void BindData() {
       // Get markets with active single settings
-      foreach (string key in Summary.MarketSummary.Keys) {
-        if (Summary.MarketSummary[key].ActiveSingleSettings != null) {
-          if (Summary.MarketSummary[key].ActiveSingleSettings.Count > 0) {
-            MarketsWithSingleSettings.Add(key);
-          }
+      var MarketsWithSingleSettingsData = from x in Summary.MarketSummary
+                                          where x.Value.ActiveSingleSettings != null
+                                          && x.Value.ActiveSingleSettings.Count > 0
+                                          orderby x.Key ascending
+                                          select x;
+
+      foreach (var market in MarketsWithSingleSettingsData) {
+        // Get the name of all active single market settings
+        string activeSettings = string.Empty;
+        foreach (var singleSetting in market.Value.ActiveSingleSettings)
+        {
+            activeSettings += (", " + singleSetting.SettingName);
         }
+        activeSettings = activeSettings.Substring(2); // Chop the unrequired comma
+
+        MarketsWithSingleSettings.Add(String.Format("{0} : {1}", market.Key, activeSettings));        
       }
-      MarketsWithSingleSettings.Sort();
     }
   }
 }

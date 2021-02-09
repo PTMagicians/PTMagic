@@ -3,13 +3,17 @@
 @{
   Layout = null;
 
+  // Single market settings tool tip
   int activeSingleSettings = Model.MarketsWithSingleSettings.Count;
   string singleSettingInfoIcon = "";
   if (activeSingleSettings > 0) {
-    singleSettingInfoIcon = "<i class=\"fa fa-info-circle text-muted\" data-toggle=\"tooltip\" data-placement=\"top\" data-html=\"true\" title=\"<b>Single Market Settings active for:</b><br />-" + Core.Helper.SystemHelper.ConvertListToTokenString(Model.MarketsWithSingleSettings, "<br />-", true) + "\" data-template=\"<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner tooltip-200 text-left'></div></div>\"></i>";
+    singleSettingInfoIcon = "<i class=\"fa fa-info-circle text-muted\" data-toggle=\"tooltip\" data-placement=\"top\" data-html=\"true\" title=\"<b>Single Market Settings active for:</b><br />" + Core.Helper.SystemHelper.ConvertListToTokenString(Model.MarketsWithSingleSettings, "<br />", true) + "\" data-template=\"<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner tooltip-200 text-left'></div></div>\"></i>";
   }
+
+  // Global setting tool tip
   string globalSettingInfoIcon = "<i class=\"fa fa-info-circle text-muted\" data-toggle=\"tooltip\" data-placement=\"top\" data-html=\"true\" title=\"<b>Instance: </b>" + Model.PTMagicConfiguration.GeneralSettings.Application.InstanceName + "\" data-template=\"<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner tooltip-100 text-left'></div></div>\"></i>";
 
+  // Health indicator
   DateTime lastRuntime = Model.Summary.LastRuntime;
   double elapsedSecondsSinceRuntime = DateTime.UtcNow.Subtract(lastRuntime).TotalSeconds;
   double intervalSeconds = Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 60.0;

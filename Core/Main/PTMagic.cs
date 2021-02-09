@@ -532,7 +532,7 @@ namespace Core.Main
     public bool StartProcess()
     {
       bool result = true;
-      
+
       this.Log.DoLogInfo("");
       this.Log.DoLogInfo("  ██████╗ ████████╗    ███╗   ███╗ █████╗  ██████╗ ██╗ ██████╗");
       this.Log.DoLogInfo("  ██╔══██╗╚══██╔══╝    ████╗ ████║██╔══██╗██╔════╝ ██║██╔════╝");
@@ -1519,11 +1519,15 @@ namespace Core.Main
 
         int marketPairProcess = 1;
         Dictionary<string, List<string>> matchedMarketTriggers = new Dictionary<string, List<string>>();
+
+        // Loop through markets
         foreach (string marketPair in this.MarketList)
         {
           this.Log.DoLogDebug("'" + marketPair + "' - Checking triggers (" + marketPairProcess.ToString() + "/" + this.MarketList.Count.ToString() + ")...");
 
           bool stopTriggers = false;
+
+          // Loop through single market settings
           foreach (SingleMarketSetting marketSetting in this.PTMagicConfiguration.AnalyzerSettings.SingleMarketSettings)
           {
             List<string> matchedSingleMarketTriggers = new List<string>();
@@ -1560,7 +1564,7 @@ namespace Core.Main
               continue;
             }
 
-            #region Checking Off Triggers
+            // Trigger checking
             SingleMarketSettingSummary smss = this.SingleMarketSettingSummaries.Find(s => s.Market.Equals(marketPair, StringComparison.InvariantCultureIgnoreCase) && s.SingleMarketSetting.SettingName.Equals(marketSetting.SettingName, StringComparison.InvariantCultureIgnoreCase));
             if (smss != null)
             {
@@ -1576,7 +1580,7 @@ namespace Core.Main
                   {
                     if (offTrigger.HoursSinceTriggered > 0)
                     {
-                      #region Check for Activation time period trigger
+                      // Check for Activation time period trigger
                       int smsActiveHours = (int)Math.Floor(DateTime.UtcNow.Subtract(smss.ActivationDateTimeUTC).TotalHours);
                       if (smsActiveHours >= offTrigger.HoursSinceTriggered)
                       {
@@ -1588,17 +1592,15 @@ namespace Core.Main
                       }
                       else
                       {
-
                         // Trigger not met!
                         this.Log.DoLogDebug("'" + marketPair + "' - SMS only active for  " + smsActiveHours.ToString() + " hours. Trigger not matched!");
 
                         offTriggerResults.Add(false);
                       }
-                      #endregion
                     }
                     else if (offTrigger.Min24hVolume > 0 || offTrigger.Max24hVolume < Constants.Max24hVolume)
                     {
-                      #region Check for 24h volume trigger
+                      // Check for 24h volume trigger
                       List<MarketTrendChange> marketTrendChanges = this.SingleMarketTrendChanges[this.SingleMarketTrendChanges.Keys.Last()];
                       if (marketTrendChanges.Count > 0)
                       {
@@ -1607,7 +1609,6 @@ namespace Core.Main
                         {
                           if (mtc.Volume24h >= offTrigger.Min24hVolume && mtc.Volume24h <= offTrigger.Max24hVolume)
                           {
-
                             // Trigger met!
                             this.Log.DoLogDebug("'" + marketPair + "' - 24h volume off trigger matched! 24h volume = " + mtc.Volume24h.ToString(new System.Globalization.CultureInfo("en-US")) + " " + this.LastRuntimeSummary.MainMarket);
 
@@ -1615,7 +1616,6 @@ namespace Core.Main
                           }
                           else
                           {
-
                             // Trigger not met!
                             this.Log.DoLogDebug("'" + marketPair + "' - 24h volume off trigger not matched! 24h volume = " + mtc.Volume24h.ToString(new System.Globalization.CultureInfo("en-US")) + " " + this.LastRuntimeSummary.MainMarket);
 
@@ -1623,19 +1623,48 @@ namespace Core.Main
                           }
                         }
                       }
-
-                      #endregion
                     }
                     else
                     {
-                      #region Check for market trend triggers
+                      // Check for market trend Off triggers
                       if (this.SingleMarketTrendChanges.ContainsKey(offTrigger.MarketTrendName))
                       {
-
                         List<MarketTrendChange> marketTrendChanges = this.SingleMarketTrendChanges[offTrigger.MarketTrendName];
+                        List<MarketTrend> marketTrends = this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends;
+
                         if (marketTrendChanges.Count > 0)
                         {
-                          double averageMarketTrendChange = marketTrendChanges.Average(m => m.TrendChange);
+                          double averageMarketTrendChange = 0;
+                          var trendThreshold = (from mt in this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends
+                                                where mt.Name == offTrigger.MarketTrendName
+                                                select new { mt.TrendThreshold }).Single();
+
+                          // Calculate average market change, skip any that are outside the threshold if enabled
+                          if (trendThreshold.TrendThreshold != 0)
+                          {
+                            // Exclude trends outside the threshhold.
+                            var excludedMarkets = from m in marketTrendChanges
+                                                  where m.TrendChange > trendThreshold.TrendThreshold || m.TrendChange < (trendThreshold.TrendThreshold * -1.0)
+                                                  orderby m.Market
+                                                  select m;
+
+                            foreach (var marketTrend in excludedMarkets)
+                            {
+                              this.Log.DoLogInfo(String.Format("SMS Off Trigger for '{0}' is ignoring {1} for exceeding TrendThreshold {2}% with {3}% on {4}", marketSetting.SettingName, marketTrend.Market, (double)trendThreshold.TrendThreshold, Math.Round(marketTrend.TrendChange, 3, MidpointRounding.ToEven), offTrigger.MarketTrendName));
+                            }
+
+                            var includedMarkets = from m in marketTrendChanges
+                                                  where m.TrendChange <= trendThreshold.TrendThreshold && m.TrendChange >= (trendThreshold.TrendThreshold * -1.0)
+                                                  orderby m.Market
+                                                  select m;
+
+                            averageMarketTrendChange = includedMarkets.Average(m => m.TrendChange);
+                          }
+                          else
+                          {
+                            // Calculate for whole market
+                            averageMarketTrendChange = marketTrendChanges.Average(m => m.TrendChange);
+                          }
 
                           MarketTrendChange mtc = marketTrendChanges.Find(m => m.Market.Equals(marketPair, StringComparison.InvariantCultureIgnoreCase));
                           if (mtc != null)
@@ -1645,7 +1674,6 @@ namespace Core.Main
 
                             if (offTrigger.MarketTrendRelation.Equals(Constants.MarketTrendRelationRelative))
                             {
-
                               // Build pair trend change relative to the global market trend
                               trendChange = trendChange - averageMarketTrendChange;
                             }
@@ -1684,7 +1712,6 @@ namespace Core.Main
                           offTriggerResults.Add(false);
                         }
                       }
-                      #endregion
                     }
                   }
 
@@ -1720,8 +1747,8 @@ namespace Core.Main
                 }
               }
             }
-            #endregion
 
+            // Do we have triggers 
             if (marketSetting.Triggers.Count > 0 && !stopTriggers)
             {
               #region Checking Triggers
@@ -1730,6 +1757,8 @@ namespace Core.Main
               List<bool> triggerResults = new List<bool>();
               Dictionary<int, double> relevantTriggers = new Dictionary<int, double>();
               int triggerIndex = 0;
+
+              // Loop through SMS triggers
               foreach (Trigger trigger in marketSetting.Triggers)
               {
 
@@ -1819,7 +1848,37 @@ namespace Core.Main
                     List<MarketTrendChange> marketTrendChanges = this.SingleMarketTrendChanges[trigger.MarketTrendName];
                     if (marketTrendChanges.Count > 0)
                     {
-                      double averageMarketTrendChange = marketTrendChanges.Average(m => m.TrendChange);
+                      double averageMarketTrendChange = 0;
+                      var trendThreshold = (from mt in this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends
+                                            where mt.Name == trigger.MarketTrendName
+                                            select new { mt.TrendThreshold }).Single();
+
+                      // Calculate average market change, skip any that are outside the threshold if enabled
+                      if (trendThreshold.TrendThreshold != 0)
+                      {
+                        // Exclude trends outside the threshhold.
+                        var excludedMarkets = from m in marketTrendChanges
+                                              where m.TrendChange > trendThreshold.TrendThreshold || m.TrendChange < (trendThreshold.TrendThreshold * -1.0)
+                                              orderby m.Market
+                                              select m;
+
+                        foreach (var marketTrend in excludedMarkets)
+                        {
+                          this.Log.DoLogInfo(String.Format("SMS Trigger for '{0}' is ignoring {1} for exceeding TrendThreshold {2}% with {3}% on {4}", marketSetting.SettingName, marketTrend.Market, (double)trendThreshold.TrendThreshold, Math.Round(marketTrend.TrendChange, 3, MidpointRounding.ToEven), trigger.MarketTrendName));
+                        }
+
+                        var includedMarkets = from m in marketTrendChanges
+                                              where m.TrendChange <= trendThreshold.TrendThreshold && m.TrendChange >= (trendThreshold.TrendThreshold * -1.0)
+                                              orderby m.Market
+                                              select m;
+
+                        averageMarketTrendChange = includedMarkets.Average(m => m.TrendChange);
+                      }
+                      else
+                      {
+                        // Calculate for whole market
+                        averageMarketTrendChange = marketTrendChanges.Average(m => m.TrendChange);
+                      }
 
                       MarketTrendChange mtc = marketTrendChanges.Find(m => m.Market.Equals(marketPair, StringComparison.InvariantCultureIgnoreCase));
                       if (mtc != null)
@@ -1895,7 +1954,7 @@ namespace Core.Main
                   #endregion
                 }
                 triggerIndex++;
-              }
+              } // End loop SMS triggers
 
               // Check if all triggers have to get triggered or just one
               bool settingTriggered = false;
@@ -2041,7 +2100,7 @@ namespace Core.Main
                 this.Log.DoLogDebug("'" + marketPair + "' - '" + marketSetting.SettingName + "' not triggered!");
               }
             }
-          }
+          } // End loop single market settings
 
           if ((marketPairProcess % 10) == 0)
           {
@@ -2049,8 +2108,9 @@ namespace Core.Main
           }
 
           marketPairProcess++;
-        }
+        } // End loop through markets
 
+        // Did we trigger any SMS?
         if (this.TriggeredSingleMarketSettings.Count > 0)
         {
           this.Log.DoLogInfo("Building single market settings for '" + this.TriggeredSingleMarketSettings.Count.ToString() + "' markets...");
@@ -2319,11 +2379,11 @@ namespace Core.Main
       string ProfitPercentageLabel = "";
       for (char c = 'A'; c <= 'Z'; c++)
       {
-        
+
         string buyStrategyName = SettingsHandler.GetCurrentPropertyValue(dcaProperties, "DEFAULT_DCA_" + c + "_buy_strategy", "");
         if (buyStrategyName.Contains("PROFITPERCENTAGE"))
         {
-          
+
           ProfitPercentageLabel = "" + c;
         }
       }
