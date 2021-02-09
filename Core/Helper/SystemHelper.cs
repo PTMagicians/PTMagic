@@ -536,16 +536,7 @@ namespace Core.Helper
       string result = "#";
       if (platform.Equals("TradingView"))
       {
-        result = "https://www.tradingview.com/chart/?symbol=" + exchange.ToUpper() + ":";
-
-        string pairName = SystemHelper.StripBadCode(market, Constants.WhiteListMinimal);
-
-        if (pairName.StartsWith(mainMarket))
-        {
-          pairName = pairName.Replace(mainMarket, "") + mainMarket;
-        }
-
-        result += pairName;
+        result = "https://uk.tradingview.com/symbols/" + market.ToUpper() + "/?exchange=" + exchange.ToUpper();
       }
       else if (platform.Equals("TradingViewFutures"))
       {
