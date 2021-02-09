@@ -159,11 +159,6 @@
                     profitPercentage = gainStrategy.CurrentValue;
                   }
                 }
-
-                // Aggregate totals
-                double bagGain = (profitPercentage / 100) * dcaLogEntry.TotalCost * leverageValue;
-                Model.TotalBagCost = Model.TotalBagCost + dcaLogEntry.TotalCost;
-                Model.TotalBagGain =  Model.TotalBagGain + bagGain;
                 
                 // Render the row
                 <tr @(lostValue ? "class=errorRow" : "") >
@@ -226,20 +221,25 @@
                   {
                     <td class="text-left"></td>
                   }
-
                   <!-- Profit -->
                   @if (!@lostValue)
-                  {                    
+                  {          
+                    profitPercentage = profitPercentage * leverageValue;
                     <td class="text-autocolor">@profitPercentage.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
                   }
                   else
                   {
                     <td class="text-left">No Value!</td>
                   }
-
                   <!-- Bag details -->
                   <td class="text-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)_get/BagDetails/?m=@dcaLogEntry.Market" data-remote="false" data-toggle="modal" data-target="#dca-chart"><i class="fa fa-plus-circle"></i></a></td>
                 </tr>
+                {
+                  // Aggregate totals
+                  double bagGain = (profitPercentage / 100) * dcaLogEntry.TotalCost;
+                  Model.TotalBagCost = Model.TotalBagCost + dcaLogEntry.TotalCost;
+                  Model.TotalBagGain =  Model.TotalBagGain + bagGain;
+                }
               }
             <td>Totals:</td>
             <td></td>
