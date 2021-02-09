@@ -1642,12 +1642,6 @@ namespace Core.Main
                           // Calculate average market change, skip any that are outside the threshold if enabled
                           if (trendThreshold.TrendThreshold != 0)
                           {
-                            // Exclude trends outside the threshhold.
-                            var excludedMarkets = from m in marketTrendChanges
-                                                  where m.TrendChange > trendThreshold.TrendThreshold || m.TrendChange < (trendThreshold.TrendThreshold * -1.0)
-                                                  orderby m.Market
-                                                  select m;
-
                             var includedMarkets = from m in marketTrendChanges
                                                   where m.TrendChange <= trendThreshold.TrendThreshold && m.TrendChange >= (trendThreshold.TrendThreshold * -1.0)
                                                   orderby m.Market
@@ -1851,12 +1845,6 @@ namespace Core.Main
                       // Calculate average market change, skip any that are outside the threshold if enabled
                       if (trendThreshold.TrendThreshold != 0)
                       {
-                        // Exclude trends outside the threshhold.
-                        var excludedMarkets = from m in marketTrendChanges
-                                              where m.TrendChange > trendThreshold.TrendThreshold || m.TrendChange < (trendThreshold.TrendThreshold * -1.0)
-                                              orderby m.Market
-                                              select m;
-
                         var includedMarkets = from m in marketTrendChanges
                                               where m.TrendChange <= trendThreshold.TrendThreshold && m.TrendChange >= (trendThreshold.TrendThreshold * -1.0)
                                               orderby m.Market
