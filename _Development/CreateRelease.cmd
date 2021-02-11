@@ -15,6 +15,7 @@ DEL /F /S /Q *
 REM Copy release files
 MD PTMagic
 XCOPY /Y /S ..\..\PTMagic\_defaults\* .\
+XCOPY /Y /S ..\..\PTMagic\_auto_updater\* .\PTMagic
 XCOPY /Y /S ..\..\PTMagic\bin\Release\PublishOutput .\PTMagic
 CD .\PTMagic
 DEL /F /S /Q _presets
