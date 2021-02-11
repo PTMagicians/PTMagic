@@ -536,7 +536,7 @@ namespace Core.Helper
       string result = "#";
       if (platform.Equals("TradingView"))
       {
-        result = "https://uk.tradingview.com/symbols/" + market.ToUpper() + "/?exchange=" + exchange.ToUpper();
+        result = "https://www.tradingview.com/symbols/" + market.ToUpper() + "/?exchange=" + exchange.ToUpper();
       }
       else if (platform.Equals("TradingViewFutures"))
       {
