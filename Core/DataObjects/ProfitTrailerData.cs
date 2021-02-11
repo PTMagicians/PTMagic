@@ -335,7 +335,7 @@ namespace Core.Main.DataObjects
 
         // check if bot is a shortbot via PT API.  Losses on short bot currently showing as gains. Issue #195
         // code removed
-        
+
         double soldValueRaw = (sellLogData.SoldAmount * sellLogData.SoldPrice);
         double soldValueAfterFees = soldValueRaw - (soldValueRaw * ((double)rsld.fee / 100));
         sellLogData.SoldValue = soldValueAfterFees;
@@ -399,9 +399,11 @@ namespace Core.Main.DataObjects
         dcaLogData.SellStrategy = pair.sellStrategy == null ? "" : pair.sellStrategy;
         dcaLogData.IsTrailing = false;
 
-        if (pair.buyStrategies != null && processBuyStrategies)
+        // See if they are using PT 2.5 (buyStrategiesData) or 2.4 (buyStrategies)
+        var buyStrats = pair.buyStrategies != null ? pair.buyStrategies : pair.buyStrategiesData.data;
+        if (buyStrats != null && processBuyStrategies)
         {
-          foreach (var bs in pair.buyStrategies)
+          foreach (var bs in buyStrats)
           {
             Strategy buyStrategy = new Strategy();
             buyStrategy.Type = bs.type;
@@ -412,16 +414,18 @@ namespace Core.Main.DataObjects
             buyStrategy.CurrentValue = bs.currentValue;
             buyStrategy.CurrentValuePercentage = bs.currentValuePercentage;
             buyStrategy.Decimals = bs.decimals;
-            buyStrategy.IsTrailing = ((string)bs.positive).IndexOf("trailing", StringComparison.InvariantCultureIgnoreCase) > -1;
-            buyStrategy.IsTrue = ((string)bs.positive).IndexOf("true", StringComparison.InvariantCultureIgnoreCase) > -1;
+            buyStrategy.IsTrailing = bs.trailing;
+            buyStrategy.IsTrue = bs.strategyResult;
 
             dcaLogData.BuyStrategies.Add(buyStrategy);
           }
         }
 
-        if (pair.sellStrategies != null)
+        // See if they are using PT 2.5 (sellStrategiesData) or 2.4 (sellStrategies)
+        var sellStrats = pair.sellStrategies != null ? pair.sellStrategies : pair.sellStrategiesData.data;
+        if (sellStrats != null)
         {
-          foreach (var ss in pair.sellStrategies)
+          foreach (var ss in sellStrats)
           {
             Strategy sellStrategy = new Strategy();
             sellStrategy.Type = ss.type;
@@ -432,8 +436,8 @@ namespace Core.Main.DataObjects
             sellStrategy.CurrentValue = ss.currentValue;
             sellStrategy.CurrentValuePercentage = ss.currentValuePercentage;
             sellStrategy.Decimals = ss.decimals;
-            sellStrategy.IsTrailing = ((string)ss.positive).IndexOf("trailing", StringComparison.InvariantCultureIgnoreCase) > -1;
-            sellStrategy.IsTrue = ((string)ss.positive).IndexOf("true", StringComparison.InvariantCultureIgnoreCase) > -1;
+            sellStrategy.IsTrailing = ss.trailing;
+            sellStrategy.IsTrue = ss.strategyResult;
 
             dcaLogData.SellStrategies.Add(sellStrategy);
 
@@ -495,9 +499,14 @@ namespace Core.Main.DataObjects
         }
         else
         {
-          if (rbld.buyStrategies != null)
+          // Parse buy strategies
+
+          // See if they are using PT 2.5 (buyStrategiesData) or 2.4 (buyStrategies)
+          var buyStrats = rbld.buyStrategies != null ? rbld.buyStrategies : rbld.buyStrategiesData.data;
+
+          if (buyStrats != null)
           {
-            foreach (var bs in rbld.buyStrategies)
+            foreach (var bs in buyStrats)
             {
               Strategy buyStrategy = new Strategy();
               buyStrategy.Type = bs.type;
@@ -508,8 +517,8 @@ namespace Core.Main.DataObjects
               buyStrategy.CurrentValue = bs.currentValue;
               buyStrategy.CurrentValuePercentage = bs.currentValuePercentage;
               buyStrategy.Decimals = bs.decimals;
-              buyStrategy.IsTrailing = ((string)(bs.positive)).IndexOf("trailing", StringComparison.InvariantCultureIgnoreCase) > -1;
-              buyStrategy.IsTrue = ((string)(bs.positive)).IndexOf("true", StringComparison.InvariantCultureIgnoreCase) > -1;
+              buyStrategy.IsTrailing = bs.trailing;
+              buyStrategy.IsTrue = bs.strategyResult;
 
               // Is SOM?
               buyLogData.IsSom = buyLogData.IsSom || buyStrategy.Name.Contains("som enabled", StringComparison.OrdinalIgnoreCase);

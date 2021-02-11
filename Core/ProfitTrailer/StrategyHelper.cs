@@ -261,85 +261,92 @@ namespace Core.ProfitTrailer
     public static bool IsValidStrategy(string strategyName, bool checkForAnyInvalid)
     {
       bool result = false;
-      // buy/sell strategies beginning with PT 2.3.3 contain the letter followed by a colon and space.
-      if (strategyName.Contains(":"))
+
+      if (!string.IsNullOrEmpty(strategyName))
       {
-        result = true;
-      }
-      if (!checkForAnyInvalid)
-      {
-        switch (strategyName.ToLower())
-        {
-          case "lowbb":
-          case "highbb":
-          case "gain":
-          case "loss":
-          case "smagain":
-          case "emagain":
-          case "hmagain":
-          case "dmagain":
-          case "smaspread":
-          case "emaspread":
-          case "hmaspread":
-          case "dmaspread":
-          case "smacross":
-          case "emacross":
-          case "hmacross":
-          case "dmacross":
-          case "rsi":
-          case "stoch":
-          case "stochrsi":
-          case "stochrsik":
-          case "stochrsid":
-          case "stochrsicross":
-          case "macd":
-          case "obv":
-          case "bbwidth":
-          case "anderson":
-          case "dema":
-          case "hma":
-          case "pdhigh":
-          case "pdlow":
-          case "pdclose":
-          case "signal":
-          case "changepercentage":
-          case "profitpercentage":
-          case "lastdcabuy":
-          case "fixedprice":
-          case "lowatrband":
-          case "highatrband":
-          case "atrpercentage":
-          case "vwappercentage":
-          case "mvwappercentage":
-          case "btcdominance":
-          case "combimagain":
-          case "combimaspread":
-          case "combimacross":
-          case "macdpercentage":
-            result = true;
-            break;
-          default:
-            break;
-        }
-      }
-      else
-      {
-        if (strategyName.IndexOf("max", StringComparison.InvariantCultureIgnoreCase) == -1
-          && strategyName.IndexOf("min", StringComparison.InvariantCultureIgnoreCase) == -1
-          && strategyName.IndexOf("som", StringComparison.InvariantCultureIgnoreCase) == -1
-          && strategyName.IndexOf("price", StringComparison.InvariantCultureIgnoreCase) == -1
-          && strategyName.IndexOf("black", StringComparison.InvariantCultureIgnoreCase) == -1
-          && strategyName.IndexOf("new", StringComparison.InvariantCultureIgnoreCase) == -1
-          && strategyName.IndexOf("insufficient", StringComparison.InvariantCultureIgnoreCase) == -1
-          && strategyName.IndexOf("timeout", StringComparison.InvariantCultureIgnoreCase) == -1
-          && strategyName.IndexOf("spread", StringComparison.InvariantCultureIgnoreCase) == -1
-          && strategyName.IndexOf("pairs", StringComparison.InvariantCultureIgnoreCase) == -1)
+        // buy/sell strategies beginning with PT 2.3.3 contain the letter followed by a colon and space.
+        if (strategyName.Contains(":"))
         {
           result = true;
         }
+        if (!checkForAnyInvalid)
+        {
+          switch (strategyName.ToLower())
+          {
+            case "lowbb":
+            case "highbb":
+            case "gain":
+            case "loss":
+            case "smagain":
+            case "emagain":
+            case "hmagain":
+            case "dmagain":
+            case "smaspread":
+            case "emaspread":
+            case "hmaspread":
+            case "dmaspread":
+            case "smacross":
+            case "emacross":
+            case "hmacross":
+            case "dmacross":
+            case "rsi":
+            case "stoch":
+            case "stochrsi":
+            case "stochrsik":
+            case "stochrsid":
+            case "stochrsicross":
+            case "macd":
+            case "obv":
+            case "bbwidth":
+            case "anderson":
+            case "dema":
+            case "hma":
+            case "pdhigh":
+            case "pdlow":
+            case "pdclose":
+            case "signal":
+            case "changepercentage":
+            case "profitpercentage":
+            case "lastdcabuy":
+            case "fixedprice":
+            case "lowatrband":
+            case "highatrband":
+            case "atrpercentage":
+            case "vwappercentage":
+            case "mvwappercentage":
+            case "btcdominance":
+            case "combimagain":
+            case "combimaspread":
+            case "combimacross":
+            case "macdpercentage":
+              result = true;
+              break;
+            default:
+              break;
+          }
+        }
+        else
+        {
+          if (strategyName.IndexOf("max", StringComparison.InvariantCultureIgnoreCase) == -1
+            && strategyName.IndexOf("min", StringComparison.InvariantCultureIgnoreCase) == -1
+            && strategyName.IndexOf("som", StringComparison.InvariantCultureIgnoreCase) == -1
+            && strategyName.IndexOf("price", StringComparison.InvariantCultureIgnoreCase) == -1
+            && strategyName.IndexOf("black", StringComparison.InvariantCultureIgnoreCase) == -1
+            && strategyName.IndexOf("new", StringComparison.InvariantCultureIgnoreCase) == -1
+            && strategyName.IndexOf("insufficient", StringComparison.InvariantCultureIgnoreCase) == -1
+            && strategyName.IndexOf("timeout", StringComparison.InvariantCultureIgnoreCase) == -1
+            && strategyName.IndexOf("spread", StringComparison.InvariantCultureIgnoreCase) == -1
+            && strategyName.IndexOf("pairs", StringComparison.InvariantCultureIgnoreCase) == -1)
+          {
+            result = true;
+          }
+        }
       }
+
       return result;
     }
+
+
     public static int GetStrategyValueDecimals(string strategyName)
     {
       int result = 0;
@@ -397,7 +404,7 @@ namespace Core.ProfitTrailer
           if (!isValidStrategy)
           {
             if (strategy.Name.Contains("TRIGGERED"))
-              // remove levels already triggered, to show only currently waiting trigger
+            // remove levels already triggered, to show only currently waiting trigger
             {
               strategyText += "";
             }

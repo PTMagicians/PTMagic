@@ -138,50 +138,31 @@
                   isSellStrategyTrue = (dcaLogEntry.SellStrategies.FindAll(ss => !ss.IsTrue).Count == 0);
                 }
 
-                bool buyDisabled = false;
                 string leverage = "";
                 double leverageValue = 1;
                 string buyStrategyText = Core.ProfitTrailer.StrategyHelper.GetStrategyText(Model.Summary, dcaLogEntry.BuyStrategies, dcaLogEntry.BuyStrategy, isBuyStrategyTrue, isTrailingBuyActive);
-
-                if (!Core.ProfitTrailer.StrategyHelper.IsValidStrategy(buyStrategyText, true)) 
-                {
-                  buyDisabled = true;
-                }
                 string sellStrategyText = Core.ProfitTrailer.StrategyHelper.GetStrategyText(Model.Summary, dcaLogEntry.SellStrategies, dcaLogEntry.SellStrategy, isSellStrategyTrue, isTrailingSellActive);
                 
                 // Check for when PT loses the value of a pair
                 bool lostValue = false;
                 lostValue = (dcaLogEntry.TotalCost == 0.0) || (dcaLogEntry.AverageBuyPrice == 0.0);
 
-                double exchangeFee = 0;
-                switch (Model.PTMagicConfiguration.GeneralSettings.Application.Exchange.ToLower())
+                // Profit percentage
+                var profitPercentage = dcaLogEntry.ProfitPercent;
+                     
+                if (dcaLogEntry.SellStrategies != null)
                 {
-                  case "binance":
-                    exchangeFee = 0.002;
-                    break;
-                  case "binanceus":
-                    exchangeFee = 0.002;
-                    break;
-                  case "binancefutures":
-                    exchangeFee = 0.002;
-                    break;
-                  case "bittrex":
-                    exchangeFee = 0.0025;
-                    break;
-                  case "poloniex":
-                    exchangeFee = 0.0025;
-                    break;
-                  default:
-                    break;
+                  var gainStrategy = dcaLogEntry.SellStrategies.FirstOrDefault(x => x.Name.Contains(" GAIN", StringComparison.InvariantCultureIgnoreCase));
+                  if (gainStrategy != null)
+                  {
+                    // Use the gain percentage value as it is accurate to what can be achieved with the order book!
+                    profitPercentage = gainStrategy.CurrentValue;
+                  }
                 }
-                // Aggregate totals
-                double tradingFee = (exchangeFee * dcaLogEntry.TotalCost) * 2;
-                double bagGain = (dcaLogEntry.ProfitPercent / 100) * dcaLogEntry.TotalCost * leverageValue;
-                Model.TotalBagCost = Model.TotalBagCost + dcaLogEntry.TotalCost;
-                Model.TotalBagGain =  Model.TotalBagGain + bagGain;
                 
                 // Render the row
                 <tr @(lostValue ? "class=errorRow" : "") >
+                  <!-- Market -->
                   @if (mps == null || mps.ActiveSingleSettings == null || mps.ActiveSingleSettings.Count == 0) 
                   {
                     <th class="align-top"><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, dcaLogEntry.Market, Model.Summary.MainMarket)" target="_blank">@dcaLogEntry.Market</a></th>
@@ -189,8 +170,11 @@
                   {
                     <th class="align-top"><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, dcaLogEntry.Market, Model.Summary.MainMarket)" target="_blank">@dcaLogEntry.Market</a> <i class="fa fa-exclamation-triangle text-highlight" data-toggle="tooltip" data-placement="top" data-html="true" title="@await Component.InvokeAsync("PairIcon", mps)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner pair-tooltip'></div></div>"></i></th>
                   }
+                  <!-- 24hr change -->
                   <td class="text-autocolor">@Html.Raw((dcaLogEntry.PercChange * 100).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))%</td>
+                  <!-- Cost -->
                   <td class="text-left">@Html.Raw(dcaLogEntry.TotalCost.ToString("#,#0.000000", new System.Globalization.CultureInfo("en-US")))</td>
+                  <!-- DCA Count -->
                   <td class="text-right">
                     @if (dcaEnabled) 
                     {
@@ -203,9 +187,11 @@
                       <span data-toggle="tooltip" data-placement="top" title="DCA is disabled"><i class="fa fa-ban text-highlight"></i></span>
                     }
                   </td>
+                  <!-- DCA Strategy -->
                   <td>@Html.Raw(buyStrategyText)</td>
+                  <!-- Sell Strategy -->
                   <td>@Html.Raw(sellStrategyText)</td>
-
+                  <!-- Target -->
                   @if (!sellStrategyText.Contains("WATCHMODE"))
                   {
                     @if (sellStrategyText.Contains("CROSSED"))
@@ -223,31 +209,37 @@
                     }
                     @if (leverageValue == 1)
                     {
-                      <td class="@Html.Raw((dcaLogEntry.TargetGainValue.HasValue && (dcaLogEntry.ProfitPercent > dcaLogEntry.TargetGainValue.Value)) ? "text-success" : "text-danger")">@Html.Raw(dcaLogEntry.TargetGainValue.HasValue ? dcaLogEntry.TargetGainValue.Value.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%" : "&nbsp")</td>
+                      <td class="@Html.Raw((dcaLogEntry.TargetGainValue.HasValue && (profitPercentage > dcaLogEntry.TargetGainValue.Value)) ? "text-success" : "text-danger")">@Html.Raw(dcaLogEntry.TargetGainValue.HasValue ? dcaLogEntry.TargetGainValue.Value.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%" : "&nbsp")</td>
                     }
                     else
                     {
                       double TargetGain = leverageValue * dcaLogEntry.TargetGainValue.Value;
-                      <td class="@Html.Raw((dcaLogEntry.TargetGainValue.HasValue && (dcaLogEntry.ProfitPercent > dcaLogEntry.TargetGainValue.Value)) ? "text-success" : "text-danger")">@Html.Raw(dcaLogEntry.TargetGainValue.HasValue ? TargetGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%" : "&nbsp")</td>
+                      <td class="@Html.Raw((dcaLogEntry.TargetGainValue.HasValue && (profitPercentage > dcaLogEntry.TargetGainValue.Value)) ? "text-success" : "text-danger")">@Html.Raw(dcaLogEntry.TargetGainValue.HasValue ? TargetGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%" : "&nbsp")</td>
                     }
                   }
                   else
                   {
                     <td class="text-left"></td>
                   }
-
-
-
+                  <!-- Profit -->
                   @if (!@lostValue)
-                  {
-                    <td class="text-autocolor">@dcaLogEntry.ProfitPercent.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+                  {          
+                    profitPercentage = profitPercentage * leverageValue;
+                    <td class="text-autocolor">@profitPercentage.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
                   }
                   else
                   {
                     <td class="text-left">No Value!</td>
                   }
+                  <!-- Bag details -->
                   <td class="text-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)_get/BagDetails/?m=@dcaLogEntry.Market" data-remote="false" data-toggle="modal" data-target="#dca-chart"><i class="fa fa-plus-circle"></i></a></td>
                 </tr>
+                {
+                  // Aggregate totals
+                  double bagGain = (profitPercentage / 100) * dcaLogEntry.TotalCost;
+                  Model.TotalBagCost = Model.TotalBagCost + dcaLogEntry.TotalCost;
+                  Model.TotalBagGain =  Model.TotalBagGain + bagGain;
+                }
               }
             <td>Totals:</td>
             <td></td>
