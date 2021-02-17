@@ -132,13 +132,13 @@ a:active {
 .table {
   color      : white;
   font-family: "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size  : 12px;
+  font-size  : 11px;
 }
 
 /* If the screen size is 400px wide or less, set the font-size of <div> to 30px */
 @media screen and (max-width: 400px) {
   .table {
-    font-size: 10px;
+    font-size: 9px;
   }
 }
 
