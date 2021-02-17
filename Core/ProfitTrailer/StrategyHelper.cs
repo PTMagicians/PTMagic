@@ -22,7 +22,14 @@ namespace Core.ProfitTrailer
       // PT allows for "advanced_stats" to show details of the trailing logic and dynamic formulas.
       if (result.Contains("STATS") || result.Contains("DYN"))
       {
-        result = "";
+        if (result.Contains("STATS-TSL") && (!result.Contains("TSL-STRAT")))
+        {
+          result = "TSL";
+        }
+        else
+        {
+          result = "";
+        }  
       }
       // strategy labels with variable values
       if (result.Contains("BUY TIMEOUT AS"))
@@ -411,7 +418,14 @@ namespace Core.ProfitTrailer
             else if (strategy.Name.Contains("STATS"))
             // Avoid displaying advanced buy stats and completed level formulas
             {
-              strategy.Name = "";
+              if (strategy.Name.Contains("STATS-TSL") && (!strategy.Name.Contains("TSL-STRAT")))
+              {
+                strategyText += "<span class=\"label label-warn\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"" + strategy.Name + "\" >" + StrategyHelper.GetStrategyShortcut(strategy.Name, false) + "<i class=\"fa fa-flag text-success\"></i></span> ";
+              }
+              else
+              {
+                strategy.Name = "";
+              }           
             }
             else if (strategy.Name.Contains("FORMULA"))
             // Avoid displaying formula details
