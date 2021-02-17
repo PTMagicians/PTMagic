@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections;
 using Core.Main;
 using Core.Helper;
-using Core.Main.DataObjects.PTMagicData;
-using Core.MarketAnalyzer;
 
 namespace Monitor.Pages {
   public class DownloadFileModel : _Internal.BasePageModelSecure {
@@ -14,7 +9,11 @@ namespace Monitor.Pages {
       // Initialize Config
       base.Init();
       
-      InitializeDownload();
+      // Check we have a log in
+      if (base.IsLoggedIn(this.HttpContext))
+      {
+        InitializeDownload();
+      }
     }
 
     private void InitializeDownload() {
