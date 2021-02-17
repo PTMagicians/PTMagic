@@ -155,7 +155,7 @@ else
 <div class="row">
   <div class="col-sm-12">
     <div class="card-box">
-      <h4 class="m-t-0 m-b-20 header-title"><b>Market Trends at @Model.PTMagicConfiguration.GeneralSettings.Application.Exchange</b></h4>
+      <h4 class="m-t-0 m-b-20 header-title"><b>Market Trend Averages at @Model.PTMagicConfiguration.GeneralSettings.Application.Exchange</b></h4>
       <table class="table table-sm">
         <thead>
           <tr>
@@ -280,7 +280,7 @@ else
                   string trendChangeOutput = mps.MarketTrendChanges[marketTrend.Name].ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
                   if ((mps.MarketTrendChanges[marketTrend.Name] > marketTrend.TrendThreshold) || (mps.MarketTrendChanges[marketTrend.Name] > marketTrend.TrendThreshold) )
                   {
-                    <td class="text-right text-autocolor-saw"><i class="fa fa-ban text-muted" data-toggle="tooltip" data-placement="top" title="This coin has been excluded from the average market trend on this timeframe due to your Threshold setting."></i>&nbsp; @trendChangeOutput%</td>
+                    <td class="text-right text-autocolor-saw"><i class="fa fa-ban text-muted" data-toggle="tooltip" data-placement="top" title="This coin has been excluded from the Market Trend Averages for this timeframe due to your Threshold setting."></i>&nbsp; @trendChangeOutput%</td>
                   }
                   else
                   {
