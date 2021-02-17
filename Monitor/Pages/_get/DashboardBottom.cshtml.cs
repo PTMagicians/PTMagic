@@ -196,15 +196,15 @@ namespace Monitor.Pages
         {
           if (sellStrategyText.Contains("PENDING"))
           {
-            PendingBalance = PendingBalance + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / dcaLogEntry.Leverage);
+            PendingBalance = PendingBalance + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / dcaLogEntry.Leverage != 0 ? dcaLogEntry.Leverage : 1);
           }
           else if (dcaLogEntry.BuyStrategies.Count > 0)
           {
-            DCABalance = DCABalance + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / dcaLogEntry.Leverage);
+            DCABalance = DCABalance + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / dcaLogEntry.Leverage != 0 ? dcaLogEntry.Leverage : 1);
           }
           else
           {
-            PairsBalance = PairsBalance + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / dcaLogEntry.Leverage);
+            PairsBalance = PairsBalance + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / dcaLogEntry.Leverage != 0 ? dcaLogEntry.Leverage : 1);
           }
         }
       }
