@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Core.Main;
+using Core.Helper;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 
@@ -58,6 +59,13 @@ namespace Monitor
       {
         options.AllowSynchronousIO = true;
       });
+
+      // Remove the old tmp folder if it exists
+      string oldTmpFolder = monitorBasePath + System.IO.Path.DirectorySeparatorChar + "wwwroot" + System.IO.Path.DirectorySeparatorChar + "assets" + System.IO.Path.DirectorySeparatorChar + "tmp" + System.IO.Path.DirectorySeparatorChar;
+      if (System.IO.Directory.Exists(oldTmpFolder))
+      {
+        System.IO.Directory.Delete(oldTmpFolder, true);
+      }
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -77,7 +85,7 @@ namespace Monitor
       // Configure request pipeline
       app.UseStaticFiles();
       app.UseSession();
-      app.UseMvcWithDefaultRoute();
+      app.UseMvcWithDefaultRoute();      
 
       // Open the browser
       if (systemConfiguration.GeneralSettings.Monitor.OpenBrowserOnStart) OpenBrowser("http://localhost:" + systemConfiguration.GeneralSettings.Monitor.Port.ToString());

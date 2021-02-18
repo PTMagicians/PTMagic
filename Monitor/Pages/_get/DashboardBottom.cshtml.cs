@@ -177,35 +177,22 @@ namespace Monitor.Pages
         string sellStrategyText = Core.ProfitTrailer.StrategyHelper.GetStrategyText(Summary, dcaLogEntry.SellStrategies, dcaLogEntry.SellStrategy, isSellStrategyTrue, isTrailingSellActive);
 
         // Aggregate totals
-        if (dcaLogEntry.Leverage == 0)
+        double leverage = dcaLogEntry.Leverage;
+        if (leverage == 0)
         {
-          if (sellStrategyText.Contains("PENDING"))
-          {
-            PendingBalance = PendingBalance + (dcaLogEntry.Amount * dcaLogEntry.CurrentPrice);
-          }
-          else if (dcaLogEntry.BuyStrategies.Count > 0)
-          {
-            DCABalance = DCABalance + (dcaLogEntry.Amount * dcaLogEntry.CurrentPrice);
-          }
-          else
-          {
-            PairsBalance = PairsBalance + (dcaLogEntry.Amount * dcaLogEntry.CurrentPrice);
-          }
+          leverage = 1;
+        }
+        if (sellStrategyText.Contains("PENDING"))
+        {
+          PendingBalance = PendingBalance + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / leverage);
+        }
+        else if (dcaLogEntry.BuyStrategies.Count > 0)
+        {
+          DCABalance = DCABalance + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / leverage);
         }
         else
         {
-          if (sellStrategyText.Contains("PENDING"))
-          {
-            PendingBalance = PendingBalance + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / dcaLogEntry.Leverage != 0 ? dcaLogEntry.Leverage : 1);
-          }
-          else if (dcaLogEntry.BuyStrategies.Count > 0)
-          {
-            DCABalance = DCABalance + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / dcaLogEntry.Leverage != 0 ? dcaLogEntry.Leverage : 1);
-          }
-          else
-          {
-            PairsBalance = PairsBalance + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / dcaLogEntry.Leverage != 0 ? dcaLogEntry.Leverage : 1);
-          }
+          PairsBalance = PairsBalance + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / leverage);
         }
       }
       totalCurrentValue = PendingBalance + DCABalance + PairsBalance + AvailableBalance;
