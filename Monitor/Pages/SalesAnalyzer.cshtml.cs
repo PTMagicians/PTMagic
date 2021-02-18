@@ -161,7 +161,12 @@ namespace Monitor.Pages
       double AvailableBalance = PTData.GetCurrentBalance();
       foreach (Core.Main.DataObjects.PTMagicData.DCALogData dcaLogEntry in PTData.DCALog)
       {
-        totalCurrentValue = totalCurrentValue + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / dcaLogEntry.Leverage != 0 ? dcaLogEntry.Leverage : 1);
+        double leverage = dcaLogEntry.Leverage;
+        if (leverage == 0)
+        {
+          leverage = 1;
+        }
+        totalCurrentValue = totalCurrentValue + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / leverage);
       }
       totalCurrentValue = totalCurrentValue + AvailableBalance;
     }
