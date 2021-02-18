@@ -538,11 +538,11 @@ namespace Core.Helper
       {
         if (exchange.Equals("binancefutures", StringComparison.InvariantCultureIgnoreCase))
         {
-          result = "https://www.tradingview.com/chart/?symbol=BINANCE:" + market.ToUpper() + "PERP";
+          result = "https://uk.tradingview.com/chart/?symbol=BINANCE:" + market.ToUpper() + "PERP";
         }
         else
         {
-          result = "https://www.tradingview.com/?symbol=" + exchange.ToUpper() + ":" + market.ToUpper();
+          result = "https://uk.tradingview.com/?symbol=" + exchange.ToUpper() + ":" + market.ToUpper();
         }
       }
       else
