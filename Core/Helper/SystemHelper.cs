@@ -536,20 +536,14 @@ namespace Core.Helper
       string result = "#";
       if (platform.Equals("TradingView"))
       {
-        result = "https://www.tradingview.com/symbols/" + market.ToUpper() + "/?exchange=" + exchange.ToUpper();
-      }
-      else if (platform.Equals("TradingViewFutures"))
-      {
-        result = "https://www.tradingview.com/chart/?symbol=";
-
-        string pairName = SystemHelper.StripBadCode(market, Constants.WhiteListMinimal);
-
-        if (pairName.StartsWith(mainMarket))
+        if (exchange.Equals("binancefutures", StringComparison.InvariantCultureIgnoreCase))
         {
-          pairName = pairName.Replace(mainMarket, "") + mainMarket;
+          result = "https://www.tradingview.com/chart/?symbol=BINANCE:" + market.ToUpper() + "PERP";
         }
-
-        result += pairName + "PERP";
+        else
+        {
+          result = "https://www.tradingview.com/?symbol=" + exchange.ToUpper() + ":" + market.ToUpper();
+        }
       }
       else
       {
@@ -614,8 +608,16 @@ namespace Core.Helper
         pairName = pairName.Replace(mainMarket, "") + mainMarket;
       }
 
-      result += pairName;
+      if (exchange.Equals("binancefutures", StringComparison.InvariantCultureIgnoreCase))
+      {
+        result = "BINANCE:" + pairName + "PERP";
+      }
+      else
+      {
+        result += pairName;
+      }
 
+      
 
       return result;
     }
