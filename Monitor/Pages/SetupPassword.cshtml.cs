@@ -20,10 +20,10 @@ namespace Monitor.Pages
     {
       if (!password.Equals(passwordConfirm))
       {
-        ValidationMessage = "Password does not match the confirmation!";
+        base.PreInit();
+        Response.Redirect(PTMagicConfiguration.GeneralSettings.Monitor.RootUrl + "SetupPassword");
       }
-
-      if (ModelState.IsValid)
+      else if (ModelState.IsValid)
       {
         base.PreInit();
         PTMagicConfiguration.WriteSecureSettings(password);
