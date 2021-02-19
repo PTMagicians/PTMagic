@@ -83,6 +83,25 @@ namespace Core.Main
       return result;
     }
 
+    public string GetProfitTrailerServerAPITokenMasked()
+    {
+      string result = "";
+
+      if (!this.GeneralSettings.Application.ProfitTrailerServerAPIToken.Equals(""))
+      {
+        result = this.GeneralSettings.Application.ProfitTrailerServerAPIToken.Substring(0, 4);
+
+        for (int i = 1; i < this.GeneralSettings.Application.ProfitTrailerServerAPIToken.Length - 8; i++)
+        {
+          result += "*";
+        }
+
+        result += this.GeneralSettings.Application.ProfitTrailerServerAPIToken.Substring(this.GeneralSettings.Application.ProfitTrailerServerAPIToken.Length - 4);
+      }
+
+      return result;
+    }
+
     public GeneralSettings GeneralSettings
     {
       get
