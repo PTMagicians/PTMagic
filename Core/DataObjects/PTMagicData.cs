@@ -35,7 +35,6 @@ namespace Core.Main.DataObjects.PTMagicData
     public bool IsEnabled { get; set; } = true;
     public bool TestMode { get; set; } = true;
     public bool EnableBetaFeatures { get; set; } = false;
-    public string ProfitTrailerPath { get; set; }
     public string ProfitTrailerLicense { get; set; } = "";
     public string ProfitTrailerServerAPIToken { get; set; }
     public string ProfitTrailerMonitorURL { get; set; } = "http://localhost:8081/";

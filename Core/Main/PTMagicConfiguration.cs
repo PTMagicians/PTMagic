@@ -47,11 +47,6 @@ namespace Core.Main
       AnalyzerSettingsWrapper asw = JsonConvert.DeserializeObject<AnalyzerSettingsWrapper>(File.ReadAllText(basePath + "settings.analyzer.json"));
       _analyzerSettings = asw.AnalyzerSettings;
 
-      if (!_generalSettings.Application.ProfitTrailerPath.EndsWith(Path.DirectorySeparatorChar))
-      {
-        _generalSettings.Application.ProfitTrailerPath += Path.DirectorySeparatorChar;
-      }
-
       if (!_generalSettings.Application.ProfitTrailerMonitorURL.EndsWith("/"))
       {
         _generalSettings.Application.ProfitTrailerMonitorURL += "/";
