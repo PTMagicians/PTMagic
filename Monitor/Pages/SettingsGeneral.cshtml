@@ -86,7 +86,7 @@
               <div class="form-group row">
                 <label class="col-md-4 col-form-label">Profit Trailer Server API Token <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The API token needed to communicate with Profit Trailer - set in Profit Trailer Server Settings"></i></label>
                 <div class="col-md-8">
-                  <input type="text" class="form-control" name="Application_ProfitTrailerServerAPIToken" value="@Model.PTMagicConfiguration.GetProfitTrailerServerAPITokenMasked()">
+                  @Model.PTMagicConfiguration.GetProfitTrailerServerAPITokenMasked()
                 </div>
               </div>
 

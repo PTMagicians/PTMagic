@@ -107,7 +107,7 @@
               </li>
             } else {
               <li>
-                <a data-toggle="tooltip" data-placement="top" title="Settings menu is only accessible when you protect your monitor with a password!"><i class="fa fa-lock text-danger"></i> <span> Settings</span></a>
+                <a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)Login"  data-toggle="tooltip" data-placement="top" title="Settings menu is only accessible when you protect your monitor with a password!"><i class="fa fa-lock text-danger"></i> <span> Settings</span></a>
               </li>
             }
 
