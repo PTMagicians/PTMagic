@@ -84,14 +84,17 @@ namespace Core.Main
 
       if (!this.GeneralSettings.Application.ProfitTrailerServerAPIToken.Equals(""))
       {
-        result = this.GeneralSettings.Application.ProfitTrailerServerAPIToken.Substring(0, 4);
-
-        for (int i = 1; i < this.GeneralSettings.Application.ProfitTrailerServerAPIToken.Length - 8; i++)
+        int tokenLength = this.GeneralSettings.Application.ProfitTrailerServerAPIToken.Length;
+        if (tokenLength == 1)
+        {
+          result = "*";
+        }
+        else
+        result = this.GeneralSettings.Application.ProfitTrailerServerAPIToken.Substring(0, 1);
+        for (int i = 1; i < this.GeneralSettings.Application.ProfitTrailerServerAPIToken.Length; i++)
         {
           result += "*";
         }
-
-        result += this.GeneralSettings.Application.ProfitTrailerServerAPIToken.Substring(this.GeneralSettings.Application.ProfitTrailerServerAPIToken.Length - 4);
       }
 
       return result;
