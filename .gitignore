@@ -11,6 +11,7 @@ LocalProfitTrailer
 PTMagic/settings.*
 Monitor/appsettings.json
 Monitor/Monitor
+Monitor/tmp
 Release/
 
 
