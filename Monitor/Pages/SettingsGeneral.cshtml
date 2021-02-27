@@ -165,7 +165,7 @@
               <div class="form-group row">
                 <label class="col-md-4 col-form-label">Is Password Protected <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Defines if your monitor will be asking to setup a password on its first start."></i></label>
                 <div class="col-md-8">
-                  <input type="checkbox" name="Monitor_IsPasswordProtected" checked="@(Model.PTMagicConfiguration.GeneralSettings.Monitor.IsPasswordProtected)" data-plugin="switchery" data-color="#81c868" data-size="small" />
+                  <input type="checkbox" name="Monitor_IsPasswordProtected" checked="@(Model.PTMagicConfiguration.GeneralSettings.Monitor.IsPasswordProtected)" data-plugin="switchery" data-color="#81c868" data-size="small" /><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)SetupPassword" label class="col-md-4 col-form-label">(Change Password)</a> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Change the password required to log in, and view the settings pages"></i></label>
                 </div>
               </div>
 
