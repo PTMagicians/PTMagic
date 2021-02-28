@@ -542,7 +542,7 @@ namespace Core.Helper
         }
         else
         {
-          result = "https://uk.tradingview.com/?symbol=" + exchange.ToUpper() + ":" + market.ToUpper();
+          result = "https://uk.tradingview.com/chart/?symbol=" + exchange.ToUpper() + ":" + market.ToUpper();
         }
       }
       else
