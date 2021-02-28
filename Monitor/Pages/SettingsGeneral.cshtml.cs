@@ -71,7 +71,6 @@ namespace Monitor.Pages
       PTMagicConfiguration.GeneralSettings.Application.StartBalance = SystemHelper.TextToDouble(HttpContext.Request.Form["Application_StartBalance"], PTMagicConfiguration.GeneralSettings.Application.StartBalance, "en-US");
       PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName = HttpContext.Request.Form["Application_ProfitTrailerDefaultSettingName"];
 
-      PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken = HttpContext.Request.Form["Application_ProfitTrailerServerAPIToken"];
       PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset = HttpContext.Request.Form["Application_TimezoneOffset"];
       PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency = HttpContext.Request.Form["Application_MainFiatCurrency"];
       

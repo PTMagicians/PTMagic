@@ -47,11 +47,6 @@ namespace Core.Main
       AnalyzerSettingsWrapper asw = JsonConvert.DeserializeObject<AnalyzerSettingsWrapper>(File.ReadAllText(basePath + "settings.analyzer.json"));
       _analyzerSettings = asw.AnalyzerSettings;
 
-      if (!_generalSettings.Application.ProfitTrailerPath.EndsWith(Path.DirectorySeparatorChar))
-      {
-        _generalSettings.Application.ProfitTrailerPath += Path.DirectorySeparatorChar;
-      }
-
       if (!_generalSettings.Application.ProfitTrailerMonitorURL.EndsWith("/"))
       {
         _generalSettings.Application.ProfitTrailerMonitorURL += "/";
@@ -78,6 +73,28 @@ namespace Core.Main
         }
 
         result += this.GeneralSettings.Application.ProfitTrailerLicense.Substring(this.GeneralSettings.Application.ProfitTrailerLicense.Length - 4);
+      }
+
+      return result;
+    }
+
+    public string GetProfitTrailerServerAPITokenMasked()
+    {
+      string result = "";
+
+      if (!this.GeneralSettings.Application.ProfitTrailerServerAPIToken.Equals(""))
+      {
+        int tokenLength = this.GeneralSettings.Application.ProfitTrailerServerAPIToken.Length;
+        if (tokenLength == 1)
+        {
+          result = "*";
+        }
+        else
+        result = this.GeneralSettings.Application.ProfitTrailerServerAPIToken.Substring(0, 1);
+        for (int i = 1; i < this.GeneralSettings.Application.ProfitTrailerServerAPIToken.Length; i++)
+        {
+          result += "*";
+        }
       }
 
       return result;

@@ -3,7 +3,6 @@
     "Application": {
       "IsEnabled": true, // Enables the PTMagic bot (needs restart to take effect)
       "TestMode": false, // If TestMode is active, no properties files will be changed
-      "ProfitTrailerPath": "YOUR PROFIT TRAILER PATH", // Path to your Profit Trailer main directory (use double backslashes for windows like C:\\ProfitTrailer\\)
       "ProfitTrailerLicense": "YOUR PROFIT TRAILER LICENSE KEY", // Your Profit Trailer license key (needed to change your settings for PT 2.0 and above)
       "ProfitTrailerServerAPIToken": "", //Your Profit Trailer Server API Token
       "ProfitTrailerMonitorURL": "http://localhost:8081/", // The URL to your profit trailer monitor (needed to change your settings for PT 2.0 and above)

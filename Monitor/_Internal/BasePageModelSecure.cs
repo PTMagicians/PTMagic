@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.Net;
+using System;
 using Microsoft.AspNetCore.Http;
 using Core.Main;
 using Core.Helper;
@@ -27,7 +28,8 @@ namespace Monitor._Internal
       // Security check
       if (!IsLoggedIn(this.HttpContext))
       {
-        HttpContext.Response.Redirect(PTMagicConfiguration.GeneralSettings.Monitor.RootUrl + _redirectUrl);
+        this.HttpContext.Response.Clear();
+        this.HttpContext.Response.Redirect(PTMagicConfiguration.GeneralSettings.Monitor.RootUrl + _redirectUrl);        
       }
     }
 

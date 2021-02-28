@@ -703,20 +703,11 @@ namespace Core.Main
       {
         try
         {
-          if (this.PTMagicConfiguration.GeneralSettings.Application.TestMode) this.Log.DoLogInfo("TESTMODE ENABLED - No files will be changed!");
-
-          // Check for PT Directory
-          DirectoryInfo ptRoot = new DirectoryInfo(this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath);
-          if (ptRoot.Exists)
+          if (this.PTMagicConfiguration.GeneralSettings.Application.TestMode) 
           {
-            this.Log.DoLogInfo("Profit Trailer directory found");
-            result = RunProfitTrailerSettingsAPIChecks();
+            this.Log.DoLogInfo("TESTMODE ENABLED - No files will be changed!");
           }
-          else
-          {
-            this.Log.DoLogError("Profit Trailer directory not found (" + this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + ")");
-            result = false;
-          }
+          result = RunProfitTrailerSettingsAPIChecks();
 
           // Check for CoinMarketCap API Key
           if (!String.IsNullOrEmpty(this.PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey))
@@ -1142,14 +1133,7 @@ namespace Core.Main
       }
     }
 
-    private void GetProfitTrailerPropertiesPaths(out string pairsPropertiesPath, out string dcaPropertiesPath, out string indicatorsPropertiesPath)
-    {
-      // Get current PT properties
-      pairsPropertiesPath = this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.PairsFileName;
-      dcaPropertiesPath = this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.DCAFileName;
-      indicatorsPropertiesPath = this.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerPath + Constants.PTPathTrading + Path.DirectorySeparatorChar + this.IndicatorsFileName;
-    }
-
+    // Get current PT properties
     private void LoadCurrentProfitTrailerProperties()
     {
       // Load current PT properties from API (Valid for PT 2.x and above)
@@ -2143,9 +2127,6 @@ namespace Core.Main
     private void SaveProfitTrailerProperties()
     {
       // Get current PT properties
-      string pairsPropertiesPath, dcaPropertiesPath, indicatorsPropertiesPath;
-      GetProfitTrailerPropertiesPaths(out pairsPropertiesPath, out dcaPropertiesPath, out indicatorsPropertiesPath);
-
       if (this.GlobalSettingWritten || this.SingleMarketSettingChanged)
       {
         // Save current PT properties to API (Valid for PT 2.x and above)
