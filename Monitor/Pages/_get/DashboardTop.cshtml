@@ -166,17 +166,19 @@
                 <tr @(lostValue ? "class=errorRow" : "") >
 
                   <!-- Market -->
-                  <th class="align-top">
-                    @if (mps == null || mps.ActiveSingleSettings == null || mps.ActiveSingleSettings.Count == 0) 
-                    {
-                      <a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, dcaLogEntry.Market, Model.Summary.MainMarket)" target="_blank">@dcaLogEntry.Market</a>
-                    } else 
-                    {
-                      <a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, dcaLogEntry.Market, Model.Summary.MainMarket)" target="_blank">@dcaLogEntry.Market</a> <i class="fa fa-exclamation-triangle text-highlight" data-toggle="tooltip" data-placement="top" data-html="true" title="@await Component.InvokeAsync("PairIcon", mps)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner pair-tooltip'></div></div>"></i>
-                    }
+                  <td class="align-top">
+                    <b>
+                      @if (mps == null || mps.ActiveSingleSettings == null || mps.ActiveSingleSettings.Count == 0) 
+                      {
+                        <a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, dcaLogEntry.Market, Model.Summary.MainMarket)" target="_blank">@dcaLogEntry.Market</a>
+                      } else 
+                      {
+                        <a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, dcaLogEntry.Market, Model.Summary.MainMarket)" target="_blank">@dcaLogEntry.Market</a> <i class="fa fa-exclamation-triangle text-highlight" data-toggle="tooltip" data-placement="top" data-html="true" title="@await Component.InvokeAsync("PairIcon", mps)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner pair-tooltip'></div></div>"></i>
+                      }
+                    </b>
                     <br>
                     @bagAgeText
-                  </th>
+                  </td>
 
                   <!-- 24hr change -->
                   <td class="text-autocolor">@Html.Raw((dcaLogEntry.PercChange * 100).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))%</td>
