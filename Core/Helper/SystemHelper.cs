@@ -470,17 +470,28 @@ namespace Core.Helper
         result += hours.ToString() + "h";
       }
 
-      if ((days == 0) && (minutes > 0))
+      if (minutes > 0)
       {
-        if (hours > 0) result += " ";
-        result += minutes.ToString() + "m";
+        if (
+          (days == 0) ||
+          (days > 0 && hours == 0)
+          ) 
+        {
+          result += " ";
+          result += minutes.ToString() + "m";
+        }
       }
 
-      if ((hours == 0) && (seconds > 0))
+      if (
+        (days == 0 && hours == 0) || 
+        (days > 0 && hours == 0 && minutes == 0) ||
+        (days == 0 && hours > 0 && minutes == 0)
+        ) 
       {
-        if (minutes > 0) result += " ";
+        result += " ";
         result += seconds.ToString() + "s";
       }
+      
 
       return result;
     }
