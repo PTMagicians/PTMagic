@@ -74,9 +74,7 @@ namespace Core.MarketAnalyzer
               //New variables for filtering out bad markets
               float marketLastPrice = currencyTicker["lastPrice"].ToObject<float>();
               float marketVolume = currencyTicker["volume"].ToObject<float>();
-              if (marketName.EndsWith(mainMarket, StringComparison.InvariantCultureIgnoreCase))
-              {
-                if (marketLastPrice > 0 && marketVolume > 0)
+              if (marketLastPrice > 0 && marketVolume > 0)
                 {
 
                   // Set last values in case any error occurs
@@ -100,7 +98,6 @@ namespace Core.MarketAnalyzer
                   //Let the user know that the problem market was ignored.
                   log.DoLogInfo("BinanceFutures - Ignoring bad market data for " + marketName);
                 }
-              }
             }
 
             BinanceFutures.CheckFirstSeenDates(markets, ref marketInfos, systemConfiguration, log);

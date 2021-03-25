@@ -1518,7 +1518,7 @@ namespace Core.Main
 
             // Check ignore markets
             List<string> ignoredMarkets = SystemHelper.ConvertTokenStringToList(marketSetting.IgnoredMarkets, ",");
-            if (ignoredMarkets.Contains(marketPair))
+            if (ignoredMarkets.Any(marketPair.Contains))
             {
               this.Log.DoLogDebug("'" + marketPair + "' - Is ignored in '" + marketSetting.SettingName + "'.");
               continue;
@@ -1526,7 +1526,7 @@ namespace Core.Main
 
             // Check allowed markets
             List<string> allowedMarkets = SystemHelper.ConvertTokenStringToList(marketSetting.AllowedMarkets, ",");
-            if (allowedMarkets.Count > 0 && !allowedMarkets.Contains(marketPair))
+            if (allowedMarkets.Count > 0 && !allowedMarkets.Any(marketPair.Contains))
             {
               this.Log.DoLogDebug("'" + marketPair + "' - Is not allowed in '" + marketSetting.SettingName + "'.");
               continue;
