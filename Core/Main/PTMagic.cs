@@ -903,6 +903,30 @@ namespace Core.Main
               // Check for single market trend triggers
               this.ApplySingleMarketSettings();
 
+              // Ignore quarterly futures
+              if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceFutures", StringComparison.InvariantCultureIgnoreCase))
+              {
+                var quarterlyFuturesLines = new Dictionary<string, string>();
+
+                // Find all quarterly futures pairs
+                var results = this.MarketList.FindAll(m => m.Contains("_", StringComparison.InvariantCultureIgnoreCase));
+
+                // Create the settings lines to disable trading
+                if (results.Count > 0)
+                {
+                  this.PairsLines.AddRange(new string[] {
+                    "",
+                    "# BinanceFutures Quarterly Contracts - Ignore list:",
+                    "###################################################"
+                  });
+
+                  foreach (var marketPair in results)
+                  {
+                    this.PairsLines.Add(String.Format("{0}_trading_enabled = false", marketPair));
+                  }
+                }
+              }
+
               // Save new properties to Profit Trailer
               this.SaveProfitTrailerProperties();
 
