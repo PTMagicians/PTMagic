@@ -906,8 +906,6 @@ namespace Core.Main
               // Ignore quarterly futures
               if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceFutures", StringComparison.InvariantCultureIgnoreCase))
               {
-                var quarterlyFuturesLines = new Dictionary<string, string>();
-
                 // Find all quarterly futures pairs
                 var results = this.MarketList.FindAll(m => m.Contains("_", StringComparison.InvariantCultureIgnoreCase));
 
