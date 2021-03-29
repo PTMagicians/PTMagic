@@ -1540,7 +1540,7 @@ namespace Core.Main
 
             // Check ignore markets
             List<string> ignoredMarkets = SystemHelper.ConvertTokenStringToList(marketSetting.IgnoredMarkets, ",");
-            if (ignoredMarkets.Any(marketPair.Contains))
+            if (ignoredMarkets.Any(im => marketPair.StartsWith(im, StringComparison.InvariantCultureIgnoreCase)))
             {
               this.Log.DoLogDebug("'" + marketPair + "' - Is ignored in '" + marketSetting.SettingName + "'.");
               continue;
@@ -1556,7 +1556,7 @@ namespace Core.Main
 
             // Check ignore global settings
             List<string> ignoredGlobalSettings = SystemHelper.ConvertTokenStringToList(marketSetting.IgnoredGlobalSettings, ",");
-            if (ignoredMarkets.Any(im => marketPair.StartsWith(im, StringComparison.InvariantCultureIgnoreCase)))
+            if (ignoredGlobalSettings.Contains(this.ActiveSettingName))
             {
               this.Log.DoLogDebug("'" + marketPair + "' - '" + this.ActiveSettingName + "' - Is ignored in '" + marketSetting.SettingName + "'.");
               continue;
