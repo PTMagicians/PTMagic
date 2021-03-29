@@ -448,7 +448,7 @@ namespace Core.Helper
       return result;
     }
 
-    public static string GetProperDurationTime(int durationSeconds, bool includeDays = true)
+    public static string GetProperDurationTime(int durationSeconds, bool includeDays = true, bool shortOutput = false)
     {
       string result = "";
 
@@ -472,15 +472,19 @@ namespace Core.Helper
 
       if (minutes > 0)
       {
-        if (hours > 0 || days > 0) result += " ";
-        result += minutes.ToString() + "m";
+        if (days == 0 || (days > 0 && hours == 0)) 
+        {
+          result += " ";
+          result += minutes.ToString() + "m";
+        }
       }
 
-      if (seconds > 0)
+      if ((days == 0 && hours == 0) || (days > 0 && hours == 0 && minutes == 0) || (days == 0 && hours > 0 && minutes == 0)) 
       {
-        if (minutes > 0 || hours > 0 || days > 0) result += " ";
+        result += " ";
         result += seconds.ToString() + "s";
       }
+      
 
       return result;
     }

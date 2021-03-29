@@ -62,6 +62,21 @@
         </div>
 
         <div class="form-group row">
+          <label class="col-md-4 col-form-label">Ignored Global Settings <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Comma separated list of global settings you want to be ignored in this single market setting."></i></label>
+          <div class="col-md-8">
+            <input type="text" class="form-control" name="MarketAnalyzer_SingleMarketSetting_@(Model.SettingName)|IgnoredGlobalSettings" value="@Model.SingleMarketSetting.IgnoredGlobalSettings">
+          </div>
+        </div>
+
+        <div class="form-group row">
+          <label class="col-md-4 col-form-label">Allowed Global Settings <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Comma separated list of markets that are allowed for this single market setting to get applied to."></i></label>
+          <div class="col-md-8">
+            <input type="text" class="form-control" name="MarketAnalyzer_SingleMarketSetting_@(Model.SettingName)|AllowedGlobalSettings" value="@Model.SingleMarketSetting.AllowedGlobalSettings">
+            <span class="help-block"><small>Leave empty to allow all</small></span>
+          </div>
+        </div>
+
+        <div class="form-group row">
           <label class="col-md-4 col-form-label">Stop Process When Triggered <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Stops looking for other single market settings when this setting gets triggered for a market."></i></label>
           <div class="col-md-8">
             <input type="checkbox" name="MarketAnalyzer_SingleMarketSetting_@(Model.SettingName)|StopProcessWhenTriggered" checked="@(Model.SingleMarketSetting.StopProcessWhenTriggered)" data-plugin="switchery" data-switchery="false" data-color="#81c868" data-size="small" />
