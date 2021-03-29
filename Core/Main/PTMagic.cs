@@ -903,6 +903,28 @@ namespace Core.Main
               // Check for single market trend triggers
               this.ApplySingleMarketSettings();
 
+              // Ignore quarterly futures
+              if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceFutures", StringComparison.InvariantCultureIgnoreCase))
+              {
+                // Find all quarterly futures pairs
+                var results = this.MarketList.FindAll(m => m.Contains("_", StringComparison.InvariantCultureIgnoreCase));
+
+                // Create the settings lines to disable trading
+                if (results.Count > 0)
+                {
+                  this.PairsLines.AddRange(new string[] {
+                    "",
+                    "# BinanceFutures Quarterly Contracts - Ignore list:",
+                    "###################################################"
+                  });
+
+                  foreach (var marketPair in results)
+                  {
+                    this.PairsLines.Add(String.Format("{0}_trading_enabled = false", marketPair));
+                  }
+                }
+              }
+
               // Save new properties to Profit Trailer
               this.SaveProfitTrailerProperties();
 
@@ -1518,7 +1540,7 @@ namespace Core.Main
 
             // Check ignore markets
             List<string> ignoredMarkets = SystemHelper.ConvertTokenStringToList(marketSetting.IgnoredMarkets, ",");
-            if (ignoredMarkets.Contains(marketPair))
+            if (ignoredMarkets.Any(marketPair.Contains))
             {
               this.Log.DoLogDebug("'" + marketPair + "' - Is ignored in '" + marketSetting.SettingName + "'.");
               continue;
@@ -1526,7 +1548,7 @@ namespace Core.Main
 
             // Check allowed markets
             List<string> allowedMarkets = SystemHelper.ConvertTokenStringToList(marketSetting.AllowedMarkets, ",");
-            if (allowedMarkets.Count > 0 && !allowedMarkets.Contains(marketPair))
+            if (allowedMarkets.Count > 0 && !allowedMarkets.Any(am => marketPair.StartsWith(am, StringComparison.InvariantCultureIgnoreCase)))
             {
               this.Log.DoLogDebug("'" + marketPair + "' - Is not allowed in '" + marketSetting.SettingName + "'.");
               continue;
@@ -1534,7 +1556,7 @@ namespace Core.Main
 
             // Check ignore global settings
             List<string> ignoredGlobalSettings = SystemHelper.ConvertTokenStringToList(marketSetting.IgnoredGlobalSettings, ",");
-            if (ignoredGlobalSettings.Contains(this.ActiveSettingName))
+            if (ignoredMarkets.Any(im => marketPair.StartsWith(im, StringComparison.InvariantCultureIgnoreCase)))
             {
               this.Log.DoLogDebug("'" + marketPair + "' - '" + this.ActiveSettingName + "' - Is ignored in '" + marketSetting.SettingName + "'.");
               continue;
