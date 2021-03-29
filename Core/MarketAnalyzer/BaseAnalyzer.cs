@@ -311,13 +311,13 @@ namespace Core.MarketAnalyzer
           if (recentMarkets.TryGetValue(recentMarketPair.Key, out recentMarket))
           {
             List<string> ignoredMarkets = SystemHelper.ConvertTokenStringToList(marketTrend.IgnoredMarkets, ",");
-            if (ignoredMarkets.Contains(recentMarketPair.Value.Symbol))
+            if (ignoredMarkets.Any(im => recentMarketPair.Value.Symbol.StartsWith(im, StringComparison.InvariantCultureIgnoreCase)))
             {
               log.DoLogDebug(platform + " - Market trend '" + marketTrend.Name + "' for '" + recentMarketPair.Key + "' is ignored in this trend.");
               continue;
             }
             List<string> allowedMarkets = SystemHelper.ConvertTokenStringToList(marketTrend.AllowedMarkets, ",");
-            if (allowedMarkets.Count > 0 && !allowedMarkets.Contains(recentMarketPair.Value.Symbol))
+            if (allowedMarkets.Count > 0 && !allowedMarkets.Any(am => recentMarketPair.Value.Symbol.StartsWith(am, StringComparison.InvariantCultureIgnoreCase)))
             {
               log.DoLogDebug(platform + " - Market trend '" + marketTrend.Name + "' for '" + recentMarketPair.Key + "' is not allowed in this trend.");
               continue;
