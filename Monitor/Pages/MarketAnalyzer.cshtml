@@ -183,14 +183,15 @@ else
               <tr>
                 <td>@Core.Helper.SystemHelper.SplitCamelCase(marketTrend.Name)</td>
                 <td class="text-right">@marketCountString</td>
-                <td class="text-right">@Core.Helper.SystemHelper.GetProperDurationTime(marketTrend.TrendMinutes * 60, false)</td> @if (marketTrend.TrendThreshold == 0)
-                {
-                  <td class="text-right">--</td>
-                }
-                else
-                {
-                  <td class="text-right">@marketTrend.TrendThreshold</td>
-                }
+                <td class="text-right">@Core.Helper.SystemHelper.GetProperDurationTime(marketTrend.TrendMinutes * 60, false)</td> 
+                  @if (marketTrend.TrendThreshold == 0)
+                  {
+                    <td class="text-right">--</td>
+                  }
+                  else
+                  {
+                    <td class="text-right">@marketTrend.TrendThreshold</td>
+                  }
                 <td class="text-right text-autocolor">@trendChangeOutput%</td>
               </tr>
             }
@@ -275,18 +276,18 @@ else
               <td class="text-right">@mps.LatestPrice.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US")) @Model.Summary.MainMarket</td>
               <td class="text-right">@Math.Round(mps.Latest24hVolume, 0).ToString("#,#0", new System.Globalization.CultureInfo("en-US")) @Model.Summary.MainMarket</td>
               @foreach (Core.Main.DataObjects.PTMagicData.MarketTrend marketTrend in marketTrends) {
-                if (mps.MarketTrendChanges.ContainsKey(marketTrend.Name)) {
+                if (mps.MarketTrendChanges.ContainsKey(marketTrend.Name)) 
+                {
                   marketTrendsDisplayed++;
                   string trendChangeOutput = mps.MarketTrendChanges[marketTrend.Name].ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
-                  if ((mps.MarketTrendChanges[marketTrend.Name] > marketTrend.TrendThreshold) || (mps.MarketTrendChanges[marketTrend.Name] > marketTrend.TrendThreshold) )
-                  {
-                    <td class="text-right text-autocolor-saw"><i class="fa fa-ban text-muted" data-toggle="tooltip" data-placement="top" title="This coin has been excluded from the Market Trend Averages for this timeframe due to your Threshold setting."></i>&nbsp; @trendChangeOutput%</td>
-                  }
-                  else
-                  {
-                    <td class="text-right text-autocolor-saw">@trendChangeOutput%</td>
-                  }
-                 
+                  if  (marketTrend.TrendThreshold != 0 && Math.Abs(mps.MarketTrendChanges[marketTrend.Name]) > marketTrend.TrendThreshold)
+                    {
+                      <td class="text-right text-autocolor-saw"><i class="fa fa-ban text-muted" data-toggle="tooltip" data-placement="top" title="This coin has been excluded from the Market Trend Averages for this timeframe due to your Threshold setting."></i>&nbsp; @trendChangeOutput%</td>
+                    }
+                    else
+                    {
+                      <td class="text-right text-autocolor-saw">@trendChangeOutput%</td>
+                    }
                 }
               }
               @for (int i = 0; i < marketTrends.Count - marketTrendsDisplayed; i++) {
