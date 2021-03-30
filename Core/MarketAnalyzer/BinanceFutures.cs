@@ -361,11 +361,11 @@ namespace Core.MarketAnalyzer
         ConcurrentDictionary<string, List<MarketTick>> marketTicks = new ConcurrentDictionary<string, List<MarketTick>>();
 
         int ParallelThrottle = 4;
-        if (systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours > 200)
+        if (systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours > 50)
         {
           ParallelThrottle = 2;
           log.DoLogInfo("----------------------------------------------------------------------------");
-          log.DoLogInfo("StoreDataMaxHours is greater than 200.  Historical data requests will be");
+          log.DoLogInfo("StoreDataMaxHours is greater than 50.  Historical data requests will be");
           log.DoLogInfo("throttled to avoid exceeding exchange data request limits.  This initial ");
           log.DoLogInfo("run could take more than 30 minutes.  Please go outside for a walk...");
           log.DoLogInfo("----------------------------------------------------------------------------");
