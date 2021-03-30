@@ -716,7 +716,7 @@ namespace Core.Main
           }
           else
           {
-            this.Log.DoLogInfo("No CoinMarketCap API KEY specified! You can't use CoinMarketCap in your settings.analyzer.json");
+            this.Log.DoLogInfo("No CoinMarketCap API KEY specified! That's ok, but you can't use CoinMarketCap in your settings.analyzer.json");
           }
 
           // Check for CurrencyConverterApi Key
@@ -726,7 +726,7 @@ namespace Core.Main
           }
           else
           {
-            this.Log.DoLogInfo("No FreeCurrencyConverterApi KEY specified, you can only use USD; apply for a key at: https://freecurrencyrates.com/en");
+            this.Log.DoLogInfo("No FreeCurrencyConverterApi KEY specified. That's ok!  But you can only use USD; apply for a key at: https://freecurrencyrates.com/en");
           }
         }
         catch (System.NullReferenceException)
@@ -1234,7 +1234,7 @@ namespace Core.Main
       }
       else
       {
-        this.Log.DoLogInfo("No CMC API-Key specified. No CMC Data will be pulled");
+        this.Log.DoLogInfo("No CMC API-Key specified. That's OK, but no CMC Data can be pulled.");
       }
 
       if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Bittrex", StringComparison.InvariantCultureIgnoreCase))
