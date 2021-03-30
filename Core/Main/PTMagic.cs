@@ -1572,7 +1572,7 @@ namespace Core.Main
             // Check allowed markets
             
             // Strip main markets from list, if exists
-            string allowed = marketSetting.IgnoredMarkets.ToUpper();
+            string allowed = marketSetting.AllowedMarkets.ToUpper();
             allowed = allowed.Replace(mainMarket, "");
             switch (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.ToLower())
             {
