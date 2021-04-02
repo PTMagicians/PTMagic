@@ -716,7 +716,7 @@ namespace Core.Main
           }
           else
           {
-            this.Log.DoLogInfo("No CoinMarketCap API KEY specified! You can't use CoinMarketCap in your settings.analyzer.json");
+            this.Log.DoLogInfo("No CoinMarketCap API KEY specified! That's ok, but you can't use CoinMarketCap in your settings.analyzer.json");
           }
 
           // Check for CurrencyConverterApi Key
@@ -726,7 +726,7 @@ namespace Core.Main
           }
           else
           {
-            this.Log.DoLogInfo("No FreeCurrencyConverterApi KEY specified, you can only use USD; apply for a key at: https://freecurrencyrates.com/en");
+            this.Log.DoLogInfo("No FreeCurrencyConverterApi KEY specified. That's ok!  But you can only use USD; apply for a key at: https://freecurrencyrates.com/en");
           }
         }
         catch (System.NullReferenceException)
@@ -1234,7 +1234,7 @@ namespace Core.Main
       }
       else
       {
-        this.Log.DoLogInfo("No CMC API-Key specified. No CMC Data will be pulled");
+        this.Log.DoLogInfo("No CMC API-Key specified. That's OK, but no CMC Data can be pulled.");
       }
 
       if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Bittrex", StringComparison.InvariantCultureIgnoreCase))
@@ -1525,12 +1525,22 @@ namespace Core.Main
 
         int marketPairProcess = 1;
         Dictionary<string, List<string>> matchedMarketTriggers = new Dictionary<string, List<string>>();
+        string mainMarket = this.LastRuntimeSummary.MainMarket;
 
         // Loop through markets
         foreach (string marketPair in this.MarketList)
         {
           this.Log.DoLogDebug("'" + marketPair + "' - Checking triggers (" + marketPairProcess.ToString() + "/" + this.MarketList.Count.ToString() + ")...");
-
+          string market = marketPair.Replace(mainMarket, "");
+          switch (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.ToLower())
+            {
+              case "bittrex":
+              market = market.Replace("-", "");
+              break;
+              case "poloniex":
+              market = market.Replace("-", "");
+              break;
+            }
           bool stopTriggers = false;
 
           // Loop through single market settings
@@ -1539,16 +1549,42 @@ namespace Core.Main
             List<string> matchedSingleMarketTriggers = new List<string>();
 
             // Check ignore markets
-            List<string> ignoredMarkets = SystemHelper.ConvertTokenStringToList(marketSetting.IgnoredMarkets, ",");
-            if (ignoredMarkets.Any(im => marketPair.StartsWith(im, StringComparison.InvariantCultureIgnoreCase)))
+            
+            // Strip main markets from list, if exists
+            string ignored = marketSetting.IgnoredMarkets.ToUpper();
+            ignored = ignored.Replace(mainMarket, "");
+            switch (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.ToLower())
+            {
+              case "bittrex":
+              ignored = ignored.Replace("-", "");
+              break;
+              case "poloniex":
+              ignored = ignored.Replace("_", "");
+              break;
+            }
+            List<string> ignoredMarkets = SystemHelper.ConvertTokenStringToList(ignored, ",");
+            if (ignoredMarkets.Contains(market))
             {
               this.Log.DoLogDebug("'" + marketPair + "' - Is ignored in '" + marketSetting.SettingName + "'.");
               continue;
             }
 
             // Check allowed markets
-            List<string> allowedMarkets = SystemHelper.ConvertTokenStringToList(marketSetting.AllowedMarkets, ",");
-            if (allowedMarkets.Count > 0 && !allowedMarkets.Any(am => marketPair.StartsWith(am, StringComparison.InvariantCultureIgnoreCase)))
+            
+            // Strip main markets from list, if exists
+            string allowed = marketSetting.AllowedMarkets.ToUpper();
+            allowed = allowed.Replace(mainMarket, "");
+            switch (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.ToLower())
+            {
+              case "bittrex":
+              allowed = allowed.Replace("-", "");
+              break;
+              case "poloniex":
+              allowed = allowed.Replace("_", "");
+              break;
+            }
+            List<string> allowedMarkets = SystemHelper.ConvertTokenStringToList(allowed, ",");
+            if (allowedMarkets.Count > 0 && !allowedMarkets.Contains(market))
             {
               this.Log.DoLogDebug("'" + marketPair + "' - Is not allowed in '" + marketSetting.SettingName + "'.");
               continue;
