@@ -316,7 +316,7 @@ namespace Core.MarketAnalyzer
               market = market.Replace("-", "");
               break;
               case "poloniex":
-              market = market.Replace("-", "");
+              market = market.Replace("_", "");
               break;
             }
           if (recentMarkets.TryGetValue(recentMarketPair.Key, out recentMarket))
