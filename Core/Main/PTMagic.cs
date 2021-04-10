@@ -1538,7 +1538,7 @@ namespace Core.Main
               market = market.Replace("-", "");
               break;
               case "poloniex":
-              market = market.Replace("-", "");
+              market = market.Replace("_", "");
               break;
             }
           bool stopTriggers = false;
