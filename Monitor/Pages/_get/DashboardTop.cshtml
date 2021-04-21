@@ -98,10 +98,9 @@
                 <th class="text-left" data-toggle="tooltip" data-placement="top" title="24 Hour Trend">24H</th>
                 <th class="text-left" data-toggle="tooltip" data-placement="top" title="Total Buy Cost">Cost</th>
                 <th></th>
-                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Active buy strategies">DCA</th>
-                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Active sell strategies">Sell</th>
-                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Target profit to sell">Target</th>
-                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Current Profit">Profit</th>
+                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Active Buy Strategies">DCA</th>
+                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Active Sell Strategies">Sell</th>
+                <th class="text-left" data-toggle="tooltip" data-html="true" data-placement="top" title="Profit Target <br> Current Profit">Profit</th>
                 <th></th>
               </tr>
             </thead>
@@ -202,42 +201,32 @@
                   <td>@Html.Raw(buyStrategyText)</td>
                   <!-- Sell Strategy -->
                   <td>@Html.Raw(sellStrategyText)</td>
-                  <!-- Target -->
-                  @if (!sellStrategyText.Contains("WATCHMODE"))
-                  {
-                    @if (sellStrategyText.Contains("CROSSED"))
-                    // if leverage, recalculate profit target
-                    {
-                      string leverageText = sellStrategyText.Remove(0, sellStrategyText.IndexOf("CROSSED")+9);
-                      leverage = leverageText.Remove(leverageText.IndexOf(".0)"), leverageText.Length - leverageText.IndexOf(".0)"));
-                      leverageValue = double.Parse(leverage);
-                    }
-                    @if (sellStrategyText.Contains("ISOLATED"))
-                    {
-                      string leverageText = sellStrategyText.Remove(0, sellStrategyText.IndexOf("ISOLATED")+10);
-                      leverage = leverageText.Remove(leverageText.IndexOf(".0)"), leverageText.Length - leverageText.IndexOf(".0)"));
-                      leverageValue = double.Parse(leverage);
-                    }
-                    @if (leverageValue == 1)
-                    {
-                      <td class="@Html.Raw((dcaLogEntry.TargetGainValue.HasValue && (profitPercentage > dcaLogEntry.TargetGainValue.Value)) ? "text-success" : "text-danger")">@Html.Raw(dcaLogEntry.TargetGainValue.HasValue ? dcaLogEntry.TargetGainValue.Value.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%" : "&nbsp")</td>
-                    }
-                    else
-                    {
-                      double TargetGain = leverageValue * dcaLogEntry.TargetGainValue.Value;
-                      <td class="@Html.Raw((dcaLogEntry.TargetGainValue.HasValue && (profitPercentage > dcaLogEntry.TargetGainValue.Value)) ? "text-success" : "text-danger")">@Html.Raw(dcaLogEntry.TargetGainValue.HasValue ? TargetGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%" : "&nbsp")</td>
-                    }
-                  }
-                  else
-                  {
-                    <td class="text-left"></td>
-                  }
-                  <!-- Profit -->
+                  <!-- Target/Profit -->
                   @if (!@lostValue)
-                  {          
-                    profitPercentage = profitPercentage * leverageValue;
-                    <td class="text-autocolor">@profitPercentage.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
-                  }
+                  {
+                    @if (!sellStrategyText.Contains("WATCHMODE"))
+                    {
+                      @if (sellStrategyText.Contains("CROSSED"))
+                      // if leverage, recalculate profit target
+                      {
+                        string leverageText = sellStrategyText.Remove(0, sellStrategyText.IndexOf("CROSSED")+9);
+                        leverage = leverageText.Remove(leverageText.IndexOf(".0)"), leverageText.Length - leverageText.IndexOf(".0)"));
+                        leverageValue = double.Parse(leverage);
+                      }
+                      @if (sellStrategyText.Contains("ISOLATED"))
+                      {
+                        string leverageText = sellStrategyText.Remove(0, sellStrategyText.IndexOf("ISOLATED")+10);
+                        leverage = leverageText.Remove(leverageText.IndexOf(".0)"), leverageText.Length - leverageText.IndexOf(".0)"));
+                        leverageValue = double.Parse(leverage);
+                      }
+                      profitPercentage = profitPercentage * leverageValue; 
+                      double TargetGain = leverageValue * dcaLogEntry.TargetGainValue.Value;
+                      <td>@TargetGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%
+                        <br>
+                        <div class="text-autocolor">@profitPercentage.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</div>
+                      </td>
+                    }
+                  } 
                   else
                   {
                     <td class="text-left">No Value!</td>
@@ -255,7 +244,6 @@
             <td>Totals:</td>
             <td></td>
             <td>@Html.Raw(Model.TotalBagCost.ToString("#,#0.000000", new System.Globalization.CultureInfo("en-US")))</td>
-            <td></td>
             <td></td>
             <td></td>
             <td></td>
