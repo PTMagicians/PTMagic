@@ -84,7 +84,7 @@
         "PairsProperties": { // Properties for PAIRS.PROPERTIES
             // Any valid setting from https://wiki.profittrailer.com/en/config can be used here.
             // You can use a specific value, or apply a discrete OFFSET or OFFSETPERCENT to the value in your default PAIRS setting.		  
-            "DEFAULT_sell_only_mode_enabled": true,
+            "DEFAULT_sell_only_mode_enabled": "true",
             "DEFAULT_trailing_profit_OFFSETPERCENT": -50
         },
         "DCAProperties": { // Properties for DCA.PROPERTIES
@@ -112,16 +112,16 @@
         ],
         "PairsProperties": {
           "max_trading_pairs_OFFSET": -2,
-		  "DEFAULT_min_buy_volume_OFFSETPERCENT": 100,
-		  //"DEFAULT_initial_cost_OFFSETPERCENT": -50,
-		  //"DEFAULT_initial_cost_percentage_OFFSETPERCENT": -50,
+		      "DEFAULT_min_buy_volume_OFFSETPERCENT": 100,
+		      //"DEFAULT_initial_cost_OFFSETPERCENT": -50,
+		      //"DEFAULT_initial_cost_percentage_OFFSETPERCENT": -50,
           "DEFAULT_trailing_buy_OFFSETPERCENT": 25,
           "DEFAULT_trailing_profit_OFFSETPERCENT": -25
         },
         "DCAProperties": {
           //"DEFAULT_DCA_rebuy_timeout_OFFSETPERCENT": 100,
           "DEFAULT_DCA_trailing_buy_OFFSETPERCENT": 25,
-		  "DEFAULT_DCA_trailing_profit_OFFSETPERCENT": -50
+		      "DEFAULT_DCA_trailing_profit_OFFSETPERCENT": -50
         },
 		"IndicatorsProperties": {
         }
@@ -147,14 +147,14 @@
         ],
         "PairsProperties": {
           "max_trading_pairs_OFFSET": -1,
-		  //"DEFAULT_initial_cost_OFFSETPERCENT": -25,
-		  //"DEFAULT_initial_cost_percentage_OFFSETPERCENT": -25,
+		      //"DEFAULT_initial_cost_OFFSETPERCENT": -25,
+		      //"DEFAULT_initial_cost_percentage_OFFSETPERCENT": -25,
           "DEFAULT_trailing_buy_OFFSETPERCENT": 10,
           "DEFAULT_trailing_profit_OFFSETPERCENT": -10
         },
         "DCAProperties": {
           "DEFAULT_DCA_trailing_buy_OFFSETPERCENT": 10,
-		  "DEFAULT_DCA_trailing_profit_OFFSETPERCENT": -10,
+		      "DEFAULT_DCA_trailing_profit_OFFSETPERCENT": -10,
         },
 		"IndicatorsProperties": {
         }
@@ -180,14 +180,14 @@
         ],
         "PairsProperties": {
           "max_trading_pairs_OFFSET": 1,
-		   //"DEFAULT_initial_cost_OFFSETPERCENT": 10,
-		   //"DEFAULT_initial_cost_percentage_OFFSETPERCENT": 10,
-		   "DEFAULT_trailing_buy_OFFSETPERCENT": -10,
+		      //"DEFAULT_initial_cost_OFFSETPERCENT": 10,
+		      //"DEFAULT_initial_cost_percentage_OFFSETPERCENT": 10,
+		      "DEFAULT_trailing_buy_OFFSETPERCENT": -10,
           "DEFAULT_A_sell_value_OFFSETPERCENT": 10
         },
         "DCAProperties": {
           "DEFAULT_DCA_trailing_buy_OFFSETPERCENT": -10,
-		  "DEFAULT_DCA_trailing_profit_OFFSETPERCENT": 10,
+		      "DEFAULT_DCA_trailing_profit_OFFSETPERCENT": 10,
         },
 		"IndicatorsProperties": {
         }
@@ -212,14 +212,14 @@
         ],
         "PairsProperties": {
           "max_trading_pairs_OFFSET": 2,
-		  //"DEFAULT_initial_cost_OFFSETPERCENT": 20,
-		  //"DEFAULT_initial_cost_percentage_OFFSETPERCENT": 20,
-		  "DEFAULT_trailing_buy_OFFSETPERCENT": -10,
+		      //"DEFAULT_initial_cost_OFFSETPERCENT": 20,
+		      //"DEFAULT_initial_cost_percentage_OFFSETPERCENT": 20,
+		      "DEFAULT_trailing_buy_OFFSETPERCENT": -10,
           "DEFAULT_A_sell_value_OFFSETPERCENT": 20
         },
         "DCAProperties": {
           "DEFAULT_DCA_trailing_buy_OFFSETPERCENT": -20,
-		  "DEFAULT_DCA_trailing_profit_OFFSETPERCENT": 20,
+		      "DEFAULT_DCA_trailing_profit_OFFSETPERCENT": 20,
         },
 		"IndicatorsProperties": {
         }
@@ -253,9 +253,9 @@
           }
         ],
         "PairsProperties": {
-          "DEFAULT_trading_enabled": false,
-          "DEFAULT_sell_only_mode_enabled": true,
-          "DEFAULT_DCA_enabled": false
+          "DEFAULT_trading_enabled": "false",
+          "DEFAULT_sell_only_mode_enabled": "true",
+          "DEFAULT_DCA_enabled": "false"
         }
       },
 	   // -----------------------------
@@ -267,7 +267,7 @@
             "MarketTrendName": "1h",
             "MarketTrendRelation": "Relative",  // The relation of the single market trend. Relative = Single market 
 			                                    //  trend compared relative to the market trend 
-											    // Absolute = Single market trend viewed on its own
+											                    // Absolute = Single market trend viewed on its own
             "MinChange": 8
           },
           {
@@ -284,12 +284,12 @@
 		"OffTriggers": [
 		  {
 			"HoursSinceTriggered": 3 //  Any coin that triggers this setting, will remain under this setting
-								     //	 for 3 hours, since the last time it triggered.
+								              //	 for 3 hours, since the last time it triggered.
           }
         ],
         "PairsProperties": {
-          "DEFAULT_sell_only_mode_enabled": true,
-          "DEFAULT_DCA_enabled": false
+          "DEFAULT_sell_only_mode_enabled": "true",
+          "DEFAULT_DCA_enabled": "false"
         }
       },
 	   // -----------------------------
@@ -309,8 +309,8 @@
           }
         ],
 		"PairsProperties": {
-          "DEFAULT_sell_only_mode_enabled": true,
-          "DEFAULT_DCA_enabled": false
+          "DEFAULT_sell_only_mode_enabled": "true",
+          "DEFAULT_DCA_enabled": "false"
         }
       }
     ]
