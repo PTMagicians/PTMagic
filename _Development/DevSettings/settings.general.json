@@ -3,10 +3,10 @@
     "Application": {
       "IsEnabled": true, // Enables the PTMagic bot (needs restart to take effect)
       "TestMode": false, // If TestMode is active, no properties files will be changed
-      "ProfitTrailerLicense": "YOUR PROFIT TRAILER LICENSE KEY", // Your Profit Trailer license key (needed to change your settings for PT 2.0 and above)
+      "ProfitTrailerLicense": "adf12349780adsfljlasdf014325ehm, eriou12340987uasdflkj123402134jkr", // Your Profit Trailer license key(s) (needed to change your settings)
       "ProfitTrailerServerAPIToken": "", //Your Profit Trailer Server API Token
-      "ProfitTrailerMonitorURL": "http://localhost:8081/", // The URL to your profit trailer monitor (needed to change your settings for PT 2.0 and above)
-      "ProfitTrailerDefaultSettingName": "default", // Your Profit Trailer default setting name (needed to change your settings for PT 2.0 and above)
+      "ProfitTrailerMonitorURL": "http://localhost:8081/, http://localhost:8082/", // The URL(s) to your profit trailer monitor (needed to change your settings)
+      "ProfitTrailerDefaultSettingName": "default", // Your Profit Trailer default setting name (needed to change your settings)
       "Exchange": "Bittrex", // The exchange your are running Profit Trailer on
       "StartBalance": 0, // The balance you had in your wallet when you started working with Profit Trailer
       "TimezoneOffset": "+0:00", // Your timezone offset from UTC time
