@@ -15,7 +15,7 @@ namespace Core.Helper
         try
         {
           TelegramBotClient botClient = new TelegramBotClient(botToken);
-          System.Threading.Tasks.Task<Message> sentMessage = botClient.SendTextMessageAsync(chatId, message, ParseMode.Markdown, false, useSilentMode);
+          System.Threading.Tasks.Task<Message> sentMessage = botClient.SendTextMessageAsync(chatId, message, ParseMode.Markdown, null, useSilentMode);
 
           if (sentMessage.IsCompleted)
           {

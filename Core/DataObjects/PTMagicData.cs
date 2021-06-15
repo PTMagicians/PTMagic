@@ -37,7 +37,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public bool EnableBetaFeatures { get; set; } = false;
     public string ProfitTrailerLicense { get; set; } = "";
     public string ProfitTrailerServerAPIToken { get; set; }
-    public string ProfitTrailerMonitorURL { get; set; } = "http://localhost:8081/";
+    public string ProfitTrailerMonitorURL { get; set; } = "";
     public string ProfitTrailerDefaultSettingName { get; set; } = "default";
     public int FloodProtectionMinutes { get; set; } = 15;
     public string Exchange { get; set; }
