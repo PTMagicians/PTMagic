@@ -3,7 +3,7 @@
     "Application": {
       "IsEnabled": true, // Enables the PTMagic bot (needs restart to take effect)
       "TestMode": false, // If TestMode is active, no properties files will be changed
-      "ProfitTrailerLicense": "adf12349780adsfljlasdf014325ehm, eriou12340987uasdflkj123402134jkr", // Your Profit Trailer license key(s) (needed to change your settings)
+      "ProfitTrailerLicense": "ptlicense1asdf234fljlasdf014325ehm, ptlicense2asdfou12987uasdflkj122134jkr", // Your Profit Trailer license key(s) (needed to change your settings)
       "ProfitTrailerServerAPIToken": "", //Your Profit Trailer Server API Token
       "ProfitTrailerMonitorURL": "http://localhost:8081/, http://localhost:8082/", // The URL(s) to your profit trailer monitor (needed to change your settings)
       "ProfitTrailerDefaultSettingName": "default", // Your Profit Trailer default setting name (needed to change your settings)
