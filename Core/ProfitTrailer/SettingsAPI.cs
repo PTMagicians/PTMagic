@@ -19,25 +19,24 @@ namespace Core.ProfitTrailer
       bool transferCompleted = false;
       bool transferCanceled = false;
 
+      // get PT license list
       string licenses = systemConfiguration.GeneralSettings.Application.ProfitTrailerLicense;
+      if (systemConfiguration.GeneralSettings.Application.ProfitTrailerLicenseXtra != "")
+      {
+        licenses = licenses + ", " + systemConfiguration.GeneralSettings.Application.ProfitTrailerLicenseXtra;
+      }
       List<string> licenseList = SystemHelper.ConvertTokenStringToList(licenses, ",");
       int licenseCount = licenseList.Count;
 
-      // Check for multiple licenses/bots
-      //int licenses = 1;
-      //if (systemConfiguration.GeneralSettings.Application.ProfitTrailerLicense2 != "")
-      //{
-      //  licenses = 2;
-      //}
-      //if (systemConfiguration.GeneralSettings.Application.ProfitTrailerLicense3 != "")
-      //{
-      //  licenses = 3;
-      //}
-
       // get URL list
       string urls = systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL;
+      if (systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURLXtra != "")
+      {
+        urls = urls + ", " + systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURLXtra;
+      }
       List<string> urlList = SystemHelper.ConvertTokenStringToList(urls, ",");
       int urlCount = urlList.Count;
+
       log.DoLogInfo("Found " + licenseCount + " licenses and " + urlCount + " URLs");
       if (urlCount != licenseCount)
       {
