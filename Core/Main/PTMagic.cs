@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.IO;
 using System.Linq;
@@ -52,7 +53,7 @@ namespace Core.Main
     private List<string> _indicatorsLines = null;
     private List<string> _exchangeMarketList = null;
     private List<string> _marketList = new List<string>();
-    private Dictionary<string, MarketInfo> _marketInfos = new Dictionary<string, MarketInfo>();
+    private ConcurrentDictionary<string, MarketInfo> _marketInfos = new ConcurrentDictionary<string, MarketInfo>();
     private Dictionary<string, double> _averageMarketTrendChanges = new Dictionary<string, double>();
     private Dictionary<string, List<MarketTrendChange>> _singleMarketTrendChanges = new Dictionary<string, List<MarketTrendChange>>();
     private Dictionary<string, List<MarketTrendChange>> _globalMarketTrendChanges = new Dictionary<string, List<MarketTrendChange>>();
@@ -432,7 +433,7 @@ namespace Core.Main
       }
     }
 
-    public Dictionary<string, MarketInfo> MarketInfos
+    public ConcurrentDictionary<string, MarketInfo> MarketInfos
     {
       get
       {
@@ -902,6 +903,28 @@ namespace Core.Main
 
               // Check for single market trend triggers
               this.ApplySingleMarketSettings();
+
+              // Ignore quarterly futures
+              if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceFutures", StringComparison.InvariantCultureIgnoreCase))
+              {
+                // Find all quarterly futures pairs
+                var results = this.MarketList.FindAll(m => m.Contains("_", StringComparison.InvariantCultureIgnoreCase));
+
+                // Create the settings lines to disable trading
+                if (results.Count > 0)
+                {
+                  this.PairsLines.AddRange(new string[] {
+                    "",
+                    "# Binance Futures quarterly futures ignore list",
+                    "###############################################"
+                  });
+                
+                  foreach (var marketPair in results)
+                  {
+                    this.PairsLines.Add(String.Format("{0}_trading_enabled = false", marketPair));
+                  }
+                }
+              }
 
               // Save new properties to Profit Trailer
               this.SaveProfitTrailerProperties();
@@ -1518,7 +1541,7 @@ namespace Core.Main
 
             // Check ignore markets
             List<string> ignoredMarkets = SystemHelper.ConvertTokenStringToList(marketSetting.IgnoredMarkets, ",");
-            if (ignoredMarkets.Contains(marketPair))
+            if (ignoredMarkets.Any(im => marketPair.StartsWith(im, StringComparison.InvariantCultureIgnoreCase)))
             {
               this.Log.DoLogDebug("'" + marketPair + "' - Is ignored in '" + marketSetting.SettingName + "'.");
               continue;
@@ -1526,7 +1549,7 @@ namespace Core.Main
 
             // Check allowed markets
             List<string> allowedMarkets = SystemHelper.ConvertTokenStringToList(marketSetting.AllowedMarkets, ",");
-            if (allowedMarkets.Count > 0 && !allowedMarkets.Contains(marketPair))
+            if (allowedMarkets.Count > 0 && !allowedMarkets.Any(am => marketPair.StartsWith(am, StringComparison.InvariantCultureIgnoreCase)))
             {
               this.Log.DoLogDebug("'" + marketPair + "' - Is not allowed in '" + marketSetting.SettingName + "'.");
               continue;

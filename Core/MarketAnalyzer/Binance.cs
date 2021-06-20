@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.IO;
-using System.Text;
 using Core.Main;
 using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
 using Newtonsoft.Json;
-using Core.ProfitTrailer;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Concurrent;
 
 namespace Core.MarketAnalyzer
 {
@@ -43,7 +40,7 @@ namespace Core.MarketAnalyzer
       return result;
     }
 
-    public static List<string> GetMarketData(string mainMarket, Dictionary<string, MarketInfo> marketInfos, PTMagicConfiguration systemConfiguration, LogHelper log)
+    public static List<string> GetMarketData(string mainMarket, ConcurrentDictionary<string, MarketInfo> marketInfos, PTMagicConfiguration systemConfiguration, LogHelper log)
     {
       List<string> result = new List<string>();
 
@@ -163,7 +160,7 @@ namespace Core.MarketAnalyzer
       return result;
     }
 
-    public static void CheckFirstSeenDates(Dictionary<string, Market> markets, ref Dictionary<string, MarketInfo> marketInfos, PTMagicConfiguration systemConfiguration, LogHelper log)
+    public static void CheckFirstSeenDates(Dictionary<string, Market> markets, ref ConcurrentDictionary<string, MarketInfo> marketInfos, PTMagicConfiguration systemConfiguration, LogHelper log)
     {
       log.DoLogInfo("Binance - Checking first seen dates for " + markets.Count + " markets. This may take a while...");
 
@@ -182,7 +179,7 @@ namespace Core.MarketAnalyzer
         {
           marketInfo = new MarketInfo();
           marketInfo.Name = key;
-          marketInfos.Add(key, marketInfo);
+          marketInfos.TryAdd(key, marketInfo);
           marketInfo.FirstSeen = Binance.GetFirstSeenDate(key, systemConfiguration, log);
         }
         else
@@ -375,7 +372,7 @@ namespace Core.MarketAnalyzer
         }
 
         Parallel.ForEach(markets.Keys,
-                          new ParallelOptions { MaxDegreeOfParallelism = ParallelThrottle},
+                          new ParallelOptions { MaxDegreeOfParallelism = ParallelThrottle },
                           (key) =>
         {
           if (!marketTicks.TryAdd(key, GetMarketTicks(key, totalTicks, systemConfiguration, log)))
@@ -413,26 +410,28 @@ namespace Core.MarketAnalyzer
               }
             }
 
-            Dictionary<string, Market> tickMarkets = new Dictionary<string, Market>();
-            foreach (string key in markets.Keys)
-            {
-              List<MarketTick> tickRange = marketTicks[key] != null ? marketTicks[key].FindAll(t => t.Time <= tickTime) : new List<MarketTick>();
+            ConcurrentDictionary<string, Market> tickMarkets = new ConcurrentDictionary<string, Market>();
 
-              if (tickRange.Count > 0)
-              {
-                MarketTick marketTick = tickRange.OrderByDescending(t => t.Time).First();
+            Parallel.ForEach(markets.Keys,
+                          (key) =>
+                            {
+                              List<MarketTick> tickRange = marketTicks[key] != null ? marketTicks[key].FindAll(t => t.Time <= tickTime) : new List<MarketTick>();
 
-                Market market = new Market();
-                market.Position = markets.Count + 1;
-                market.Name = key;
-                market.Symbol = key;
-                market.Price = marketTick.Price;
-                //market.Volume24h = marketTick.Volume24h;
-                market.MainCurrencyPriceUSD = mainCurrencyPrice;
+                              if (tickRange.Count > 0)
+                              {
+                                MarketTick marketTick = tickRange.OrderByDescending(t => t.Time).First();
 
-                tickMarkets.Add(market.Name, market);
-              }
-            }
+                                Market market = new Market();
+                                market.Position = markets.Count + 1;
+                                market.Name = key;
+                                market.Symbol = key;
+                                market.Price = marketTick.Price;
+                                //market.Volume24h = marketTick.Volume24h;
+                                market.MainCurrencyPriceUSD = mainCurrencyPrice;
+
+                                tickMarkets.TryAdd(market.Name, market);
+                              }
+                            });
 
             DateTime fileDateTime = new DateTime(tickTime.ToLocalTime().Year, tickTime.ToLocalTime().Month, tickTime.ToLocalTime().Day, tickTime.ToLocalTime().Hour, tickTime.ToLocalTime().Minute, 0).ToUniversalTime();
 

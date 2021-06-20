@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.IO;
-using System.Text;
 using Core.Main;
 using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
 using Newtonsoft.Json;
-using Core.ProfitTrailer;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Concurrent;
 
 namespace Core.MarketAnalyzer
 {
@@ -43,7 +40,7 @@ namespace Core.MarketAnalyzer
       return result;
     }
 
-    public static List<string> GetMarketData(string mainMarket, Dictionary<string, MarketInfo> marketInfos, PTMagicConfiguration systemConfiguration, LogHelper log)
+    public static List<string> GetMarketData(string mainMarket, ConcurrentDictionary<string, MarketInfo> marketInfos, PTMagicConfiguration systemConfiguration, LogHelper log)
     {
       List<string> result = new List<string>();
 
@@ -163,7 +160,7 @@ namespace Core.MarketAnalyzer
       return result;
     }
 
-    public static void CheckFirstSeenDates(Dictionary<string, Market> markets, ref Dictionary<string, MarketInfo> marketInfos, PTMagicConfiguration systemConfiguration, LogHelper log)
+    public static void CheckFirstSeenDates(Dictionary<string, Market> markets, ref ConcurrentDictionary<string, MarketInfo> marketInfos, PTMagicConfiguration systemConfiguration, LogHelper log)
     {
       log.DoLogInfo("BinanceFutures - Checking first seen dates for " + markets.Count + " markets. This may take a while...");
 
@@ -182,7 +179,7 @@ namespace Core.MarketAnalyzer
         {
           marketInfo = new MarketInfo();
           marketInfo.Name = key;
-          marketInfos.Add(key, marketInfo);
+          marketInfos.TryAdd(key, marketInfo);
           marketInfo.FirstSeen = BinanceFutures.GetFirstSeenDate(key, systemConfiguration, log);
         }
         else
