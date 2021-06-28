@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -702,13 +702,13 @@ namespace Core.Main
       // Check if the program is enabled
       if (this.PTMagicConfiguration.GeneralSettings.Application.IsEnabled)
       {
+        result = RunProfitTrailerSettingsAPIChecks();
         try
         {
           if (this.PTMagicConfiguration.GeneralSettings.Application.TestMode) 
           {
-            this.Log.DoLogInfo("TESTMODE ENABLED - No files will be changed!");
+            this.Log.DoLogWarn("TESTMODE ENABLED - No PT settings will be changed!");
           }
-          result = RunProfitTrailerSettingsAPIChecks();
 
           // Check for CoinMarketCap API Key
           if (!String.IsNullOrEmpty(this.PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey))
@@ -717,7 +717,7 @@ namespace Core.Main
           }
           else
           {
-            this.Log.DoLogInfo("No CoinMarketCap API KEY specified! You can't use CoinMarketCap in your settings.analyzer.json");
+            this.Log.DoLogInfo("No CoinMarketCap API KEY specified! That's ok, but you can't use CoinMarketCap in your settings.analyzer.json");
           }
 
           // Check for CurrencyConverterApi Key
@@ -727,12 +727,12 @@ namespace Core.Main
           }
           else
           {
-            this.Log.DoLogInfo("No FreeCurrencyConverterApi KEY specified, you can only use USD; apply for a key at: https://freecurrencyrates.com/en");
+            this.Log.DoLogInfo("No FreeCurrencyConverterApi KEY specified. That's ok!  But you can only use USD; apply for a key at: https://freecurrencyrates.com/en");
           }
         }
         catch (System.NullReferenceException)
         {
-          this.Log.DoLogError("PTM failed to read the Config File. That means something in the File is either missing or incorrect. If this happend after an update please take a look at the release notes at: https://github.com/PTMagicians/PTMagic/releases");
+          this.Log.DoLogError("PTM failed to read the General Settings file. That means something in the file is either missing or incorrect. If this happend after an update please take a look at the release notes at: https://github.com/PTMagicians/PTMagic/releases");
           Console.WriteLine("Press enter to close the Application...");
           Console.ReadLine();
           Environment.Exit(0);
@@ -740,7 +740,7 @@ namespace Core.Main
       }
       else
       {
-        this.Log.DoLogWarn("PTMagic disabled, shutting down...");
+        this.Log.DoLogWarn("PTMagic is disabled.  The scheduled raid was skipped.");
         result = false;
       }
 
@@ -915,10 +915,10 @@ namespace Core.Main
                 {
                   this.PairsLines.AddRange(new string[] {
                     "",
-                    "# Binance Futures quarterly futures ignore list",
-                    "###############################################"
+                    "# BinanceFutures Quarterly Contracts - Ignore list:",
+                    "###################################################"
                   });
-                
+
                   foreach (var marketPair in results)
                   {
                     this.PairsLines.Add(String.Format("{0}_trading_enabled = false", marketPair));
@@ -953,7 +953,7 @@ namespace Core.Main
               this.Log.DoLogInfo("+ Active setting: " + this.LastRuntimeSummary.CurrentGlobalSetting.SettingName);
               this.Log.DoLogInfo("+ Global setting changed: " + ((this.LastRuntimeSummary.LastGlobalSettingSwitch == this.LastRuntimeSummary.LastRuntime) ? "Yes" : "No") + " " + ((this.LastRuntimeSummary.FloodProtectedSetting != null) ? "(Flood protection!)" : ""));
               this.Log.DoLogInfo("+ Single Market Settings changed: " + (this.SingleMarketSettingChanged ? "Yes" : "No"));
-              this.Log.DoLogInfo("+ PT Config updated: " + (((this.GlobalSettingWritten || this.SingleMarketSettingChanged) && !this.PTMagicConfiguration.GeneralSettings.Application.TestMode) ? "Yes" : "No"));
+              this.Log.DoLogInfo("+ PT Config updated: " + (((this.GlobalSettingWritten || this.SingleMarketSettingChanged) && !this.PTMagicConfiguration.GeneralSettings.Application.TestMode) ? "Yes" : "No") + ((this.PTMagicConfiguration.GeneralSettings.Application.TestMode) ? " - TESTMODE active" : ""));
               this.Log.DoLogInfo("+ Markets with active single market settings: " + this.TriggeredSingleMarketSettings.Count.ToString());
               foreach (string activeSMS in this.SingleMarketSettingsCount.Keys)
               {
@@ -970,7 +970,7 @@ namespace Core.Main
             else
             {
               this.State = Constants.PTMagicBotState_Idle;
-              Log.DoLogWarn("PTMagic disabled, shutting down until next raid...");
+              Log.DoLogWarn("PTMagic is disabled.  The scheduled raid was skipped.");
             }
           }
           catch (Exception ex)
@@ -1235,7 +1235,7 @@ namespace Core.Main
       }
       else
       {
-        this.Log.DoLogInfo("No CMC API-Key specified. No CMC Data will be pulled");
+        this.Log.DoLogInfo("No CMC API-Key specified. That's OK, but no CMC Data can be pulled.");
       }
 
       if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Bittrex", StringComparison.InvariantCultureIgnoreCase))
@@ -1526,12 +1526,22 @@ namespace Core.Main
 
         int marketPairProcess = 1;
         Dictionary<string, List<string>> matchedMarketTriggers = new Dictionary<string, List<string>>();
+        string mainMarket = this.LastRuntimeSummary.MainMarket;
 
         // Loop through markets
         foreach (string marketPair in this.MarketList)
         {
           this.Log.DoLogDebug("'" + marketPair + "' - Checking triggers (" + marketPairProcess.ToString() + "/" + this.MarketList.Count.ToString() + ")...");
-
+          string market = marketPair.Replace(mainMarket, "");
+          switch (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.ToLower())
+            {
+              case "bittrex":
+              market = market.Replace("-", "");
+              break;
+              case "poloniex":
+              market = market.Replace("_", "");
+              break;
+            }
           bool stopTriggers = false;
 
           // Loop through single market settings
@@ -1540,16 +1550,42 @@ namespace Core.Main
             List<string> matchedSingleMarketTriggers = new List<string>();
 
             // Check ignore markets
-            List<string> ignoredMarkets = SystemHelper.ConvertTokenStringToList(marketSetting.IgnoredMarkets, ",");
-            if (ignoredMarkets.Any(im => marketPair.StartsWith(im, StringComparison.InvariantCultureIgnoreCase)))
+            
+            // Strip main markets from list, if exists
+            string ignored = marketSetting.IgnoredMarkets.ToUpper();
+            ignored = ignored.Replace(mainMarket, "");
+            switch (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.ToLower())
+            {
+              case "bittrex":
+              ignored = ignored.Replace("-", "");
+              break;
+              case "poloniex":
+              ignored = ignored.Replace("_", "");
+              break;
+            }
+            List<string> ignoredMarkets = SystemHelper.ConvertTokenStringToList(ignored, ",");
+            if (ignoredMarkets.Contains(market))
             {
               this.Log.DoLogDebug("'" + marketPair + "' - Is ignored in '" + marketSetting.SettingName + "'.");
               continue;
             }
 
             // Check allowed markets
-            List<string> allowedMarkets = SystemHelper.ConvertTokenStringToList(marketSetting.AllowedMarkets, ",");
-            if (allowedMarkets.Count > 0 && !allowedMarkets.Any(am => marketPair.StartsWith(am, StringComparison.InvariantCultureIgnoreCase)))
+            
+            // Strip main markets from list, if exists
+            string allowed = marketSetting.AllowedMarkets.ToUpper();
+            allowed = allowed.Replace(mainMarket, "");
+            switch (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.ToLower())
+            {
+              case "bittrex":
+              allowed = allowed.Replace("-", "");
+              break;
+              case "poloniex":
+              allowed = allowed.Replace("_", "");
+              break;
+            }
+            List<string> allowedMarkets = SystemHelper.ConvertTokenStringToList(allowed, ",");
+            if (allowedMarkets.Count > 0 && !allowedMarkets.Contains(market))
             {
               this.Log.DoLogDebug("'" + marketPair + "' - Is not allowed in '" + marketSetting.SettingName + "'.");
               continue;
@@ -2159,9 +2195,12 @@ namespace Core.Main
         if (!this.PTMagicConfiguration.GeneralSettings.Application.TestMode)
         {
           SettingsAPI.SendPropertyLinesToAPI(this.PairsLines, this.DCALines, this.IndicatorsLines, this.PTMagicConfiguration, this.Log);
+          this.Log.DoLogInfo("Settings updates sent to PT!");
         }
-
-        this.Log.DoLogInfo("Properties saved!");
+        else
+        {
+          this.Log.DoLogWarn("TESTMODE enabled -- no updates sent to PT!");
+        }
       }
       else
       {

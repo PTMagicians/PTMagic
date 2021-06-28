@@ -185,6 +185,8 @@ namespace Monitor.Pages
         sms.OffTriggerConnection = HttpContext.Request.Form[smsFormKey + "OffTriggerConnection"];
         sms.IgnoredMarkets = HttpContext.Request.Form[smsFormKey + "IgnoredMarkets"];
         sms.AllowedMarkets = HttpContext.Request.Form[smsFormKey + "AllowedMarkets"];
+        sms.IgnoredGlobalSettings = HttpContext.Request.Form[smsFormKey + "IgnoredGlobalSettings"];
+        sms.AllowedGlobalSettings = HttpContext.Request.Form[smsFormKey + "AllowedGlobalSettings"];
         sms.StopProcessWhenTriggered = HttpContext.Request.Form[smsFormKey + "StopProcessWhenTriggered"].Equals("on");
 
         #region Triggers

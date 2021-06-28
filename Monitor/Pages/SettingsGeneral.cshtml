@@ -48,24 +48,30 @@
             </div>
             <div id="collapse1" class="panel-collapse collapse">
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Is Enabled <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Enables the PTMagic bot."></i></label>
+                <label class="col-md-4 col-form-label">Is Enabled <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="If disabled PTM and the PTM monitor will continue to run, however all market analysis and PT settings changes are stopped."></i></label>
                 <div class="col-md-8">
                   <input type="checkbox" name="Application_IsEnabled" checked="@(Model.PTMagicConfiguration.GeneralSettings.Application.IsEnabled)" data-plugin="switchery" data-color="#81c868" data-size="small" />
                 </div>
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Test Mode <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="If TestMode is active, no properties files will be changed"></i></label>
+                <label class="col-md-4 col-form-label">Test Mode <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="If TestMode is active market analysis will continue, however PT settings will not be updated."></i></label>
                 <div class="col-md-8">
                   <input type="checkbox" name="Application_TestMode" checked="@(Model.PTMagicConfiguration.GeneralSettings.Application.TestMode)" data-plugin="switchery" data-color="#81c868" data-size="small" />
                 </div>
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Exchange <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The exchange PT Magic is using to get market data."></i></label>
-                <div class="col-md-8">
-                  @Model.PTMagicConfiguration.GeneralSettings.Application.Exchange
-                </div>
+                <label class="col-md-4 col-form-label">Exchange <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The exchange your PT bot is running on."></i></label>
+                  <div class="col-md-8">
+                    <select name="Application_Exchange" class="form-control">
+                      <option selected="@(Model.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Bittrex", StringComparison.InvariantCultureIgnoreCase))">Bittrex</option>
+                      <option selected="@(Model.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Binance", StringComparison.InvariantCultureIgnoreCase))">Binance</option>
+                      <option selected="@(Model.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceUS", StringComparison.InvariantCultureIgnoreCase))">BinanceUS</option>
+                      <option selected="@(Model.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceFutures", StringComparison.InvariantCultureIgnoreCase))">BinanceFutures</option>
+                      <option selected="@(Model.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Poloniex", StringComparison.InvariantCultureIgnoreCase))">Poloniex</option>
+                    </select>
+                  </div>
               </div>
 
 
@@ -77,16 +83,16 @@
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Profit Trailer Monitor URL <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The URL to your profit trailer monitor (needed to change your settings for PT 2.0 and above)"></i></label>
+                <label class="col-md-4 col-form-label">Profit Trailer Monitor URL <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The URL to your profit trailer monitor (if PT and PTM are running on the same machine, 'http://localhost:xxxx' should be used.)"></i></label>
                 <div class="col-md-8">
-                  <a href="@Model.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL" target="_blank">@Model.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL</a>
+                  <input type="text" class="form-control" name="Application_ProfitTrailerMonitorURL" value="@Model.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL">
                 </div>
               </div>
 
               <div class="form-group row">
                 <label class="col-md-4 col-form-label">Profit Trailer Server API Token <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The API token needed to communicate with Profit Trailer - set in Profit Trailer Server Settings"></i></label>
                 <div class="col-md-8">
-                  @Model.PTMagicConfiguration.GetProfitTrailerServerAPITokenMasked()
+                  <input type="text" class="form-control" name="Application_ProfitTrailerServerAPIToken" value="@Model.PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken">
                 </div>
               </div>
 
@@ -170,28 +176,21 @@
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Open Browser On Start <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="If active, a browser window will open as soon as you start the monitor."></i></label>
+                <label class="col-md-4 col-form-label">Open Browser On Start <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="If active, a browser window will open as soon as you start the PTM monitor."></i></label>
                 <div class="col-md-8">
                   <input type="checkbox" name="Monitor_OpenBrowserOnStart" checked="@(Model.PTMagicConfiguration.GeneralSettings.Monitor.OpenBrowserOnStart)" data-plugin="switchery" data-color="#81c868" data-size="small" />
                 </div>
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Port <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The port you want to run your monitor on"></i></label>
+                <label class="col-md-4 col-form-label">Port <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The port you want to run your PTM monitor on"></i></label>
                 <div class="col-md-8">
-                  @Model.PTMagicConfiguration.GeneralSettings.Monitor.Port
+                  <input type="text" class="form-control" name="Monitor_Port" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.Port.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">RootUrl <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The root URL of your monitor website"></i></label>
-                <div class="col-md-8">
-                  @Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl
-                </div>
-              </div>
-
-              <div class="form-group row">
-                <label class="col-md-4 col-form-label">Market Analyzer Chart <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="By default the price chart on the analyzer page displays your base currency.  You can select a different currency here"></i></label>
+                <label class="col-md-4 col-form-label">Market Analyzer Chart <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="By default the price chart on the analyzer page displays your base market currency against your fiat.  You can change this to another pair."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Monitor_AnalyzerChart" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.AnalyzerChart.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>

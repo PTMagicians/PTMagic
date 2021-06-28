@@ -71,9 +71,7 @@ namespace Core.MarketAnalyzer
               //New variables for filtering out bad markets
               float marketLastPrice = currencyTicker["lastPrice"].ToObject<float>();
               float marketVolume = currencyTicker["volume"].ToObject<float>();
-              if (marketName.EndsWith(mainMarket, StringComparison.InvariantCultureIgnoreCase))
-              {
-                if (marketLastPrice > 0 && marketVolume > 0)
+              if (marketLastPrice > 0 && marketVolume > 0)
                 {
 
                   // Set last values in case any error occurs
@@ -97,7 +95,6 @@ namespace Core.MarketAnalyzer
                   //Let the user know that the problem market was ignored.
                   log.DoLogInfo("BinanceFutures - Ignoring bad market data for " + marketName);
                 }
-              }
             }
 
             BinanceFutures.CheckFirstSeenDates(markets, ref marketInfos, systemConfiguration, log);
@@ -361,11 +358,11 @@ namespace Core.MarketAnalyzer
         ConcurrentDictionary<string, List<MarketTick>> marketTicks = new ConcurrentDictionary<string, List<MarketTick>>();
 
         int ParallelThrottle = 4;
-        if (systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours > 200)
+        if (systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours > 50)
         {
           ParallelThrottle = 2;
           log.DoLogInfo("----------------------------------------------------------------------------");
-          log.DoLogInfo("StoreDataMaxHours is greater than 200.  Historical data requests will be");
+          log.DoLogInfo("StoreDataMaxHours is greater than 50.  Historical data requests will be");
           log.DoLogInfo("throttled to avoid exceeding exchange data request limits.  This initial ");
           log.DoLogInfo("run could take more than 30 minutes.  Please go outside for a walk...");
           log.DoLogInfo("----------------------------------------------------------------------------");
