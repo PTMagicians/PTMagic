@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.IO;
 using System.Linq;
@@ -52,7 +53,7 @@ namespace Core.Main
     private List<string> _indicatorsLines = null;
     private List<string> _exchangeMarketList = null;
     private List<string> _marketList = new List<string>();
-    private Dictionary<string, MarketInfo> _marketInfos = new Dictionary<string, MarketInfo>();
+    private ConcurrentDictionary<string, MarketInfo> _marketInfos = new ConcurrentDictionary<string, MarketInfo>();
     private Dictionary<string, double> _averageMarketTrendChanges = new Dictionary<string, double>();
     private Dictionary<string, List<MarketTrendChange>> _singleMarketTrendChanges = new Dictionary<string, List<MarketTrendChange>>();
     private Dictionary<string, List<MarketTrendChange>> _globalMarketTrendChanges = new Dictionary<string, List<MarketTrendChange>>();
@@ -432,7 +433,7 @@ namespace Core.Main
       }
     }
 
-    public Dictionary<string, MarketInfo> MarketInfos
+    public ConcurrentDictionary<string, MarketInfo> MarketInfos
     {
       get
       {
