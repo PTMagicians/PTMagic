@@ -272,7 +272,7 @@ namespace Core.ProfitTrailer
       if (!string.IsNullOrEmpty(strategyName))
       {
         // buy/sell strategies beginning with PT 2.3.3 contain the letter followed by a colon and space.
-        if (strategyName.Contains(":"))
+        if (strategyName.Contains(":") && !strategyName.Contains("FORMULA"))
         {
           result = true;
         }
