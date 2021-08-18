@@ -108,7 +108,28 @@ namespace Core.Main.DataObjects
             if (_sellLog == null || (DateTime.UtcNow > _sellLogRefresh))
             {
               _sellLog.Clear();
-              this.BuildSellLogData(GetDataFromProfitTrailer("/api/v2/data/sales"));
+
+              // Page through the sales data summarizing it.
+              bool exitLoop = false;
+              int pageIndex = 1;
+
+              while (!exitLoop)
+              {
+                var sellDataPage = GetDataFromProfitTrailer("/api/v2/data/sales?perPage=5000&sort=SOLDDATE&sortDirection=ASCENDING&page=" + pageIndex);
+                if (sellDataPage != null && sellDataPage.data.Count > 0)
+                {
+                  // Add sales data page to collection
+                  this.BuildSellLogData(sellDataPage);
+                  pageIndex++;
+                }
+                else
+                {
+                  // All data retrieved
+                  exitLoop = true;
+                }
+              }
+              
+              // Update sell log refresh time
               _sellLogRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
             }
           }
@@ -265,7 +286,10 @@ namespace Core.Main.DataObjects
     private dynamic GetDataFromProfitTrailer(string callPath, bool arrayReturned = false)
     {
       string rawBody = "";
-      string url = string.Format("{0}{1}?token={2}", _systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL, callPath, _systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken);
+      string url = string.Format("{0}{1}{2}token={3}", _systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL, 
+      callPath,
+      callPath.Contains("?") ? "&" : "?", 
+      _systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken);
 
       // Get the data from PT
       Debug.WriteLine(String.Format("{0} - Calling '{1}'", DateTime.UtcNow, url));
