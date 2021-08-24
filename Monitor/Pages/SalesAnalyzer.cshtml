@@ -62,14 +62,7 @@
         <h4 class="m-t-0 header-title">Sales Analysis</h4>
         @{
           double totalProfit = 0;
-          if (Model.PTData.Properties.Shorting)
-          {
-            totalProfit = Model.PTData.SellLog.Sum(s => s.Profit * (-1));
-          }
-          else
-          {
-            totalProfit = Model.PTData.SellLog.Sum(s => s.Profit);
-          }
+          totalProfit = Model.PTData.SellLog.Sum(s => s.Profit);
           double totalProfitFiat = Math.Round(totalProfit * Model.Summary.MainMarketPrice, 2);
           double percentGain = Math.Round(totalProfit / Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance * 100, 2);
           double avgDailyGain = Model.DailyGains.Values.Average(dg => dg);
@@ -205,14 +198,7 @@
             @for (DateTime salesDate = Model.DateTimeNow.DateTime.Date; salesDate >= Model.DateTimeNow.DateTime.AddDays(-Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxDailySummaries) && salesDate >= Model.MinSellLogDate; salesDate = salesDate.AddDays(-1)) {
               List<Core.Main.DataObjects.PTMagicData.SellLogData> salesDateSales = Model.PTData.SellLog.FindAll(sl => sl.SoldDate.Date == salesDate);
               double salesDateProfit = 0;
-              if (Model.PTData.Properties.Shorting)
-              {
-                salesDateProfit = salesDateSales.Sum(sl => sl.Profit * (-1));
-              }
-              else
-              {
-                salesDateProfit = salesDateSales.Sum(sl => sl.Profit);
-              }
+              salesDateProfit = salesDateSales.Sum(sl => sl.Profit);
               double salesDateProfitFiat = Math.Round(salesDateProfit * Model.Summary.MainMarketPrice, 2);
               double salesDateStartBalance = Model.PTData.GetSnapshotBalance(salesDate);
               double salesDateGain = Math.Round(salesDateProfit / salesDateStartBalance * 100, 2);
@@ -252,14 +238,7 @@
             @for (DateTime salesMonthDate = salesMonthStartDate.Date; salesMonthDate >= Model.DateTimeNow.DateTime.AddMonths(-Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxMonthlySummaries) && salesMonthDate >= minSellLogMonthDate; salesMonthDate = salesMonthDate.AddMonths(-1)) {
               List<Core.Main.DataObjects.PTMagicData.SellLogData> salesMonthSales = Model.PTData.SellLog.FindAll(sl => sl.SoldDate.Date.Month == salesMonthDate.Month && sl.SoldDate.Date.Year == salesMonthDate.Year);
               double salesDateProfit = 0;
-              if (Model.PTData.Properties.Shorting)
-              {
-                salesDateProfit = salesMonthSales.Sum(sl => sl.Profit * (-1));
-              }
-              else 
-              {
-                salesDateProfit = salesMonthSales.Sum(sl => sl.Profit);
-              }
+              salesDateProfit = salesMonthSales.Sum(sl => sl.Profit);
               double salesDateProfitFiat = Math.Round(salesDateProfit * Model.Summary.MainMarketPrice, 2);
               double salesDateStartBalance = Model.PTData.GetSnapshotBalance(salesMonthDate);
               double salesDateGain = Math.Round(salesDateProfit / salesDateStartBalance * 100, 2);
@@ -272,14 +251,7 @@
                   days++;
                   List<Core.Main.DataObjects.PTMagicData.SellLogData> monthDaySales = Model.PTData.SellLog.FindAll(sl => sl.SoldDate.Date == monthDay.Date);
                   double monthDayProfit = 0;
-                  if (Model.PTData.Properties.Shorting)
-                  {
-                    monthDayProfit = monthDaySales.Sum(sl => sl.Profit * (-1));
-                  }
-                  else
-                  {
-                    monthDayProfit = monthDaySales.Sum(sl => sl.Profit);
-                  }
+                  monthDayProfit = monthDaySales.Sum(sl => sl.Profit);
                   double monthDayStartBalance = Model.PTData.GetSnapshotBalance(monthDay);
                   monthDailyProfit += Math.Round(monthDayProfit / monthDayStartBalance * 100, 2);
                 }
@@ -319,10 +291,6 @@
           <tbody>
             @{
               var topMarkets = Model.PTData.SellLog.GroupBy(m => m.Market).Select(mg => mg.Sum(m => m.Profit));
-              if (Model.PTData.Properties.Shorting)
-              {
-                topMarkets = Model.PTData.SellLog.GroupBy(m => m.Market).Select(mg => mg.Sum(m => m.Profit) * (-1));
-              }
               int marketRank = 0;
             }
             @foreach (KeyValuePair<string, double> marketData in Model.TopMarkets) {

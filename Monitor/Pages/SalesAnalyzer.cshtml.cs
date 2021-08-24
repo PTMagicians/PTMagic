@@ -46,14 +46,7 @@ namespace Monitor.Pages
       foreach (var market in markets)
       {
         double totalProfit = 0;
-        if (PTData.Properties.Shorting)
-        {
-          totalProfit = PTData.SellLog.FindAll(m => m.Market == market.Key).Sum(m => m.Profit * (-1));
-        }
-        else
-        {
-          totalProfit = PTData.SellLog.FindAll(m => m.Market == market.Key).Sum(m => m.Profit);
-        }
+        totalProfit = PTData.SellLog.FindAll(m => m.Market == market.Key).Sum(m => m.Profit);
         topMarketsDic.Add(market.Key, totalProfit);
       }
       TopMarkets = new SortedDictionary<string, double>(topMarketsDic).OrderByDescending(m => m.Value).Take(PTMagicConfiguration.GeneralSettings.Monitor.MaxTopMarkets);
@@ -81,14 +74,7 @@ namespace Monitor.Pages
           }
           double profit = 0;
           int trades = PTData.SellLog.FindAll(t => t.SoldDate.Date == salesDate.Date).Count;
-          if (PTData.Properties.Shorting)
-          {
-            profit = PTData.SellLog.FindAll(t => t.SoldDate.Date == salesDate.Date).Sum(t => t.Profit * (-1));
-          }
-          else
-          {
-            profit = PTData.SellLog.FindAll(t => t.SoldDate.Date == salesDate.Date).Sum(t => t.Profit);
-          }
+          profit = PTData.SellLog.FindAll(t => t.SoldDate.Date == salesDate.Date).Sum(t => t.Profit);
           double profitFiat = Math.Round(profit * Summary.MainMarketPrice, 2);
           balance += profitFiat; 
           tradesPerDayJSON += "{x: new Date('" + salesDate.Date.ToString("yyyy-MM-dd") + "'), y: " + trades + "}";
@@ -124,14 +110,7 @@ namespace Monitor.Pages
         {
           List<SellLogData> salesDateSales = PTData.SellLog.FindAll(sl => sl.SoldDate.Date == salesDate);
           double salesDateProfit;
-          if (PTData.Properties.Shorting)
-          {
-            salesDateProfit = salesDateSales.Sum(sl => sl.Profit * (-1));
-          }
-          else 
-          {
-            salesDateProfit = salesDateSales.Sum(sl => sl.Profit);
-          }
+          salesDateProfit = salesDateSales.Sum(sl => sl.Profit);
           double salesDateStartBalance = PTData.GetSnapshotBalance(salesDate);
           double salesDateGain = Math.Round(salesDateProfit / salesDateStartBalance * 100, 2);
           DailyGains.Add(salesDate, salesDateGain);
@@ -142,14 +121,7 @@ namespace Monitor.Pages
         {
           List<Core.Main.DataObjects.PTMagicData.SellLogData> salesMonthSales = PTData.SellLog.FindAll(sl => sl.SoldDate.Date.Month == salesMonthDate.Month && sl.SoldDate.Date.Year == salesMonthDate.Year);
           double salesDateProfit;
-          if (PTData.Properties.Shorting)
-          {
-            salesDateProfit = salesMonthSales.Sum(sl => sl.Profit * (-1));
-          }
-          else
-          {
-            salesDateProfit = salesMonthSales.Sum(sl => sl.Profit);
-          }
+          salesDateProfit = salesMonthSales.Sum(sl => sl.Profit);
           double salesDateStartBalance = PTData.GetSnapshotBalance(salesMonthDate);
           double salesDateGain = Math.Round(salesDateProfit / salesDateStartBalance * 100, 2);
           MonthlyGains.Add(salesMonthDate, salesDateGain);

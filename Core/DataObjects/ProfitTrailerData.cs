@@ -355,15 +355,9 @@ namespace Core.Main.DataObjects
         sellLogData.ProfitPercent = rsld.profit;
         sellLogData.SoldPrice = rsld.currentPrice;
         sellLogData.AverageBuyPrice = rsld.avgPrice;
-        sellLogData.TotalCost = sellLogData.SoldAmount * sellLogData.AverageBuyPrice;
+        sellLogData.TotalCost = rsld.totalCost;
+        sellLogData.Profit = rsld.profitCurrency;
 
-        // check if bot is a shortbot via PT API.  Losses on short bot currently showing as gains. Issue #195
-        // code removed
-
-        double soldValueRaw = (sellLogData.SoldAmount * sellLogData.SoldPrice);
-        double soldValueAfterFees = soldValueRaw - (soldValueRaw * ((double)rsld.fee / 100));
-        sellLogData.SoldValue = soldValueAfterFees;
-        sellLogData.Profit = Math.Round(sellLogData.SoldValue - sellLogData.TotalCost, 8);
 
         //Convert Unix Timestamp to Datetime
         System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
