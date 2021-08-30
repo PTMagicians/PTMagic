@@ -11,24 +11,29 @@
   }
 
   // Global setting tool tip
-  string globalSettingInfoIcon = "<i class=\"fa fa-info-circle text-muted\" data-toggle=\"tooltip\" data-placement=\"top\" data-html=\"true\" title=\"<b>Instance: </b>" + Model.PTMagicConfiguration.GeneralSettings.Application.InstanceName + "\" data-template=\"<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner tooltip-100 text-left'></div></div>\"></i>";
+   string globalIconColor = "text-success";
+   string globalSettingInfoIcon = "<i class=\"fa fa-info-circle text-muted\" data-toggle=\"tooltip\" data-placement=\"top\" data-html=\"true\" title=\"<b>Instance: </b>" + Model.PTMagicConfiguration.GeneralSettings.Application.InstanceName + "\" data-template=\"<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner tooltip-100 text-left'></div></div>\"></i>";
+  if (Model.PTData.Properties.Shorting)
+  {
+    globalIconColor = "text-danger";
+  }
 
   // Health indicator
   DateTime lastRuntime = Model.Summary.LastRuntime;
   double elapsedSecondsSinceRuntime = DateTime.UtcNow.Subtract(lastRuntime).TotalSeconds;
   double intervalSeconds = Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 60.0;
 
-  string iconColor = "text-success";
+  string healthIconColor = "text-success";
   string ptMagicHealthIcon = "fa-heartbeat";
   string ptMagicHealthTooltip = "PT Magic is alive and healthy! Time elapsed since last run:  " + Math.Round(elapsedSecondsSinceRuntime / 60, 1) + " mins.";
   if (elapsedSecondsSinceRuntime > (intervalSeconds * 2)) {
     ptMagicHealthIcon = "fa-exclamation-triangle";
     ptMagicHealthTooltip = "PT Magic seems to have problems, check the logs!  Time elapsed since last run:  " + Math.Round(elapsedSecondsSinceRuntime / 60, 1) + " mins.";
-    iconColor = "text-danger";
+    healthIconColor = "text-danger";
   }
 }
 
-<div class="card-box card-box-mini card-box-ptmagic-outlined">
+<div class="card-box card-box-mini card-box-ptmagic-outlined @globalIconColor">
    <span data-toggle="tooltip" data-placement="bottom" title="Active global setting">
    @Core.Helper.SystemHelper.SplitCamelCase(Model.Summary.CurrentGlobalSetting.SettingName)</span><span class = "header-title"><a href="StatusSummary">@Html.Raw(" " + globalSettingInfoIcon)</a></span>
 </div>
@@ -37,8 +42,8 @@
   <span data-toggle="tooltip" data-placement="bottom" title="Active single market settings"><b>SMS: </b></span><span class = "header-title"><a href="ManageSMS">@Html.Raw(activeSingleSettings + " " + singleSettingInfoIcon)</a></span>
 </div>
 
-<div class="card-box card-box-mini card-box-ptmagic-status-outlined @iconColor" data-toggle="tooltip" data-placement="bottom" title="@ptMagicHealthTooltip">
-  <i class="fa @ptMagicHealthIcon @iconColor"></i>
+<div class="card-box card-box-mini card-box-ptmagic-status-outlined @healthIconColor" data-toggle="tooltip" data-placement="bottom" title="@ptMagicHealthTooltip">
+  <i class="fa @ptMagicHealthIcon @healthIconColor"></i>
 </div>
 
 <script type="text/javascript">
