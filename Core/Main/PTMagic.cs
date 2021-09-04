@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Threading;
 using System.IO;
 using System.Linq;
@@ -52,7 +53,7 @@ namespace Core.Main
     private List<string> _indicatorsLines = null;
     private List<string> _exchangeMarketList = null;
     private List<string> _marketList = new List<string>();
-    private Dictionary<string, MarketInfo> _marketInfos = new Dictionary<string, MarketInfo>();
+    private ConcurrentDictionary<string, MarketInfo> _marketInfos = new ConcurrentDictionary<string, MarketInfo>();
     private Dictionary<string, double> _averageMarketTrendChanges = new Dictionary<string, double>();
     private Dictionary<string, List<MarketTrendChange>> _singleMarketTrendChanges = new Dictionary<string, List<MarketTrendChange>>();
     private Dictionary<string, List<MarketTrendChange>> _globalMarketTrendChanges = new Dictionary<string, List<MarketTrendChange>>();
@@ -432,7 +433,7 @@ namespace Core.Main
       }
     }
 
-    public Dictionary<string, MarketInfo> MarketInfos
+    public ConcurrentDictionary<string, MarketInfo> MarketInfos
     {
       get
       {
@@ -701,13 +702,13 @@ namespace Core.Main
       // Check if the program is enabled
       if (this.PTMagicConfiguration.GeneralSettings.Application.IsEnabled)
       {
+        result = RunProfitTrailerSettingsAPIChecks();
         try
         {
           if (this.PTMagicConfiguration.GeneralSettings.Application.TestMode) 
           {
-            this.Log.DoLogInfo("TESTMODE ENABLED - No files will be changed!");
+            this.Log.DoLogWarn("TESTMODE ENABLED - No PT settings will be changed!");
           }
-          result = RunProfitTrailerSettingsAPIChecks();
 
           // Check for CoinMarketCap API Key
           if (!String.IsNullOrEmpty(this.PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey))
@@ -731,7 +732,7 @@ namespace Core.Main
         }
         catch (System.NullReferenceException)
         {
-          this.Log.DoLogError("PTM failed to read the Config File. That means something in the File is either missing or incorrect. If this happend after an update please take a look at the release notes at: https://github.com/PTMagicians/PTMagic/releases");
+          this.Log.DoLogError("PTM failed to read the General Settings file. That means something in the file is either missing or incorrect. If this happend after an update please take a look at the release notes at: https://github.com/PTMagicians/PTMagic/releases");
           Console.WriteLine("Press enter to close the Application...");
           Console.ReadLine();
           Environment.Exit(0);
@@ -739,7 +740,7 @@ namespace Core.Main
       }
       else
       {
-        this.Log.DoLogWarn("PTMagic disabled, shutting down...");
+        this.Log.DoLogWarn("PTMagic is disabled.  The scheduled raid was skipped.");
         result = false;
       }
 
@@ -952,7 +953,7 @@ namespace Core.Main
               this.Log.DoLogInfo("+ Active setting: " + this.LastRuntimeSummary.CurrentGlobalSetting.SettingName);
               this.Log.DoLogInfo("+ Global setting changed: " + ((this.LastRuntimeSummary.LastGlobalSettingSwitch == this.LastRuntimeSummary.LastRuntime) ? "Yes" : "No") + " " + ((this.LastRuntimeSummary.FloodProtectedSetting != null) ? "(Flood protection!)" : ""));
               this.Log.DoLogInfo("+ Single Market Settings changed: " + (this.SingleMarketSettingChanged ? "Yes" : "No"));
-              this.Log.DoLogInfo("+ PT Config updated: " + (((this.GlobalSettingWritten || this.SingleMarketSettingChanged) && !this.PTMagicConfiguration.GeneralSettings.Application.TestMode) ? "Yes" : "No"));
+              this.Log.DoLogInfo("+ PT Config updated: " + (((this.GlobalSettingWritten || this.SingleMarketSettingChanged) && !this.PTMagicConfiguration.GeneralSettings.Application.TestMode) ? "Yes" : "No") + ((this.PTMagicConfiguration.GeneralSettings.Application.TestMode) ? " - TESTMODE active" : ""));
               this.Log.DoLogInfo("+ Markets with active single market settings: " + this.TriggeredSingleMarketSettings.Count.ToString());
               foreach (string activeSMS in this.SingleMarketSettingsCount.Keys)
               {
@@ -969,7 +970,7 @@ namespace Core.Main
             else
             {
               this.State = Constants.PTMagicBotState_Idle;
-              Log.DoLogWarn("PTMagic disabled, shutting down until next raid...");
+              Log.DoLogWarn("PTMagic is disabled.  The scheduled raid was skipped.");
             }
           }
           catch (Exception ex)
@@ -1538,7 +1539,7 @@ namespace Core.Main
               market = market.Replace("-", "");
               break;
               case "poloniex":
-              market = market.Replace("-", "");
+              market = market.Replace("_", "");
               break;
             }
           bool stopTriggers = false;
@@ -2194,9 +2195,12 @@ namespace Core.Main
         if (!this.PTMagicConfiguration.GeneralSettings.Application.TestMode)
         {
           SettingsAPI.SendPropertyLinesToAPI(this.PairsLines, this.DCALines, this.IndicatorsLines, this.PTMagicConfiguration, this.Log);
+          this.Log.DoLogInfo("Settings updates sent to PT!");
         }
-
-        this.Log.DoLogInfo("Properties saved!");
+        else
+        {
+          this.Log.DoLogWarn("TESTMODE enabled -- no updates sent to PT!");
+        }
       }
       else
       {

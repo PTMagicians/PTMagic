@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.IO;
-using System.Text;
 using Core.Main;
 using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
 using Newtonsoft.Json;
-using Core.ProfitTrailer;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Core.MarketAnalyzer
@@ -44,7 +42,7 @@ namespace Core.MarketAnalyzer
       return result;
     }
 
-    public static List<string> GetMarketData(string mainMarket, Dictionary<string, MarketInfo> marketInfos, PTMagicConfiguration systemConfiguration, LogHelper log)
+    public static List<string> GetMarketData(string mainMarket, ConcurrentDictionary<string, MarketInfo> marketInfos, PTMagicConfiguration systemConfiguration, LogHelper log)
     {
       List<string> result = new List<string>();
 
@@ -104,7 +102,7 @@ namespace Core.MarketAnalyzer
                   {
                     marketInfo = new MarketInfo();
                     marketInfo.Name = marketName;
-                    marketInfos.Add(marketName, marketInfo);
+                    marketInfos.TryAdd(marketName, marketInfo);
                   }
                   if (currencyTicker["Summary"]["Created"].Type == Newtonsoft.Json.Linq.JTokenType.Date) marketInfo.FirstSeen = (DateTime)currencyTicker["Summary"]["Created"];
                   marketInfo.LastSeen = DateTime.UtcNow;

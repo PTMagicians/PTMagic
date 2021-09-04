@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -153,16 +154,16 @@ namespace Core.MarketAnalyzer
       return result;
     }
 
-    public static Dictionary<string, MarketInfo> GetMarketInfosFromFile(PTMagicConfiguration systemConfiguration, LogHelper log)
+    public static ConcurrentDictionary<string, MarketInfo> GetMarketInfosFromFile(PTMagicConfiguration systemConfiguration, LogHelper log)
     {
-      Dictionary<string, MarketInfo> result = new Dictionary<string, MarketInfo>();
+      ConcurrentDictionary<string, MarketInfo> result = new ConcurrentDictionary<string, MarketInfo>();
 
       string marketInfoFilePath = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathExchange + Path.DirectorySeparatorChar + "MarketInfo.json";
       if (File.Exists(marketInfoFilePath))
       {
         try
         {
-          result = JsonConvert.DeserializeObject<Dictionary<string, MarketInfo>>(System.IO.File.ReadAllText(marketInfoFilePath));
+          result = JsonConvert.DeserializeObject<ConcurrentDictionary<string, MarketInfo>>(System.IO.File.ReadAllText(marketInfoFilePath));
         }
         catch (Exception ex)
         {
@@ -171,12 +172,12 @@ namespace Core.MarketAnalyzer
       }
       if (result == null)
       {
-        result = new Dictionary<string, MarketInfo>();
+        result = new ConcurrentDictionary<string, MarketInfo>();
       }
       return result;
     }
 
-    public static void SaveMarketInfosToFile(Dictionary<string, MarketInfo> marketInfos, PTMagicConfiguration systemConfiguration, LogHelper log)
+    public static void SaveMarketInfosToFile(ConcurrentDictionary<string, MarketInfo> marketInfos, PTMagicConfiguration systemConfiguration, LogHelper log)
     {
       FileHelper.WriteTextToFile(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathExchange + Path.DirectorySeparatorChar, "MarketInfo.json", JsonConvert.SerializeObject(marketInfos));
     }
@@ -316,7 +317,7 @@ namespace Core.MarketAnalyzer
               market = market.Replace("-", "");
               break;
               case "poloniex":
-              market = market.Replace("-", "");
+              market = market.Replace("_", "");
               break;
             }
           if (recentMarkets.TryGetValue(recentMarketPair.Key, out recentMarket))

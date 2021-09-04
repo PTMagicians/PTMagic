@@ -20,6 +20,7 @@ namespace Monitor.Pages {
     }
 
     private void BindData() {
+      PTData = this.PtDataObject;
       // Get markets with active single settings
       var MarketsWithSingleSettingsData = from x in Summary.MarketSummary
                                           where x.Value.ActiveSingleSettings != null

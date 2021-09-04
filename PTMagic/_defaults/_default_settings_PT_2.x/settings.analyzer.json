@@ -1,6 +1,7 @@
 ﻿//
 //  The settings below offer a basic example of some of the options available when using PTMagic.
-//  You should take your time and adjust these settings according to your own personal preferences.
+//  You should take your time and adjust these settings according to your own personal preferences, and settings.
+//
 //  Always test your PTMagic settings by running a Profit Trailer bot in TESTMODE, to make sure 
 //  it is performing as you expect. 
 //
@@ -10,21 +11,19 @@
 {
   "AnalyzerSettings": {
     "MarketAnalyzer": {
-      "StoreDataMaxHours": 48, // Number of hours to store market data
-      "IntervalMinutes": 2, // Interval in minutes for PTMagic to check market trends and triggers
-      "ExcludeMainCurrency": true, // Excludes the main currency (for example BTC) from market trend analysis
+      "StoreDataMaxHours": 48,		// Number of hours to store market data
+      "IntervalMinutes": 2,			// Interval in minutes for PTMagic to check market trends and triggers
+      "ExcludeMainCurrency": true,	// Excludes the main currency (for example BTC) from market trend analysis
       "MarketTrends": [
         {
-          "Name": "1h",  // UNIQUE market trend name (to be referenced by your triggers below)
-          "Platform": "Exchange", // Platform to grab prices from (Allowed values are: CoinMarketCap, Exchange)
-          "MaxMarkets": 50,   // Number of markets/pairs to analyze sorted by 24h volume
-          "TrendMinutes": 60,  // Number of minutes to build a trend (1440 = 24h, 720 = 12h, 60 = 1h)
-          "TrendCurrency": "Market",  // Trend Currency to build the trend against. If set to "Fiat", the trend will
-		                                  // take the USD value of your main currency into account to build the trend. 
-                                      // "Market" will build a trend against your base currency, such as BTC or USDT.
-          "TrendThreshold": 15,  // Any coin that is above 15% or below -15% for this timeframe will not be used when calculating the market average.
-		      "DisplayGraph": false,  //  Use this trend in the graph on the PTM Monitor dashboard and market analyzer
-		      "DisplayOnMarketAnalyzerList": false  //  Disply this trend for all coins on the PTM Monitor market analyzer
+          "Name": "1h",					// UNIQUE market trend name (to be referenced by your triggers below)
+          "Platform": "Exchange",		// Platform to grab prices from (Allowed values are: CoinMarketCap, Exchange)
+          "MaxMarkets": 50,				// Number of markets/pairs to analyze sorted by 24h volume
+          "TrendMinutes": 60, 			// Number of minutes to build a trend (1440 = 24h, 720 = 12h, 60 = 1h)
+          "TrendCurrency": "Market",	// Trend Currency to build the trend against. If set to "Fiat", the trend will take the USD value of your main currency into account to build the trend. "Market" will build a trend against your base currency, such as BTC or USDT.
+          "TrendThreshold": 15,			// Any coin that is above 15% or below -15% for this timeframe will not be used when calculating the market average.
+		  "DisplayGraph": false,		//  Use this trend in the graph on the PTM Monitor dashboard and market analyzer?
+		  "DisplayOnMarketAnalyzerList": false	//  Disply this trend on the PTM Monitor market analyzer?
         },
         {
           "Name": "6h",
@@ -33,8 +32,8 @@
           "TrendMinutes": 360,
           "TrendCurrency": "Market",
           "TrendThreshold": 30, 
-		      "DisplayGraph": true,  
-		      "DisplayOnMarketAnalyzerList": true 
+		  "DisplayGraph": true,  
+		  "DisplayOnMarketAnalyzerList": true 
         },
         {
           "Name": "12h",
@@ -43,8 +42,8 @@
           "TrendMinutes": 720,
           "TrendCurrency": "Market",
           "TrendThreshold": 50, 
-		      "DisplayGraph": true,  
-		      "DisplayOnMarketAnalyzerList": true 
+		  "DisplayGraph": true,  
+		  "DisplayOnMarketAnalyzerList": true 
         },
         {
           "Name": "24h",
@@ -53,24 +52,24 @@
           "TrendMinutes": 1440,
           "TrendCurrency": "Market",
           "TrendThreshold": 75, 
-		      "DisplayGraph": true,  
-		      "DisplayOnMarketAnalyzerList": true 
+		  "DisplayGraph": true,  
+		  "DisplayOnMarketAnalyzerList": true 
         }
       ]
     },
 	// ================================  GLOBAL SETTINGS  ================================ 
 	//
     "GlobalSettings": [ // Global settings for Profit Trailer properties
-  //
-  // =================================================================================== 
-	    // -----------------------------
+	//
+	// =================================================================================== 
+	  // -----------------------------
       {
-        "SettingName": "EndOfTheWorld", // ANY UNIQUE name of your setting
-        "TriggerConnection": "AND", // Define if triggers will be connected by AND or OR
-        "Triggers": [ // Your triggers for this setting.  You can use any of your defined trends from above
+        "SettingName": "EndOfTheWorld",		// ANY UNIQUE name of your setting
+        "TriggerConnection": "AND",			// Define if triggers will be connected by AND or OR
+        "Triggers": [						// Your triggers for this setting.  You can use any of your defined trends from above
           {
-            "MarketTrendName": "1h", // Reference to the market trend specified above
-            "MaxChange": 0  // The maximum value for this trigger to be true. (Any value below "0" will trigger this)
+            "MarketTrendName": "1h",		// Reference to the market trend specified above
+            "MaxChange": 0					// The maximum value for this trigger to be true. (Any value below "0" will trigger this)
           },
           {
             "MarketTrendName": "12h",
@@ -81,17 +80,19 @@
             "MaxChange": -5
           }
         ],
-        "PairsProperties": { // Properties for PAIRS.PROPERTIES
-            // Any valid setting from https://wiki.profittrailer.com/en/config can be used here.
-            // You can use a specific value, or apply a discrete OFFSET or OFFSETPERCENT to the value in your default PAIRS setting.		  
+        "PairsProperties": {		// Changes you wish to make to your PAIRS.properties settings
+									// Any valid setting from https://wiki.profittrailer.com/en/config can be used here.
+									// You can use a specific value, or apply a discrete OFFSET or OFFSETPERCENT to the value in your default PAIRS setting.		  
             "DEFAULT_sell_only_mode_enabled": true,
             "DEFAULT_trailing_profit_OFFSETPERCENT": -50
         },
-        "DCAProperties": { // Properties for DCA.PROPERTIES
+        "DCAProperties": {			// Changes you wish to make to your DCA.properties settings
             "DEFAULT_DCA_trailing_profit_OFFSETPERCENT": -75
+        },
+		"IndicatorsProperties": {	// Changes you wish to make to your INDICATORS.properties settings
         }
       },
-	    // -----------------------------
+	  // -----------------------------
       {
         "SettingName": "TankingDown",
         "TriggerConnection": "AND",
@@ -99,34 +100,25 @@
 		      {
             "MarketTrendName": "1h",
             "MaxChange": 0
-          },
-          {
-            "MarketTrendName": "12h",
-            "MaxChange": 0
-          },
-          {
-            "MarketTrendName": "24h", // Any value between -5 and -3 will make this trigger true.
-            "MaxChange": -3,
-            "MinChange": -5 // The minimum value for this trigger to be true. (Any value above "-5" will trigger this)
           }
         ],
         "PairsProperties": {
-          "max_trading_pairs_OFFSET": -2,
-		      "DEFAULT_min_buy_volume_OFFSETPERCENT": 100,
-		      //"DEFAULT_initial_cost_OFFSETPERCENT": -50,
-		      //"DEFAULT_initial_cost_percentage_OFFSETPERCENT": -50,
-          "DEFAULT_trailing_buy_OFFSETPERCENT": 25,
-          "DEFAULT_trailing_profit_OFFSETPERCENT": -25
+			"max_trading_pairs_OFFSET": -2,
+			"DEFAULT_min_buy_volume_OFFSETPERCENT": 100,
+			//"DEFAULT_initial_cost_OFFSETPERCENT": -50,
+			//"DEFAULT_initial_cost_percentage_OFFSETPERCENT": -50,
+			"DEFAULT_trailing_buy_OFFSETPERCENT": 25,
+			"DEFAULT_trailing_profit_OFFSETPERCENT": -25
         },
         "DCAProperties": {
           //"DEFAULT_DCA_rebuy_timeout_OFFSETPERCENT": 100,
           "DEFAULT_DCA_trailing_buy_OFFSETPERCENT": 25,
-		      "DEFAULT_DCA_trailing_profit_OFFSETPERCENT": -50
+		  "DEFAULT_DCA_trailing_profit_OFFSETPERCENT": -50
         },
-		    "IndicatorsProperties": {
+		"IndicatorsProperties": {
         }
       },
-	    // -----------------------------
+	  // -----------------------------
       {
         "SettingName": "BearSighted",
         "TriggerConnection": "AND",
@@ -147,16 +139,16 @@
         ],
         "PairsProperties": {
           "max_trading_pairs_OFFSET": -1,
-		      //"DEFAULT_initial_cost_OFFSETPERCENT": -25,
-		      //"DEFAULT_initial_cost_percentage_OFFSETPERCENT": -25,
-          "DEFAULT_trailing_buy_OFFSETPERCENT": 10,
-          "DEFAULT_trailing_profit_OFFSETPERCENT": -10
+		  //"DEFAULT_initial_cost_OFFSETPERCENT": -25,
+		  //"DEFAULT_initial_cost_percentage_OFFSETPERCENT": -25,
+		  "DEFAULT_trailing_buy_OFFSETPERCENT": 10,
+		  "DEFAULT_trailing_profit_OFFSETPERCENT": -10
         },
         "DCAProperties": {
           "DEFAULT_DCA_trailing_buy_OFFSETPERCENT": 10,
-		      "DEFAULT_DCA_trailing_profit_OFFSETPERCENT": -10,
+		  "DEFAULT_DCA_trailing_profit_OFFSETPERCENT": -10,
         },
-		    "IndicatorsProperties": {
+		"IndicatorsProperties": {
         }
       },
 	    // -----------------------------
@@ -180,19 +172,19 @@
         ],
         "PairsProperties": {
           "max_trading_pairs_OFFSET": 1,
-		      //"DEFAULT_initial_cost_OFFSETPERCENT": 10,
-		      //"DEFAULT_initial_cost_percentage_OFFSETPERCENT": 10,
-		    "DEFAULT_trailing_buy_OFFSETPERCENT": -10,
-          "DEFAULT_A_sell_value_OFFSETPERCENT": 10
+		  //"DEFAULT_initial_cost_OFFSETPERCENT": 10,
+		  //"DEFAULT_initial_cost_percentage_OFFSETPERCENT": 10,
+		  "DEFAULT_trailing_buy_OFFSETPERCENT": -10,
+		  "DEFAULT_A_sell_value_OFFSETPERCENT": 10
         },
         "DCAProperties": {
-          "DEFAULT_DCA_trailing_buy_OFFSETPERCENT": -10,
-		      "DEFAULT_DCA_trailing_profit_OFFSETPERCENT": 10,
+		  "DEFAULT_DCA_trailing_buy_OFFSETPERCENT": -10,
+		  "DEFAULT_DCA_trailing_profit_OFFSETPERCENT": 10,
         },
-		    "IndicatorsProperties": {
+		"IndicatorsProperties": {
         }
       },
-	    // -----------------------------
+	  // -----------------------------
       {
         "SettingName": "ToTheMoon",
         "TriggerConnection": "AND",
@@ -212,8 +204,8 @@
         ],
         "PairsProperties": {
           "max_trading_pairs_OFFSET": 2,
-		      //"DEFAULT_initial_cost_OFFSETPERCENT": 20,
-		      //"DEFAULT_initial_cost_percentage_OFFSETPERCENT": 20,
+		  //"DEFAULT_initial_cost_OFFSETPERCENT": 20,
+		  //"DEFAULT_initial_cost_percentage_OFFSETPERCENT": 20,
 		  "DEFAULT_trailing_buy_OFFSETPERCENT": -10,
           "DEFAULT_A_sell_value_OFFSETPERCENT": 20
         },
@@ -221,7 +213,7 @@
           "DEFAULT_DCA_trailing_buy_OFFSETPERCENT": -20,
 		      "DEFAULT_DCA_trailing_profit_OFFSETPERCENT": 20,
         },
-		    "IndicatorsProperties": {
+		"IndicatorsProperties": {
         }
       },
 	  // -----------------------------
@@ -238,36 +230,25 @@
         }
       }
     ],
+	//
 	// ================================  COIN-SPECIFIC SETTINGS  ================================ 
 	// 
-    "SingleMarketSettings": [ // Single market/pair settings for Profit Trailer properties
-	                            // Any setting from https://wiki.profittrailer.com/doku.php?id=pairs.properties 
-							                // marked as CS (coin-specific) can be used here.
-							                // Only coins that meet the triggered conditions will have the settings applied.
-      {
-        "SettingName": "BlacklistCoins",
-        "StopProcessWhenTriggered": true,
-        "Triggers": [
-          {
-            "AgeDaysLowerThan": 21
-          }
-        ],
-        "PairsProperties": {
-          "DEFAULT_trading_enabled": false,
-          "DEFAULT_sell_only_mode_enabled": true,
-          "DEFAULT_DCA_enabled": false
-        }
-      },
-	    // -----------------------------
+    "SingleMarketSettings": [	// Single market/pair settings for Profit Trailer properties
+								// Any setting from https://wiki.profittrailer.com/en/config marked as COIN (coin-specific) can be used here.
+								// Only coins that meet the triggered conditions will have the settings applied.
+								// A variety of SMS can be employed to check for long-term down trends, sideways trends, over-extended uptrends, etc. 
+								// If more than one SMS is true, the settings of the last applied SMS over-rides any prior SMS
       {
         "SettingName": "PumpNDumpProtection",
         "TriggerConnection": "OR",
+        //"StopProcessWhenTriggered": true,		// No SMS after this will be analyzed or applied if this SMS is true
+		//"AllowedGlobalSettings": "Default",	// You can specify that this setting will only apply when a specific Global setting is active
+		//"IgnoredGlobalSettings": "Default",	// You can specify that this setting will NOT apply when a specific Global setting is active
         "Triggers": [
           {
             "MarketTrendName": "1h",
-            "MarketTrendRelation": "Relative",  // The relation of the single market trend. Relative = Single market 
-			                                          //  trend compared relative to the market trend 
-											                          // Absolute = Single market trend viewed on its own
+            "MarketTrendRelation": "Relative",  // Relative = The single market trend is compared to the overall trend of the entire market
+												// Absolute = The Single market trend is considered on its own
             "MinChange": 8
           },
           {
@@ -281,18 +262,17 @@
             "MinChange": 12
           }
         ],
-		    "OffTriggers": [
-		      {
-            "HoursSinceTriggered": 3 //  Any coin that triggers this setting, will remain under this setting
-                                     //	 for 3 hours, since the last time it triggered.
+		"OffTriggers": [
+		  {
+			"HoursSinceTriggered": 3	//  Any coin that triggers this setting, will remain under this setting
+										//	 for 3 hours, since the last time it triggered.
           }
         ],
         "PairsProperties": {
-          "DEFAULT_sell_only_mode_enabled": true,
-          "DEFAULT_DCA_enabled": false
+          "DEFAULT_sell_only_mode_enabled": "true",
+          "DEFAULT_DCA_enabled": "false"
         }
       },
-	    // -----------------------------
       {
         "SettingName": "FreefallBlock",
         "TriggerConnection": "OR",
@@ -303,14 +283,14 @@
             "MaxChange": -5
           }
         ],
-		    "OffTriggers": [
-		      {
+		"OffTriggers": [
+		  {
             "HoursSinceTriggered": 1
           }
         ],
-		    "PairsProperties": {
-          "DEFAULT_sell_only_mode_enabled": true,
-          "DEFAULT_DCA_enabled": false
+		"PairsProperties": {
+          "DEFAULT_sell_only_mode_enabled": "true",
+          "DEFAULT_DCA_enabled": "false"
         }
       }
     ]

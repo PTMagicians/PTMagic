@@ -145,10 +145,6 @@ namespace Monitor.Pages
           }
           int trades = PTData.SellLog.FindAll(t => t.SoldDate.Date == salesDate).Count;
           double profit = PTData.SellLog.FindAll(t => t.SoldDate.Date == salesDate).Sum(t => t.Profit);
-          if (PTData.Properties.Shorting)
-          {
-            profit = profit * (-1);
-          }
           double profitFiat = Math.Round(profit * Summary.MainMarketPrice, 2);
           profitPerDayJSON += "{x: new Date('" + salesDate.ToString("yyyy-MM-dd") + "'), y: " + profitFiat.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "}";
           tradeDayIndex++;

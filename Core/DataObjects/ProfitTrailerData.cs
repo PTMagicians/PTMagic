@@ -108,7 +108,28 @@ namespace Core.Main.DataObjects
             if (_sellLog == null || (DateTime.UtcNow > _sellLogRefresh))
             {
               _sellLog.Clear();
-              this.BuildSellLogData(GetDataFromProfitTrailer("/api/v2/data/sales"));
+
+              // Page through the sales data summarizing it.
+              bool exitLoop = false;
+              int pageIndex = 1;
+
+              while (!exitLoop)
+              {
+                var sellDataPage = GetDataFromProfitTrailer("/api/v2/data/sales?perPage=5000&sort=SOLDDATE&sortDirection=ASCENDING&page=" + pageIndex);
+                if (sellDataPage != null && sellDataPage.data.Count > 0)
+                {
+                  // Add sales data page to collection
+                  this.BuildSellLogData(sellDataPage);
+                  pageIndex++;
+                }
+                else
+                {
+                  // All data retrieved
+                  exitLoop = true;
+                }
+              }
+              
+              // Update sell log refresh time
               _sellLogRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
             }
           }
@@ -265,7 +286,10 @@ namespace Core.Main.DataObjects
     private dynamic GetDataFromProfitTrailer(string callPath, bool arrayReturned = false)
     {
       string rawBody = "";
-      string url = string.Format("{0}{1}?token={2}", _systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL, callPath, _systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken);
+      string url = string.Format("{0}{1}{2}token={3}", _systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL, 
+      callPath,
+      callPath.Contains("?") ? "&" : "?", 
+      _systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken);
 
       // Get the data from PT
       Debug.WriteLine(String.Format("{0} - Calling '{1}'", DateTime.UtcNow, url));
@@ -331,15 +355,9 @@ namespace Core.Main.DataObjects
         sellLogData.ProfitPercent = rsld.profit;
         sellLogData.SoldPrice = rsld.currentPrice;
         sellLogData.AverageBuyPrice = rsld.avgPrice;
-        sellLogData.TotalCost = sellLogData.SoldAmount * sellLogData.AverageBuyPrice;
+        sellLogData.TotalCost = rsld.totalCost;
+        sellLogData.Profit = rsld.profitCurrency;
 
-        // check if bot is a shortbot via PT API.  Losses on short bot currently showing as gains. Issue #195
-        // code removed
-
-        double soldValueRaw = (sellLogData.SoldAmount * sellLogData.SoldPrice);
-        double soldValueAfterFees = soldValueRaw - (soldValueRaw * ((double)rsld.fee / 100));
-        sellLogData.SoldValue = soldValueAfterFees;
-        sellLogData.Profit = Math.Round(sellLogData.SoldValue - sellLogData.TotalCost, 8);
 
         //Convert Unix Timestamp to Datetime
         System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
