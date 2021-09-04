@@ -96,7 +96,7 @@ namespace Core.ProfitTrailer
           if (presetFilePath.IndexOf(".properties", StringComparison.InvariantCultureIgnoreCase) > -1)
           {
             FileInfo presetFile = new FileInfo(presetFilePath);
-            if (presetFile.LastWriteTimeUtc > DateTime.UtcNow.AddMinutes(-systemConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes).AddSeconds(2))
+            if (presetFile.LastWriteTimeUtc > DateTime.UtcNow.AddSeconds(-systemConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalSeconds).AddSeconds(2))
             {
 
               // File has changed recently, force preparation check

@@ -33,7 +33,7 @@ namespace Monitor.Pages
       base.Init();
 
       PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours = SystemHelper.TextToInteger(HttpContext.Request.Form["MarketAnalyzer_StoreDataMaxHours"], PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours);
-      PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes = SystemHelper.TextToInteger(HttpContext.Request.Form["MarketAnalyzer_IntervalMinutes"], PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes);
+      PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalSeconds = SystemHelper.TextToInteger(HttpContext.Request.Form["MarketAnalyzer_IntervalSeconds"], PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalSeconds);
       PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.ExcludeMainCurrency = HttpContext.Request.Form["MarketAnalyzer_ExcludeMainCurrency"].Equals("on");
 
       List<string> formKeys = HttpContext.Request.Form.Keys.ToList();

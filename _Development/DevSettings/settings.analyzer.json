@@ -12,7 +12,7 @@
   "AnalyzerSettings": {
     "MarketAnalyzer": {
       "StoreDataMaxHours": 48,		// Number of hours to store market data
-      "IntervalMinutes": 2,			// Interval in minutes for PTMagic to check market trends and triggers
+      "IntervalSeconds": 120,			// Interval in seconds for PTMagic to check market trends and triggers
       "ExcludeMainCurrency": true,	// Excludes the main currency (for example BTC) from market trend analysis
       "MarketTrends": [
         {

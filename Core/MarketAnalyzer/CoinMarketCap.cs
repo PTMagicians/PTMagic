@@ -94,7 +94,7 @@ namespace Core.MarketAnalyzer
       if (marketFiles.Count > 0)
       {
         marketFile = marketFiles.First();
-        if (marketFile.LastWriteTimeUtc <= DateTime.UtcNow.AddHours(-24).AddMinutes(-systemConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes).AddSeconds(-10))
+        if (marketFile.LastWriteTimeUtc <= DateTime.UtcNow.AddHours(-24).AddSeconds(-systemConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalSeconds).AddSeconds(-10))
         {
           log.DoLogDebug("CoinMarketCap - 24h market data file too old (" + marketFile.LastWriteTimeUtc.ToString() + "). Rebuilding data...");
           build24hMarketDataFile = true;
@@ -110,7 +110,7 @@ namespace Core.MarketAnalyzer
         if (marketFiles.Count > 0)
         {
           marketFile = marketFiles.First();
-          if (marketFile.LastWriteTimeUtc >= DateTime.UtcNow.AddHours(-24).AddMinutes(systemConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes).AddSeconds(10))
+          if (marketFile.LastWriteTimeUtc >= DateTime.UtcNow.AddHours(-24).AddSeconds(systemConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalSeconds).AddSeconds(10))
           {
             log.DoLogDebug("CoinMarketCap - 24h market data file too young (" + marketFile.LastWriteTimeUtc.ToString() + "). Rebuilding data...");
             build24hMarketDataFile = true;

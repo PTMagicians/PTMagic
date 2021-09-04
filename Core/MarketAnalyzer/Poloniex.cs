@@ -237,7 +237,7 @@ namespace Core.MarketAnalyzer
         latestMarketDataFileDateTime = latestMarketDataFile.LastWriteTimeUtc;
       }
 
-      if (latestMarketDataFileDateTime < DateTime.UtcNow.AddMinutes(-(systemConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 3)))
+      if (latestMarketDataFileDateTime < DateTime.UtcNow.AddSeconds(-(systemConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalSeconds * 3)))
       {
         int lastMarketDataAgeInSeconds = (int)Math.Ceiling(DateTime.UtcNow.Subtract(latestMarketDataFileDateTime).TotalSeconds);
 
