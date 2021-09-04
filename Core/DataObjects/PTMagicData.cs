@@ -118,7 +118,7 @@ namespace Core.Main.DataObjects.PTMagicData
   public class MarketAnalyzer
   {
     public int StoreDataMaxHours { get; set; }
-    public int IntervalMinutes { get; set; } = 5;
+    public int IntervalSeconds { get; set; } = 300;
     public bool ExcludeMainCurrency { get; set; } = true;
     public List<MarketTrend> MarketTrends { get; set; }
   }

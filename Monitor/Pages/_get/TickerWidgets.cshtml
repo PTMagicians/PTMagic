@@ -16,7 +16,7 @@
   // Health indicator
   DateTime lastRuntime = Model.Summary.LastRuntime;
   double elapsedSecondsSinceRuntime = DateTime.UtcNow.Subtract(lastRuntime).TotalSeconds;
-  double intervalSeconds = Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 60.0;
+  double intervalSeconds = Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalSeconds;
 
   string iconColor = "text-success";
   string ptMagicHealthIcon = "fa-heartbeat";

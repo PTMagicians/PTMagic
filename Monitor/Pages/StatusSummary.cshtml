@@ -16,7 +16,7 @@
       @{
         DateTime lastRuntime = Model.Summary.LastRuntime;
         double elapsedSecondsSinceRuntime = DateTime.UtcNow.Subtract(lastRuntime).TotalSeconds;
-        double intervalSeconds = Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 60.0;
+        double intervalSeconds = Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalSeconds;
 
         string ptMagicHealthIcon = "<i class=\"fa fa-heartbeat text-success\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"PT Magic is alive and healthy!\"></i>";
         if (elapsedSecondsSinceRuntime > (intervalSeconds + intervalSeconds)) {

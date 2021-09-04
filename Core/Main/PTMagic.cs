@@ -822,11 +822,11 @@ namespace Core.Main
 
     public void StartPTMagicIntervalTimer()
     {
-      this.Timer = new System.Timers.Timer(this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 60 * 1000);
+      this.Timer = new System.Timers.Timer(this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalSeconds * 1000);
       this.Timer.Enabled = true;
       this.Timer.Elapsed += new System.Timers.ElapsedEventHandler(this.PTMagicIntervalTimer_Elapsed);
 
-      this.Log.DoLogInfo("Checking market trends every " + this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes.ToString() + " minutes...");
+      this.Log.DoLogInfo("Checking market trends every " + this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalSeconds.ToString() + " seconds...");
 
       // Fire the first start immediately
       this.PTMagicIntervalTimer_Elapsed(null, null);
@@ -959,7 +959,7 @@ namespace Core.Main
               {
                 this.Log.DoLogInfo("+   " + activeSMS + ": " + this.SingleMarketSettingsCount[activeSMS].ToString());
               }
-              this.Log.DoLogInfo("+ " + this.TotalElapsedSeconds.ToString() + " Magicbots killed in " + this.RunCount.ToString() + " raids on Cryptodragon's Lair " + this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes.ToString() + ".");
+              this.Log.DoLogInfo("+ " + this.TotalElapsedSeconds.ToString() + " Magicbots killed in " + this.RunCount.ToString() + " raids on Cryptodragon's Lair, next refresh in " + this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalSeconds.ToString() + " seconds.");
               this.Log.DoLogInfo("");
               this.Log.DoLogInfo("DO NOT CLOSE THIS WINDOW! THIS IS THE BOT THAT ANALYZES TRENDS AND CHANGES SETTINGS!");
               this.Log.DoLogInfo("");
@@ -997,9 +997,9 @@ namespace Core.Main
           if (File.Exists(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "LastRuntimeSummary.json"))
           {
             FileInfo fiLastSummary = new FileInfo(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "LastRuntimeSummary.json");
-            if (fiLastSummary.LastWriteTimeUtc < DateTime.UtcNow.AddMinutes(-(this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 2)))
+            if (fiLastSummary.LastWriteTimeUtc < DateTime.UtcNow.AddSeconds(-(this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalSeconds * 2)))
             {
-              Log.DoLogWarn("PTMagic raid " + this.RunCount.ToString() + " is taking longer than expected.  Consider increasing your IntervalMinues setting, reducing other processes on your PC, or raising PTMagic's priority.");
+              Log.DoLogWarn("PTMagic raid " + this.RunCount.ToString() + " is taking longer than expected.  Consider increasing your IntervalSeconds setting, reducing other processes on your PC, or raising PTMagic's priority.");
               this.State = Constants.PTMagicBotState_Idle;
               Log.DoLogInfo("PTMagic status reset, waiting for the next raid to be good to go again.");
             }
@@ -1054,13 +1054,13 @@ namespace Core.Main
           this.LastSettingFileCheck = DateTime.UtcNow;
           result = true;
 
-          if (this.Timer.Interval != this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 60 * 1000)
+          if (this.Timer.Interval != this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalSeconds * 1000)
           {
-            Log.DoLogInfo("Setting for 'IntervalMinutes' changed in MarketAnalyzer, setting new timer...");
+            Log.DoLogInfo("Setting for 'IntervalSeconds' changed in MarketAnalyzer, setting new timer...");
             this.Timer.Stop();
-            this.Timer.Interval = this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 60 * 1000;
+            this.Timer.Interval = this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalSeconds * 1000;
             this.Timer.Start();
-            Log.DoLogInfo("New timer set to " + this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes.ToString() + " minutes.");
+            Log.DoLogInfo("New timer set to " + this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalSeconds.ToString() + " seconds.");
           }
 
           SettingsFiles.CheckPresets(this.PTMagicConfiguration, this.Log, true);
@@ -1269,7 +1269,7 @@ namespace Core.Main
       // Check if problems occured during the Exchange contact
       if (this.ExchangeMarketList == null)
       {
-        Exception ex = new Exception("Unable to contact " + this.PTMagicConfiguration.GeneralSettings.Application.Exchange + " for fresh market data. Trying again in " + this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes + " minute(s).");
+        Exception ex = new Exception("Unable to contact " + this.PTMagicConfiguration.GeneralSettings.Application.Exchange + " for fresh market data. Trying again in " + this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalSeconds + " second(s).");
         Log.DoLogError(ex.Message);
         this.State = Constants.PTMagicBotState_Idle;
         throw ex;
