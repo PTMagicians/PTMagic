@@ -5,7 +5,9 @@
 }
 
 <div class="row">
-  <div class="col-md-5 px-1">
+  @if (Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxDashboardBuyEntries>0)
+  {
+  <div class="col-md-6 px-1">
     <div class="card-box px-2">
       <h4 class="m-t-0 m-b-20 header-title"><b>Possible Buys (@Model.PTData.BuyLog.Count)</b><small id="buylist-refresh-icon"></small><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)BuyAnalyzer">more</a></small></h4>
       @if (Model.PTData.BuyLog.Count == 0) 
@@ -79,8 +81,9 @@
       }
     </div>
   </div>
-
-  <div class="col-md-7 px-1">
+  }
+  
+  <div class="col-md px-1">    
     <div class="card-box px-2">
       <h4 class="m-t-0 m-b-20 header-title"><b>Pairs / DCA / Pending (@Model.PTData.DCALog.Count)</b><small id="baglist-refresh-icon"></small><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)BagAnalyzer">more</a></small></h4>
 
