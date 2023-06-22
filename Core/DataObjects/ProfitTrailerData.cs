@@ -384,7 +384,7 @@ namespace Core.Main.DataObjects
       _dcaLog.AddRange(ParsePairsData(rawPairsLogData, false));
 
       // Parse pending pairs data
-      _dcaLog.AddRange(ParsePairsData(rawPendingLogData, false));
+      //_dcaLog.AddRange(ParsePairsData(rawPendingLogData, false));
 
       // Parse watch only pairs data
       _dcaLog.AddRange(ParsePairsData(rawWatchModeLogData, false));
