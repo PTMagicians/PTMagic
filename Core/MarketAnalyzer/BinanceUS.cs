@@ -370,12 +370,12 @@ namespace Core.MarketAnalyzer
         log.DoLogDebug("BinanceUS - Getting ticks for '" + markets.Count + "' markets");
         ConcurrentDictionary<string, List<MarketTick>> marketTicks = new ConcurrentDictionary<string, List<MarketTick>>();
 
-        int ParallelThrottle = 4;
-        if (systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours > 200)
+        int ParallelThrottle = 2;
+        if (systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours > 6)
         {
-          ParallelThrottle = 2;
+          ParallelThrottle = 1;
           log.DoLogInfo("----------------------------------------------------------------------------");
-          log.DoLogInfo("StoreDataMaxHours is greater than 200.  Historical data requests will be");
+          log.DoLogInfo("StoreDataMaxHours is greater than 6.  Historical data requests will be");
           log.DoLogInfo("throttled to avoid exceeding exchange data request limits.  This initial ");
           log.DoLogInfo("run could take more than 30 minutes.  Please go outside for a walk...");
           log.DoLogInfo("----------------------------------------------------------------------------");

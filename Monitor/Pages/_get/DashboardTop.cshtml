@@ -111,6 +111,7 @@
               @foreach (Core.Main.DataObjects.PTMagicData.DCALogData dcaLogEntry in Model.PTData.DCALog.OrderByDescending(d => d.ProfitPercent).Take(Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxDashboardBagEntries)) {
                 // Loop through the pairs preparing the data for display
                 Core.Main.DataObjects.PTMagicData.MarketPairSummary mps = null;
+
                 if (Model.Summary.MarketSummary.ContainsKey(dcaLogEntry.Market)) {
                   mps = Model.Summary.MarketSummary[dcaLogEntry.Market];
                 }
@@ -149,22 +150,26 @@
                 
                 // Check for when PT loses the value of a pair
                 bool lostValue = false;
-                lostValue = (dcaLogEntry.TotalCost == 0.0) || (dcaLogEntry.AverageBuyPrice == 0.0);
+                lostValue = !(sellStrategyText.Contains("WATCHMODE")) && !(sellStrategyText.Contains("PENDING")) && ((dcaLogEntry.TotalCost == 0.0) || (dcaLogEntry.AverageBuyPrice == 0.0));
 
                 // Profit percentage
                 var profitPercentage = dcaLogEntry.ProfitPercent;
                      
-                if (dcaLogEntry.SellStrategies != null)
-                {
-                  var gainStrategy = dcaLogEntry.SellStrategies.FirstOrDefault(x => x.Name.Contains(" GAIN", StringComparison.InvariantCultureIgnoreCase));
-                  if (gainStrategy != null)
-                  {
-                    // Use the gain percentage value as it is accurate to what can be achieved with the order book!
-                    profitPercentage = gainStrategy.CurrentValue;
-                  }
-                }
+                // if (dcaLogEntry.SellStrategies != null)
+                // {
+                //   var gainStrategy = dcaLogEntry.SellStrategies.FirstOrDefault(x => x.Name.Contains(" GAIN", StringComparison.InvariantCultureIgnoreCase));
+                //   if (gainStrategy != null)
+                //   {
+                //     // Use the gain percentage value as it is accurate to what can be achieved with the order book!
+                //     profitPercentage = gainStrategy.CurrentValue;
+                //   }
+                // }
                 
                 // Render the row
+
+                 if (!sellStrategyText.Contains("PENDING-BUY"))
+                {
+
                 <tr @(lostValue ? "class=errorRow" : "") >
 
                   <!-- Market -->
@@ -207,8 +212,8 @@
                   <!-- Target/Profit -->
                   @if (!@lostValue)
                   {
-                    @if (!sellStrategyText.Contains("WATCHMODE"))
-                    {
+                    //@if (!sellStrategyText.Contains("WATCHMODE"))
+                    //{
                       @if (sellStrategyText.Contains("CROSSED"))
                       // if leverage, recalculate profit target
                       {
@@ -222,17 +227,31 @@
                         leverage = leverageText.Remove(leverageText.IndexOf(".0)"), leverageText.Length - leverageText.IndexOf(".0)"));
                         leverageValue = double.Parse(leverage);
                       }
-                      profitPercentage = profitPercentage * leverageValue; 
-                      double TargetGain = leverageValue * dcaLogEntry.TargetGainValue.Value;
-                      <td>@TargetGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%
-                        <br>
-                        <div class="text-autocolor">@profitPercentage.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</div>
-                      </td>
-                    }
+                      //profitPercentage = profitPercentage * leverageValue;
+
+                      @if ( !(sellStrategyText.Contains("WATCHMODE")) && !(sellStrategyText.Contains("PENDING")))
+                      {
+                        double TargetGain = leverageValue * dcaLogEntry.TargetGainValue.Value;
+                        <td>@TargetGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%
+                          <br>
+                          <div class="text-autocolor">@profitPercentage.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</div>
+                        </td>
+                      }
+                      else
+                      {
+                        <td>
+                          <div class="text-left">None</div>
+                          <br>
+                          <div class="text-autocolor">@profitPercentage.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</div>
+                        </td>
+                      }
+
+                     
+                    //}
                   } 
                   else
                   {
-                    <td class="text-left">No Value!</td>
+                    <td class="text-left">Lost Value!</td>
                   }
                   <!-- Bag details -->
                   <td class="text-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)_get/BagDetails/?m=@dcaLogEntry.Market" data-remote="false" data-toggle="modal" data-target="#dca-chart"><i class="fa fa-plus-circle"></i></a></td>
@@ -243,6 +262,9 @@
                   Model.TotalBagCost = Model.TotalBagCost + dcaLogEntry.TotalCost;
                   Model.TotalBagGain =  Model.TotalBagGain + bagGain;
                 }
+
+                } 
+
               }
             <td>Totals:</td>
             <td></td>
