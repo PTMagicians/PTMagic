@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>netcoreapp7.0</TargetFramework>
     <!--<PublishWithAspNetCoreTargetManifest>false</PublishWithAspNetCoreTargetManifest>-->
   </PropertyGroup>
   <ItemGroup>
@@ -19,7 +19,7 @@
     <None Include="nlog.config" CopyToOutputDirectory="Always" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="Microsoft.VisualStudio.Web.BrowserLink" Version="2.2.0" />
   </ItemGroup>
   <ItemGroup>

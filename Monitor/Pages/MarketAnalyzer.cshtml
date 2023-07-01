@@ -250,6 +250,8 @@ else
         </thead>
         <tbody>
           @foreach (string market in Model.Summary.MarketSummary.Keys.OrderBy(m => m)) {
+            if (market.EndsWith(Model.Summary.MainMarket))
+            {
             Core.Main.DataObjects.PTMagicData.MarketPairSummary mps = Model.Summary.MarketSummary[market];
             int marketTrendsDisplayed = 0;
             <tr>
@@ -294,6 +296,7 @@ else
                 <td></td>
               }
             </tr>
+            }
           }
         </tbody>
       </table>

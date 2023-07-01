@@ -71,7 +71,7 @@ namespace Core.MarketAnalyzer
               //New variables for filtering out bad markets
               float marketLastPrice = currencyTicker["lastPrice"].ToObject<float>();
               float marketVolume = currencyTicker["volume"].ToObject<float>();
-              if (marketLastPrice > 0 && marketVolume > 0)
+              if (marketLastPrice > 0 && marketVolume > 0 && marketName.EndsWith(mainMarket))
                 {
 
                   // Set last values in case any error occurs
@@ -92,8 +92,15 @@ namespace Core.MarketAnalyzer
                 }
                 else
                 {
-                  //Let the user know that the problem market was ignored.
+                  //Let the user know that a problem market was ignored.
+                  if (!marketName.EndsWith(mainMarket))
+                  {
+                    log.DoLogInfo("BinanceFutures - Incorrect base currency: " + marketName + " ignored");
+                  }
+                  else
+                  {
                   log.DoLogInfo("BinanceFutures - Ignoring bad market data for " + marketName);
+                  }
                 }
             }
 
@@ -357,12 +364,12 @@ namespace Core.MarketAnalyzer
         log.DoLogDebug("BinanceFutures - Getting ticks for '" + markets.Count + "' markets");
         ConcurrentDictionary<string, List<MarketTick>> marketTicks = new ConcurrentDictionary<string, List<MarketTick>>();
 
-        int ParallelThrottle = 4;
-        if (systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours > 50)
+        int ParallelThrottle = 2;
+        if (systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours > 6)
         {
-          ParallelThrottle = 2;
+          ParallelThrottle = 1;
           log.DoLogInfo("----------------------------------------------------------------------------");
-          log.DoLogInfo("StoreDataMaxHours is greater than 50.  Historical data requests will be");
+          log.DoLogInfo("StoreDataMaxHours is greater than 6.  Historical data requests will be");
           log.DoLogInfo("throttled to avoid exceeding exchange data request limits.  This initial ");
           log.DoLogInfo("run could take more than 30 minutes.  Please go outside for a walk...");
           log.DoLogInfo("----------------------------------------------------------------------------");
