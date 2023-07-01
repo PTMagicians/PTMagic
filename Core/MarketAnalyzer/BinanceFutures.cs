@@ -71,7 +71,7 @@ namespace Core.MarketAnalyzer
               //New variables for filtering out bad markets
               float marketLastPrice = currencyTicker["lastPrice"].ToObject<float>();
               float marketVolume = currencyTicker["volume"].ToObject<float>();
-              if (marketLastPrice > 0 && marketVolume > 0)
+              if (marketLastPrice > 0 && marketVolume > 0 && marketName.EndsWith(mainMarket))
                 {
 
                   // Set last values in case any error occurs
@@ -92,8 +92,15 @@ namespace Core.MarketAnalyzer
                 }
                 else
                 {
-                  //Let the user know that the problem market was ignored.
+                  //Let the user know that a problem market was ignored.
+                  if (!marketName.EndsWith(mainMarket))
+                  {
+                    log.DoLogInfo("BinanceFutures - Incorrect base currency: " + marketName + " ignored");
+                  }
+                  else
+                  {
                   log.DoLogInfo("BinanceFutures - Ignoring bad market data for " + marketName);
+                  }
                 }
             }
 
