@@ -639,7 +639,7 @@ a.text-dark:hover {
 }
 
 .bg-success {
-  background-color: #81c868 !important;
+  background-color: #296a12 !important;
 }
 
 .bg-info {
@@ -647,11 +647,11 @@ a.text-dark:hover {
 }
 
 .bg-warning {
-  background-color: #ffbd4a !important;
+  background-color: #563a09 !important;
 }
 
 .bg-danger {
-  background-color: #f05050 !important;
+  background-color: #6e0e0e !important;
 }
 
 .bg-muted {
@@ -759,7 +759,7 @@ a.text-dark:hover {
 }
 
 .label-success {
-  background-color: #81c868;
+  background-color: #3b5e2f;
 }
 
 .label-info {
@@ -767,11 +767,11 @@ a.text-dark:hover {
 }
 
 .label-warning {
-  background-color: #ffbd4a;
+  background-color: #847f0a;
 }
 
 .label-danger {
-  background-color: #f05050;
+  background-color: #601f1f;
 }
 
 .label-purple {
@@ -829,7 +829,7 @@ a.text-dark:hover {
 }
 
 .badge-success {
-  background-color: #81c868;
+  background-color: #307516;
 }
 
 .badge-info {
@@ -837,11 +837,11 @@ a.text-dark:hover {
 }
 
 .badge-warning {
-  background-color: #ffbd4a;
+  background-color: #6f5019;
 }
 
 .badge-danger {
-  background-color: #f05050;
+  background-color: #6a1414;
 }
 
 .badge-purple {

@@ -74,11 +74,11 @@ namespace Monitor.Pages
       PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL = HttpContext.Request.Form["Application_ProfitTrailerMonitorURL"];
       PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken = HttpContext.Request.Form["Application_ProfitTrailerServerAPIToken"];
       PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset = HttpContext.Request.Form["Application_TimezoneOffset"];
-      PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency = HttpContext.Request.Form["Application_MainFiatCurrency"];
+      //PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency = HttpContext.Request.Form["Application_MainFiatCurrency"];
       PTMagicConfiguration.GeneralSettings.Application.FloodProtectionMinutes = SystemHelper.TextToInteger(HttpContext.Request.Form["Application_FloodProtectionMinutes"], PTMagicConfiguration.GeneralSettings.Application.FloodProtectionMinutes);
       PTMagicConfiguration.GeneralSettings.Application.InstanceName = HttpContext.Request.Form["Application_InstanceName"];
       PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey = HttpContext.Request.Form["Application_CoinMarketCapAPIKey"];
-      PTMagicConfiguration.GeneralSettings.Application.FreeCurrencyConverterAPIKey = HttpContext.Request.Form["Application_FreeCurrencyConverterAPIKey"];
+      //PTMagicConfiguration.GeneralSettings.Application.FreeCurrencyConverterAPIKey = HttpContext.Request.Form["Application_FreeCurrencyConverterAPIKey"];
       PTMagicConfiguration.GeneralSettings.Monitor.IsPasswordProtected = HttpContext.Request.Form["Monitor_IsPasswordProtected"].Equals("on");
       PTMagicConfiguration.GeneralSettings.Monitor.OpenBrowserOnStart = HttpContext.Request.Form["Monitor_OpenBrowserOnStart"].Equals("on");
       PTMagicConfiguration.GeneralSettings.Monitor.AnalyzerChart = HttpContext.Request.Form["Monitor_AnalyzerChart"];
@@ -89,6 +89,7 @@ namespace Monitor.Pages
       PTMagicConfiguration.GeneralSettings.Monitor.BagAnalyzerRefreshSeconds = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_BagAnalyzerRefreshSeconds"], PTMagicConfiguration.GeneralSettings.Monitor.BagAnalyzerRefreshSeconds);
       PTMagicConfiguration.GeneralSettings.Monitor.BuyAnalyzerRefreshSeconds = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_BuyAnalyzerRefreshSeconds"], PTMagicConfiguration.GeneralSettings.Monitor.BuyAnalyzerRefreshSeconds);
       PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform = HttpContext.Request.Form["Monitor_LinkPlatform"];
+      PTMagicConfiguration.GeneralSettings.Monitor.MaxSalesRecords = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_MaxSalesRecords"], PTMagicConfiguration.GeneralSettings.Monitor.MaxSalesRecords);
       PTMagicConfiguration.GeneralSettings.Monitor.MaxTopMarkets = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_MaxTopMarkets"], PTMagicConfiguration.GeneralSettings.Monitor.MaxTopMarkets);
       PTMagicConfiguration.GeneralSettings.Monitor.MaxDailySummaries = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_MaxDailySummaries"], PTMagicConfiguration.GeneralSettings.Monitor.MaxDailySummaries);
       PTMagicConfiguration.GeneralSettings.Monitor.MaxMonthlySummaries = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_MaxMonthlySummaries"], PTMagicConfiguration.GeneralSettings.Monitor.MaxMonthlySummaries);

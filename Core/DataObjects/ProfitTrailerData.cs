@@ -113,14 +113,19 @@ namespace Core.Main.DataObjects
               bool exitLoop = false;
               int pageIndex = 1;
 
-              while (!exitLoop)
+              int maxPages = _systemConfiguration.GeneralSettings.Monitor.MaxSalesRecords;
+              int requestedPages = 0;
+
+              while (!exitLoop && requestedPages < maxPages)
               {
-                var sellDataPage = GetDataFromProfitTrailer("/api/v2/data/sales?perPage=5000&sort=SOLDDATE&sortDirection=ASCENDING&page=" + pageIndex);
+                var sellDataPage = GetDataFromProfitTrailer("/api/v2/data/sales?Page=1&perPage=1&sort=SOLDDATE&sortDirection=DESCENDING&page=" + pageIndex);
                 if (sellDataPage != null && sellDataPage.data.Count > 0)
                 {
                   // Add sales data page to collection
                   this.BuildSellLogData(sellDataPage);
                   pageIndex++;
+                  requestedPages++;
+
                 }
                 else
                 {
@@ -130,7 +135,7 @@ namespace Core.Main.DataObjects
               }
               
               // Update sell log refresh time
-              _sellLogRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+              _sellLogRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds -1);
             }
           }
         }

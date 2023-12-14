@@ -48,7 +48,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public string TimezoneOffset { get; set; } = "+0:00";
     public string MainFiatCurrency { get; set; } = "USD";
     public string CoinMarketCapAPIKey { get; set; }
-    public string FreeCurrencyConverterAPIKey { get; set; }
+    //public string FreeCurrencyConverterAPIKey { get; set; }
   }
 
   public class Monitor
@@ -64,6 +64,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public int RefreshSeconds { get; set; } = 30;
     public int BagAnalyzerRefreshSeconds { get; set; } = 5;
     public int BuyAnalyzerRefreshSeconds { get; set; } = 5;
+    public int MaxSalesRecords { get; set; } = 99999;
     public int MaxTopMarkets { get; set; } = 20;
     public int MaxDailySummaries { get; set; } = 10;
     public int MaxMonthlySummaries { get; set; } = 10;

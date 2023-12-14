@@ -67,7 +67,7 @@
     </div>
 
     <div class="card-box">
-      <h4 class="m-t-0 header-title">Active Settings</h4>
+      <h4 class="m-t-0 header-title">Active Settings &nbsp;  <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="If DYNAMIC formulas are used in PT for these settings, the values will not be properly displayed here."></i></h4>
       @{
         string maxCostCaption = "Initial";
       }
@@ -86,8 +86,6 @@
             }
           </tr>
           <tr>
-            <td>DCA Level</td>
-            <td class="text-right">@Model.Summary.DCALevels.ToString(new System.Globalization.CultureInfo("en-US"))</td>
             <td>Min Vol.</td>
             <td class="text-right">@Model.Summary.MinBuyVolume.ToString(new System.Globalization.CultureInfo("en-US"))</td>
           </tr>
@@ -101,62 +99,7 @@
       </table>
     </div>
 
-    <div class="card-box">
-      <h4 class="m-t-0 header-title">Active Buy Strategies</h4>
-
-      <table class="table table-striped table-sm">
-        <tbody>
-          @if (Model.Summary.BuyStrategies.Count == 0) {
-            <tr>
-              <td>Buy Strat.</td>
-              <td class="text-right">@Model.Summary.BuyStrategy</td>
-              <td>Buy Value</td>
-              <td class="text-right">@Model.Summary.BuyValue.ToString(new System.Globalization.CultureInfo("en-US"))</td>
-            </tr>
-          } else {
-            char buyStrategyIndex = 'A';
-            foreach (Core.Main.DataObjects.PTMagicData.StrategySummary buyStrategy in Model.Summary.BuyStrategies) {
-              <tr>
-                <td>Buy Strat. @buyStrategyIndex</td>
-                <td class="text-right">@buyStrategy.Name</td>
-                <td>Buy Value @buyStrategyIndex</td>
-                <td class="text-right">@buyStrategy.Value.ToString(new System.Globalization.CultureInfo("en-US"))</td>
-              </tr>
-              buyStrategyIndex++;
-            }
-          }
-        </tbody>
-      </table>
-    </div>
-
-    <div class="card-box">
-      <h4 class="m-t-0 header-title">Active Sell Strategies</h4>
-
-      <table class="table table-striped table-sm">
-        <tbody>
-          @if (Model.Summary.SellStrategies.Count == 0) {
-            <tr>
-              <td>Sell Strat.</td>
-              <td class="text-right">@Model.Summary.SellStrategy</td>
-              <td>Sell Value</td>
-              <td class="text-right">@Model.Summary.SellValue.ToString(new System.Globalization.CultureInfo("en-US"))</td>
-            </tr>
-          } else {
-            char sellStrategyIndex = 'A';
-            foreach (Core.Main.DataObjects.PTMagicData.StrategySummary sellStrategy in Model.Summary.SellStrategies) {
-              <tr>
-                <td>Sell Strat. @sellStrategyIndex</td>
-                <td class="text-right">@sellStrategy.Name</td>
-                <td>Sell Value @sellStrategyIndex</td>
-                <td class="text-right">@sellStrategy.Value.ToString(new System.Globalization.CultureInfo("en-US"))</td>
-              </tr>
-              sellStrategyIndex++;
-            }
-          }
-        </tbody>
-      </table>
-    </div>
-  </div>
+    
 
   <div class="col-md-7">
     <div class="row">

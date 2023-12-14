@@ -25,7 +25,7 @@
                   totalCurrentValueString = Math.Round(Model.totalCurrentValue, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
                 }
               }
-              <th class="m-t-0 header-title text-left">Total Account Value: &nbsp; <text class="text-autocolor"> @totalCurrentValueString @Model.Summary.MainMarket </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is based on your sales history, entries on the Transactions page and any currently held positions."></i></small></th>
+              <th class="m-t-0 header-title text-left">Total Current Value: &nbsp; <text class="text-autocolor"> @totalCurrentValueString @Model.Summary.MainMarket </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is based on the TCV reported by Profit Trailer."></i></small></th>
               <th class="text-right">Starting Value: &nbsp; <text class="text-autocolor"> @Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance &nbsp; @Model.Summary.MainMarket </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is the starting value found in your settings file"></i></small></th>
             </tr>
           </thead>

@@ -124,12 +124,12 @@
                 </div>
               </div>
 
-               <div class="form-group row">
+               @* <div class="form-group row">
                 <label class="col-md-4 col-form-label">Main Fiat Currency <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is the local currency you want PTM to use when showing your sales and account value in fiat."></i></label>
                 <div class="col-md-8">
-                  <input type="text" class="form-control" name="Application_MainFiatCurrency" value="@Model.PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency">
+                 <input type="text" class="form-control" name="Application_MainFiatCurrency" value="@Model.PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency">
                 </div>
-              </div>
+               </div> *@
 
                <div class="form-group row">
                 <label class="col-md-4 col-form-label">Starting Balance <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="PTM will use this to calculate total profits to date, and projected profits."></i></label>
@@ -145,12 +145,12 @@
                 </div>
               </div>
 
-              <div class="form-group row">
+              @* <div class="form-group row">
                 <label class="col-md-4 col-form-label">FreeCurrencyConverter API Key <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The api key needed for currency conversions for non-USD currency users (optional)."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Application_FreeCurrencyConverterAPIKey" value="@Model.PTMagicConfiguration.GeneralSettings.Application.FreeCurrencyConverterAPIKey">
                 </div>
-              </div>
+              </div> *@
 
             </div>
           </div>
@@ -196,14 +196,14 @@
                 </div>
               </div>
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Graph Interval Minutes <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The interval for the monitor market trend graph to draw points."></i></label>
+                <label class="col-md-4 col-form-label">Market Trend Graph Interval Minutes <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The time interval for the market trend graph between points."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Monitor_GraphIntervalMinutes" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.GraphIntervalMinutes.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Graph Max Timeframe Hours <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This defines the timeframe that your graph for market trends covers."></i></label>
+                <label class="col-md-4 col-form-label">Market Trend Graph Max Timeframe <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This defines the total timeframe for the market trends graph."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Monitor_GraphMaxTimeframeHours" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>
@@ -241,6 +241,13 @@
               </div>
 
               <div class="form-group row">
+                <label class="col-md-4 col-form-label">Max Sales Records<i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The number of sales records PTMagic pulls from Profit Trailer.  Changes require a Monitor Restart."></i></label>
+                <div class="col-md-8">
+                  <input type="text" class="form-control" name="Monitor_MaxSalesRecords" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxSalesRecords.ToString(new System.Globalization.CultureInfo("en-US"))">
+                </div>
+              </div>
+
+             <div class="form-group row">
                 <label class="col-md-4 col-form-label">Max Top Markets <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The amount of top markets being show in your Sales Analyzer."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Monitor_MaxTopMarkets" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxTopMarkets.ToString(new System.Globalization.CultureInfo("en-US"))">
