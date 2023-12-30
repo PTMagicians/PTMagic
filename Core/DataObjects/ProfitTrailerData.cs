@@ -16,16 +16,22 @@ namespace Core.Main.DataObjects
   {
     private SummaryData _summary = null;
     private Properties _properties = null;
+    private List<StatsData> _stats = null;
     private List<SellLogData> _sellLog = new List<SellLogData>();
     private List<DCALogData> _dcaLog = new List<DCALogData>();
     private List<BuyLogData> _buyLog = new List<BuyLogData>();
     private string _ptmBasePath = "";
     private PTMagicConfiguration _systemConfiguration = null;
     private TransactionData _transactionData = null;
-    private DateTime _buyLogRefresh = DateTime.UtcNow, _sellLogRefresh = DateTime.UtcNow, _dcaLogRefresh = DateTime.UtcNow, _summaryRefresh = DateTime.UtcNow, _propertiesRefresh = DateTime.UtcNow;
-    private volatile object _buyLock = new object(), _sellLock = new object(), _dcaLock = new object(), _summaryLock = new object(), _propertiesLock = new object();
+    private DateTime _statsRefresh = DateTime.UtcNow,_buyLogRefresh = DateTime.UtcNow, _sellLogRefresh = DateTime.UtcNow, _dcaLogRefresh = DateTime.UtcNow, _summaryRefresh = DateTime.UtcNow, _propertiesRefresh = DateTime.UtcNow;
+    private volatile object _statsLock = new object(),_buyLock = new object(), _sellLock = new object(), _dcaLock = new object(), _summaryLock = new object(), _propertiesLock = new object();
     private TimeSpan? _offsetTimeSpan = null;
-
+    
+    public void DoLog(string message)
+    {
+        // Implement your logging logic here
+        Console.WriteLine(message);
+    }
     // Constructor
     public ProfitTrailerData(PTMagicConfiguration systemConfiguration)
     {
@@ -96,86 +102,82 @@ namespace Core.Main.DataObjects
         return _properties;
       }
     }
+
+    public List<StatsData> Stats
+    {
+        get
+        {
+            if (_stats == null || DateTime.UtcNow > _statsRefresh)
+            {
+                lock (_statsLock)
+                {
+                    if (_stats == null || DateTime.UtcNow > _statsRefresh)
+                    {
+                        dynamic statsDataJson = GetDataFromProfitTrailer("/api/v2/data/stats");
+                        JObject statsDataJObject = statsDataJson as JObject;
+                        JObject basicSection = (JObject)statsDataJObject["basic"];
+                        _stats = new List<StatsData> { BuildStatsData(basicSection) };
+                        _statsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                    }
+                }
+            }
+            return _stats;
+        }
+    }
+
+    
     public List<SellLogData> SellLog
     {
       get
       {
+            
         if (_sellLog == null || (DateTime.UtcNow > _sellLogRefresh))
         {
-          lock (_sellLock)
-          {
-            // Thread double locking
-            if (_sellLog == null || (DateTime.UtcNow > _sellLogRefresh))
+            lock (_sellLock)
             {
-              _sellLog.Clear();
-
-              // Page through the sales data summarizing it.
-              bool exitLoop = false;
-              int pageIndex = 1;
-
-              int maxPages = _systemConfiguration.GeneralSettings.Monitor.MaxSalesRecords;
-              int requestedPages = 0;
-
-              while (!exitLoop && requestedPages < maxPages)
+              // Thread double locking
+              if (_sellLog == null || (DateTime.UtcNow > _sellLogRefresh))
               {
-                var sellDataPage = GetDataFromProfitTrailer("/api/v2/data/sales?Page=1&perPage=1&sort=SOLDDATE&sortDirection=DESCENDING&page=" + pageIndex);
-                if (sellDataPage != null && sellDataPage.data.Count > 0)
-                {
-                  // Add sales data page to collection
-                  this.BuildSellLogData(sellDataPage);
-                  pageIndex++;
-                  requestedPages++;
+                _sellLog.Clear();
+                
 
-                }
-                else
+                // Page through the sales data summarizing it.
+                bool exitLoop = false;
+                int pageIndex = 1;
+
+                // 1 record per page to allow user to set max records to retrieve
+                int maxPages = _systemConfiguration.GeneralSettings.Monitor.MaxSalesRecords;
+                int requestedPages = 0;
+
+                while (!exitLoop && requestedPages < maxPages)
                 {
-                  // All data retrieved
-                  exitLoop = true;
+                  var sellDataPage = GetDataFromProfitTrailer("/api/v2/data/sales?Page=1&perPage=1&sort=SOLDDATE&sortDirection=DESCENDING&page=" + pageIndex);
+                  if (sellDataPage != null && sellDataPage.data.Count > 0)
+                  {
+                    // Add sales data page to collection
+                    this.BuildSellLogData(sellDataPage);
+                    pageIndex++;
+                    requestedPages++;
+                    Console.WriteLine($"Importing sale: {pageIndex}");
+
+                  }
+                  else
+                  {
+                    // All data retrieved
+                    exitLoop = true;
+                  }
                 }
+                
+                // Update sell log refresh time
+                _sellLogRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds -1);
               }
-              
-              // Update sell log refresh time
-              _sellLogRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds -1);
             }
           }
-        }
-
         return _sellLog;
       }
     }
 
-    public List<SellLogData> SellLogToday
-    {
-      get
-      {
-        return SellLog.FindAll(sl => sl.SoldDate.Date == LocalizedTime.DateTime.Date);
-      }
-    }
-
-    public List<SellLogData> SellLogYesterday
-    {
-      get
-      {
-        return SellLog.FindAll(sl => sl.SoldDate.Date == LocalizedTime.DateTime.AddDays(-1).Date);
-      }
-    }
-
-    public List<SellLogData> SellLogLast7Days
-    {
-      get
-      {
-        return SellLog.FindAll(sl => sl.SoldDate.Date >= LocalizedTime.DateTime.AddDays(-7).Date);
-      }
-    }
-
-    public List<SellLogData> SellLogLast30Days
-    {
-      get
-      {
-        return SellLog.FindAll(sl => sl.SoldDate.Date >= LocalizedTime.DateTime.AddDays(-30).Date);
-      }
-    }
-
+   
     public List<DCALogData> DCALog
     {
       get
@@ -313,15 +315,18 @@ namespace Core.Main.DataObjects
 
       response.Close();
 
-      // Parse the JSON and build the data sets
+
       if (!arrayReturned)
-      {
-        return JObject.Parse(rawBody);
-      }
-      else
-      {
-        return JArray.Parse(rawBody);
-      }
+        {
+            return JObject.Parse(rawBody);
+        }
+        else
+        {
+            return JArray.Parse(rawBody);
+        }
+
+
+
     }
 
     private SummaryData BuildSummaryData(dynamic PTData)
@@ -348,6 +353,32 @@ namespace Core.Main.DataObjects
         IsLeverageExchange = PTProperties.isLeverageExchange,
         BaseUrl = PTProperties.baseUrl
       };
+    }
+    private StatsData BuildStatsData(dynamic statsDataJson)
+    {
+        return new StatsData()
+        {
+            SalesToday = statsDataJson["totalSalesToday"],
+            ProfitToday = statsDataJson["totalProfitToday"],
+            ProfitPercToday = statsDataJson["totalProfitPercToday"],
+            SalesYesterday = statsDataJson["totalSalesYesterday"],
+            ProfitYesterday = statsDataJson["totalProfitYesterday"],
+            ProfitPercYesterday = statsDataJson["totalProfitPercYesterday"],
+            SalesWeek = statsDataJson["totalSalesWeek"],
+            ProfitWeek = statsDataJson["totalProfitWeek"],
+            ProfitPercWeek = statsDataJson["totalProfitPercWeek"],
+            SalesMonth = statsDataJson["totalSalesThisMonth"],
+            ProfitMonth = statsDataJson["totalProfitThisMonth"],
+            ProfitPercMonth = statsDataJson["totalProfitPercThisMonth"],
+            TotalProfit = statsDataJson["totalProfit"],
+            TotalSales = statsDataJson["totalSales"],
+            TotalProfitPerc = statsDataJson["totalProfitPerc"],
+            FundingToday = statsDataJson["totalFundingToday"],
+            FundingYesterday = statsDataJson["totalFundingYesterday"],
+            FundingWeek = statsDataJson["totalFundingWeek"],
+            FundingMonth = statsDataJson["totalFundingThisMonth"],
+            FundingTotal = statsDataJson["totalFunding"]
+        };
     }
     private void BuildSellLogData(dynamic rawSellLogData)
     {

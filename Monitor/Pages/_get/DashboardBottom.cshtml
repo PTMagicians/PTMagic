@@ -62,7 +62,7 @@
   </div>
 </div>
 <div class="row">
-  <div class="col-md-6 px-1">
+  <div class="col-md-5 px-1">
     <div class="card-box px-2">
       <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
       <br>
@@ -113,46 +113,56 @@
     </div>
   </div>
   
-  <div class="col-md-6 px-1">
+  <div class="col-md-7 px-1">
     <div class="card-box px-2">
       <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
       <br>
       <h4 class="m-t-0 m-b-20 header-title"><b>Sales Overview</b><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)SalesAnalyzer">more</a></small></h4>
       @{
 
-        double totalProfit = 0;
-        totalProfit = Model.PTData.SellLog.Sum(s => s.Profit);
-        double totalProfitFiat = Math.Round(totalProfit * Model.Summary.MainMarketPrice, 2);
-        double percentGain = Math.Round(totalProfit / Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance * 100, 2);
-        string percentGainText = percentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
-        if (Model.PTData.TransactionData.Transactions.Count > 0) 
-        {
-          percentGainText = "<i class=\"fa fa-info-circle text-muted\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"You have added at least one manual transaction, so the total gain percentage cannot be calculated.\"></i>";
-        }
 
-        double todaysProfit = 0;
-        todaysProfit = Model.PTData.SellLogToday.Sum(s => s.Profit);
-        double todaysStartBalance = Model.PTData.GetSnapshotBalance(Model.DateTimeNow.DateTime);
-        double todaysProfitFiat = Math.Round(todaysProfit * Model.Summary.MainMarketPrice, 2);
-        double todaysPercentGain = Math.Round(todaysProfit / todaysStartBalance * 100, 2);
+        var overviewStats = Model.StatsData.FirstOrDefault(); // todaysStats is a new variable
 
-        double yesterdaysProfit = 0;
-        yesterdaysProfit = Model.PTData.SellLogYesterday.Sum(s => s.Profit);
-        double yesterdaysStartBalance = Model.PTData.GetSnapshotBalance(Model.DateTimeNow.DateTime.AddDays(-1));
-        double yesterdaysProfitFiat = Math.Round(yesterdaysProfit * Model.Summary.MainMarketPrice, 2);
-        double yesterdaysPercentGain = Math.Round(yesterdaysProfit / yesterdaysStartBalance * 100, 2);
+        var todaysSales = overviewStats.SalesToday;
+        var todaysProfit = overviewStats.ProfitToday;
+        var todaysFunding = overviewStats.FundingToday;
+        var todaysPercentGain = overviewStats.ProfitPercToday;
+        var todaysFundingGain = todaysPercentGain * ((todaysProfit - todaysFunding) / todaysProfit);
+        
 
-        double last7DaysProfit = 0;
-        last7DaysProfit = Model.PTData.SellLogLast7Days.Sum(s => s.Profit);
-        double last7DaysStartBalance = Model.PTData.GetSnapshotBalance(Model.DateTimeNow.DateTime.AddDays(-7));
-        double last7DaysProfitFiat = Math.Round(last7DaysProfit * Model.Summary.MainMarketPrice, 2);
-        double last7DaysPercentGain = Math.Round(last7DaysProfit / last7DaysStartBalance * 100, 2);
+        var yesterdaysSales = overviewStats.SalesYesterday;
+        var yesterdaysProfit = overviewStats.ProfitYesterday;
+        var yesterdaysFunding = overviewStats.FundingYesterday;
+        var yesterdaysPercentGain = overviewStats.ProfitPercYesterday;
+        var yesterdaysFundingGain = yesterdaysPercentGain * ((yesterdaysProfit + yesterdaysFunding) / yesterdaysProfit);
 
-        double last30DaysProfit = 0;
-        last30DaysProfit = Model.PTData.SellLogLast30Days.Sum(s => s.Profit);
-        double last30DaysStartBalance = Model.PTData.GetSnapshotBalance(Model.DateTimeNow.DateTime.AddDays(-30));
-        double last30DaysProfitFiat = Math.Round(last30DaysProfit * Model.Summary.MainMarketPrice, 2);
-        double last30DaysPercentGain = Math.Round(last30DaysProfit / last30DaysStartBalance * 100, 2);
+        var last7DaysSales = overviewStats.SalesWeek;
+        var last7DaysProfit = overviewStats.ProfitWeek;
+        var last7DaysFunding = overviewStats.FundingWeek;
+        var last7DaysPercentGain = overviewStats.ProfitPercWeek;
+        var last7DaysFundingGain = last7DaysPercentGain * ((last7DaysProfit + last7DaysFunding) / last7DaysProfit);
+
+        var last30DaysSales = overviewStats.SalesMonth;
+        var last30DaysProfit = overviewStats.ProfitMonth;
+        var last30DaysFunding = overviewStats.FundingMonth;
+        var last30DaysPercentGain = overviewStats.ProfitPercMonth;
+        var last30DaysFundingGain = last30DaysPercentGain * ((last30DaysProfit + last30DaysFunding) / last30DaysProfit);
+
+        var totalSales = overviewStats.TotalSales;
+        var totalProfit = overviewStats.TotalProfit;
+        var totalFunding = overviewStats.FundingTotal;
+        var totalProfitPercent = overviewStats.TotalProfitPerc;
+        var totalFundingGain = totalProfitPercent * ((totalProfit + totalFunding) / totalProfit);
+
+        double todaysProfitFiat = Math.Round((todaysProfit + todaysFunding) * Model.Summary.MainMarketPrice, 2);
+        double yesterdaysProfitFiat = Math.Round((yesterdaysProfit + yesterdaysFunding) * Model.Summary.MainMarketPrice, 2);
+        double last7DaysProfitFiat = Math.Round((last7DaysProfit + last7DaysFunding) * Model.Summary.MainMarketPrice, 2);
+        double last30DaysProfitFiat = Math.Round((last30DaysProfit + last30DaysFunding) * Model.Summary.MainMarketPrice, 2);
+        double totalProfitFiat = Math.Round((totalProfit + totalFunding) * Model.Summary.MainMarketPrice, 2);
+
+
+
+
       }
       <table class="table table-sm">
         <thead>
@@ -160,45 +170,51 @@
             <th></th>
             <th class="text-right">Sales</th>
             <th class="text-right">Profit @Model.Summary.MainMarket</th>
-            <th class="text-right">Profit @Model.Summary.MainFiatCurrency</th>
+            <th class="text-right">Funding</th>
+            <th class="text-right">@Model.Summary.MainFiatCurrency</th>
             <th class="text-right">Gain</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <th>Today</th>
-            <td class="text-right">@Model.PTData.SellLogToday.Count</td>
+            <td class="text-right">@overviewStats.SalesToday</td>
             <td class="text-right text-autocolor">@todaysProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
-            <td class="text-right text-autocolor">@Html.Raw(Model.MainFiatCurrencySymbol + todaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
-            <td class="text-right text-autocolor">@todaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+            <td class="text-right text-autocolor">@todaysFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
+            <td class="text-right text-autocolor">@Html.Raw(todaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
+            <td class="text-right text-autocolor">@todaysFundingGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
           </tr>
           <tr>
             <th>Yesterday</th>
-            <td class="text-right">@Model.PTData.SellLogYesterday.Count</td>
+            <td class="text-right">@yesterdaysSales</td>
             <td class="text-right text-autocolor">@yesterdaysProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
-            <td class="text-right text-autocolor">@Html.Raw(Model.MainFiatCurrencySymbol + yesterdaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
-            <td class="text-right text-autocolor">@yesterdaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+            <td class="text-right text-autocolor">@yesterdaysFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
+            <td class="text-right text-autocolor">@Html.Raw(yesterdaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
+            <td class="text-right text-autocolor">@yesterdaysFundingGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
           </tr>
           <tr>
             <th>Last 7 Days</th>
-            <td class="text-right">@Model.PTData.SellLogLast7Days.Count</td>
+            <td class="text-right">@last7DaysSales</td>
             <td class="text-right text-autocolor">@last7DaysProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
-            <td class="text-right text-autocolor">@Html.Raw(Model.MainFiatCurrencySymbol + last7DaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
-            <td class="text-right text-autocolor">@last7DaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+            <td class="text-right text-autocolor">@last7DaysFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
+            <td class="text-right text-autocolor">@Html.Raw(last7DaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
+            <td class="text-right text-autocolor">@last7DaysFundingGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
           </tr>
           <tr>
             <th>Last 30 Days</th>
-            <td class="text-right">@Model.PTData.SellLogLast30Days.Count</td>
+            <td class="text-right">@last30DaysSales</td>
             <td class="text-right text-autocolor">@last30DaysProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
-            <td class="text-right text-autocolor">@Html.Raw(Model.MainFiatCurrencySymbol + last30DaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
-            <td class="text-right text-autocolor">@last30DaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+            <td class="text-right text-autocolor">@last30DaysFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
+            <td class="text-right text-autocolor">@Html.Raw(last30DaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
+            <td class="text-right text-autocolor">@last30DaysFundingGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
           </tr>
           <tr>
             <th>Total</th>
-            <td class="text-right">@Model.PTData.SellLog.Count</td>
+            <td class="text-right">@totalSales</td>
             <td class="text-right text-autocolor">@totalProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
-            <td class="text-right text-autocolor">@Html.Raw(Model.MainFiatCurrencySymbol + totalProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
-            <td class="text-right text-autocolor">@Html.Raw(percentGainText)</td>
+            <td class="text-right text-autocolor">@totalFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
+            <td class="text-right text-autocolor">@Html.Raw(totalProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
+            <td class="text-right text-autocolor">@totalFundingGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
           </tr>
         </tbody>
       </table>

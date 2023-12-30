@@ -431,6 +431,31 @@ namespace Core.Main.DataObjects.PTMagicData
     public double TotalCost { get; set; }
     public double SoldPrice { get; set; }
     public double SoldValue { get; set; }
+    public double TotalSales { get; set; } 
+  }
+
+  public class StatsData  
+  {
+    public double SalesToday { get; set; }
+    public double ProfitToday { get; set; }
+    public double ProfitPercToday { get; set; }
+    public double SalesYesterday { get; set; }
+    public double ProfitYesterday { get; set; }
+    public double ProfitPercYesterday { get; set; }
+    public double SalesWeek { get; set; }
+    public double ProfitWeek { get; set; }
+    public double ProfitPercWeek { get; set; }
+    public double SalesMonth { get; set; }
+    public double ProfitMonth { get; set; }
+    public double ProfitPercMonth { get; set; }
+    public double TotalProfit { get; set; }
+    public double TotalSales { get; set; }
+    public double TotalProfitPerc { get; set; }
+    public double FundingToday { get; set; }
+    public double FundingYesterday { get; set; }
+    public double FundingWeek { get; set; }
+    public double FundingMonth { get; set; }
+    public double FundingTotal { get; set; }
   }
 
   public class PTStrategy

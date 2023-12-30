@@ -13,6 +13,7 @@ namespace Monitor.Pages
   public class DashboardBottomModel : _Internal.BasePageModelSecureAJAX
   {
     public ProfitTrailerData PTData = null;
+    public List<StatsData> StatsData { get; set; }
     public List<MarketTrend> MarketTrends { get; set; } = new List<MarketTrend>();
     public string TrendChartDataJSON = "";
     public string ProfitChartDataJSON = "";
@@ -26,12 +27,14 @@ namespace Monitor.Pages
       base.Init();
 
       BindData();
+      
       BuildAssetDistributionData();
     }
 
     private void BindData()
     {
       PTData = this.PtDataObject;
+      StatsData = this.PTData.Stats;
 
       // Cleanup temp files
       FileHelper.CleanupFilesMinutes(PTMagicMonitorBasePath + "wwwroot" + System.IO.Path.DirectorySeparatorChar + "assets" + System.IO.Path.DirectorySeparatorChar + "tmp" + System.IO.Path.DirectorySeparatorChar, 5);
