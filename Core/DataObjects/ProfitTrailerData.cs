@@ -15,18 +15,32 @@ namespace Core.Main.DataObjects
   public class ProfitTrailerData
   {
     private SummaryData _summary = null;
-    private Properties _properties = null;
-    private List<StatsData> _stats = null;
+    private PropertiesData _properties = null;
+    private StatsData _stats = null;
+    private List<DailyStatsData> _dailyStats = new List<DailyStatsData>();
+    private List<DailyPNLData> _dailyPNL = new List<DailyPNLData>();
     private List<SellLogData> _sellLog = new List<SellLogData>();
     private List<DCALogData> _dcaLog = new List<DCALogData>();
     private List<BuyLogData> _buyLog = new List<BuyLogData>();
     private string _ptmBasePath = "";
     private PTMagicConfiguration _systemConfiguration = null;
     private TransactionData _transactionData = null;
-    private DateTime _statsRefresh = DateTime.UtcNow,_buyLogRefresh = DateTime.UtcNow, _sellLogRefresh = DateTime.UtcNow, _dcaLogRefresh = DateTime.UtcNow, _summaryRefresh = DateTime.UtcNow, _propertiesRefresh = DateTime.UtcNow;
-    private volatile object _statsLock = new object(),_buyLock = new object(), _sellLock = new object(), _dcaLock = new object(), _summaryLock = new object(), _propertiesLock = new object();
-    private TimeSpan? _offsetTimeSpan = null;
-    
+    private DateTime _dailyStatsRefresh = DateTime.UtcNow;
+    private DateTime _dailyPNLRefresh = DateTime.UtcNow;
+    private DateTime _statsRefresh = DateTime.UtcNow;
+    private DateTime _buyLogRefresh = DateTime.UtcNow;
+    private DateTime _sellLogRefresh = DateTime.UtcNow;
+    private DateTime _dcaLogRefresh = DateTime.UtcNow;
+    private DateTime _summaryRefresh = DateTime.UtcNow;
+    private DateTime _propertiesRefresh = DateTime.UtcNow;    
+    private volatile object _dailyStatsLock = new object();   
+    private volatile object _dailyPNLLock = new object();   
+    private volatile object _statsLock = new object();
+    private volatile object _buyLock = new object();
+    private volatile object _sellLock = new object();
+    private volatile object _dcaLock = new object();
+    private volatile object _summaryLock = new object();
+    private volatile object _propertiesLock = new object();    private TimeSpan? _offsetTimeSpan = null;  
     public void DoLog(string message)
     {
         // Implement your logging logic here
@@ -78,11 +92,25 @@ namespace Core.Main.DataObjects
             }
           }
         }
-
+        
         return _summary;
       }
     }
-    public Properties Properties
+    private SummaryData BuildSummaryData(dynamic PTData)
+    {
+      return new SummaryData()
+      {
+        Market = PTData.market,
+        FiatConversionRate = PTData.priceDataFiatConversionRate,
+        Balance = PTData.realBalance,
+        PairsValue = PTData.totalPairsCurrentValue,
+        DCAValue = PTData.totalDCACurrentValue,
+        PendingValue = PTData.totalPendingCurrentValue,
+        DustValue = PTData.totalDustCurrentValue,
+        StartBalance = PTData.startBalance,
+      };
+    }
+    public PropertiesData Properties
     {
       get
       {
@@ -102,8 +130,20 @@ namespace Core.Main.DataObjects
         return _properties;
       }
     }
-
-    public List<StatsData> Stats
+    private PropertiesData BuildProptertiesData(dynamic PTProperties)
+    {
+      return new PropertiesData()
+      {
+        Currency = PTProperties.currency,
+        Shorting = PTProperties.shorting,
+        Margin = PTProperties.margin,
+        UpTime = PTProperties.upTime,
+        Port = PTProperties.port,
+        IsLeverageExchange = PTProperties.isLeverageExchange,
+        BaseUrl = PTProperties.baseUrl
+      };
+    }
+    public StatsData Stats
     {
         get
         {
@@ -116,7 +156,7 @@ namespace Core.Main.DataObjects
                         dynamic statsDataJson = GetDataFromProfitTrailer("/api/v2/data/stats");
                         JObject statsDataJObject = statsDataJson as JObject;
                         JObject basicSection = (JObject)statsDataJObject["basic"];
-                        _stats = new List<StatsData> { BuildStatsData(basicSection) };
+                        _stats = BuildStatsData(basicSection);
                         _statsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
                     }
                 }
@@ -124,13 +164,103 @@ namespace Core.Main.DataObjects
             return _stats;
         }
     }
-
-    
+    private StatsData BuildStatsData(dynamic statsDataJson)
+    {
+        return new StatsData()
+        {
+            SalesToday = statsDataJson["totalSalesToday"],
+            ProfitToday = statsDataJson["totalProfitToday"],
+            ProfitPercToday = statsDataJson["totalProfitPercToday"],
+            SalesYesterday = statsDataJson["totalSalesYesterday"],
+            ProfitYesterday = statsDataJson["totalProfitYesterday"],
+            ProfitPercYesterday = statsDataJson["totalProfitPercYesterday"],
+            SalesWeek = statsDataJson["totalSalesWeek"],
+            ProfitWeek = statsDataJson["totalProfitWeek"],
+            ProfitPercWeek = statsDataJson["totalProfitPercWeek"],
+            SalesThisMonth = statsDataJson["totalSalesThisMonth"],
+            ProfitThisMonth = statsDataJson["totalProfitThisMonth"],
+            ProfitPercThisMonth = statsDataJson["totalProfitPercThisMonth"],
+            SalesLastMonth = statsDataJson["totalSalesLastMonth"],
+            ProfitLastMonth = statsDataJson["totalProfitLastMonth"],
+            ProfitPercLastMonth = statsDataJson["totalProfitPercLastMonth"],
+            TotalProfit = statsDataJson["totalProfit"],
+            TotalSales = statsDataJson["totalSales"],
+            TotalProfitPerc = statsDataJson["totalProfitPerc"],
+            FundingToday = statsDataJson["totalFundingToday"],
+            FundingYesterday = statsDataJson["totalFundingYesterday"],
+            FundingWeek = statsDataJson["totalFundingWeek"],
+            FundingThisMonth = statsDataJson["totalFundingThisMonth"],
+            FundingLastMonth = statsDataJson["totalFundingLastMonth"],
+            FundingTotal = statsDataJson["totalFunding"]
+        };
+    }
+    public List<DailyStatsData> DailyStats
+    {
+        get
+        {
+            if (_dailyStats == null || DateTime.UtcNow > _dailyStatsRefresh)
+            {
+                lock (_dailyStatsLock)
+                {
+                    if (_dailyStats == null || DateTime.UtcNow > _dailyStatsRefresh)
+                    {
+                        dynamic dailyStatsDataJson = GetDataFromProfitTrailer("/api/v2/data/stats");
+                        JObject dailyStatsDataJObject = dailyStatsDataJson as JObject;
+                        JArray dailyStatsSection = (JArray)dailyStatsDataJObject["extra"]["dailyStats"];
+                        _dailyStats = dailyStatsSection.Select(j => BuildDailyStatsData(j as JObject)).ToList();
+                        _dailyStatsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                    }
+                }
+            }
+            return _dailyStats;
+        }
+    }
+    private DailyStatsData BuildDailyStatsData(dynamic dailyStatsDataJson)
+    {
+        return new DailyStatsData()
+        {
+            Date = dailyStatsDataJson["date"],
+            TotalSales = dailyStatsDataJson["totalSales"],
+            TotalBuys = dailyStatsDataJson["totalBuys"],
+            TotalProfitCurrency = dailyStatsDataJson["totalProfitCurrency"],
+            Order = dailyStatsDataJson["order"],
+        };
+    }
+    public List<DailyPNLData> DailyPNL
+    {
+        get
+        {
+            if (_dailyPNL == null || DateTime.UtcNow > _dailyPNLRefresh)
+            {
+                lock (_dailyPNLLock)
+                {
+                    if (_dailyPNL == null || DateTime.UtcNow > _dailyPNLRefresh)
+                    {
+                        dynamic dailyPNLDataJson = GetDataFromProfitTrailer("/api/v2/data/stats");
+                        JObject dailyPNLDataJObject = dailyPNLDataJson as JObject;
+                        JArray dailyPNLSection = (JArray)dailyPNLDataJObject["extra"]["dailyPNLStats"];
+                        _dailyPNL = dailyPNLSection.Select(j => BuildDailyPNLData(j as JObject)).ToList();
+                        _dailyPNLRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                    }
+                }
+            }
+            return _dailyPNL;
+        }
+    }
+    private DailyPNLData BuildDailyPNLData(dynamic dailyPNLDataJson)
+    {
+        return new DailyPNLData()
+        {
+            Date = dailyPNLDataJson["date"],
+            CumulativeProfitCurrency = dailyPNLDataJson["cumulativeProfitCurrency"],
+            Order = dailyPNLDataJson["order"],
+        };
+    }
     public List<SellLogData> SellLog
     {
       get
       {
-            
+         
         if (_sellLog == null || (DateTime.UtcNow > _sellLogRefresh))
         {
             lock (_sellLock)
@@ -139,16 +269,16 @@ namespace Core.Main.DataObjects
               if (_sellLog == null || (DateTime.UtcNow > _sellLogRefresh))
               {
                 _sellLog.Clear();
-                
+
 
                 // Page through the sales data summarizing it.
                 bool exitLoop = false;
                 int pageIndex = 1;
-
+                
                 // 1 record per page to allow user to set max records to retrieve
                 int maxPages = _systemConfiguration.GeneralSettings.Monitor.MaxSalesRecords;
                 int requestedPages = 0;
-
+                
                 while (!exitLoop && requestedPages < maxPages)
                 {
                   var sellDataPage = GetDataFromProfitTrailer("/api/v2/data/sales?Page=1&perPage=1&sort=SOLDDATE&sortDirection=DESCENDING&page=" + pageIndex);
@@ -167,7 +297,7 @@ namespace Core.Main.DataObjects
                     exitLoop = true;
                   }
                 }
-                
+
                 // Update sell log refresh time
                 _sellLogRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds -1);
               }
@@ -177,7 +307,7 @@ namespace Core.Main.DataObjects
       }
     }
 
-   
+
     public List<DCALogData> DCALog
     {
       get
@@ -203,7 +333,6 @@ namespace Core.Main.DataObjects
               () =>
               {
                 pendingData = GetDataFromProfitTrailer("/api/v2/data/pending", true);
-
               },
               () =>
               {
@@ -276,20 +405,21 @@ namespace Core.Main.DataObjects
       return
       (this.Summary.DustValue);
     }
-
+    
+    
     public double GetSnapshotBalance(DateTime snapshotDateTime)
     {
-      double result = _systemConfiguration.GeneralSettings.Application.StartBalance;
-
+      double result = _summary.StartBalance;
+      
       result += this.SellLog.FindAll(sl => sl.SoldDate.Date < snapshotDateTime.Date).Sum(sl => sl.Profit);
       result += this.TransactionData.Transactions.FindAll(t => t.UTCDateTime < snapshotDateTime).Sum(t => t.Amount);
-
+      
       // Calculate holdings for snapshot date
       result += this.DCALog.FindAll(pairs => pairs.FirstBoughtDate <= snapshotDateTime).Sum(pairs => pairs.CurrentValue);
-
+     
       return result;
     }
-
+    
     private dynamic GetDataFromProfitTrailer(string callPath, bool arrayReturned = false)
     {
       string rawBody = "";
@@ -297,15 +427,15 @@ namespace Core.Main.DataObjects
       callPath,
       callPath.Contains("?") ? "&" : "?", 
       _systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken);
-
+      
       // Get the data from PT
       Debug.WriteLine(String.Format("{0} - Calling '{1}'", DateTime.UtcNow, url));
       HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
       request.AutomaticDecompression = DecompressionMethods.GZip;
       request.KeepAlive = true;
-
+      
       WebResponse response = request.GetResponse();
-
+      
       using (Stream dataStream = response.GetResponseStream())
       {
         StreamReader reader = new StreamReader(dataStream);
@@ -314,8 +444,8 @@ namespace Core.Main.DataObjects
       }
 
       response.Close();
-
-
+      
+      
       if (!arrayReturned)
         {
             return JObject.Parse(rawBody);
@@ -324,62 +454,9 @@ namespace Core.Main.DataObjects
         {
             return JArray.Parse(rawBody);
         }
-
-
-
     }
 
-    private SummaryData BuildSummaryData(dynamic PTData)
-    {
-      return new SummaryData()
-      {
-        Market = PTData.market,
-        Balance = PTData.realBalance,
-        PairsValue = PTData.totalPairsCurrentValue,
-        DCAValue = PTData.totalDCACurrentValue,
-        PendingValue = PTData.totalPendingCurrentValue,
-        DustValue = PTData.totalDustCurrentValue
-      };
-    }
-    private Properties BuildProptertiesData(dynamic PTProperties)
-    {
-      return new Properties()
-      {
-        Currency = PTProperties.currency,
-        Shorting = PTProperties.shorting,
-        Margin = PTProperties.margin,
-        UpTime = PTProperties.upTime,
-        Port = PTProperties.port,
-        IsLeverageExchange = PTProperties.isLeverageExchange,
-        BaseUrl = PTProperties.baseUrl
-      };
-    }
-    private StatsData BuildStatsData(dynamic statsDataJson)
-    {
-        return new StatsData()
-        {
-            SalesToday = statsDataJson["totalSalesToday"],
-            ProfitToday = statsDataJson["totalProfitToday"],
-            ProfitPercToday = statsDataJson["totalProfitPercToday"],
-            SalesYesterday = statsDataJson["totalSalesYesterday"],
-            ProfitYesterday = statsDataJson["totalProfitYesterday"],
-            ProfitPercYesterday = statsDataJson["totalProfitPercYesterday"],
-            SalesWeek = statsDataJson["totalSalesWeek"],
-            ProfitWeek = statsDataJson["totalProfitWeek"],
-            ProfitPercWeek = statsDataJson["totalProfitPercWeek"],
-            SalesMonth = statsDataJson["totalSalesThisMonth"],
-            ProfitMonth = statsDataJson["totalProfitThisMonth"],
-            ProfitPercMonth = statsDataJson["totalProfitPercThisMonth"],
-            TotalProfit = statsDataJson["totalProfit"],
-            TotalSales = statsDataJson["totalSales"],
-            TotalProfitPerc = statsDataJson["totalProfitPerc"],
-            FundingToday = statsDataJson["totalFundingToday"],
-            FundingYesterday = statsDataJson["totalFundingYesterday"],
-            FundingWeek = statsDataJson["totalFundingWeek"],
-            FundingMonth = statsDataJson["totalFundingThisMonth"],
-            FundingTotal = statsDataJson["totalFunding"]
-        };
-    }
+    
     private void BuildSellLogData(dynamic rawSellLogData)
     {
       foreach (var rsld in rawSellLogData.data)
@@ -393,20 +470,23 @@ namespace Core.Main.DataObjects
         sellLogData.AverageBuyPrice = rsld.avgPrice;
         sellLogData.TotalCost = rsld.totalCost;
         sellLogData.Profit = rsld.profitCurrency;
-
-
+        
+        
         //Convert Unix Timestamp to Datetime
         System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
         dtDateTime = dtDateTime.AddSeconds((double)rsld.soldDate).ToUniversalTime();
-
+        
+        
         // Profit Trailer sales are saved in UTC
         DateTimeOffset ptSoldDate = DateTimeOffset.Parse(dtDateTime.Year.ToString() + "-" + dtDateTime.Month.ToString("00") + "-" + dtDateTime.Day.ToString("00") + "T" + dtDateTime.Hour.ToString("00") + ":" + dtDateTime.Minute.ToString("00") + ":" + dtDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
-
+        
+        
         // Convert UTC sales time to local offset time
+       
         ptSoldDate = ptSoldDate.ToOffset(OffsetTimeSpan);
-
+        
         sellLogData.SoldDate = ptSoldDate.DateTime;
-
+       
         _sellLog.Add(sellLogData);
       }
     }
@@ -415,23 +495,22 @@ namespace Core.Main.DataObjects
     {
       // Parse DCA data
       _dcaLog.AddRange(ParsePairsData(rawDCALogData, true));
-
+      
       // Parse Pairs data
       _dcaLog.AddRange(ParsePairsData(rawPairsLogData, false));
-
+      
       // Parse pending pairs data
       _dcaLog.AddRange(ParsePairsData(rawPendingLogData, false));
-
+      
       // Parse watch only pairs data
       _dcaLog.AddRange(ParsePairsData(rawWatchModeLogData, false));
-
     }
 
     // Parse the pairs data from PT to our own common data structure.
     private List<DCALogData> ParsePairsData(dynamic pairsData, bool processBuyStrategies)
     {
       List<DCALogData> pairs = new List<DCALogData>();
-
+      
       foreach (var pair in pairsData)
       {
         DCALogData dcaLogData = new DCALogData();
@@ -452,7 +531,7 @@ namespace Core.Main.DataObjects
         dcaLogData.BuyStrategy = pair.buyStrategy == null ? "" : pair.buyStrategy;
         dcaLogData.SellStrategy = pair.sellStrategy == null ? "" : pair.sellStrategy;
         dcaLogData.IsTrailing = false;
-
+        
         // See if they are using PT 2.5 (buyStrategiesData) or 2.4 (buyStrategies)
         var buyStrats = pair.buyStrategies != null ? pair.buyStrategies : pair.buyStrategiesData.data;
         if (buyStrats != null && processBuyStrategies)
@@ -470,7 +549,7 @@ namespace Core.Main.DataObjects
             buyStrategy.Decimals = bs.decimals;
             buyStrategy.IsTrailing = bs.trailing;
             buyStrategy.IsTrue = bs.strategyResult;
-
+           
             dcaLogData.BuyStrategies.Add(buyStrategy);
           }
         }
@@ -492,9 +571,9 @@ namespace Core.Main.DataObjects
             sellStrategy.Decimals = ss.decimals;
             sellStrategy.IsTrailing = ss.trailing;
             sellStrategy.IsTrue = ss.strategyResult;
-
+            
             dcaLogData.SellStrategies.Add(sellStrategy);
-
+            
             // Find the target percentage gain to sell.
             if (sellStrategy.Name.Contains("GAIN", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -506,14 +585,14 @@ namespace Core.Main.DataObjects
             }
           }
         }
-
+        
         // Calculate current value
         dcaLogData.CurrentValue = dcaLogData.CurrentPrice * dcaLogData.Amount;
-
+        
         // Convert Unix Timestamp to Datetime
         System.DateTime rdldDateTime = new DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
         rdldDateTime = rdldDateTime.AddSeconds((double)pair.firstBoughtDate).ToUniversalTime();
-
+        
         // Profit Trailer bought times are saved in UTC
         if (pair.firstBoughtDate > 0)
         {
@@ -528,7 +607,7 @@ namespace Core.Main.DataObjects
         {
           dcaLogData.FirstBoughtDate = Constants.confMinDate;
         }
-
+        
         _dcaLog.Add(dcaLogData);
       }
 
@@ -545,7 +624,7 @@ namespace Core.Main.DataObjects
         buyLogData.CurrentPrice = rbld.currentPrice;
         buyLogData.PercChange = rbld.percChange;
         buyLogData.Volume24h = rbld.volume;
-
+        
         if (rbld.positive != null)
         {
           buyLogData.IsTrailing = ((string)(rbld.positive)).IndexOf("trailing", StringComparison.InvariantCultureIgnoreCase) > -1;
@@ -554,10 +633,10 @@ namespace Core.Main.DataObjects
         else
         {
           // Parse buy strategies
-
+          
           // See if they are using PT 2.5 (buyStrategiesData) or 2.4 (buyStrategies)
           var buyStrats = rbld.buyStrategies != null ? rbld.buyStrategies : rbld.buyStrategiesData.data;
-
+          
           if (buyStrats != null)
           {
             foreach (var bs in buyStrats)
@@ -573,17 +652,17 @@ namespace Core.Main.DataObjects
               buyStrategy.Decimals = bs.decimals;
               buyStrategy.IsTrailing = bs.trailing;
               buyStrategy.IsTrue = bs.strategyResult;
-
+              
               // Is SOM?
               buyLogData.IsSom = buyLogData.IsSom || buyStrategy.Name.Contains("som enabled", StringComparison.OrdinalIgnoreCase);
-
+              
               // Is the pair trailing?
               buyLogData.IsTrailing = buyLogData.IsTrailing || buyStrategy.IsTrailing;
               buyLogData.IsTrue = buyLogData.IsTrue || buyStrategy.IsTrue;
-
+              
               // True status strategy count total
               buyLogData.TrueStrategyCount += buyStrategy.IsTrue ? 1 : 0;
-
+              
               // Add
               buyLogData.BuyStrategies.Add(buyStrategy);
             }

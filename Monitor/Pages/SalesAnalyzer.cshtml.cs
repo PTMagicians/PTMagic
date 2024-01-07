@@ -12,6 +12,7 @@ namespace Monitor.Pages
   public class SalesAnalyzer : _Internal.BasePageModelSecure
   {
     public ProfitTrailerData PTData = null;
+    public SummaryData SummaryData { get; set; }
     public string TradesChartDataJSON = "";
     public string ProfitChartDataJSON = "";
     public string BalanceChartDataJSON = "";
@@ -31,6 +32,7 @@ namespace Monitor.Pages
     private void BindData()
     {
       PTData = this.PtDataObject;
+      SummaryData = this.PTData.Summary;
 
       // Convert local offset time to UTC
       TimeSpan offsetTimeSpan = TimeSpan.Parse(PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));

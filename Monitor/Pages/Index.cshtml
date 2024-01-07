@@ -33,6 +33,11 @@
       $("#baglist-refresh-icon").html('<i class="fa fa-circle-o-notch fa-spin fa-fw" data-toggle="tooltip" data-placement="top" title="Loading fresh data..."></i>');
       $("#buylist-refresh-icon").html('<i class="fa fa-circle-o-notch fa-spin fa-fw" data-toggle="tooltip" data-placement="top" title="Loading fresh data..."></i>');
 
+      // Add the page refresh code here
+      setTimeout(function(){
+         location.reload();
+      }, 60 * 60 * 1000); // 60 minutes
+
       // Clear exisitng interval to stop multiple attempts to load at the same time.
       if (intervalDashboardTop != null)
       {
@@ -64,13 +69,13 @@
 
     var loadDashboardBottom = function () {
       //destroy all d3 svg graph to avoid memory leak
-      $(".nvtooltip").remove();
-      $("svg > *").remove();
-      $("svg").remove();
-      nv.charts = {};
-      nv.graphs = [];
-      nv.logs = {};
-      nv.tooltip = {};
+      //$(".nvtooltip").remove();
+      //$("svg > *").remove();
+      //$("svg").remove();
+      //nv.charts = {};
+      //nv.graphs = [];
+      //nv.logs = {};
+      //nv.tooltip = {};
 
       // Clear exisitng interval to stop multiple attempts to load at the same time.
       if (intervalDashboardBottom != null)

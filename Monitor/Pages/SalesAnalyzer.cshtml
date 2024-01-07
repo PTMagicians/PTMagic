@@ -26,7 +26,7 @@
                 }
               }
               <th class="m-t-0 header-title text-left">Total Current Value: &nbsp; <text class="text-autocolor"> @totalCurrentValueString @Model.Summary.MainMarket </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is based on the TCV reported by Profit Trailer."></i></small></th>
-              <th class="text-right">Starting Value: &nbsp; <text class="text-autocolor"> @Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance &nbsp; @Model.Summary.MainMarket </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is the starting value found in your settings file"></i></small></th>
+              <th class="text-right">Starting Value: &nbsp; <text class="text-autocolor"> @Model.SummaryData.StartBalance &nbsp; @Model.Summary.MainMarket </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is the starting value found in your settings file"></i></small></th>
             </tr>
           </thead>
         </table>
@@ -64,7 +64,7 @@
           double totalProfit = 0;
           totalProfit = Model.PTData.SellLog.Sum(s => s.Profit);
           double totalProfitFiat = Math.Round(totalProfit * Model.Summary.MainMarketPrice, 2);
-          double percentGain = Math.Round(totalProfit / Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance * 100, 2);
+          double percentGain = Math.Round(totalProfit / Model.SummaryData.StartBalance * 100, 2);
           double avgDailyGain = Model.DailyGains.Values.Average(dg => dg);
           double avgMonthlyGain = Model.MonthlyGains.Values.Average(dg => dg);
           string percentGainText = percentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";

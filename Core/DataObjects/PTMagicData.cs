@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Text;
 
 namespace Core.Main.DataObjects.PTMagicData
 {
-  #region Settings Objects
   public class GeneralSettingsWrapper
   {
     public GeneralSettings GeneralSettings { get; set; }
@@ -21,7 +19,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public SecureSettings SecureSettings { get; set; }
   }
 
-  #region GeneralSettings
+
   public class GeneralSettings
   {
     public Application Application { get; set; }
@@ -43,7 +41,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public string ProfitTrailerDefaultSettingName { get; set; } = "default";
     public int FloodProtectionMinutes { get; set; } = 15;
     public string Exchange { get; set; }
-    public double StartBalance { get; set; } = 0;
+    //public double StartBalance { get; set; } = 0;
     public string InstanceName { get; set; } = "PT Magic";
     public string TimezoneOffset { get; set; } = "+0:00";
     public string MainFiatCurrency { get; set; } = "USD";
@@ -106,9 +104,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public Int64 ChatId { get; set; }
     public bool SilentMode { get; set; } = false;
   }
-  #endregion
 
-  #region AnalyzerSettings
   public class AnalyzerSettings
   {
     public MarketAnalyzer MarketAnalyzer { get; set; }
@@ -244,18 +240,12 @@ namespace Core.Main.DataObjects.PTMagicData
     [DefaultValue(0)]
     public int HoursSinceTriggered { get; set; } = 0;
   }
-  #endregion
 
-  #region SecureSettings
   public class SecureSettings
   {
     public string MonitorPassword { get; set; } = "";
   }
-  #endregion
 
-  #endregion
-
-  #region Market Analyzer Objects
   public class Market
   {
     public int Position;
@@ -291,9 +281,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public DateTime FirstSeen = Constants.confMinDate;
     public DateTime LastSeen = Constants.confMaxDate;
   }
-  #endregion
-
-  #region Summary Objects
+  
   public class Summary
   {
     public string Version { get; set; } = "";
@@ -324,14 +312,26 @@ namespace Core.Main.DataObjects.PTMagicData
     public string SellStrategy { get; set; } = "";
     public string MainMarket { get; set; } = "";
     public double MainMarketPrice { get; set; } = 0;
-    public string MainFiatCurrency { get; set; } = "USD";
-    public double MainFiatCurrencyExchangeRate { get; set; } = 1;
+    private PropertiesData _propertiesData = new PropertiesData();
+    public string MainFiatCurrency => _propertiesData.Currency;
+    private SummaryData _summaryData = new SummaryData();
+    public double MainFiatCurrencyExchangeRate => _summaryData.FiatConversionRate;
     public List<StrategySummary> BuyStrategies { get; set; } = new List<StrategySummary>();
     public List<StrategySummary> SellStrategies { get; set; } = new List<StrategySummary>();
     public List<StrategySummary> DCABuyStrategies { get; set; } = new List<StrategySummary>();
     public List<StrategySummary> DCASellStrategies { get; set; } = new List<StrategySummary>();
   }
-
+  public class PropertiesData
+  {
+    public string Currency { get; set; } = "";
+    public bool Shorting { get; set; } = false;
+    public bool Margin { get; set; } = false;
+    public string UpTime { get; set; } = "";
+    public int Port { get; set; } = 0;
+    public bool IsLeverageExchange { get; set; } = false;
+    public string BaseUrl { get; set; } = "";
+  }
+  
   public class StrategySummary
   {
     public string Name { get; set; } = "";
@@ -364,22 +364,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public List<StrategySummary> DCABuyStrategies { get; set; } = new List<StrategySummary>();
     public List<StrategySummary> DCASellStrategies { get; set; } = new List<StrategySummary>();
   }
-  #endregion
-
-  #region Properties Objects
-  public class Properties
-  {
-    public string Currency { get; set; } = "";
-    public bool Shorting { get; set; } = false;
-    public bool Margin { get; set; } = false;
-    public string UpTime { get; set; } = "";
-    public int Port { get; set; } = 0;
-    public bool IsLeverageExchange { get; set; } = false;
-    public string BaseUrl { get; set; } = "";
-  }
-  #endregion
-
-  #region Transaction Objects
+  
   public class Transaction
   {
     public string GUID { get; set; } = "";
@@ -397,9 +382,7 @@ namespace Core.Main.DataObjects.PTMagicData
       return result.DateTime;
     }
   }
-  #endregion
-
-  #region SingleMarketSettingSummary Objects
+  
   public class SingleMarketSettingSummary
   {
     public string Market { get; set; } = "";
@@ -415,11 +398,8 @@ namespace Core.Main.DataObjects.PTMagicData
     public double LastPrice { get; set; } = 0;
     public double Last24hVolume { get; set; } = 0;
   }
-  #endregion
-
-  #region Profit Trailer JSON Objects
-
-  public class SellLogData
+ 
+ public class SellLogData
   {
     public double SoldAmount { get; set; }
     public DateTime SoldDate { get; set; }
@@ -445,19 +425,39 @@ namespace Core.Main.DataObjects.PTMagicData
     public double SalesWeek { get; set; }
     public double ProfitWeek { get; set; }
     public double ProfitPercWeek { get; set; }
-    public double SalesMonth { get; set; }
-    public double ProfitMonth { get; set; }
-    public double ProfitPercMonth { get; set; }
+    public double SalesThisMonth { get; set; }
+    public double ProfitThisMonth { get; set; }
+    public double ProfitPercThisMonth { get; set; }
+    public double SalesLastMonth { get; set; }
+    public double ProfitLastMonth { get; set; }
+    public double ProfitPercLastMonth { get; set; }
     public double TotalProfit { get; set; }
     public double TotalSales { get; set; }
     public double TotalProfitPerc { get; set; }
     public double FundingToday { get; set; }
     public double FundingYesterday { get; set; }
     public double FundingWeek { get; set; }
-    public double FundingMonth { get; set; }
+    public double FundingThisMonth { get; set; }
+    public double FundingLastMonth { get; set; }
     public double FundingTotal { get; set; }
   }
 
+  public class DailyStatsData
+  {
+    public string Date { get; set; }
+    public double TotalSales { get; set; }
+    public double TotalBuys { get; set; }
+    public double TotalProfitCurrency { get; set; }
+    public int Order { get; set; }
+  }
+
+  public class DailyPNLData  
+  {
+    public string Date { get; set; }
+    public double CumulativeProfitCurrency { get; set; }
+    public double Order { get; set; }
+  }  
+  
   public class PTStrategy
   {
     public string type { get; set; }
@@ -534,15 +534,13 @@ namespace Core.Main.DataObjects.PTMagicData
   }
 
   public class SummaryData
-  {
-    public double Balance { get; set; }
+  {    public double Balance { get; set; }
     public double StartBalance { get; set; }
+    public double FiatConversionRate { get; set; }
     public double PairsValue { get; set; }
     public double DCAValue { get; set; }
     public double PendingValue { get; set; }
     public double DustValue { get; set; }
     public string Market { get; set; }
   }
-
-  #endregion
 }

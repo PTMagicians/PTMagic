@@ -1,16 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Core.Main;
 using Core.Helper;
+using Core.Main.DataObjects;
 using Core.Main.DataObjects.PTMagicData;
+
 
 namespace Monitor.Pages
 {
   public class SettingsGeneralModel : _Internal.BasePageModelSecure
   {
-    public string ValidationMessage = "";
+  public string ValidationMessage = ""; 
+  public ProfitTrailerData PTData = null;
+  public SummaryData SummaryData { get; set; }
 
     private string GetTimezoneOffsetString(TimeZoneInfo tzi)
     {
@@ -51,6 +54,8 @@ namespace Monitor.Pages
     public void OnGet()
     {
       base.Init();
+      PTData = this.PtDataObject;
+      SummaryData = this.PTData.Summary;
 
       string notification = GetStringParameter("n", "");
       if (notification.Equals("BackupRestored"))
@@ -68,7 +73,7 @@ namespace Monitor.Pages
       // Read the new settings
       PTMagicConfiguration.GeneralSettings.Application.IsEnabled = HttpContext.Request.Form["Application_IsEnabled"].Equals("on");
       PTMagicConfiguration.GeneralSettings.Application.TestMode = HttpContext.Request.Form["Application_TestMode"].Equals("on");
-      PTMagicConfiguration.GeneralSettings.Application.StartBalance = SystemHelper.TextToDouble(HttpContext.Request.Form["Application_StartBalance"], PTMagicConfiguration.GeneralSettings.Application.StartBalance, "en-US");
+      //PTMagicConfiguration.GeneralSettings.Application.StartBalance = SystemHelper.TextToDouble(HttpContext.Request.Form["Application_StartBalance"], PTMagicConfiguration.GeneralSettings.Application.StartBalance, "en-US");
       PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName = HttpContext.Request.Form["Application_ProfitTrailerDefaultSettingName"];
       PTMagicConfiguration.GeneralSettings.Application.Exchange = HttpContext.Request.Form["Application_Exchange"];
       PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL = HttpContext.Request.Form["Application_ProfitTrailerMonitorURL"];

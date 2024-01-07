@@ -6,14 +6,19 @@ using Core.Main;
 using Core.Helper;
 using Core.Main.DataObjects;
 using Core.Main.DataObjects.PTMagicData;
-using Core.MarketAnalyzer;
+using System.Globalization;
+using System.Text;
 
 namespace Monitor.Pages
 {
   public class DashboardBottomModel : _Internal.BasePageModelSecureAJAX
   {
     public ProfitTrailerData PTData = null;
-    public List<StatsData> StatsData { get; set; }
+    public StatsData StatsData { get; set; }
+    public PropertiesData PropertiesData { get; set; }
+    public SummaryData SummaryData { get; set; }
+    public List<DailyStatsData> DailyStats { get; set; } = new List<DailyStatsData>();
+    public List<DailyPNLData> DailyPNL { get; set; } = new List<DailyPNLData>();
     public List<MarketTrend> MarketTrends { get; set; } = new List<MarketTrend>();
     public string TrendChartDataJSON = "";
     public string ProfitChartDataJSON = "";
@@ -35,6 +40,10 @@ namespace Monitor.Pages
     {
       PTData = this.PtDataObject;
       StatsData = this.PTData.Stats;
+      PropertiesData = this.PTData.Properties;
+      SummaryData = this.PTData.Summary;
+      List<DailyStatsData> dailyStatsData = this.PTData.DailyStats;
+      List<DailyPNLData> dailyPNLData = this.PTData.DailyPNL;
 
       // Cleanup temp files
       FileHelper.CleanupFilesMinutes(PTMagicMonitorBasePath + "wwwroot" + System.IO.Path.DirectorySeparatorChar + "assets" + System.IO.Path.DirectorySeparatorChar + "tmp" + System.IO.Path.DirectorySeparatorChar, 5);
@@ -57,110 +66,101 @@ namespace Monitor.Pages
       BuildProfitChartData();
     }
     private void BuildMarketTrendChartData()
+{
+    StringBuilder trendChartDataJSON = new StringBuilder();
+    if (MarketTrends.Count > 0)
     {
-      if (MarketTrends.Count > 0)
-      {
-        TrendChartDataJSON = "[";
+        trendChartDataJSON.Append("[");
         int mtIndex = 0;
         foreach (MarketTrend mt in MarketTrends)
         {
-          if (mt.DisplayGraph)
-          {
-            string lineColor = "";
-            if (mtIndex < Constants.ChartLineColors.Length)
+            if (mt.DisplayGraph)
             {
-              lineColor = Constants.ChartLineColors[mtIndex];
-            }
-            else
-            {
-              lineColor = Constants.ChartLineColors[mtIndex - 20];
-            }
-
-            if (Summary.MarketTrendChanges.ContainsKey(mt.Name))
-            {
-              List<MarketTrendChange> marketTrendChangeSummaries = Summary.MarketTrendChanges[mt.Name];
-
-              if (marketTrendChangeSummaries.Count > 0)
-              {
-                if (!TrendChartDataJSON.Equals("[")) TrendChartDataJSON += ",";
-
-                TrendChartDataJSON += "{";
-                TrendChartDataJSON += "key: '" + SystemHelper.SplitCamelCase(mt.Name) + "',";
-                TrendChartDataJSON += "color: '" + lineColor + "',";
-                TrendChartDataJSON += "values: [";
-
-                // Get trend ticks for chart
-                DateTime currentDateTime = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, DateTime.UtcNow.Hour, 0, 0);
-                DateTime startDateTime = currentDateTime.AddHours(-PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours);
-                DateTime endDateTime = currentDateTime;
-                int trendChartTicks = 0;
-                for (DateTime tickTime = startDateTime; tickTime <= endDateTime; tickTime = tickTime.AddMinutes(PTMagicConfiguration.GeneralSettings.Monitor.GraphIntervalMinutes))
+                string lineColor = "";
+                if (mtIndex < Constants.ChartLineColors.Length)
                 {
-                  List<MarketTrendChange> tickRange = marketTrendChangeSummaries.FindAll(m => m.TrendDateTime >= tickTime).OrderBy(m => m.TrendDateTime).ToList();
-                  if (tickRange.Count > 0)
-                  {
-                    MarketTrendChange mtc = tickRange.First();
-                    if (tickTime != startDateTime) TrendChartDataJSON += ",\n";
-                    if (Double.IsInfinity(mtc.TrendChange)) mtc.TrendChange = 0;
-
-                    TrendChartDataJSON += "{ x: new Date('" + tickTime.ToString("yyyy-MM-ddTHH:mm:ss").Replace(".", ":") + "'), y: " + mtc.TrendChange.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "}";
-                    trendChartTicks++;
-                  }
+                    lineColor = Constants.ChartLineColors[mtIndex];
                 }
-                // Add most recent tick
-                List<MarketTrendChange> latestTickRange = marketTrendChangeSummaries.OrderByDescending(m => m.TrendDateTime).ToList();
-                if (latestTickRange.Count > 0)
+                else
                 {
-                  MarketTrendChange mtc = latestTickRange.First();
-                  if (trendChartTicks > 0) TrendChartDataJSON += ",\n";
-                  if (Double.IsInfinity(mtc.TrendChange)) mtc.TrendChange = 0;
-                  TrendChartDataJSON += "{ x: new Date('" + mtc.TrendDateTime.ToString("yyyy-MM-ddTHH:mm:ss").Replace(".", ":") + "'), y: " + mtc.TrendChange.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "}";
+                    lineColor = Constants.ChartLineColors[mtIndex - 20];
                 }
-                TrendChartDataJSON += "]";
-                TrendChartDataJSON += "}";
-                mtIndex++;
-              }
+
+                if (Summary.MarketTrendChanges.ContainsKey(mt.Name))
+                {
+                    List<MarketTrendChange> marketTrendChangeSummaries = Summary.MarketTrendChanges[mt.Name];
+
+                    if (marketTrendChangeSummaries.Count > 0)
+                    {
+                        if (!trendChartDataJSON.ToString().Equals("[")) trendChartDataJSON.Append(",");
+
+                        trendChartDataJSON.Append("{");
+                        trendChartDataJSON.Append("key: '" + SystemHelper.SplitCamelCase(mt.Name) + "',");
+                        trendChartDataJSON.Append("color: '" + lineColor + "',");
+                        trendChartDataJSON.Append("values: [");
+
+                        // Get trend ticks for chart
+                        DateTime currentDateTime = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, DateTime.UtcNow.Hour, 0, 0);
+                        DateTime startDateTime = currentDateTime.AddHours(-PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours);
+                        DateTime endDateTime = currentDateTime;
+                        int trendChartTicks = 0;
+                        for (DateTime tickTime = startDateTime; tickTime <= endDateTime; tickTime = tickTime.AddMinutes(PTMagicConfiguration.GeneralSettings.Monitor.GraphIntervalMinutes))
+                        {
+                            List<MarketTrendChange> tickRange = marketTrendChangeSummaries.FindAll(m => m.TrendDateTime >= tickTime).OrderBy(m => m.TrendDateTime).ToList();
+                            if (tickRange.Count > 0)
+                            {
+                                MarketTrendChange mtc = tickRange.First();
+                                if (tickTime != startDateTime) trendChartDataJSON.Append(",\n");
+                                if (Double.IsInfinity(mtc.TrendChange)) mtc.TrendChange = 0;
+
+                                trendChartDataJSON.Append("{ x: new Date('" + tickTime.ToString("yyyy-MM-ddTHH:mm:ss").Replace(".", ":") + "'), y: " + mtc.TrendChange.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "}");
+                                trendChartTicks++;
+                            }
+                        }
+                        // Add most recent tick
+                        List<MarketTrendChange> latestTickRange = marketTrendChangeSummaries.OrderByDescending(m => m.TrendDateTime).ToList();
+                        if (latestTickRange.Count > 0)
+                        {
+                            MarketTrendChange mtc = latestTickRange.First();
+                            if (trendChartTicks > 0) trendChartDataJSON.Append(",\n");
+                            if (Double.IsInfinity(mtc.TrendChange)) mtc.TrendChange = 0;
+                            trendChartDataJSON.Append("{ x: new Date('" + mtc.TrendDateTime.ToString("yyyy-MM-ddTHH:mm:ss").Replace(".", ":") + "'), y: " + mtc.TrendChange.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "}");
+                        }
+                        trendChartDataJSON.Append("]");
+                        trendChartDataJSON.Append("}");
+                        mtIndex++;
+                    }
+                }
             }
-          }
         }
-        TrendChartDataJSON += "]";
-      }
+        trendChartDataJSON.Append("]");
     }
+    TrendChartDataJSON = trendChartDataJSON.ToString();
+}
 
     private void BuildProfitChartData()
     {
-      int tradeDayIndex = 0;
-      string profitPerDayJSON = "";
-      
-      if (PTData.SellLog.Count > 0)
-      {
-        DateTime minSellLogDate = PTData.SellLog.OrderBy(sl => sl.SoldDate).First().SoldDate.Date;
-        DateTime graphStartDate = DateTime.UtcNow.Date.AddDays(-30);
-        if (minSellLogDate > graphStartDate) 
+        StringBuilder profitPerDayJSON = new StringBuilder();
+
+        if (PTData.DailyStats.Count > 0)
         {
-          graphStartDate = minSellLogDate;
+            DateTime endDate = DateTime.UtcNow.Date;
+            DateTime startDate = endDate.AddDays(-30);
+
+            for (DateTime date = startDate; date <= endDate; date = date.AddDays(1))
+            {
+                if (profitPerDayJSON.Length > 0)
+                {
+                    profitPerDayJSON.Append(",\n");
+                }
+                DailyStatsData dailyStats = PTData.DailyStats.Find(ds => DateTime.ParseExact(ds.Date, "d-M-yyyy", CultureInfo.InvariantCulture) == date);
+                double profitFiat = dailyStats != null ? Math.Round(dailyStats.TotalProfitCurrency,2) : 0;
+                profitPerDayJSON.Append("{x: new Date('" + date.ToString("yyyy-MM-dd") + "'), y: " + profitFiat.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "}");
+            }
+            ProfitChartDataJSON = "[{key: 'Profit in " + PTData.Properties.Currency + "',color: '" + Constants.ChartLineColors[1] + "',values: [" + profitPerDayJSON.ToString() + "]}]";
         }
-        for (DateTime salesDate = graphStartDate; salesDate <= DateTime.UtcNow.Date; salesDate = salesDate.AddDays(1))
-        {
-          if (tradeDayIndex > 0)
-          {
-            profitPerDayJSON += ",\n";
-          }
-          int trades = PTData.SellLog.FindAll(t => t.SoldDate.Date == salesDate).Count;
-          double profit = PTData.SellLog.FindAll(t => t.SoldDate.Date == salesDate).Sum(t => t.Profit);
-          double profitFiat = Math.Round(profit * Summary.MainMarketPrice, 2);
-          profitPerDayJSON += "{x: new Date('" + salesDate.ToString("yyyy-MM-dd") + "'), y: " + profitFiat.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "}";
-          tradeDayIndex++;
-        }
-        ProfitChartDataJSON = "[";
-        ProfitChartDataJSON += "{";
-        ProfitChartDataJSON += "key: 'Profit in " + Summary.MainFiatCurrency + "',";
-        ProfitChartDataJSON += "color: '" + Constants.ChartLineColors[1] + "',";
-        ProfitChartDataJSON += "values: [" + profitPerDayJSON + "]";
-        ProfitChartDataJSON += "}";
-        ProfitChartDataJSON += "]";
-      }
     }
+
     private void BuildAssetDistributionData()
     {
       // the per PT-Eelroy, the PT API doesn't provide these values when using leverage, so they are calculated here to cover either case.
@@ -171,9 +171,9 @@ namespace Monitor.Pages
       bool isSellStrategyTrue = false;
       bool isTrailingSellActive = false;
 
-      foreach (Core.Main.DataObjects.PTMagicData.DCALogData dcaLogEntry in PTData.DCALog)
-      {
-        string sellStrategyText = Core.ProfitTrailer.StrategyHelper.GetStrategyText(Summary, dcaLogEntry.SellStrategies, dcaLogEntry.SellStrategy, isSellStrategyTrue, isTrailingSellActive);
+        foreach (Core.Main.DataObjects.PTMagicData.DCALogData dcaLogEntry in PTData.DCALog)
+        {
+            string sellStrategyText = Core.ProfitTrailer.StrategyHelper.GetStrategyText(Summary, dcaLogEntry.SellStrategies, dcaLogEntry.SellStrategy, isSellStrategyTrue, isTrailingSellActive);
 
         // Aggregate totals
         double leverage = dcaLogEntry.Leverage;

@@ -872,7 +872,7 @@ namespace Core.Main
               this.CheckLatestGitHubVersion(this.LastRuntimeSummary.Version);
 
               // Get latest main fiat currency exchange rate
-              this.GetMainFiatCurrencyDetails();
+              // this.GetMainFiatCurrencyDetails();
 
               // Load current PT files
               this.LoadCurrentProfitTrailerProperties();
@@ -1127,10 +1127,10 @@ namespace Core.Main
       }
     }
 
-    private void GetMainFiatCurrencyDetails()
-    {
-      this.LastRuntimeSummary.MainFiatCurrency = this.LastMainFiatCurrency;
-      this.LastRuntimeSummary.MainFiatCurrencyExchangeRate = this.LastMainFiatCurrencyExchangeRate;
+    //private void GetMainFiatCurrencyDetails()
+    //{
+      //this.LastRuntimeSummary.MainFiatCurrency = this.PropertiesData.Currency;
+      //this.LastRuntimeSummary.MainFiatCurrencyExchangeRate = this.LastMainFiatCurrencyExchangeRate;
 
       // if (this.LastFiatCurrencyCheck < DateTime.UtcNow.AddHours(-12) && !this.PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency.Equals("USD", StringComparison.InvariantCultureIgnoreCase))
       // {
@@ -1154,7 +1154,7 @@ namespace Core.Main
       //     this.LastMainFiatCurrencyExchangeRate = 1;
       //   }
       // }
-    }
+    //}
 
     // Get current PT properties
     private void LoadCurrentProfitTrailerProperties()

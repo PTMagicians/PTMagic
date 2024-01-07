@@ -10,7 +10,6 @@
       "ProfitTrailerMonitorURLXtra": "", // URLs for additional bots you want PTM to update (optional  - comma separated list)
       "ProfitTrailerDefaultSettingName": "default", // Your Profit Trailer default setting name (needed to change your settings)
       "Exchange": "Bittrex", // The exchange your are running Profit Trailer on
-      "StartBalance": 0, // The balance you had in your wallet when you started working with Profit Trailer
       "TimezoneOffset": "+0:00", // Your timezone offset from UTC time
       //"MainFiatCurrency": "USD", // Your main fiat currency that will be used in the monitor
       "FloodProtectionMinutes": 0, // If a price trend is just zig-zagging around its trigger, you may want to protect your settings from getting switched back and forth every minute
