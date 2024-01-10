@@ -23,8 +23,9 @@
       "Port": 8080, // The port you want to run your monitor on
       "RootUrl": "/", // The root Url of your monitor
       "AnalyzerChart": "", // By default the chart on the Market Analyzer page will use your default currency against USD.  You can change that here. (eg., BTCEUR)
-      "GraphIntervalMinutes": 60, // The interval for the monitor market trend graph to draw points
-      "GraphMaxTimeframeHours": 24, // This will enable you to define the timeframe that your graph for market trends covers
+      "GraphIntervalMinutes": 60, // The interval for the monitor market trend graph to draw points in minutes
+      "GraphMaxTimeframeHours": 24, // This will enable you to define the timeframe that your graph for market trends covers in hours
+      "ProfitsMaxTimeframeDays": 30, // This will enable you to define the timeframe for your dashboard profits graph in days
       "RefreshSeconds": 30, // The refresh interval of your monitor main page
       "LinkPlatform": "TradingView", // The platform to which the pair name will link if you click on it
       "MaxSalesRecords": 99999, // The maximum number of sales records pulled from Profit Trailer. Changes require a Monitor Restart.

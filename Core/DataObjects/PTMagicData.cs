@@ -41,10 +41,8 @@ namespace Core.Main.DataObjects.PTMagicData
     public string ProfitTrailerDefaultSettingName { get; set; } = "default";
     public int FloodProtectionMinutes { get; set; } = 15;
     public string Exchange { get; set; }
-    //public double StartBalance { get; set; } = 0;
     public string InstanceName { get; set; } = "PT Magic";
     public string TimezoneOffset { get; set; } = "+0:00";
-    public string MainFiatCurrency { get; set; } = "USD";
     public string CoinMarketCapAPIKey { get; set; }
     //public string FreeCurrencyConverterAPIKey { get; set; }
   }
@@ -59,6 +57,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public string AnalyzerChart { get; set; } = "";
     public int GraphIntervalMinutes { get; set; } = 60;
     public int GraphMaxTimeframeHours { get; set; } = 24;
+    public int ProfitsMaxTimeframeDays { get; set; } = 60;
     public int RefreshSeconds { get; set; } = 30;
     public int BagAnalyzerRefreshSeconds { get; set; } = 5;
     public int BuyAnalyzerRefreshSeconds { get; set; } = 5;
@@ -127,6 +126,7 @@ namespace Core.Main.DataObjects.PTMagicData
 
     [DefaultValue("Market")]
     public string TrendCurrency { get; set; } = "Market";
+    public string SplitCamelCaseName { get; set; }
 
     [DefaultValue(0)]
     public int MaxMarkets { get; set; } = 0;
@@ -440,15 +440,6 @@ namespace Core.Main.DataObjects.PTMagicData
     public double FundingThisMonth { get; set; }
     public double FundingLastMonth { get; set; }
     public double FundingTotal { get; set; }
-  }
-
-  public class DailyStatsData
-  {
-    public string Date { get; set; }
-    public double TotalSales { get; set; }
-    public double TotalBuys { get; set; }
-    public double TotalProfitCurrency { get; set; }
-    public int Order { get; set; }
   }
 
   public class DailyPNLData  

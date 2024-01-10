@@ -81,34 +81,38 @@
         </thead>
         <tbody>
           @foreach (var marketTrend in Model.MarketTrends.OrderBy(mt => mt.TrendMinutes)) {
-            if (Model.Summary.MarketTrendChanges.ContainsKey(marketTrend.Name)) {
-              double trendChange = Model.Summary.MarketTrendChanges[marketTrend.Name].OrderByDescending(mtc => mtc.TrendDateTime).First().TrendChange;
-              string trendChangeOutput = trendChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
+              if (Model.Summary.MarketTrendChanges.ContainsKey(marketTrend.Name)) {
+                double trendChange = Model.Summary.MarketTrendChanges[marketTrend.Name].Last().TrendChange;
+                string trendChangeOutput = trendChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
 
-              int marketCount = marketTrend.MaxMarkets;
-              string marketCountString = marketCount.ToString();
+                int marketCount = marketTrend.MaxMarkets;
+                string marketCountString = marketCount.ToString();
 
-              if (marketCount == 0) {
-                marketCountString = "All";
-              } else if (marketCount > Model.Summary.MarketSummary.Keys.Count && marketTrend.Platform.Equals("Exchange", StringComparison.InvariantCultureIgnoreCase)) {
-                marketCountString = Model.Summary.MarketSummary.Keys.Count.ToString();
+                if (marketCount == 0) {
+                  marketCountString = "All";
+                } else if (marketCount > Model.Summary.MarketSummary.Keys.Count && marketTrend.Platform.Equals("Exchange", StringComparison.InvariantCultureIgnoreCase)) {
+                  marketCountString = Model.Summary.MarketSummary.Keys.Count.ToString();
+                }
+
+                // Cache the result of SplitCamelCase(marketTrend.Name)
+                string splitCamelCaseName = Core.Helper.SystemHelper.SplitCamelCase(marketTrend.Name);
+
+                <tr>
+                  <td>@splitCamelCaseName</td> <!-- Use the cached value here -->
+                  <td class="text-right">@marketCountString</td>
+                  <td class="text-right">@Core.Helper.SystemHelper.GetProperDurationTime(marketTrend.TrendMinutes * 60, false)</td>
+                  @if (marketTrend.TrendThreshold == 0)
+                  {
+                    <td class="text-right">--</td>
+                  }
+                  else
+                  {
+                    <td class="text-right">@marketTrend.TrendThreshold</td>
+                  }
+                  <td class="text-right text-autocolor">@trendChangeOutput%</td>
+                </tr>
               }
-              <tr>
-                <td>@Core.Helper.SystemHelper.SplitCamelCase(marketTrend.Name)</td>
-                <td class="text-right">@marketCountString</td>
-                <td class="text-right">@Core.Helper.SystemHelper.GetProperDurationTime(marketTrend.TrendMinutes * 60, false)</td>
-                @if (marketTrend.TrendThreshold == 0)
-                {
-                  <td class="text-right">--</td>
-                }
-                else
-                {
-                  <td class="text-right">@marketTrend.TrendThreshold</td>
-                }
-                <td class="text-right text-autocolor">@trendChangeOutput%</td>
-              </tr>
             }
-          }
         </tbody>
       </table>
     </div>

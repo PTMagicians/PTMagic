@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Core.Main.DataObjects.PTMagicData;
 
@@ -17,15 +18,25 @@ namespace Core.Main.DataObjects
     private SummaryData _summary = null;
     private PropertiesData _properties = null;
     private StatsData _stats = null;
-    private List<DailyStatsData> _dailyStats = new List<DailyStatsData>();
     private List<DailyPNLData> _dailyPNL = new List<DailyPNLData>();
+    private decimal? _totalProfit = null;
+    public decimal? TotalProfit
+    {
+        get { return _totalProfit; }
+        set { _totalProfit = value; }
+    }
+    private decimal? _totalSales = null;
+    public decimal? TotalSales
+    {
+        get { return _totalSales; }
+        set { _totalSales = value; }
+    }
     private List<SellLogData> _sellLog = new List<SellLogData>();
     private List<DCALogData> _dcaLog = new List<DCALogData>();
     private List<BuyLogData> _buyLog = new List<BuyLogData>();
     private string _ptmBasePath = "";
     private PTMagicConfiguration _systemConfiguration = null;
     private TransactionData _transactionData = null;
-    private DateTime _dailyStatsRefresh = DateTime.UtcNow;
     private DateTime _dailyPNLRefresh = DateTime.UtcNow;
     private DateTime _statsRefresh = DateTime.UtcNow;
     private DateTime _buyLogRefresh = DateTime.UtcNow;
@@ -143,6 +154,28 @@ namespace Core.Main.DataObjects
         BaseUrl = PTProperties.baseUrl
       };
     }
+    // public StatsData Stats
+    // {
+    //     get
+    //     {
+    //         if (_stats == null || DateTime.UtcNow > _statsRefresh)
+    //         {
+    //             lock (_statsLock)
+    //             {
+    //                 if (_stats == null || DateTime.UtcNow > _statsRefresh)
+    //                 {
+    //                     dynamic statsDataJson = GetDataFromProfitTrailer("/api/v2/data/stats");
+    //                     JObject statsDataJObject = statsDataJson as JObject;
+    //                     JObject basicSection = (JObject)statsDataJObject["basic"];
+    //                     _stats = BuildStatsData(basicSection);
+    //                     _statsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+    //                 }
+    //             }
+    //         }
+    //         return _stats;
+    //     }
+    // }
+
     public StatsData Stats
     {
         get
@@ -153,17 +186,29 @@ namespace Core.Main.DataObjects
                 {
                     if (_stats == null || DateTime.UtcNow > _statsRefresh)
                     {
-                        dynamic statsDataJson = GetDataFromProfitTrailer("/api/v2/data/stats");
-                        JObject statsDataJObject = statsDataJson as JObject;
-                        JObject basicSection = (JObject)statsDataJObject["basic"];
-                        _stats = BuildStatsData(basicSection);
-                        _statsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                        using (var stream = GetDataFromProfitTrailerAsStream("/api/v2/data/stats"))
+                        using (var reader = new StreamReader(stream))
+                        using (var jsonReader = new JsonTextReader(reader))
+                        {
+                            while (jsonReader.Read())
+                            {
+                                if (jsonReader.TokenType == JsonToken.PropertyName && (string)jsonReader.Value == "basic")
+                                {
+                                    jsonReader.Read(); // Move to the value of the "basic" property
+                                    JObject basicSection = JObject.Load(jsonReader);
+                                    _stats = BuildStatsData(basicSection);
+                                    _statsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
             }
             return _stats;
         }
     }
+
     private StatsData BuildStatsData(dynamic statsDataJson)
     {
         return new StatsData()
@@ -194,38 +239,28 @@ namespace Core.Main.DataObjects
             FundingTotal = statsDataJson["totalFunding"]
         };
     }
-    public List<DailyStatsData> DailyStats
-    {
-        get
-        {
-            if (_dailyStats == null || DateTime.UtcNow > _dailyStatsRefresh)
-            {
-                lock (_dailyStatsLock)
-                {
-                    if (_dailyStats == null || DateTime.UtcNow > _dailyStatsRefresh)
-                    {
-                        dynamic dailyStatsDataJson = GetDataFromProfitTrailer("/api/v2/data/stats");
-                        JObject dailyStatsDataJObject = dailyStatsDataJson as JObject;
-                        JArray dailyStatsSection = (JArray)dailyStatsDataJObject["extra"]["dailyStats"];
-                        _dailyStats = dailyStatsSection.Select(j => BuildDailyStatsData(j as JObject)).ToList();
-                        _dailyStatsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
-                    }
-                }
-            }
-            return _dailyStats;
-        }
-    }
-    private DailyStatsData BuildDailyStatsData(dynamic dailyStatsDataJson)
-    {
-        return new DailyStatsData()
-        {
-            Date = dailyStatsDataJson["date"],
-            TotalSales = dailyStatsDataJson["totalSales"],
-            TotalBuys = dailyStatsDataJson["totalBuys"],
-            TotalProfitCurrency = dailyStatsDataJson["totalProfitCurrency"],
-            Order = dailyStatsDataJson["order"],
-        };
-    }
+    // public List<DailyPNLData> DailyPNL
+    // {
+    //     get
+    //     {
+    //         if (_dailyPNL == null || DateTime.UtcNow > _dailyPNLRefresh)
+    //         {
+    //             lock (_dailyPNLLock)
+    //             {
+    //                 if (_dailyPNL == null || DateTime.UtcNow > _dailyPNLRefresh)
+    //                 {
+    //                     dynamic dailyPNLDataJson = GetDataFromProfitTrailer("/api/v2/data/stats");
+    //                     JObject dailyPNLDataJObject = dailyPNLDataJson as JObject;
+    //                     JArray dailyPNLSection = (JArray)dailyPNLDataJObject["extra"]["dailyPNLStats"];
+    //                     _dailyPNL = dailyPNLSection.Select(j => BuildDailyPNLData(j as JObject)).ToList();
+    //                     _dailyPNLRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+    //                 }
+    //             }
+    //         }
+    //         return _dailyPNL;
+    //     }
+    // }
+
     public List<DailyPNLData> DailyPNL
     {
         get
@@ -236,11 +271,52 @@ namespace Core.Main.DataObjects
                 {
                     if (_dailyPNL == null || DateTime.UtcNow > _dailyPNLRefresh)
                     {
-                        dynamic dailyPNLDataJson = GetDataFromProfitTrailer("/api/v2/data/stats");
-                        JObject dailyPNLDataJObject = dailyPNLDataJson as JObject;
-                        JArray dailyPNLSection = (JArray)dailyPNLDataJObject["extra"]["dailyPNLStats"];
-                        _dailyPNL = dailyPNLSection.Select(j => BuildDailyPNLData(j as JObject)).ToList();
-                        _dailyPNLRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                        using (var stream = GetDataFromProfitTrailerAsStream("/api/v2/data/stats"))
+                        using (var reader = new StreamReader(stream))
+                        using (var jsonReader = new JsonTextReader(reader))
+                        {
+                            JObject basicSection = null;
+                            JObject extraSection = null;
+
+                            while (jsonReader.Read())
+                            {
+                                if (jsonReader.TokenType == JsonToken.PropertyName)
+                                {
+                                    if ((string)jsonReader.Value == "basic")
+                                    {
+                                        jsonReader.Read(); // Move to the value of the "basic" property
+                                        basicSection = JObject.Load(jsonReader);
+                                    }
+                                    else if ((string)jsonReader.Value == "extra")
+                                    {
+                                        jsonReader.Read(); // Move to the value of the "extra" property
+                                        extraSection = JObject.Load(jsonReader);
+                                    }
+                                }
+
+                                if (basicSection != null && extraSection != null)
+                                {
+                                    break;
+                                }
+                            }
+
+                            if (basicSection != null && 
+                                ((_totalProfit == null || 
+                                !Decimal.Equals(_totalProfit.Value, basicSection["totalProfit"].Value<decimal>())) ||
+                                (_totalSales == null || 
+                                !Decimal.Equals(_totalSales.Value, basicSection["totalSales"].Value<decimal>()))))
+                            {
+                                _totalProfit = basicSection["totalProfit"].Value<decimal>();
+                                _totalSales = basicSection["totalSales"].Value<decimal>();
+
+                                if (extraSection != null)
+                                {
+                                    JArray dailyPNLSection = (JArray)extraSection["dailyPNLStats"];
+                                    _dailyPNL = dailyPNLSection.Select(j => BuildDailyPNLData(j as JObject)).ToList();
+                                    _dailyPNLRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -454,6 +530,23 @@ namespace Core.Main.DataObjects
         {
             return JArray.Parse(rawBody);
         }
+    }
+    private Stream GetDataFromProfitTrailerAsStream(string callPath)
+    {
+        string url = string.Format("{0}{1}{2}token={3}", _systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL, 
+        callPath,
+        callPath.Contains("?") ? "&" : "?", 
+        _systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken);
+        
+        // Get the data from PT
+        Debug.WriteLine(String.Format("{0} - Calling '{1}'", DateTime.UtcNow, url));
+        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+        request.AutomaticDecompression = DecompressionMethods.GZip;
+        request.KeepAlive = true;
+        
+        WebResponse response = request.GetResponse();
+        
+        return response.GetResponseStream();
     }
 
     
