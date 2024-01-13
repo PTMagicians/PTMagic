@@ -11,8 +11,8 @@
 
 <div class="row">
   <div class="col-md-5 px-1">
-    <div class="card-box px-2" style="height:305px;">
-      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
+    <div class="card-box px-2" style="height:320px;">
+      <h4 class="m-t-0 m-b-20 header-title" style="display: inline;"><b>Market Trend History  </b><i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="@Math.Round(Model.DataHours, 1) hours of data available. Currently set to show @Model.PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours hours in general settings."></i></h4>
       @if (!Model.TrendChartDataJSON.Equals("")) {
         <div class="trend-chart">
           <svg style="height: 300px;width: 100%;"></svg>
@@ -22,9 +22,10 @@
       }
     </div>
   </div>
+  
   <div class="col-md-3 px-1">
-    <div class="card-box px-3" style="height:305px;">
-      @*<div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>*@
+    <div class="card-box px-3" style="height:320px;">
+      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"><i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="You dashboard is set to refresh every @Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds seconds in general settings."></i></div>
       @{
       string totalCurrentValueString = Model.totalCurrentValue.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
       if (Model.totalCurrentValue > 100) {
@@ -50,7 +51,8 @@
 
   <div class="col-md-4 px-1">
     @*<div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>*@
-    <div class="card-box px-2" style="height:305px;">
+    <div class="card-box px-2" style="height:320px;">
+      <h4 class="m-t-0 m-b-20 header-title" style="display: inline;"><b>Daily Profit  </b><i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="@Model.ProfitDays days of data available. Currently Set to @Model.PTMagicConfiguration.GeneralSettings.Monitor.ProfitsMaxTimeframeDays days in general settings."></i>
       @if (!Model.ProfitChartDataJSON.Equals("")) {
         <div class="profit-chart">
           <svg style="height:300px;width:100%"></svg>
@@ -65,8 +67,8 @@
 <div class="row">
   <div class="col-md-5 px-1">
     <div class="card-box px-2">
-      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
-      <br>
+      @* <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
+      <br> *@
       <h4 class="m-t-0 m-b-20 header-title"><b>Market Trends at @Model.PTMagicConfiguration.GeneralSettings.Application.Exchange</b>
       <small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)MarketAnalyzer">more</a></small></h4>
       <table class="table table-sm">
@@ -293,6 +295,22 @@
           .datum(assetDistributionData)
           .transition().duration(0)
           .call(assetDistributionChart);
+
+           // Add mouseleave, and mousemove event listeners to hide tooltip
+        d3.select('.profit-chart').on('mouseleave', function() {
+          d3.select('.nvtooltip').style('opacity', 0);
+        });
+
+        d3.select('body').on('mousemove', function() {
+          var chartBounds = d3.select('.profit-chart')[0][0].getBoundingClientRect();
+          var mouseX = d3.event.clientX;
+          var mouseY = d3.event.clientY;
+
+          if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
+            d3.select('.nvtooltip').style('opacity', 0);
+          }
+        });
+        
         return assetDistributionChart;
       });
     </text>
@@ -325,6 +343,21 @@
           .datum(trendData)
           .transition().duration(0)
           .call(trendChart);
+           // Add mouseleave, and mousemove event listeners to hide tooltip
+        d3.select('.profit-chart').on('mouseleave', function() {
+          d3.select('.nvtooltip').style('opacity', 0);
+        });
+
+        d3.select('body').on('mousemove', function() {
+          var chartBounds = d3.select('.profit-chart')[0][0].getBoundingClientRect();
+          var mouseX = d3.event.clientX;
+          var mouseY = d3.event.clientY;
+
+          if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
+            d3.select('.nvtooltip').style('opacity', 0);
+          }
+        });
+
         return trendChart;
       });
     </text>
@@ -348,7 +381,7 @@
         profitChart = nv.models.lineChart();
         var height = 300;
         profitChart.useInteractiveGuideline(true);
-        profitChart.xAxis.tickFormat(function (d) { return d3.time.format('%Y/%m/%d')(new Date(d)); });
+        profitChart.xAxis.tickFormat(function (d) { return d3.time.format('%m/%d')(new Date(d)); });
         profitChart.yAxis.axisLabel('Daily Profit').tickFormat(d3.format(',.2f'));
 
         profitData = @Html.Raw(Model.ProfitChartDataJSON);
@@ -357,9 +390,54 @@
           .datum(profitData)
           .transition().duration(0)
           .call(profitChart);
+
+          // Add mouseleave, and mousemove event listeners to hide tooltip
+        d3.select('.profit-chart').on('mouseleave', function() {
+          d3.select('.nvtooltip').style('opacity', 0);
+        });
+
+        d3.select('body').on('mousemove', function() {
+          var chartBounds = d3.select('.profit-chart')[0][0].getBoundingClientRect();
+          var mouseX = d3.event.clientX;
+          var mouseY = d3.event.clientY;
+
+          if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
+            d3.select('.nvtooltip').style('opacity', 0);
+          }
+        });
+
+
         return profitChart;
       });
     </text>
     }
   })(jQuery);
+</script>
+
+<script type="text/javascript">
+  $(document).ready(function(){
+    var originalLeave = $.fn.tooltip.Constructor.prototype.leave;
+    $.fn.tooltip.Constructor.prototype.leave = function(obj){
+      var self = obj instanceof this.constructor ?
+        obj : $(obj.currentTarget)[this.type](this.getDelegateOptions()).data('bs.' + this.type);
+      var container, timeout;
+
+      originalLeave.call(this, obj);
+
+      if(obj.currentTarget) {
+        container = $(obj.currentTarget).siblings('.tooltip');
+        timeout = self.timeout;
+        container.one('mouseenter', function(){
+          //We entered the actual tooltip – call off the dogs
+          clearTimeout(timeout);
+          //Let's monitor tooltip content instead
+          container.one('mouseleave', function(){
+            $.fn.tooltip.Constructor.prototype.leave.call(self, self);
+          });
+        });
+      }
+    };
+
+    $('[data-toggle="tooltip"]').tooltip();
+  });
 </script>

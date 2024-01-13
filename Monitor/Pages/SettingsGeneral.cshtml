@@ -196,21 +196,21 @@
                 </div>
               </div>
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Market Trend Graph Interval Minutes <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The time interval for the market trend graph between points."></i></label>
+                <label class="col-md-4 col-form-label">Market Trend Graph Interval Minutes <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The time interval for the market trend graph (Dashboard and Sales Analyzer) between data points. Very small intervals on large timeframe graphs can significantly impact performance."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Monitor_GraphIntervalMinutes" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.GraphIntervalMinutes.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Market Trend Graph Max Timeframe <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This defines the total timeframe for the market trends graph in hours."></i></label>
+                <label class="col-md-4 col-form-label">Market Trend Graph Max Timeframe <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This defines the total timeframe for the market trends graph (Dashboard and Sales Analyzer) in hours. Large timeframe graphs can significantly impact performance."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Monitor_GraphMaxTimeframeHours" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Daily Profit Graph Max Timeframe <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This defines the total timeframe for the daily profits graph on the dashboard in days."></i></label>
+                <label class="col-md-4 col-form-label">Daily Profit Graph Max Timeframe <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This defines the total timeframe for the daily profits graph on the dashboard in days.  Large timeframes can significantly impact performance."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Monitor_ProfitsMaxTimeframeDays" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.ProfitsMaxTimeframeDays.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>
