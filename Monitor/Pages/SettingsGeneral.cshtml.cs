@@ -13,7 +13,7 @@ namespace Monitor.Pages
   {
   public string ValidationMessage = ""; 
   public ProfitTrailerData PTData = null;
-  public SummaryData SummaryData { get; set; }
+  public MiscData MiscData { get; set; }
 
     private string GetTimezoneOffsetString(TimeZoneInfo tzi)
     {
@@ -55,7 +55,7 @@ namespace Monitor.Pages
     {
       base.Init();
       PTData = this.PtDataObject;
-      SummaryData = this.PTData.Summary;
+      MiscData = this.PTData.Misc;
 
       string notification = GetStringParameter("n", "");
       if (notification.Equals("BackupRestored"))

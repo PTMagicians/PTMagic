@@ -15,10 +15,11 @@ namespace Core.Main.DataObjects
 
   public class ProfitTrailerData
   {
-    private SummaryData _summary = null;
+    private MiscData _misc = null;
     private PropertiesData _properties = null;
     private StatsData _stats = null;
     private List<DailyPNLData> _dailyPNL = new List<DailyPNLData>();
+    private List<MonthlyStatsData> _monthlyStats = new List<MonthlyStatsData>();
     private decimal? _totalProfit = null;
     public decimal? TotalProfit
     {
@@ -38,20 +39,23 @@ namespace Core.Main.DataObjects
     private PTMagicConfiguration _systemConfiguration = null;
     private TransactionData _transactionData = null;
     private DateTime _dailyPNLRefresh = DateTime.UtcNow;
+    private DateTime _monthlyStatsRefresh = DateTime.UtcNow;
     private DateTime _statsRefresh = DateTime.UtcNow;
     private DateTime _buyLogRefresh = DateTime.UtcNow;
     private DateTime _sellLogRefresh = DateTime.UtcNow;
     private DateTime _dcaLogRefresh = DateTime.UtcNow;
-    private DateTime _summaryRefresh = DateTime.UtcNow;
+    private DateTime _miscRefresh = DateTime.UtcNow;
     private DateTime _propertiesRefresh = DateTime.UtcNow;    
     private volatile object _dailyStatsLock = new object();   
-    private volatile object _dailyPNLLock = new object();   
+    private volatile object _dailyPNLLock = new object();     
+    private volatile object _monthlyStatsLock = new object();    
     private volatile object _statsLock = new object();
     private volatile object _buyLock = new object();
     private volatile object _sellLock = new object();
     private volatile object _dcaLock = new object();
-    private volatile object _summaryLock = new object();
-    private volatile object _propertiesLock = new object();    private TimeSpan? _offsetTimeSpan = null;  
+    private volatile object _miscLock = new object();
+    private volatile object _propertiesLock = new object();    
+    private TimeSpan? _offsetTimeSpan = null;  
     public void DoLog(string message)
     {
         // Implement your logging logic here
@@ -87,29 +91,29 @@ namespace Core.Main.DataObjects
       }
     }
 
-    public SummaryData Summary
+    public MiscData Misc
     {
       get
       {
-        if (_summary == null || (DateTime.UtcNow > _summaryRefresh))
+        if (_misc == null || (DateTime.UtcNow > _miscRefresh))
         {
-          lock (_summaryLock)
+          lock (_miscLock)
           {
             // Thread double locking
-            if (_summary == null || (DateTime.UtcNow > _summaryRefresh))
+            if (_misc == null || (DateTime.UtcNow > _miscRefresh))
             {
-              _summary = BuildSummaryData(GetDataFromProfitTrailer("api/v2/data/misc"));
-              _summaryRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+              _misc = BuildMiscData(GetDataFromProfitTrailer("api/v2/data/misc"));
+              _miscRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
             }
           }
         }
         
-        return _summary;
+        return _misc;
       }
     }
-    private SummaryData BuildSummaryData(dynamic PTData)
+    private MiscData BuildMiscData(dynamic PTData)
     {
-      return new SummaryData()
+      return new MiscData()
       {
         Market = PTData.market,
         FiatConversionRate = PTData.priceDataFiatConversionRate,
@@ -119,6 +123,8 @@ namespace Core.Main.DataObjects
         PendingValue = PTData.totalPendingCurrentValue,
         DustValue = PTData.totalDustCurrentValue,
         StartBalance = PTData.startBalance,
+        TotalCurrentValue = PTData.totalCurrentValue,
+        TimeZoneOffset = PTData.timeZoneOffset,
       };
     }
     public PropertiesData Properties
@@ -154,27 +160,6 @@ namespace Core.Main.DataObjects
         BaseUrl = PTProperties.baseUrl
       };
     }
-    // public StatsData Stats
-    // {
-    //     get
-    //     {
-    //         if (_stats == null || DateTime.UtcNow > _statsRefresh)
-    //         {
-    //             lock (_statsLock)
-    //             {
-    //                 if (_stats == null || DateTime.UtcNow > _statsRefresh)
-    //                 {
-    //                     dynamic statsDataJson = GetDataFromProfitTrailer("/api/v2/data/stats");
-    //                     JObject statsDataJObject = statsDataJson as JObject;
-    //                     JObject basicSection = (JObject)statsDataJObject["basic"];
-    //                     _stats = BuildStatsData(basicSection);
-    //                     _statsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
-    //                 }
-    //             }
-    //         }
-    //         return _stats;
-    //     }
-    // }
 
     public StatsData Stats
     {
@@ -239,37 +224,90 @@ namespace Core.Main.DataObjects
             FundingTotal = statsDataJson["totalFunding"]
         };
     }
-    // public List<DailyPNLData> DailyPNL
-    // {
-    //     get
-    //     {
-    //         if (_dailyPNL == null || DateTime.UtcNow > _dailyPNLRefresh)
-    //         {
-    //             lock (_dailyPNLLock)
-    //             {
-    //                 if (_dailyPNL == null || DateTime.UtcNow > _dailyPNLRefresh)
-    //                 {
-    //                     dynamic dailyPNLDataJson = GetDataFromProfitTrailer("/api/v2/data/stats");
-    //                     JObject dailyPNLDataJObject = dailyPNLDataJson as JObject;
-    //                     JArray dailyPNLSection = (JArray)dailyPNLDataJObject["extra"]["dailyPNLStats"];
-    //                     _dailyPNL = dailyPNLSection.Select(j => BuildDailyPNLData(j as JObject)).ToList();
-    //                     _dailyPNLRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
-    //                 }
-    //             }
-    //         }
-    //         return _dailyPNL;
-    //     }
-    // }
-
     public List<DailyPNLData> DailyPNL
+    {
+      get
+      {
+          if (_dailyPNL == null || DateTime.UtcNow > _dailyPNLRefresh)
+          {
+              lock (_dailyPNLLock)
+              {
+                  if (_dailyPNL == null || DateTime.UtcNow > _dailyPNLRefresh)
+                  {
+                      using (var stream = GetDataFromProfitTrailerAsStream("/api/v2/data/stats"))
+                      using (var reader = new StreamReader(stream))
+                      using (var jsonReader = new JsonTextReader(reader))
+                      {
+                          JObject basicSection = null;
+                          JObject extraSection = null;
+
+                          while (jsonReader.Read())
+                          {
+                              if (jsonReader.TokenType == JsonToken.PropertyName)
+                              {
+                                  if ((string)jsonReader.Value == "basic")
+                                  {
+                                      jsonReader.Read(); // Move to the value of the "basic" property
+                                      basicSection = JObject.Load(jsonReader);
+                                  }
+                                  else if ((string)jsonReader.Value == "extra")
+                                  {
+                                      jsonReader.Read(); // Move to the value of the "extra" property
+                                      extraSection = JObject.Load(jsonReader);
+                                  }
+                              }
+
+                              if (basicSection != null && extraSection != null)
+                              {
+                                  break;
+                              }
+                          }
+
+                          if (basicSection != null && 
+                              ((_totalProfit == null || 
+                              !Decimal.Equals(_totalProfit.Value, basicSection["totalProfit"].Value<decimal>())) ||
+                              (_totalSales == null || 
+                              !Decimal.Equals(_totalSales.Value, basicSection["totalSales"].Value<decimal>()))))
+                          {
+                              _totalProfit = basicSection["totalProfit"].Value<decimal>();
+                              _totalSales = basicSection["totalSales"].Value<decimal>();
+
+                              if (extraSection != null)
+                              {
+                                  JArray dailyPNLSection = (JArray)extraSection["dailyPNLStats"];
+                                  _dailyPNL = dailyPNLSection.Select(j => BuildDailyPNLData(j as JObject)).ToList();
+                                  _dailyPNLRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+          return _dailyPNL;
+        }
+    }
+    public int GetTotalDays()
+    {
+        return DailyPNL?.Count ?? 0;
+    }
+    private DailyPNLData BuildDailyPNLData(dynamic dailyPNLDataJson)
+    {
+        return new DailyPNLData()
+        {
+            Date = dailyPNLDataJson["date"],
+            CumulativeProfitCurrency = dailyPNLDataJson["cumulativeProfitCurrency"],
+            Order = dailyPNLDataJson["order"],
+        };
+    }
+    public List<MonthlyStatsData> MonthlyStats
     {
         get
         {
-            if (_dailyPNL == null || DateTime.UtcNow > _dailyPNLRefresh)
+            if (_monthlyStats == null || DateTime.UtcNow > _monthlyStatsRefresh)
             {
-                lock (_dailyPNLLock)
+                lock (_monthlyStatsLock)
                 {
-                    if (_dailyPNL == null || DateTime.UtcNow > _dailyPNLRefresh)
+                    if (_monthlyStats == null || DateTime.UtcNow > _monthlyStatsRefresh)
                     {
                         using (var stream = GetDataFromProfitTrailerAsStream("/api/v2/data/stats"))
                         using (var reader = new StreamReader(stream))
@@ -300,36 +338,43 @@ namespace Core.Main.DataObjects
                                 }
                             }
 
-                            if (basicSection != null && 
-                                ((_totalProfit == null || 
-                                !Decimal.Equals(_totalProfit.Value, basicSection["totalProfit"].Value<decimal>())) ||
-                                (_totalSales == null || 
-                                !Decimal.Equals(_totalSales.Value, basicSection["totalSales"].Value<decimal>()))))
+                            if (basicSection != null)// && 
+                                //((_totalProfit == null || 
+                                //!Decimal.Equals(_totalProfit.Value, basicSection["totalProfit"].Value<decimal>())) ||
+                                //(_totalSales == null || 
+                                //!Decimal.Equals(_totalSales.Value, basicSection["totalSales"].Value<decimal>()))))
                             {
-                                _totalProfit = basicSection["totalProfit"].Value<decimal>();
-                                _totalSales = basicSection["totalSales"].Value<decimal>();
+                                //_totalProfit = basicSection["totalProfit"].Value<decimal>();
+                                //_totalSales = basicSection["totalSales"].Value<decimal>();
 
                                 if (extraSection != null)
                                 {
-                                    JArray dailyPNLSection = (JArray)extraSection["dailyPNLStats"];
-                                    _dailyPNL = dailyPNLSection.Select(j => BuildDailyPNLData(j as JObject)).ToList();
-                                    _dailyPNLRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                                    JArray monthlyStatsSection = (JArray)extraSection["monthlyStats"];
+                                    _monthlyStats = monthlyStatsSection.Select(j => BuildMonthlyStatsData(j as JObject)).ToList();
+                                    _monthlyStatsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
                                 }
                             }
                         }
                     }
                 }
             }
-            return _dailyPNL;
+            return _monthlyStats;
         }
     }
-    private DailyPNLData BuildDailyPNLData(dynamic dailyPNLDataJson)
+
+    public int GetTotalMonths()
     {
-        return new DailyPNLData()
+        return MonthlyStats?.Count ?? 0;
+    }
+
+    private MonthlyStatsData BuildMonthlyStatsData(dynamic monthlyStatsDataJson)
+    {
+        return new MonthlyStatsData()
         {
-            Date = dailyPNLDataJson["date"],
-            CumulativeProfitCurrency = dailyPNLDataJson["cumulativeProfitCurrency"],
-            Order = dailyPNLDataJson["order"],
+            Month = monthlyStatsDataJson["month"],
+            TotalSales = monthlyStatsDataJson["totalSales"],
+            TotalProfitCurrency = monthlyStatsDataJson["totalProfitCurrency"],
+            AvgGrowth = monthlyStatsDataJson["avgGrowth"],
         };
     }
     public List<SellLogData> SellLog
@@ -459,33 +504,33 @@ namespace Core.Main.DataObjects
     public double GetCurrentBalance()
     {
       return
-      (this.Summary.Balance);
+      (this.Misc.Balance);
     }
     public double GetPairsBalance()
     {
       return
-      (this.Summary.PairsValue);
+      (this.Misc.PairsValue);
     }
     public double GetDCABalance()
     {
       return
-      (this.Summary.DCAValue);
+      (this.Misc.DCAValue);
     }
     public double GetPendingBalance()
     {
       return
-      (this.Summary.PendingValue);
+      (this.Misc.PendingValue);
     }
     public double GetDustBalance()
     {
       return
-      (this.Summary.DustValue);
+      (this.Misc.DustValue);
     }
     
     
     public double GetSnapshotBalance(DateTime snapshotDateTime)
     {
-      double result = _summary.StartBalance;
+      double result = _misc.StartBalance;
       
       result += this.SellLog.FindAll(sl => sl.SoldDate.Date < snapshotDateTime.Date).Sum(sl => sl.Profit);
       result += this.TransactionData.Transactions.FindAll(t => t.UTCDateTime < snapshotDateTime).Sum(t => t.Amount);

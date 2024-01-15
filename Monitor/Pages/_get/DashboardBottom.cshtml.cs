@@ -17,8 +17,7 @@ namespace Monitor.Pages
     public ProfitTrailerData PTData = null;
     public StatsData StatsData { get; set; }
     public PropertiesData PropertiesData { get; set; }
-    public SummaryData SummaryData { get; set; }
-
+    public MiscData MiscData { get; set; }
     public List<MarketTrend> MarketTrends { get; set; } = new List<MarketTrend>();
     public double DataHours { get; set; }
     public int ProfitDays { get; set; }
@@ -42,8 +41,7 @@ namespace Monitor.Pages
       PTData = this.PtDataObject;
       StatsData = this.PTData.Stats;
       PropertiesData = this.PTData.Properties;
-      SummaryData = this.PTData.Summary;
-
+      MiscData = this.PTData.Misc;
       List<DailyPNLData> dailyPNLData = this.PTData.DailyPNL;
 
       // Cleanup temp files
@@ -215,7 +213,7 @@ namespace Monitor.Pages
         // Convert the list to a JSON string using Newtonsoft.Json
         ProfitChartDataJSON = Newtonsoft.Json.JsonConvert.SerializeObject(new[] {
             new {
-                key = "Profit in " + PTData.Properties.Currency,
+                key = "Profit in " + PTData.Misc.Market,
                 color = Constants.ChartLineColors[1],
                 values = profitPerDayList
             }

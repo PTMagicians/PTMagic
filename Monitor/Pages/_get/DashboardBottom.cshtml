@@ -25,7 +25,7 @@
   
   <div class="col-md-3 px-1">
     <div class="card-box px-3" style="height:320px;">
-      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"><i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="You dashboard is set to refresh every @Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds seconds in general settings."></i></div>
+      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
       @{
       string totalCurrentValueString = Model.totalCurrentValue.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
       if (Model.totalCurrentValue > 100) {
@@ -35,8 +35,8 @@
       <div id="AssetDistribution" class="container">        
         <div class="text-center">
           <small>
-            <span data-toggle="tooltip" data-placement="top" title="Starting balance from PTM settings">Start: &nbsp; <text class="text-autocolor"> @Model.SummaryData.StartBalance @Model.Summary.MainMarket </text></span>
-            <span data-toggle="tooltip" data-placement="top" title="TCV gain on starting balance"> &emsp; &emsp; Gain:&nbsp;<text class="text-autocolor">@Math.Round(((Model.totalCurrentValue - Model.SummaryData.StartBalance) / Model.SummaryData.StartBalance) * 100, 2)%</text></span>
+            <span data-toggle="tooltip" data-placement="top" title="Starting balance from PTM settings">Start: &nbsp; <text class="text-autocolor"> @Model.MiscData.StartBalance @Model.Summary.MainMarket </text></span>
+            <span data-toggle="tooltip" data-placement="top" title="TCV gain on starting balance"> &emsp; &emsp; Gain:&nbsp;<text class="text-autocolor">@Math.Round(((Model.totalCurrentValue - Model.MiscData.StartBalance) / Model.MiscData.StartBalance) * 100, 2)%</text></span>
           </small>
         </div>
         <div class="text-center">
@@ -166,12 +166,12 @@
         var totalProfitPercent = overviewStats.TotalProfitPerc;
         //var totalFundingGain = totalProfitPercent * ((totalProfit + totalFunding) / totalProfit);
 
-        double todaysProfitFiat = Math.Round((todaysProfit + todaysFunding) * Model.PTData.Summary.FiatConversionRate, 2);
-        double yesterdaysProfitFiat = Math.Round((yesterdaysProfit + yesterdaysFunding) * Model.PTData.Summary.FiatConversionRate, 2);
-        double last7DaysProfitFiat = Math.Round((last7DaysProfit + last7DaysFunding) * Model.PTData.Summary.FiatConversionRate, 2);
-        double thisMonthProfitFiat = Math.Round((thisMonthProfit + thisMonthFunding) * Model.PTData.Summary.FiatConversionRate, 2);
-        double lastMonthProfitFiat = Math.Round((lastMonthProfit + lastMonthFunding) * Model.PTData.Summary.FiatConversionRate, 2);
-        double totalProfitFiat = Math.Round((totalProfit + totalFunding) * Model.PTData.Summary.FiatConversionRate, 2);
+        double todaysProfitFiat = Math.Round((todaysProfit + todaysFunding) * Model.PTData.Misc.FiatConversionRate, 2);
+        double yesterdaysProfitFiat = Math.Round((yesterdaysProfit + yesterdaysFunding) * Model.PTData.Misc.FiatConversionRate, 2);
+        double last7DaysProfitFiat = Math.Round((last7DaysProfit + last7DaysFunding) * Model.PTData.Misc.FiatConversionRate, 2);
+        double thisMonthProfitFiat = Math.Round((thisMonthProfit + thisMonthFunding) * Model.PTData.Misc.FiatConversionRate, 2);
+        double lastMonthProfitFiat = Math.Round((lastMonthProfit + lastMonthFunding) * Model.PTData.Misc.FiatConversionRate, 2);
+        double totalProfitFiat = Math.Round((totalProfit + totalFunding) * Model.PTData.Misc.FiatConversionRate, 2);
 
         bool futuresFunding = Model.PropertiesData.IsLeverageExchange;
 
@@ -181,7 +181,7 @@
           <tr>
             <th></th>
             <th class="text-right">Sales</th>
-            <th class="text-right">Profit @Model.PTData.Summary.Market</th>
+            <th class="text-right">Profit @Model.PTData.Misc.Market</th>
             <th class="text-right">Gain</th>
             @if (futuresFunding)
                 {

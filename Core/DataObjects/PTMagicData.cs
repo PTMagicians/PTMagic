@@ -314,8 +314,8 @@ namespace Core.Main.DataObjects.PTMagicData
     public double MainMarketPrice { get; set; } = 0;
     private PropertiesData _propertiesData = new PropertiesData();
     public string MainFiatCurrency => _propertiesData.Currency;
-    private SummaryData _summaryData = new SummaryData();
-    public double MainFiatCurrencyExchangeRate => _summaryData.FiatConversionRate;
+    private MiscData _miscData = new MiscData();
+    public double MainFiatCurrencyExchangeRate => _miscData.FiatConversionRate;
     public List<StrategySummary> BuyStrategies { get; set; } = new List<StrategySummary>();
     public List<StrategySummary> SellStrategies { get; set; } = new List<StrategySummary>();
     public List<StrategySummary> DCABuyStrategies { get; set; } = new List<StrategySummary>();
@@ -447,6 +447,15 @@ namespace Core.Main.DataObjects.PTMagicData
     public string Date { get; set; }
     public double CumulativeProfitCurrency { get; set; }
     public double Order { get; set; }
+    
+  }  
+  public class MonthlyStatsData  
+  {
+    public string Month { get; set; }
+    public double TotalProfitCurrency { get; set; }
+    public double TotalSales { get; set; }
+    public double AvgGrowth { get; set; }
+    
   }  
   
   public class PTStrategy
@@ -524,8 +533,9 @@ namespace Core.Main.DataObjects.PTMagicData
     public List<Strategy> BuyStrategies { get; set; } = new List<Strategy>();
   }
 
-  public class SummaryData
-  {    public double Balance { get; set; }
+  public class MiscData
+  {    
+    public double Balance { get; set; }
     public double StartBalance { get; set; }
     public double FiatConversionRate { get; set; }
     public double PairsValue { get; set; }
@@ -533,5 +543,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public double PendingValue { get; set; }
     public double DustValue { get; set; }
     public string Market { get; set; }
+    public string TotalCurrentValue { get; set; }
+    public string TimeZoneOffset { get; set; }
   }
 }

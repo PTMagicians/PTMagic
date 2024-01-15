@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Core.Main;
-using Core.Helper;
+using System.Globalization;
 using Core.Main.DataObjects;
 using Core.Main.DataObjects.PTMagicData;
 
@@ -12,7 +11,12 @@ namespace Monitor.Pages
   public class SalesAnalyzer : _Internal.BasePageModelSecure
   {
     public ProfitTrailerData PTData = null;
-    public SummaryData SummaryData { get; set; }
+    public MiscData MiscData { get; set; }
+    public PropertiesData PropertiesData { get; set; }
+    public StatsData StatsData { get; set; }
+    public List<DailyPNLData> DailyPNL { get; set; }
+    public List<MonthlyStatsData> MonthlyStats { get; set; }
+
     public string TradesChartDataJSON = "";
     public string ProfitChartDataJSON = "";
     public string BalanceChartDataJSON = "";
@@ -22,17 +26,26 @@ namespace Monitor.Pages
     public Dictionary<DateTime, double> MonthlyGains = new Dictionary<DateTime, double>();
     public DateTimeOffset DateTimeNow = Constants.confMinDate;
     public double totalCurrentValue = 0;
+    
     public void OnGet()
     {
       base.Init();
 
       BindData();
-      BuildTCV();
     }
+    
     private void BindData()
     {
       PTData = this.PtDataObject;
-      SummaryData = this.PTData.Summary;
+      MiscData = this.PTData.Misc;
+      PropertiesData = this.PTData.Properties;
+      StatsData = this.PTData.Stats;
+      MonthlyStats = this.PTData.MonthlyStats;
+      DailyPNL = this.PTData.DailyPNL;
+      
+      //List<MonthlyStatsData> monthlyStatsData = this.PTData.MonthlyStats;
+      //List<DailyPNLData> dailyPNLData = this.PTData.DailyPNL;
+
 
       // Convert local offset time to UTC
       TimeSpan offsetTimeSpan = TimeSpan.Parse(PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
@@ -40,6 +53,49 @@ namespace Monitor.Pages
 
       BuildTopMarkets();
       BuildSalesChartData();
+      BuildTCV();
+      //MonthlyAverages(monthlyStatsData, PTData.Stats.FundingTotal);
+    }
+    
+    public (double totalMonths, DateTime startDate, DateTime endDate) MonthlyAverages(List<MonthlyStatsData> monthlyStats, List<DailyPNLData> dailyPNL)
+    {
+        double totalMonths = 0;
+        // Get the exact start and end dates of sales data
+        DateTime startDate = dailyPNL.Min(d => DateTime.ParseExact(d.Date, "d-M-yyyy", CultureInfo.InvariantCulture));
+        DateTime endDate = dailyPNL.Max(d => DateTime.ParseExact(d.Date, "d-M-yyyy", CultureInfo.InvariantCulture));
+
+        int daysInFirstMonth = DateTime.DaysInMonth(startDate.Year, startDate.Month) - startDate.Day + 1;
+        int daysInLastMonth = endDate.Day;
+        //Console.WriteLine("Start Date: {0}, End Date: {1}, Days in first month: {2}, Days in last month: {3}", startDate, endDate, daysInFirstMonth, daysInLastMonth);
+
+        for (int i = 0; i < monthlyStats.Count; i++)
+        {
+            var monthStat = monthlyStats[i];
+            double weight;
+
+            // Parse the Month property into a DateTime object
+            DateTime monthDate = DateTime.ParseExact(monthStat.Month, "M-yyyy", CultureInfo.InvariantCulture);
+
+            // If it's the first or last month in the dataset, calculate the weight based on the number of days
+            if (i == 0)
+              {
+                  // Calculate weight based on the number of days in the dataset for the first month
+                  weight = daysInFirstMonth / 30.0;
+              }
+              else if (i == monthlyStats.Count - 1)
+              {
+                  // Calculate weight based on the number of days in the dataset for the last month
+                  weight = (daysInLastMonth / 30.0);
+              }
+              else
+              {
+                  // Otherwise, assume it's a full month
+                  weight = 1;
+              }
+            totalMonths += weight;
+            //Console.WriteLine("Month: {0}, Weight: {1}", monthStat.Month, weight);
+        }
+        return (totalMonths, startDate, endDate);
     }
     private void BuildTopMarkets()
     {
