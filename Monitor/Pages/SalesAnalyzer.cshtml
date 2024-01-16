@@ -19,14 +19,11 @@
           <thead>
             <tr>
               @{
-                string totalCurrentValueString = Model.totalCurrentValue.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
-                if (Model.totalCurrentValue > 100) 
-                {
-                  totalCurrentValueString = Math.Round(Model.totalCurrentValue, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
-                }
+                double totalCurrentValue = double.Parse(Model.PTData.Misc.TotalCurrentValue);
+                string totalCurrentValueString = Model.PTData.Misc.TotalCurrentValue;
               }
-              <th class="m-t-0 header-title text-left">Total Current Value: &nbsp; <text class="text-autocolor"> @totalCurrentValueString @Model.Summary.MainMarket </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is based on the TCV reported by Profit Trailer."></i></small></th>
-              <th class="text-right">Starting Value: &nbsp; <text class="text-autocolor"> @Model.MiscData.StartBalance &nbsp; @Model.Summary.MainMarket </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is the starting value found in your settings file"></i></small></th>
+              <th class="m-t-0 header-title text-left">Total Current Value: &nbsp; <text class="text-autocolor"> @totalCurrentValueString @Model.Summary.MainMarket </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is based on the Total Current Value reported by Profit Trailer."></i></small></th>
+              <th class="text-right">Starting Value: &nbsp; <text class="text-autocolor"> @Model.MiscData.StartBalance &nbsp; @Model.Summary.MainMarket </text> <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is the starting value set in your PT account settings."></i></small></th>
             </tr>
           </thead>
         </table>
@@ -34,16 +31,33 @@
   </div>
 </div>
 
-<div class="row">
-  <div class="col-md-12">
-    <div class="card-box">       
-      <h4 class="m-t-0 header-title text-center">Cumulative PNL <small> <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This value is based on your sales history"></i></small></h4>
-      <div class="balance-chart">
-          <svg style="height:350px;width:100%"></svg>
+  <div class="row">
+    <div class="col-md-6">
+    <div class="card-box px-2" style="height:320px;">
+        <h4 class="m-t-0 header-title"><b>Cumulative Profits</b>
+        @if (!Model.CumulativeProfitChartDataJSON.Equals("")) {
+          <div class="cumulative-profit-chart">
+            <svg style="height:300px;width:100%"></svg>
+          </div>
+        } else {
+          <p>Unable to load graph, no sales data found.</p>
+        }
+      </div>
+    </div>
+
+    <div class="col-md-6">
+    <div class="card-box px-2" style="height:320px;">
+        <h4 class="m-t-0 header-title"><b>Daily TCV</b>
+        @if (!Model.TCVChartDataJSON.Equals("")) {
+          <div class="TCV-chart">
+            <svg style="height:300px;width:100%"></svg>
+          </div>
+        } else {
+          <p>Unable to load graph, no sales data found.</p>
+        }
       </div>
     </div>
   </div>
-</div>
 
 @if (Model.PTData.SellLog.Count == 0) {
   <div class="row">
@@ -60,10 +74,11 @@
       <div class="card-box">
         @{
           int totalDays = Model.PTData.GetTotalDays();
+          double startBalance = Model.MiscData.StartBalance;
           double totalSales = Model.PTData.Stats.TotalSales;
           double totalProfit = Model.PTData.Stats.TotalProfit;
           double totalFundingFees = Model.PTData.Stats.FundingTotal;
-          double totalPercentGain = Model.PTData.Stats.TotalProfitPerc;
+          double totalPercentGain = ((totalProfit + totalFundingFees) / startBalance) * 100;
           double totalProfitFiat = @Math.Round((totalProfit + totalFundingFees) * Model.PTData.Misc.FiatConversionRate, 0);
           double avgDailySales = @Math.Round(totalSales/totalDays, 1);
           double avgDailyGain = totalPercentGain / totalDays;
@@ -76,9 +91,8 @@
           double avgMonthlyProfit = totalProfit / totalMonths;
           double avgMonthlyGain = totalPercentGain / totalMonths;
           double avgMonthlyFunding = totalFundingFees / totalMonths;
-          string percentGainText = totalPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
         }
-        <h4 class="m-t-0 header-title" style="display: inline;">Sales Analysis  </h4><span style="font-size: x-small"> (@startDate - @endDate)</span>
+        <h4 class="m-t-0 header-title" style="display: inline;">Sales Analysis</h4>&nbsp;&nbsp;&nbsp;&nbsp;<span style="font-size: x-small"> (@startDate - @endDate)</span>
         <table class="table table-striped table-sm">
           <thead>
             <tr>
@@ -102,12 +116,6 @@
               <td class="text-right text-autocolor">@Math.Round(totalProfit / totalDays, 8).ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
               <td class="text-right text-autocolor">@avgMonthlyProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
             </tr>
-            <tr>
-              <th>% Gain</th>
-              <td class="text-right text-autocolor">@Html.Raw(percentGainText)</td>
-              <td class="text-right text-autocolor">@avgDailyGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
-              <td class="text-right text-autocolor">@avgMonthlyGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
-            </tr>
              @if(Model.PropertiesData.IsLeverageExchange)
               {
                 <tr>
@@ -123,6 +131,12 @@
               <td class="text-right text-autocolor">@Html.Raw(Math.Round(totalProfitFiat / totalDays, 0).ToString("#,#0", new System.Globalization.CultureInfo("en-US")))</td>
               <td class="text-right text-autocolor">@Html.Raw(Math.Round(totalProfitFiat / totalMonths, 0).ToString("#,#0", new System.Globalization.CultureInfo("en-US")))</td>
             </tr>
+            <tr>
+              <th>% Gain</th>
+              <td class="text-right text-autocolor">@totalPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+              <td class="text-right text-autocolor">@avgDailyGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+              <td class="text-right text-autocolor">@avgMonthlyGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -131,46 +145,52 @@
     <div class="col-md-6">
       <div class="card-box">
         @{
-          double currentTotalBalance = Model.totalCurrentValue;
-          double estimatedBalance1Month = Math.Round(currentTotalBalance * Math.Pow((1 + (avgDailyGain / 100)), 30.0), 8);
-          double estimatedBalance3Months = Math.Round(currentTotalBalance * Math.Pow((1 + (avgDailyGain / 100)), 90.0), 8);
-          double estimatedBalance6Months = Math.Round(currentTotalBalance * Math.Pow((1 + (avgDailyGain / 100)), 180.0), 8);
-          double estimatedBalance1Year = Math.Round(currentTotalBalance * Math.Pow((1 + (avgDailyGain / 100)), 365.0), 8);
+          double estimatedBalance1Week = Math.Round(totalCurrentValue * Math.Pow((1 + (avgDailyGain / 100)), 7.0), 8);
+          double estimatedBalance1Month = Math.Round(totalCurrentValue * Math.Pow((1 + (avgDailyGain / 100)), 30.0), 8);
+          double estimatedBalance3Months = Math.Round(totalCurrentValue * Math.Pow((1 + (avgDailyGain / 100)), 90.0), 8);
+          double estimatedBalance6Months = Math.Round(totalCurrentValue * Math.Pow((1 + (avgDailyGain / 100)), 180.0), 8);
+          double estimatedBalance1Year = Math.Round(totalCurrentValue * Math.Pow((1 + (avgDailyGain / 100)), 365.0), 8);
         }
-        <h4 class="m-t-0 header-title">Balance Prediction <small><i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The balance prediction is based on your daily average gain of @avgDailyGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))% and your current approximate balance of @currentTotalBalance.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))"></i></small></h4>
+        <h4 class="m-t-0 header-title">TCV Prediction <small><i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The balance prediction is based on your daily average gain of @avgDailyGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))% and your current TCV of @totalCurrentValue.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))"></i></small></h4>
         <table class="table table-striped table-sm">
           <thead>
             <tr>
               <th class="text-right"></th>
-              <th class="text-right">Est. Balance</th>
+              <th class="text-right">Est. TCV</th>
               <th class="text-right">Est. @Model.PTData.Properties.Currency Value</th>
               <th class="text-right">Est. Gain</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <th>1 month</th>
+              <th>1 Week</th>
+              <td class="text-right text-autocolor">@estimatedBalance1Week.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
+              <td class="text-right text-autocolor">@Html.Raw(Math.Round(estimatedBalance1Week * Model.MiscData.FiatConversionRate, 0).ToString("#,#0", new System.Globalization.CultureInfo("en-US")))</td>
+              <td class="text-right text-autocolor">@Math.Round((estimatedBalance1Week - totalCurrentValue) / totalCurrentValue * 100, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+            </tr>
+            <tr>
+              <th>1 Month</th>
               <td class="text-right text-autocolor">@estimatedBalance1Month.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
               <td class="text-right text-autocolor">@Html.Raw(Math.Round(estimatedBalance1Month * Model.MiscData.FiatConversionRate, 0).ToString("#,#0", new System.Globalization.CultureInfo("en-US")))</td>
-              <td class="text-right text-autocolor">@Math.Round((estimatedBalance1Month - currentTotalBalance) / currentTotalBalance * 100, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+              <td class="text-right text-autocolor">@Math.Round((estimatedBalance1Month - totalCurrentValue) / totalCurrentValue * 100, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
             </tr>
             <tr>
-              <th>3 months</th>
+              <th>3 Months</th>
               <td class="text-right text-autocolor">@estimatedBalance3Months.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
               <td class="text-right text-autocolor">@Html.Raw(Math.Round(estimatedBalance3Months * Model.MiscData.FiatConversionRate, 0).ToString("#,#0", new System.Globalization.CultureInfo("en-US")))</td>
-              <td class="text-right text-autocolor">@Math.Round((estimatedBalance3Months - currentTotalBalance) / currentTotalBalance * 100, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+              <td class="text-right text-autocolor">@Math.Round((estimatedBalance3Months - totalCurrentValue) / totalCurrentValue * 100, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
             </tr>
             <tr>
-              <th>6 months</th>
+              <th>6 Months</th>
               <td class="text-right text-autocolor">@estimatedBalance6Months.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
               <td class="text-right text-autocolor">@Html.Raw(Math.Round(estimatedBalance6Months * Model.MiscData.FiatConversionRate, 0).ToString("#,#0", new System.Globalization.CultureInfo("en-US")))</td>
-              <td class="text-right text-autocolor">@Math.Round((estimatedBalance6Months - currentTotalBalance) / currentTotalBalance * 100, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+              <td class="text-right text-autocolor">@Math.Round((estimatedBalance6Months - totalCurrentValue) / totalCurrentValue * 100, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
             </tr>
             <tr>
-              <th>1 year</th>
+              <th>1 Year</th>
               <td class="text-right text-autocolor">@estimatedBalance1Year.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
               <td class="text-right text-autocolor">@Html.Raw(Math.Round(estimatedBalance1Year * Model.MiscData.FiatConversionRate, 0).ToString("#,#0", new System.Globalization.CultureInfo("en-US")))</td>
-              <td class="text-right text-autocolor">@Math.Round((estimatedBalance1Year - currentTotalBalance) / currentTotalBalance * 100, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+              <td class="text-right text-autocolor">@Math.Round((estimatedBalance1Year - totalCurrentValue) / totalCurrentValue * 100, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
             </tr>
           </tbody>
         </table>
@@ -180,20 +200,27 @@
 
   <div class="row">
     <div class="col-md-6">
-      <div class="card-box">
+      <div class="card-box px-3" style="height:340px;">
+      <h4 class="m-t-0 m-b-20 header-title"><b>Daily Sales </b>
         <div class="trades-chart">
-          <svg style="height:220px;width:100%"></svg>
+          <svg style="height:300px;width:100%"></svg>
         </div>
       </div>
     </div>
 
     <div class="col-md-6">
-      <div class="card-box">
-        <div class="profit-chart">
-          <svg style="height:220px;width:100%"></svg>
-        </div>
+      <div class="card-box px-3" style="height:340px;">
+        <h4 class="m-t-0 m-b-20 header-title"><b>Daily Profit  </b>
+        @if (!Model.ProfitChartDataJSON.Equals("")) {
+          <div class="profit-chart">
+            <svg style="height:300px;width:100%"></svg>
+          </div>
+        } else {
+          <p>Unable to load graph, no sales data found.</p>
+        }
       </div>
-    </div>
+  </div>
+
   </div>
 
   <div class="row">
@@ -375,7 +402,7 @@
       nv.utils.windowResize(lineChart.update);
       return lineChart;
     });
-
+@* 
     nv.addGraph(function () {
       var lineChart = nv.models.lineChart();
       var height = 300;
@@ -402,7 +429,7 @@
       d3.select('.balance-chart svg').attr('perserveAspectRatio', 'xMinYMid').datum(chartData).transition().duration(500).call(lineChart);
       nv.utils.windowResize(lineChart.update);
       return lineChart;
-    });
+    }); *@
 
     $("#salesList").on("show.bs.modal", function (e) {
       $(this).find(".modal-content").html('<i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i>');
@@ -412,7 +439,146 @@
       });
     });
   })(jQuery);
-
-
   </script>
+
+  <script type="text/javascript">
+    (function ($) {
+      'use strict';
+      $('[role="tooltip"]').remove();
+      $('[data-toggle="tooltip"]').tooltip();
+      $('.text-autocolor').autocolor(false);
+
+      var cumulativeProfitChart;  // Keep a reference to the chart
+      var cumulativeProfitData;  // Keep a reference to the data
+
+      @if (!Model.CumulativeProfitChartDataJSON.Equals("")) {
+      <text>
+        nv.addGraph(function () {
+          cumulativeProfitChart = nv.models.lineChart();
+          var height = 300;
+          cumulativeProfitChart.useInteractiveGuideline(true);
+          cumulativeProfitChart.xAxis.tickFormat(function (d) { return d3.time.format('%m/%d')(new Date(d)); });
+          cumulativeProfitChart.yAxis.axisLabel('').tickFormat(d3.format(',.2f'));
+
+          cumulativeProfitData = @Html.Raw(Model.CumulativeProfitChartDataJSON);
+
+          d3.select('.cumulative-profit-chart svg')
+            .datum(cumulativeProfitData)
+            .transition().duration(0)
+            .call(cumulativeProfitChart);
+
+            // Add mouseleave, and mousemove event listeners to hide tooltip
+          d3.select('.cumulative-profit-chart').on('mouseleave', function() {
+            d3.select('.nvtooltip').style('opacity', 0);
+          });
+
+          d3.select('body').on('mousemove', function() {
+            var chartBounds = d3.select('.cumulative-profit-chart')[0][0].getBoundingClientRect();
+            var mouseX = d3.event.clientX;
+            var mouseY = d3.event.clientY;
+
+            if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
+              d3.select('.nvtooltip').style('opacity', 0);
+            }
+          });
+          return cumulativeProfitChart;
+        });
+      </text>
+      }
+    })(jQuery);
+  </script>
+
+  <script type="text/javascript">
+    (function ($) {
+      'use strict';
+      $('[role="tooltip"]').remove();
+      $('[data-toggle="tooltip"]').tooltip();
+      $('.text-autocolor').autocolor(false);
+
+      var TCVChart;  // Keep a reference to the chart
+      var TCVData;  // Keep a reference to the data
+
+      @if (!Model.TCVChartDataJSON.Equals("")) {
+      <text>
+        nv.addGraph(function () {
+          TCVChart = nv.models.lineChart();
+          var height = 300;
+          TCVChart.useInteractiveGuideline(true);
+          TCVChart.xAxis.tickFormat(function (d) { return d3.time.format('%m/%d')(new Date(d)); });
+          TCVChart.yAxis.axisLabel('').tickFormat(d3.format(',.2f'));
+
+          TCVData = @Html.Raw(Model.TCVChartDataJSON);
+
+          d3.select('.TCV-chart svg')
+            .datum(TCVData)
+            .transition().duration(0)
+            .call(TCVChart);
+
+            // Add mouseleave, and mousemove event listeners to hide tooltip
+          d3.select('.TCV-chart').on('mouseleave', function() {
+            d3.select('.nvtooltip').style('opacity', 0);
+          });
+
+          d3.select('body').on('mousemove', function() {
+            var chartBounds = d3.select('.TCV-chart')[0][0].getBoundingClientRect();
+            var mouseX = d3.event.clientX;
+            var mouseY = d3.event.clientY;
+
+            if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
+              d3.select('.nvtooltip').style('opacity', 0);
+            }
+          });
+          return TCVChart;
+        });
+      </text>
+      }
+    })(jQuery);
+  </script>
+
+  <script type="text/javascript">
+  (function ($) {
+    'use strict';
+    $('[role="tooltip"]').remove();
+    $('[data-toggle="tooltip"]').tooltip();
+    $('.text-autocolor').autocolor(false);
+
+    var profitChart;  // Keep a reference to the chart
+    var profitData;  // Keep a reference to the data
+
+    @if (!Model.ProfitChartDataJSON.Equals("")) {
+    <text>
+      nv.addGraph(function () {
+        profitChart = nv.models.lineChart();
+        var height = 300;
+        profitChart.useInteractiveGuideline(true);
+        profitChart.xAxis.tickFormat(function (d) { return d3.time.format('%m/%d')(new Date(d)); });
+        profitChart.yAxis.axisLabel('').tickFormat(d3.format(',.2f'));
+
+        profitData = @Html.Raw(Model.ProfitChartDataJSON);
+
+        d3.select('.profit-chart svg')
+          .datum(profitData)
+          .transition().duration(0)
+          .call(profitChart);
+
+          // Add mouseleave, and mousemove event listeners to hide tooltip
+        d3.select('.profit-chart').on('mouseleave', function() {
+          d3.select('.nvtooltip').style('opacity', 0);
+        });
+
+        d3.select('body').on('mousemove', function() {
+          var chartBounds = d3.select('.profit-chart')[0][0].getBoundingClientRect();
+          var mouseX = d3.event.clientX;
+          var mouseY = d3.event.clientY;
+
+          if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
+            d3.select('.nvtooltip').style('opacity', 0);
+          }
+        });
+        return profitChart;
+      });
+    </text>
+    }
+  })(jQuery);
+</script>
 }

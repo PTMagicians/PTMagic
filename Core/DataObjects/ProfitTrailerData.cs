@@ -19,6 +19,7 @@ namespace Core.Main.DataObjects
     private PropertiesData _properties = null;
     private StatsData _stats = null;
     private List<DailyPNLData> _dailyPNL = new List<DailyPNLData>();
+    private List<DailyTCVData> _dailyTCV = new List<DailyTCVData>();
     private List<MonthlyStatsData> _monthlyStats = new List<MonthlyStatsData>();
     private decimal? _totalProfit = null;
     public decimal? TotalProfit
@@ -39,15 +40,16 @@ namespace Core.Main.DataObjects
     private PTMagicConfiguration _systemConfiguration = null;
     private TransactionData _transactionData = null;
     private DateTime _dailyPNLRefresh = DateTime.UtcNow;
+    private DateTime _dailyTCVRefresh = DateTime.UtcNow;
     private DateTime _monthlyStatsRefresh = DateTime.UtcNow;
     private DateTime _statsRefresh = DateTime.UtcNow;
     private DateTime _buyLogRefresh = DateTime.UtcNow;
     private DateTime _sellLogRefresh = DateTime.UtcNow;
     private DateTime _dcaLogRefresh = DateTime.UtcNow;
     private DateTime _miscRefresh = DateTime.UtcNow;
-    private DateTime _propertiesRefresh = DateTime.UtcNow;    
-    private volatile object _dailyStatsLock = new object();   
-    private volatile object _dailyPNLLock = new object();     
+    private DateTime _propertiesRefresh = DateTime.UtcNow;  
+    private volatile object _dailyPNLLock = new object();    
+    private volatile object _dailyTCVLock = new object();       
     private volatile object _monthlyStatsLock = new object();    
     private volatile object _statsLock = new object();
     private volatile object _buyLock = new object();
@@ -221,7 +223,11 @@ namespace Core.Main.DataObjects
             FundingWeek = statsDataJson["totalFundingWeek"],
             FundingThisMonth = statsDataJson["totalFundingThisMonth"],
             FundingLastMonth = statsDataJson["totalFundingLastMonth"],
-            FundingTotal = statsDataJson["totalFunding"]
+            FundingTotal = statsDataJson["totalFunding"],
+            TotalFundingPerc = statsDataJson["totalFundingPerc"],
+            TotalFundingPercYesterday = statsDataJson["totalFundingPercYesterday"],
+            TotalFundingPercWeek = statsDataJson["totalFundingPercWeekPerc"],
+            TotalFundingPercToday = statsDataJson["totalFundingPercTodayPerc"]
         };
     }
     public List<DailyPNLData> DailyPNL
@@ -297,6 +303,83 @@ namespace Core.Main.DataObjects
             Date = dailyPNLDataJson["date"],
             CumulativeProfitCurrency = dailyPNLDataJson["cumulativeProfitCurrency"],
             Order = dailyPNLDataJson["order"],
+        };
+    }
+
+
+    public List<DailyTCVData> DailyTCV
+    {
+      get
+      {
+          if (_dailyTCV == null || DateTime.UtcNow > _dailyTCVRefresh)
+          {
+              lock (_dailyTCVLock)
+              {
+                  if (_dailyTCV == null || DateTime.UtcNow > _dailyTCVRefresh)
+                  {
+                      using (var stream = GetDataFromProfitTrailerAsStream("/api/v2/data/stats"))
+                      using (var reader = new StreamReader(stream))
+                      using (var jsonReader = new JsonTextReader(reader))
+                      {
+                          JObject basicSection = null;
+                          JObject extraSection = null;
+
+                          while (jsonReader.Read())
+                          {
+                              if (jsonReader.TokenType == JsonToken.PropertyName)
+                              {
+                                  if ((string)jsonReader.Value == "basic")
+                                  {
+                                      jsonReader.Read(); // Move to the value of the "basic" property
+                                      basicSection = JObject.Load(jsonReader);
+                                  }
+                                  else if ((string)jsonReader.Value == "extra")
+                                  {
+                                      jsonReader.Read(); // Move to the value of the "extra" property
+                                      extraSection = JObject.Load(jsonReader);
+                                  }
+                              }
+
+                              if (basicSection != null && extraSection != null)
+                              {
+                                  break;
+                              }
+                          }
+
+                          if (basicSection != null) // && 
+                              //((_totalProfit == null || 
+                              //!Decimal.Equals(_totalProfit.Value, basicSection["totalProfit"].Value<decimal>())) ||
+                              //(_totalSales == null || 
+                              //!Decimal.Equals(_totalSales.Value, basicSection["totalSales"].Value<decimal>()))))
+                          {
+                              //_totalProfit = basicSection["totalProfit"].Value<decimal>();
+                              //_totalSales = basicSection["totalSales"].Value<decimal>();
+
+                              if (extraSection != null)
+                              {
+                                  JArray dailyTCVSection = (JArray)extraSection["dailyTCVStats"];
+                                  _dailyTCV = dailyTCVSection.Select(j => BuildDailyTCVData(j as JObject)).ToList();
+                                  _dailyTCVRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+          return _dailyTCV;
+        }
+    }
+    public int GetTotalTCVDays()
+    {
+        return DailyTCV?.Count ?? 0;
+    }
+    private DailyTCVData BuildDailyTCVData(dynamic dailyTCVDataJson)
+    {
+        return new DailyTCVData()
+        {
+            Date = dailyTCVDataJson["date"],
+            TCV = dailyTCVDataJson["TCV"],
+            Order = dailyTCVDataJson["order"],
         };
     }
     public List<MonthlyStatsData> MonthlyStats
@@ -375,6 +458,7 @@ namespace Core.Main.DataObjects
             TotalSales = monthlyStatsDataJson["totalSales"],
             TotalProfitCurrency = monthlyStatsDataJson["totalProfitCurrency"],
             AvgGrowth = monthlyStatsDataJson["avgGrowth"],
+            Order = monthlyStatsDataJson["order"],
         };
     }
     public List<SellLogData> SellLog

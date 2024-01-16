@@ -11,7 +11,7 @@
 
 <div class="row">
   <div class="col-md-5 px-1">
-    <div class="card-box px-2" style="height:320px;">
+    <div class="card-box px-2" style="height:340px;">
       <h4 class="m-t-0 m-b-20 header-title" style="display: inline;"><b>Market Trend History  </b><i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="@Math.Round(Model.DataHours, 1) hours of data available. Currently set to show @Model.PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours hours in general settings."></i></h4>
       @if (!Model.TrendChartDataJSON.Equals("")) {
         <div class="trend-chart">
@@ -24,7 +24,7 @@
   </div>
   
   <div class="col-md-3 px-1">
-    <div class="card-box px-3" style="height:320px;">
+    <div class="card-box px-3" style="height:340px;">
       <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
       @{
       string totalCurrentValueString = Model.totalCurrentValue.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
@@ -127,44 +127,42 @@
       <h4 class="m-t-0 m-b-20 header-title"><b>Sales Overview</b><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)SalesAnalyzer">more</a></small></h4>
       @{
 
+        double avgGrowthThisMonth = Model.PTData.MonthlyStats.FirstOrDefault(data => data.Order == 1)?.AvgGrowth ?? 0.0;
+        double avgGrowthLastMonth = Model.PTData.MonthlyStats.FirstOrDefault(data => data.Order == 2)?.AvgGrowth ?? 0.0;
 
-        var overviewStats = Model.StatsData; // todaysStats is a new variable
+        //var startingBalance = Model.MiscData.StartBalance;
+        var totalCurrentValue = Model.totalCurrentValue;
+        var overviewStats = Model.StatsData; 
 
         var todaysSales = overviewStats.SalesToday;
         var todaysProfit = overviewStats.ProfitToday;
         var todaysFunding = overviewStats.FundingToday;
-        var todaysPercentGain = overviewStats.ProfitPercToday;
-        //var todaysFundingGain = todaysPercentGain * ((todaysProfit - todaysFunding) / todaysProfit);
+        var todaysPercentGain = overviewStats.ProfitPercToday + Model.PTData.Stats.TotalFundingPercToday;
         
         var yesterdaysSales = overviewStats.SalesYesterday;
         var yesterdaysProfit = overviewStats.ProfitYesterday;
         var yesterdaysFunding = overviewStats.FundingYesterday;
-        var yesterdaysPercentGain = overviewStats.ProfitPercYesterday;
-        //var yesterdaysFundingGain = yesterdaysPercentGain * ((yesterdaysProfit + yesterdaysFunding) / yesterdaysProfit);
+        var yesterdaysPercentGain = overviewStats.ProfitPercYesterday + Model.PTData.Stats.TotalFundingPercYesterday;
 
         var last7DaysSales = overviewStats.SalesWeek;
         var last7DaysProfit = overviewStats.ProfitWeek;
         var last7DaysFunding = overviewStats.FundingWeek;
-        var last7DaysPercentGain = overviewStats.ProfitPercWeek;
-        //var last7DaysFundingGain = last7DaysPercentGain * ((last7DaysProfit + last7DaysFunding) / last7DaysProfit);
+        var last7DaysPercentGain = overviewStats.ProfitPercWeek + Model.PTData.Stats.TotalFundingPercWeek;
 
         var thisMonthSales = overviewStats.SalesThisMonth;
         var thisMonthProfit = overviewStats.ProfitThisMonth;
         var thisMonthFunding = overviewStats.FundingThisMonth;
-        var thisMonthPercentGain = overviewStats.ProfitPercThisMonth;
-        //var thisMonthFundingGain = thisMonthPercentGain * ((thisMonthProfit + thisMonthFunding) / thisMonthProfit);
+        var thisMonthPercentGain = avgGrowthThisMonth;
 
         var lastMonthSales = overviewStats.SalesLastMonth;
         var lastMonthProfit = overviewStats.ProfitLastMonth;
         var lastMonthFunding = overviewStats.FundingLastMonth;
-        var lastMonthPercentGain = overviewStats.ProfitPercLastMonth;
-        //var lastMonthFundingGain = lastMonthPercentGain * ((lastMonthProfit + lastMonthFunding) / lastMonthProfit);
+        var lastMonthPercentGain = avgGrowthLastMonth;
 
         var totalSales = overviewStats.TotalSales;
         var totalProfit = overviewStats.TotalProfit;
         var totalFunding = overviewStats.FundingTotal;
-        var totalProfitPercent = overviewStats.TotalProfitPerc;
-        //var totalFundingGain = totalProfitPercent * ((totalProfit + totalFunding) / totalProfit);
+        var totalPercentGain = overviewStats.TotalProfitPerc + Model.PTData.Stats.TotalFundingPerc;
 
         double todaysProfitFiat = Math.Round((todaysProfit + todaysFunding) * Model.PTData.Misc.FiatConversionRate, 2);
         double yesterdaysProfitFiat = Math.Round((yesterdaysProfit + yesterdaysFunding) * Model.PTData.Misc.FiatConversionRate, 2);
@@ -182,12 +180,12 @@
             <th></th>
             <th class="text-right">Sales</th>
             <th class="text-right">Profit @Model.PTData.Misc.Market</th>
-            <th class="text-right">Gain</th>
             @if (futuresFunding)
                 {
-                    <th class="text-right">Funding</th>
+                    <th class="text-right">Funding @Model.PTData.Misc.Market</th>
                 }
             <th class="text-right">@Model.PTData.Properties.Currency</th>
+            <th class="text-right">Gain</th>
           </tr>
         </thead>
         <tbody>
@@ -195,67 +193,67 @@
             <th>Today</th>
             <td class="text-right">@overviewStats.SalesToday</td>
             <td class="text-right text-autocolor">@todaysProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
-            <td class="text-right text-autocolor">@todaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
              @if (futuresFunding)
                 {
                   <td class="text-right text-autocolor">@todaysFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
                 }
             <td class="text-right text-autocolor">@Html.Raw(todaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
+            <td class="text-right text-autocolor">@todaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
           </tr>
           <tr>
             <th>Yesterday</th>
             <td class="text-right">@yesterdaysSales</td>
             <td class="text-right text-autocolor">@yesterdaysProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
-            <td class="text-right text-autocolor">@yesterdaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
              @if (futuresFunding)
                 {
                   <td class="text-right text-autocolor">@yesterdaysFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
-                  }
+                }
             <td class="text-right text-autocolor">@Html.Raw(yesterdaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
+            <td class="text-right text-autocolor">@yesterdaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
           </tr>
           <tr>
             <th>Last 7 Days</th>
             <td class="text-right">@last7DaysSales</td>
             <td class="text-right text-autocolor">@last7DaysProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
-            <td class="text-right text-autocolor">@last7DaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
              @if (futuresFunding)
                 {
                   <td class="text-right text-autocolor">@last7DaysFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
                   }
             <td class="text-right text-autocolor">@Html.Raw(last7DaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
+            <td class="text-right text-autocolor">@last7DaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
           </tr>
           <tr>
             <th>This Month</th>
             <td class="text-right">@thisMonthSales</td>
             <td class="text-right text-autocolor">@thisMonthProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
-            <td class="text-right text-autocolor">@thisMonthPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
              @if (futuresFunding)
                 {
                   <td class="text-right text-autocolor">@thisMonthFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
                   }
             <td class="text-right text-autocolor">@Html.Raw(thisMonthProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
+            <td class="text-right text-autocolor">@thisMonthPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
           </tr>
           <tr>
             <th>Last Month</th>
             <td class="text-right">@lastMonthSales</td>
             <td class="text-right text-autocolor">@lastMonthProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
-            <td class="text-right text-autocolor">@lastMonthPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
              @if (futuresFunding)
                 {
                   <td class="text-right text-autocolor">@lastMonthFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
                   }
             <td class="text-right text-autocolor">@Html.Raw(lastMonthProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
+            <td class="text-right text-autocolor">@lastMonthPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
           </tr>
           <tr>
             <th>Total</th>
             <td class="text-right">@totalSales</td>
             <td class="text-right text-autocolor">@totalProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
-            <td class="text-right text-autocolor">@totalProfitPercent.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
              @if (futuresFunding)
                 {
                   <td class="text-right text-autocolor">@totalFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
                   }
             <td class="text-right text-autocolor">@Html.Raw(totalProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
+            <td class="text-right text-autocolor">@totalPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
           </tr>
         </tbody>
       </table>

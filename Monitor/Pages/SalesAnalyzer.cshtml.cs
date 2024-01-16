@@ -15,9 +15,14 @@ namespace Monitor.Pages
     public PropertiesData PropertiesData { get; set; }
     public StatsData StatsData { get; set; }
     public List<DailyPNLData> DailyPNL { get; set; }
+    public List<DailyTCVData> DailyTCV { get; set; }
+    public int ProfitDays { get; set; }
+    public int TCVDays { get; set; }
     public List<MonthlyStatsData> MonthlyStats { get; set; }
 
     public string TradesChartDataJSON = "";
+    public string CumulativeProfitChartDataJSON = "";
+    public string TCVChartDataJSON = "";
     public string ProfitChartDataJSON = "";
     public string BalanceChartDataJSON = "";
     public IEnumerable<KeyValuePair<string, double>> TopMarkets = null;
@@ -42,6 +47,7 @@ namespace Monitor.Pages
       StatsData = this.PTData.Stats;
       MonthlyStats = this.PTData.MonthlyStats;
       DailyPNL = this.PTData.DailyPNL;
+      DailyTCV = this.PTData.DailyTCV;
       
       //List<MonthlyStatsData> monthlyStatsData = this.PTData.MonthlyStats;
       //List<DailyPNLData> dailyPNLData = this.PTData.DailyPNL;
@@ -53,8 +59,197 @@ namespace Monitor.Pages
 
       BuildTopMarkets();
       BuildSalesChartData();
-      BuildTCV();
+      BuildProfitChartData();
+      BuildCumulativeProfitChartData();
+      BuildTCVChartData();
       //MonthlyAverages(monthlyStatsData, PTData.Stats.FundingTotal);
+    }
+    private void BuildTCVChartData()
+    {
+        List<object> TCVPerDayList = new List<object>();
+
+        if (PTData.DailyTCV.Count > 0)
+        {
+            // Get timezone offset
+            TimeSpan offset;
+            bool isNegative = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.StartsWith("-");
+            string offsetWithoutSign = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.TrimStart('+', '-');
+
+            if (!TimeSpan.TryParse(offsetWithoutSign, out offset))
+            {
+                offset = TimeSpan.Zero; // If offset is invalid, set it to zero
+            }
+
+            DateTime endDate = DateTime.UtcNow.Add(isNegative ? -offset : offset).Date;
+
+            // Parse dates once and adjust them to the local timezone
+            Dictionary<DateTime, DailyTCVData> dailyTCVByDate = PTData.DailyTCV
+                .Select(data => {
+                    DateTime dateUtc = DateTime.ParseExact(data.Date, "d-M-yyyy", CultureInfo.InvariantCulture);
+                    DateTime dateLocal = dateUtc.Add(isNegative ? -offset : offset);
+                    return new { Date = dateLocal.Date, Data = data };
+                })
+                .ToDictionary(
+                    item => item.Date,
+                    item => item.Data
+                );
+
+            DateTime earliestDataDate = dailyTCVByDate.Keys.Min();
+            DateTime startDate = earliestDataDate;
+
+            // Calculate the total days of data available
+            TCVDays = (endDate - startDate).Days;
+
+            for (DateTime date = startDate; date <= endDate; date = date.AddDays(1))
+            {
+                // Use the dictionary to find the Data for the date
+                if (dailyTCVByDate.TryGetValue(date, out DailyTCVData dailyTCV))
+                {
+                    double TCV = dailyTCV.TCV;
+
+                    // Add the data point to the list
+                    TCVPerDayList.Add(new { x = new DateTimeOffset(date).ToUnixTimeMilliseconds(), y = TCV });
+                }
+            }
+            // Convert the list to a JSON string using Newtonsoft.Json
+            TCVChartDataJSON = Newtonsoft.Json.JsonConvert.SerializeObject(new[] {
+                new {
+                    key = "TCV in " + PTData.Misc.Market,
+                    color = Constants.ChartLineColors[1],
+                    values = TCVPerDayList
+                }
+            });
+        }
+    }
+
+    private void BuildCumulativeProfitChartData()
+    {
+        List<object> profitPerDayList = new List<object>();
+
+        if (PTData.DailyPNL.Count > 0)
+        {
+            // Get timezone offset
+            TimeSpan offset;
+            bool isNegative = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.StartsWith("-");
+            string offsetWithoutSign = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.TrimStart('+', '-');
+
+            if (!TimeSpan.TryParse(offsetWithoutSign, out offset))
+            {
+                offset = TimeSpan.Zero; // If offset is invalid, set it to zero
+            }
+
+            DateTime endDate = DateTime.UtcNow.Add(isNegative ? -offset : offset).Date;
+
+            // Parse dates once and adjust them to the local timezone
+            Dictionary<DateTime, DailyPNLData> dailyPNLByDate = PTData.DailyPNL
+                .Select(data => {
+                    DateTime dateUtc = DateTime.ParseExact(data.Date, "d-M-yyyy", CultureInfo.InvariantCulture);
+                    DateTime dateLocal = dateUtc.Add(isNegative ? -offset : offset);
+                    return new { Date = dateLocal.Date, Data = data };
+                })
+                .ToDictionary(
+                    item => item.Date,
+                    item => item.Data
+                );
+
+            DateTime earliestDataDate = dailyPNLByDate.Keys.Min();
+            DateTime startDate = earliestDataDate;
+
+            // Calculate the total days of data available
+            ProfitDays = (endDate - startDate).Days;
+
+            double previousDayCumulativeProfit = 0;
+            for (DateTime date = startDate; date <= endDate; date = date.AddDays(1))
+            {
+                // Use the dictionary to find the DailyPNLData for the date
+                if (dailyPNLByDate.TryGetValue(date, out DailyPNLData dailyPNL))
+                {
+                    // Use the CumulativeProfitCurrency directly
+                    double profitFiat = dailyPNL.CumulativeProfitCurrency;
+
+                    // Add the data point to the list
+                    profitPerDayList.Add(new { x = new DateTimeOffset(date).ToUnixTimeMilliseconds(), y = profitFiat });
+
+                    previousDayCumulativeProfit = dailyPNL.CumulativeProfitCurrency;
+                }
+            }
+            // Convert the list to a JSON string using Newtonsoft.Json
+            CumulativeProfitChartDataJSON = Newtonsoft.Json.JsonConvert.SerializeObject(new[] {
+                new {
+                    key = "Profit in " + PTData.Misc.Market,
+                    color = Constants.ChartLineColors[1],
+                    values = profitPerDayList
+                }
+            });
+        }
+    }
+    private void BuildProfitChartData()
+    {
+        List<object> profitPerDayList = new List<object>();
+
+        if (PTData.DailyPNL.Count > 0)
+        {
+            // Get timezone offset
+            TimeSpan offset;
+            bool isNegative = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.StartsWith("-");
+            string offsetWithoutSign = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.TrimStart('+', '-');
+
+            if (!TimeSpan.TryParse(offsetWithoutSign, out offset))
+            {
+                offset = TimeSpan.Zero; // If offset is invalid, set it to zero
+            }
+
+            DateTime endDate = DateTime.UtcNow.Add(isNegative ? -offset : offset).Date;
+
+            // Parse dates once and adjust them to the local timezone
+            Dictionary<DateTime, DailyPNLData> dailyPNLByDate = PTData.DailyPNL
+                .Select(data => {
+                    DateTime dateUtc = DateTime.ParseExact(data.Date, "d-M-yyyy", CultureInfo.InvariantCulture);
+                    DateTime dateLocal = dateUtc.Add(isNegative ? -offset : offset);
+                    return new { Date = dateLocal.Date, Data = data };
+                })
+                .ToDictionary(
+                    item => item.Date,
+                    item => item.Data
+                );
+
+            DateTime earliestDataDate = dailyPNLByDate.Keys.Min();
+            DateTime startDate = earliestDataDate;
+
+            // Calculate the total days of data available
+            ProfitDays = (endDate - startDate).Days;
+
+            double previousDayCumulativeProfit = 0;
+            bool isFirstDay = true;
+            for (DateTime date = startDate; date <= endDate; date = date.AddDays(1))
+            {
+                // Use the dictionary to find the DailyPNLData for the date
+                if (dailyPNLByDate.TryGetValue(date, out DailyPNLData dailyPNL))
+                {
+                    if (isFirstDay)
+                    {
+                        isFirstDay = false;
+                    }
+                    else
+                    {
+                        // Calculate the profit for the current day
+                        double profitFiat = Math.Round(dailyPNL.CumulativeProfitCurrency - previousDayCumulativeProfit, 2);
+
+                        // Add the data point to the list
+                        profitPerDayList.Add(new { x = new DateTimeOffset(date).ToUnixTimeMilliseconds(), y = profitFiat });
+                    }
+                    previousDayCumulativeProfit = dailyPNL.CumulativeProfitCurrency;
+                }
+            }
+            // Convert the list to a JSON string using Newtonsoft.Json
+            ProfitChartDataJSON = Newtonsoft.Json.JsonConvert.SerializeObject(new[] {
+                new {
+                    key = "Profit in " + PTData.Misc.Market,
+                    color = Constants.ChartLineColors[1],
+                    values = profitPerDayList
+                }
+            });
+        }
     }
     
     public (double totalMonths, DateTime startDate, DateTime endDate) MonthlyAverages(List<MonthlyStatsData> monthlyStats, List<DailyPNLData> dailyPNL)
@@ -185,20 +380,6 @@ namespace Monitor.Pages
           MonthlyGains.Add(salesMonthDate, salesDateGain);
         }
       }
-    }
-    private void BuildTCV()
-    {
-      double AvailableBalance = PTData.GetCurrentBalance();
-      foreach (Core.Main.DataObjects.PTMagicData.DCALogData dcaLogEntry in PTData.DCALog)
-      {
-        double leverage = dcaLogEntry.Leverage;
-        if (leverage == 0)
-        {
-          leverage = 1;
-        }
-        totalCurrentValue = totalCurrentValue + ((dcaLogEntry.Amount * dcaLogEntry.CurrentPrice) / leverage);
-      }
-      totalCurrentValue = totalCurrentValue + AvailableBalance;
     }
   }
 }

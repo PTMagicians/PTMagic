@@ -42,7 +42,9 @@ namespace Monitor.Pages
       StatsData = this.PTData.Stats;
       PropertiesData = this.PTData.Properties;
       MiscData = this.PTData.Misc;
+      List<MonthlyStatsData> monthlyStatsData = this.PTData.MonthlyStats;
       List<DailyPNLData> dailyPNLData = this.PTData.DailyPNL;
+      
 
       // Cleanup temp files
       FileHelper.CleanupFilesMinutes(PTMagicMonitorBasePath + "wwwroot" + System.IO.Path.DirectorySeparatorChar + "assets" + System.IO.Path.DirectorySeparatorChar + "tmp" + System.IO.Path.DirectorySeparatorChar, 5);
@@ -65,161 +67,162 @@ namespace Monitor.Pages
       BuildAssetDistributionData();
       BuildProfitChartData();
     }
+    
     private void BuildMarketTrendChartData()
-{
-    List<string> trendChartData = new List<string>();
-    if (MarketTrends.Count > 0)
     {
-      
-        int mtIndex = 0;
-        foreach (MarketTrend mt in MarketTrends)
+        List<string> trendChartData = new List<string>();
+        if (MarketTrends.Count > 0)
         {
-            if (mt.DisplayGraph)
+        
+            int mtIndex = 0;
+            foreach (MarketTrend mt in MarketTrends)
             {
-                string lineColor = mtIndex < Constants.ChartLineColors.Length
-                    ? Constants.ChartLineColors[mtIndex]
-                    : Constants.ChartLineColors[mtIndex - 20];
-
-                if (Summary.MarketTrendChanges.ContainsKey(mt.Name))
+                if (mt.DisplayGraph)
                 {
-                    List<MarketTrendChange> marketTrendChangeSummaries = Summary.MarketTrendChanges[mt.Name];
+                    string lineColor = mtIndex < Constants.ChartLineColors.Length
+                        ? Constants.ChartLineColors[mtIndex]
+                        : Constants.ChartLineColors[mtIndex - 20];
 
-                    if (marketTrendChangeSummaries.Count > 0)
+                    if (Summary.MarketTrendChanges.ContainsKey(mt.Name))
                     {
-                        List<string> trendValues = new List<string>();
+                        List<MarketTrendChange> marketTrendChangeSummaries = Summary.MarketTrendChanges[mt.Name];
 
-                        // Sort marketTrendChangeSummaries by TrendDateTime
-                        marketTrendChangeSummaries = marketTrendChangeSummaries.OrderBy(m => m.TrendDateTime).ToList();
-
-                        // Get trend ticks for chart
-                        TimeSpan offset;
-                        bool isNegative = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.StartsWith("-");
-                        string offsetWithoutSign = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.TrimStart('+', '-');
-
-                        if (!TimeSpan.TryParse(offsetWithoutSign, out offset))
+                        if (marketTrendChangeSummaries.Count > 0)
                         {
-                            offset = TimeSpan.Zero; // If offset is invalid, set it to zero
-                        }
+                            List<string> trendValues = new List<string>();
 
-                        DateTime currentDateTime = DateTime.UtcNow;
-                        DateTime startDateTime = currentDateTime.AddHours(-PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours);
-                        DateTime endDateTime = currentDateTime;
+                            // Sort marketTrendChangeSummaries by TrendDateTime
+                            marketTrendChangeSummaries = marketTrendChangeSummaries.OrderBy(m => m.TrendDateTime).ToList();
 
-                        // Ensure startDateTime doesn't exceed the available data
-                        DateTime earliestTrendDateTime = marketTrendChangeSummaries.Min(mtc => mtc.TrendDateTime);
-                        startDateTime = startDateTime > earliestTrendDateTime ? startDateTime : earliestTrendDateTime;
-                        DataHours = (currentDateTime - earliestTrendDateTime).TotalHours;
+                            // Get trend ticks for chart
+                            TimeSpan offset;
+                            bool isNegative = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.StartsWith("-");
+                            string offsetWithoutSign = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.TrimStart('+', '-');
 
-                        // Cache the result of SplitCamelCase(mt.Name)
-                        string splitCamelCaseName = SystemHelper.SplitCamelCase(mt.Name);
-
-                        for (DateTime tickTime = startDateTime; tickTime <= endDateTime; tickTime = tickTime.AddMinutes(PTMagicConfiguration.GeneralSettings.Monitor.GraphIntervalMinutes))
-                        {
-                            // Use binary search to find the range of items that match the condition
-                            int index = marketTrendChangeSummaries.BinarySearch(new MarketTrendChange { TrendDateTime = tickTime }, Comparer<MarketTrendChange>.Create((x, y) => x.TrendDateTime.CompareTo(y.TrendDateTime)));
-                            if (index < 0) index = ~index;
-                            if (index < marketTrendChangeSummaries.Count)
+                            if (!TimeSpan.TryParse(offsetWithoutSign, out offset))
                             {
-                                MarketTrendChange mtc = marketTrendChangeSummaries[index];
-                                if (Double.IsInfinity(mtc.TrendChange)) mtc.TrendChange = 0;
-
-                                // Adjust tickTime to the desired timezone before converting to string
-                                DateTime adjustedTickTime = tickTime.Add(isNegative ? -offset : offset);
-                                trendValues.Add("{ x: new Date('" + adjustedTickTime.ToString("yyyy-MM-ddTHH:mm:ss").Replace(".", ":") + "'), y: " + mtc.TrendChange.ToString("0.00", CultureInfo.InvariantCulture) + "}");
+                                offset = TimeSpan.Zero; // If offset is invalid, set it to zero
                             }
+
+                            DateTime currentDateTime = DateTime.UtcNow;
+                            DateTime startDateTime = currentDateTime.AddHours(-PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours);
+                            DateTime endDateTime = currentDateTime;
+
+                            // Ensure startDateTime doesn't exceed the available data
+                            DateTime earliestTrendDateTime = marketTrendChangeSummaries.Min(mtc => mtc.TrendDateTime);
+                            startDateTime = startDateTime > earliestTrendDateTime ? startDateTime : earliestTrendDateTime;
+                            DataHours = (currentDateTime - earliestTrendDateTime).TotalHours;
+
+                            // Cache the result of SplitCamelCase(mt.Name)
+                            string splitCamelCaseName = SystemHelper.SplitCamelCase(mt.Name);
+
+                            for (DateTime tickTime = startDateTime; tickTime <= endDateTime; tickTime = tickTime.AddMinutes(PTMagicConfiguration.GeneralSettings.Monitor.GraphIntervalMinutes))
+                            {
+                                // Use binary search to find the range of items that match the condition
+                                int index = marketTrendChangeSummaries.BinarySearch(new MarketTrendChange { TrendDateTime = tickTime }, Comparer<MarketTrendChange>.Create((x, y) => x.TrendDateTime.CompareTo(y.TrendDateTime)));
+                                if (index < 0) index = ~index;
+                                if (index < marketTrendChangeSummaries.Count)
+                                {
+                                    MarketTrendChange mtc = marketTrendChangeSummaries[index];
+                                    if (Double.IsInfinity(mtc.TrendChange)) mtc.TrendChange = 0;
+
+                                    // Adjust tickTime to the desired timezone before converting to string
+                                    DateTime adjustedTickTime = tickTime.Add(isNegative ? -offset : offset);
+                                    trendValues.Add("{ x: new Date('" + adjustedTickTime.ToString("yyyy-MM-ddTHH:mm:ss").Replace(".", ":") + "'), y: " + mtc.TrendChange.ToString("0.00", CultureInfo.InvariantCulture) + "}");
+                                }
+                            }
+
+                            // Add most recent tick
+                            MarketTrendChange latestMtc = marketTrendChangeSummaries.Last();
+                            if (Double.IsInfinity(latestMtc.TrendChange)) latestMtc.TrendChange = 0;
+
+                            // Adjust latestMtc.TrendDateTime to the desired timezone before converting to string
+                            DateTime adjustedLatestTrendDateTime = latestMtc.TrendDateTime.Add(isNegative ? -offset : offset);
+                            trendValues.Add("{ x: new Date('" + adjustedLatestTrendDateTime.ToString("yyyy-MM-ddTHH:mm:ss").Replace(".", ":") + "'), y: " + latestMtc.TrendChange.ToString("0.00", CultureInfo.InvariantCulture) + "}");
+
+                            // Use cached splitCamelCaseName
+                            trendChartData.Add("{ key: '" + splitCamelCaseName + "', color: '" + lineColor + "', values: [" + string.Join(",\n", trendValues) + "] }");
+                            mtIndex++;
                         }
-
-                        // Add most recent tick
-                        MarketTrendChange latestMtc = marketTrendChangeSummaries.Last();
-                        if (Double.IsInfinity(latestMtc.TrendChange)) latestMtc.TrendChange = 0;
-
-                        // Adjust latestMtc.TrendDateTime to the desired timezone before converting to string
-                        DateTime adjustedLatestTrendDateTime = latestMtc.TrendDateTime.Add(isNegative ? -offset : offset);
-                        trendValues.Add("{ x: new Date('" + adjustedLatestTrendDateTime.ToString("yyyy-MM-ddTHH:mm:ss").Replace(".", ":") + "'), y: " + latestMtc.TrendChange.ToString("0.00", CultureInfo.InvariantCulture) + "}");
-
-                        // Use cached splitCamelCaseName
-                        trendChartData.Add("{ key: '" + splitCamelCaseName + "', color: '" + lineColor + "', values: [" + string.Join(",\n", trendValues) + "] }");
-                        mtIndex++;
                     }
                 }
             }
         }
+        TrendChartDataJSON = "[" + string.Join(",", trendChartData) + "]";
     }
-    TrendChartDataJSON = "[" + string.Join(",", trendChartData) + "]";
-}
 
     private void BuildProfitChartData()
-{
-    List<object> profitPerDayList = new List<object>();
-
-    if (PTData.DailyPNL.Count > 0)
     {
-        // Get timezone offset
-        TimeSpan offset;
-        bool isNegative = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.StartsWith("-");
-        string offsetWithoutSign = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.TrimStart('+', '-');
+        List<object> profitPerDayList = new List<object>();
 
-        if (!TimeSpan.TryParse(offsetWithoutSign, out offset))
+        if (PTData.DailyPNL.Count > 0)
         {
-            offset = TimeSpan.Zero; // If offset is invalid, set it to zero
-        }
+            // Get timezone offset
+            TimeSpan offset;
+            bool isNegative = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.StartsWith("-");
+            string offsetWithoutSign = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.TrimStart('+', '-');
 
-        DateTime endDate = DateTime.UtcNow.Add(isNegative ? -offset : offset).Date;
-
-        // Parse dates once and adjust them to the local timezone
-        Dictionary<DateTime, DailyPNLData> dailyPNLByDate = PTData.DailyPNL
-            .Select(data => {
-                DateTime dateUtc = DateTime.ParseExact(data.Date, "d-M-yyyy", CultureInfo.InvariantCulture);
-                DateTime dateLocal = dateUtc.Add(isNegative ? -offset : offset);
-                return new { Date = dateLocal.Date, Data = data };
-            })
-            .ToDictionary(
-                item => item.Date,
-                item => item.Data
-            );
-
-        DateTime earliestDataDate = dailyPNLByDate.Keys.Min();
-        DateTime startDate = endDate.AddDays(-PTMagicConfiguration.GeneralSettings.Monitor.ProfitsMaxTimeframeDays - 1); // Fetch data for timeframe + 1 days
-        if (startDate < earliestDataDate)
-        {
-            startDate = earliestDataDate;
-        }
-
-        // Calculate the total days of data available
-        ProfitDays = (endDate - startDate).Days;
-
-        double previousDayCumulativeProfit = 0;
-        bool isFirstDay = true;
-        for (DateTime date = startDate; date <= endDate; date = date.AddDays(1))
-        {
-            // Use the dictionary to find the DailyPNLData for the date
-            if (dailyPNLByDate.TryGetValue(date, out DailyPNLData dailyPNL))
+            if (!TimeSpan.TryParse(offsetWithoutSign, out offset))
             {
-                if (isFirstDay)
-                {
-                    isFirstDay = false;
-                }
-                else
-                {
-                    // Calculate the profit for the current day
-                    double profitFiat = Math.Round(dailyPNL.CumulativeProfitCurrency - previousDayCumulativeProfit, 2);
+                offset = TimeSpan.Zero; // If offset is invalid, set it to zero
+            }
 
-                    // Add the data point to the list
-                    profitPerDayList.Add(new { x = new DateTimeOffset(date).ToUnixTimeMilliseconds(), y = profitFiat });
+            DateTime endDate = DateTime.UtcNow.Add(isNegative ? -offset : offset).Date;
+
+            // Parse dates once and adjust them to the local timezone
+            Dictionary<DateTime, DailyPNLData> dailyPNLByDate = PTData.DailyPNL
+                .Select(data => {
+                    DateTime dateUtc = DateTime.ParseExact(data.Date, "d-M-yyyy", CultureInfo.InvariantCulture);
+                    DateTime dateLocal = dateUtc.Add(isNegative ? -offset : offset);
+                    return new { Date = dateLocal.Date, Data = data };
+                })
+                .ToDictionary(
+                    item => item.Date,
+                    item => item.Data
+                );
+
+            DateTime earliestDataDate = dailyPNLByDate.Keys.Min();
+            DateTime startDate = endDate.AddDays(-PTMagicConfiguration.GeneralSettings.Monitor.ProfitsMaxTimeframeDays - 1); // Fetch data for timeframe + 1 days
+            if (startDate < earliestDataDate)
+            {
+                startDate = earliestDataDate;
+            }
+
+            // Calculate the total days of data available
+            ProfitDays = (endDate - startDate).Days;
+
+            double previousDayCumulativeProfit = 0;
+            bool isFirstDay = true;
+            for (DateTime date = startDate; date <= endDate; date = date.AddDays(1))
+            {
+                // Use the dictionary to find the DailyPNLData for the date
+                if (dailyPNLByDate.TryGetValue(date, out DailyPNLData dailyPNL))
+                {
+                    if (isFirstDay)
+                    {
+                        isFirstDay = false;
+                    }
+                    else
+                    {
+                        // Calculate the profit for the current day
+                        double profitFiat = Math.Round(dailyPNL.CumulativeProfitCurrency - previousDayCumulativeProfit, 2);
+
+                        // Add the data point to the list
+                        profitPerDayList.Add(new { x = new DateTimeOffset(date).ToUnixTimeMilliseconds(), y = profitFiat });
+                    }
+                    previousDayCumulativeProfit = dailyPNL.CumulativeProfitCurrency;
                 }
-                previousDayCumulativeProfit = dailyPNL.CumulativeProfitCurrency;
             }
+            // Convert the list to a JSON string using Newtonsoft.Json
+            ProfitChartDataJSON = Newtonsoft.Json.JsonConvert.SerializeObject(new[] {
+                new {
+                    key = "Profit in " + PTData.Misc.Market,
+                    color = Constants.ChartLineColors[1],
+                    values = profitPerDayList
+                }
+            });
         }
-        // Convert the list to a JSON string using Newtonsoft.Json
-        ProfitChartDataJSON = Newtonsoft.Json.JsonConvert.SerializeObject(new[] {
-            new {
-                key = "Profit in " + PTData.Misc.Market,
-                color = Constants.ChartLineColors[1],
-                values = profitPerDayList
-            }
-        });
     }
-}
 
     private void BuildAssetDistributionData()
     {

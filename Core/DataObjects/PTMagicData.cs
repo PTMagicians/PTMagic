@@ -440,6 +440,10 @@ namespace Core.Main.DataObjects.PTMagicData
     public double FundingThisMonth { get; set; }
     public double FundingLastMonth { get; set; }
     public double FundingTotal { get; set; }
+    public double TotalFundingPerc { get; set; }
+    public double TotalFundingPercYesterday { get; set; }
+    public double TotalFundingPercWeek { get; set; }
+    public double TotalFundingPercToday { get; set; }
   }
 
   public class DailyPNLData  
@@ -449,12 +453,20 @@ namespace Core.Main.DataObjects.PTMagicData
     public double Order { get; set; }
     
   }  
+  public class DailyTCVData  
+  {
+    public string Date { get; set; }
+    public double TCV { get; set; }
+    public double Order { get; set; }
+    
+  }  
   public class MonthlyStatsData  
   {
     public string Month { get; set; }
     public double TotalProfitCurrency { get; set; }
     public double TotalSales { get; set; }
     public double AvgGrowth { get; set; }
+    public double Order { get; set; }
     
   }  
   
