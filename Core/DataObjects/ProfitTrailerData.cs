@@ -21,6 +21,7 @@ namespace Core.Main.DataObjects
     private List<DailyPNLData> _dailyPNL = new List<DailyPNLData>();
     private List<DailyTCVData> _dailyTCV = new List<DailyTCVData>();
     private List<MonthlyStatsData> _monthlyStats = new List<MonthlyStatsData>();
+    private List<ProfitablePairsData> _profitablePairs = new List<ProfitablePairsData>();
     private decimal? _totalProfit = null;
     public decimal? TotalProfit
     {
@@ -48,6 +49,7 @@ namespace Core.Main.DataObjects
     private DateTime _dcaLogRefresh = DateTime.UtcNow;
     private DateTime _miscRefresh = DateTime.UtcNow;
     private DateTime _propertiesRefresh = DateTime.UtcNow;  
+    private DateTime _profitablePairsRefresh = DateTime.UtcNow;  
     private volatile object _dailyPNLLock = new object();    
     private volatile object _dailyTCVLock = new object();       
     private volatile object _monthlyStatsLock = new object();    
@@ -56,7 +58,8 @@ namespace Core.Main.DataObjects
     private volatile object _sellLock = new object();
     private volatile object _dcaLock = new object();
     private volatile object _miscLock = new object();
-    private volatile object _propertiesLock = new object();    
+    private volatile object _propertiesLock = new object();  
+    private volatile object _profitablePairsLock = new object();     
     private TimeSpan? _offsetTimeSpan = null;  
     public void DoLog(string message)
     {
@@ -305,6 +308,90 @@ namespace Core.Main.DataObjects
             Order = dailyPNLDataJson["order"],
         };
     }
+    public List<ProfitablePairsData> ProfitablePairs
+    {
+        get
+        {
+            if (_profitablePairs == null || DateTime.UtcNow > _profitablePairsRefresh)
+            {
+                lock (_profitablePairsLock)
+                {
+                    if (_profitablePairs == null || DateTime.UtcNow > _profitablePairsRefresh)
+                    {
+                        using (var stream = GetDataFromProfitTrailerAsStream("/api/v2/data/stats"))
+                        using (var reader = new StreamReader(stream))
+                        using (var jsonReader = new JsonTextReader(reader))
+                        {
+                            JObject basicSection = null;
+                            JObject extraSection = null;
+                            while (jsonReader.Read())
+                            {
+                                if (jsonReader.TokenType == JsonToken.PropertyName)
+                                {
+                                    if ((string)jsonReader.Value == "basic")
+                                    {
+                                        jsonReader.Read(); // Move to the value of the "basic" property
+                                        basicSection = JObject.Load(jsonReader);
+                                    }
+                                    else if ((string)jsonReader.Value == "extra")
+                                    {
+                                        jsonReader.Read(); // Move to the value of the "extra" property
+                                        extraSection = JObject.Load(jsonReader);
+                                    }
+                                }
+
+                                if (basicSection != null && extraSection != null)
+                                {
+                                    break;
+                                }
+                            }
+                            if (basicSection != null) // && 
+                                //((_totalProfit == null || 
+                                //!Decimal.Equals(_totalProfit.Value, basicSection["totalProfit"].Value<decimal>())) ||
+                                //(_totalSales == null || 
+                                //!Decimal.Equals(_totalSales.Value, basicSection["totalSales"].Value<decimal>()))))
+                            {
+                                //_totalProfit = basicSection["totalProfit"].Value<decimal>();
+                                //_totalSales = basicSection["totalSales"].Value<decimal>();
+                                if (extraSection != null)
+                                  {
+                                      JObject profitablePairsSection = (JObject)extraSection["profitablePairs"];
+                                      _profitablePairs = new List<ProfitablePairsData>();
+                                      int counter = 0;
+                                      foreach (var j in profitablePairsSection)
+                                      {
+                                          if (counter >= _systemConfiguration.GeneralSettings.Monitor.MaxTopMarkets)
+                                          {
+                                              break;
+                                          }
+                                          // Process each JObject in the dictionary
+                                          JObject profitablePair = (JObject)j.Value;
+                                          _profitablePairs.Add(BuildProfitablePairs(profitablePair));
+                                          counter++;
+                                      }
+                                      _profitablePairsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                                  }
+                            }
+                        }
+                    }
+                }
+            }
+            return _profitablePairs;
+        }
+    }
+    private ProfitablePairsData BuildProfitablePairs(JObject profitablePairsJson)
+    {
+        return new ProfitablePairsData()
+        {
+            Coin = profitablePairsJson["coin"].Value<string>(),
+            ProfitCurrency = profitablePairsJson["profitCurrency"].Value<double>(),
+            SoldTimes = profitablePairsJson["soldTimes"].Value<int>(),
+            Avg = profitablePairsJson["avg"].Value<double>(),
+        };
+    }
+
+
+
 
 
     public List<DailyTCVData> DailyTCV
@@ -493,7 +580,7 @@ namespace Core.Main.DataObjects
                     this.BuildSellLogData(sellDataPage);
                     pageIndex++;
                     requestedPages++;
-                    Console.WriteLine($"Importing sale: {pageIndex}");
+Console.WriteLine($"Importing sale: {pageIndex}");
 
                   }
                   else

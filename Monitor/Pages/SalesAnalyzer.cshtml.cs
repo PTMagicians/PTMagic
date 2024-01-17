@@ -16,6 +16,7 @@ namespace Monitor.Pages
     public StatsData StatsData { get; set; }
     public List<DailyPNLData> DailyPNL { get; set; }
     public List<DailyTCVData> DailyTCV { get; set; }
+    public List<ProfitablePairsData> ProfitablePairs { get; set; }
     public int ProfitDays { get; set; }
     public int TCVDays { get; set; }
     public List<MonthlyStatsData> MonthlyStats { get; set; }
@@ -48,21 +49,16 @@ namespace Monitor.Pages
       MonthlyStats = this.PTData.MonthlyStats;
       DailyPNL = this.PTData.DailyPNL;
       DailyTCV = this.PTData.DailyTCV;
+      ProfitablePairs = this.PTData.ProfitablePairs;
       
-      //List<MonthlyStatsData> monthlyStatsData = this.PTData.MonthlyStats;
-      //List<DailyPNLData> dailyPNLData = this.PTData.DailyPNL;
-
-
       // Convert local offset time to UTC
       TimeSpan offsetTimeSpan = TimeSpan.Parse(PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
       DateTimeNow = DateTimeOffset.UtcNow.ToOffset(offsetTimeSpan);
 
-      BuildTopMarkets();
       BuildSalesChartData();
       BuildProfitChartData();
       BuildCumulativeProfitChartData();
       BuildTCVChartData();
-      //MonthlyAverages(monthlyStatsData, PTData.Stats.FundingTotal);
     }
     private void BuildTCVChartData()
     {
@@ -314,25 +310,14 @@ namespace Monitor.Pages
 
         int tradeDayIndex = 0;
         string tradesPerDayJSON = "";
-        string profitPerDayJSON = "";
-        string balancePerDayJSON = "";
-        double balance = 0.0;
         for (DateTime salesDate = graphStartDate; salesDate <= DateTimeNow.DateTime.Date; salesDate = salesDate.AddDays(1))
         {
           if (tradeDayIndex > 0)
           {
             tradesPerDayJSON += ",\n";
-            profitPerDayJSON += ",\n";
-            balancePerDayJSON += ",\n";
           }
-          double profit = 0;
           int trades = PTData.SellLog.FindAll(t => t.SoldDate.Date == salesDate.Date).Count;
-          profit = PTData.SellLog.FindAll(t => t.SoldDate.Date == salesDate.Date).Sum(t => t.Profit);
-          double profitFiat = Math.Round(profit * Summary.MainMarketPrice, 2);
-          balance += profitFiat; 
           tradesPerDayJSON += "{x: new Date('" + salesDate.Date.ToString("yyyy-MM-dd") + "'), y: " + trades + "}";
-          profitPerDayJSON += "{x: new Date('" + salesDate.Date.ToString("yyyy-MM-dd") + "'), y: " + profitFiat.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "}";
-          balancePerDayJSON += "{x: new Date('" + salesDate.Date.ToString("yyyy-MM-dd") + "'), y: " + balance.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "}";
           tradeDayIndex++;
         }
         TradesChartDataJSON = "[";
@@ -343,42 +328,7 @@ namespace Monitor.Pages
         TradesChartDataJSON += "}";
         TradesChartDataJSON += "]";
 
-        ProfitChartDataJSON = "[";
-        ProfitChartDataJSON += "{";
-        ProfitChartDataJSON += "key: 'Profit in " + Summary.MainFiatCurrency + "',";
-        ProfitChartDataJSON += "color: '" + Constants.ChartLineColors[1] + "',";
-        ProfitChartDataJSON += "values: [" + profitPerDayJSON + "]";
-        ProfitChartDataJSON += "}";
-        ProfitChartDataJSON += "]";
-
-        BalanceChartDataJSON = "[";
-        BalanceChartDataJSON += "{";
-        BalanceChartDataJSON += "key: 'Profit in " + Summary.MainFiatCurrency + "',";
-        BalanceChartDataJSON += "color: '" + Constants.ChartLineColors[1] + "',";
-        BalanceChartDataJSON += "values: [" + balancePerDayJSON + "]";
-        BalanceChartDataJSON += "}";
-        BalanceChartDataJSON += "]";
         
-        for (DateTime salesDate = DateTimeNow.DateTime.Date; salesDate >= MinSellLogDate; salesDate = salesDate.AddDays(-1))
-        {
-          List<SellLogData> salesDateSales = PTData.SellLog.FindAll(sl => sl.SoldDate.Date == salesDate);
-          double salesDateProfit;
-          salesDateProfit = salesDateSales.Sum(sl => sl.Profit);
-          double salesDateStartBalance = PTData.GetSnapshotBalance(salesDate);
-          double salesDateGain = Math.Round(salesDateProfit / salesDateStartBalance * 100, 2);
-          DailyGains.Add(salesDate, salesDateGain);
-        }
-        DateTime minSellLogMonthDate = new DateTime(MinSellLogDate.Year, MinSellLogDate.Month, 1).Date;
-        DateTime salesMonthStartDate = new DateTime(DateTimeNow.DateTime.Year, DateTimeNow.DateTime.Month, 1).Date;
-        for (DateTime salesMonthDate = salesMonthStartDate.Date; salesMonthDate >= minSellLogMonthDate; salesMonthDate = salesMonthDate.AddMonths(-1))
-        {
-          List<Core.Main.DataObjects.PTMagicData.SellLogData> salesMonthSales = PTData.SellLog.FindAll(sl => sl.SoldDate.Date.Month == salesMonthDate.Month && sl.SoldDate.Date.Year == salesMonthDate.Year);
-          double salesDateProfit;
-          salesDateProfit = salesMonthSales.Sum(sl => sl.Profit);
-          double salesDateStartBalance = PTData.GetSnapshotBalance(salesMonthDate);
-          double salesDateGain = Math.Round(salesDateProfit / salesDateStartBalance * 100, 2);
-          MonthlyGains.Add(salesMonthDate, salesDateGain);
-        }
       }
     }
   }

@@ -51,7 +51,7 @@
 
   <div class="col-md-4 px-1">
     @*<div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>*@
-    <div class="card-box px-2" style="height:320px;">
+    <div class="card-box px-2" style="height:340px;">
       <h4 class="m-t-0 m-b-20 header-title" style="display: inline;"><b>Daily Profit  </b><i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="@Model.ProfitDays days of data available. Currently Set to @Model.PTMagicConfiguration.GeneralSettings.Monitor.ProfitsMaxTimeframeDays days in general settings."></i>
       @if (!Model.ProfitChartDataJSON.Equals("")) {
         <div class="profit-chart">
@@ -308,7 +308,7 @@
             d3.select('.nvtooltip').style('opacity', 0);
           }
         });
-        
+        nv.utils.windowResize(assetDistributionChart.update);
         return assetDistributionChart;
       });
     </text>
@@ -355,7 +355,7 @@
             d3.select('.nvtooltip').style('opacity', 0);
           }
         });
-
+        nv.utils.windowResize(trendChart.update);
         return trendChart;
       });
     </text>
@@ -403,8 +403,7 @@
             d3.select('.nvtooltip').style('opacity', 0);
           }
         });
-
-
+        nv.utils.windowResize(profitChart.update);
         return profitChart;
       });
     </text>

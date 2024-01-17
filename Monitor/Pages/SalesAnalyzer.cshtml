@@ -219,8 +219,49 @@
           <p>Unable to load graph, no sales data found.</p>
         }
       </div>
+    </div>
   </div>
 
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="card-box">
+        <h4 class="m-t-0 header-title"><b>Top @Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxTopMarkets Sales Markets</b></h4>
+        <table class="tablesaw table m-b-0" data-tablesaw-sortable data-tablesaw-sortable-switch>
+          <thead>
+            <tr>
+              <th scope="col" data-tablesaw-priority="persist" data-tablesaw-sortable-col data-tablesaw-sortable-default-col>Rank</th>
+              <th scope="col" data-tablesaw-sortable-col>Market</th>
+              <th scope="col" class="text-right" data-tablesaw-sortable-col>Profit @Model.PTData.Misc.Market</th>
+              <th scope="col" class="text-right" data-tablesaw-sortable-col>Sales</th>
+              <th scope="col" class="text-right" data-tablesaw-sortable-col>Avg/Trade</th>
+              <th scope="col" class="text-right" data-tablesaw-sortable-col>Profit @Model.PTData.Properties.Currency</th>
+            </tr>
+          </thead>
+          <tbody>
+            @{
+            int rank = 1;
+            foreach (var pair in Model.ProfitablePairs)
+              {
+              string coin = pair.Coin;
+              double profit = Math.Round(pair.ProfitCurrency,8);
+              int sales = pair.SoldTimes;
+              double avg = Math.Round(pair.Avg,8);
+              double profitFiat = Math.Round(profit * Model.MiscData.FiatConversionRate, 0);
+              <tr>
+                <td>@rank</td>
+                <td><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform, Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, coin, Model.PTData.Misc.Market)" target="_blank">@coin</a></td>
+                <td class="text-right text-autocolor-saw">@profit</td>
+                <td class="text-right">@sales</td>
+                <td class="text-right text-autocolor-saw">@avg </td>
+                <td class="text-right text-autocolor-saw">@profitFiat</td>
+              </tr>
+              rank++;
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <div class="row">
@@ -315,55 +356,15 @@
     </div>
   </div>
 
-  <div class="row">
-    <div class="col-sm-12">
-      <div class="card-box">
-        <h4 class="m-t-0 header-title"><b>Top @Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxTopMarkets Sales Market Analysis</b></h4>
-        <table class="tablesaw table m-b-0" data-tablesaw-sortable data-tablesaw-sortable-switch>
-          <thead>
-            <tr>
-              <th scope="col" data-tablesaw-priority="persist" data-tablesaw-sortable-col data-tablesaw-sortable-default-col>Rank</th>
-              <th scope="col" data-tablesaw-sortable-col>Market</th>
-              <th scope="col" class="text-right" data-tablesaw-sortable-col>Sales</th>
-              <th scope="col" class="text-right" data-tablesaw-sortable-col>Profit @Model.Summary.MainMarket</th>
-              <th scope="col" class="text-right" data-tablesaw-sortable-col>Profit @Model.Summary.MainFiatCurrency</th>
-              <th scope="col" class="text-right" data-tablesaw-sortable-col>Profit @Model.Summary.MainFiatCurrency/Trade</th>
-              <th scope="col" class="text-right" data-tablesaw-sortable-col>Profit %/Trade</th>
-            </tr>
-          </thead>
-          <tbody>
-            @{
-              var topMarkets = Model.PTData.SellLog.GroupBy(m => m.Market).Select(mg => mg.Sum(m => m.Profit));
-              int marketRank = 0;
-            }
-            @foreach (KeyValuePair<string, double> marketData in Model.TopMarkets) {
-              marketRank++;
-              int trades = Model.PTData.SellLog.FindAll(m => m.Market == marketData.Key).Count;
-              double profitFiat = Math.Round(marketData.Value * Model.Summary.MainMarketPrice, 2);
-              double profitFiatPerTrade = Math.Round(profitFiat / trades, 2);
-              <tr>
-                <td>@marketRank</td>
-                <td><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform, Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, marketData.Key, Model.Summary.MainMarket)" target="_blank">@marketData.Key</a></td>
-                <td class="text-right">@trades</td>
-                <td class="text-right text-autocolor-saw">@marketData.Value.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
-                <td class="text-right text-autocolor-saw">@profitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) @Model.Summary.MainFiatCurrency</td>
-                <td class="text-right text-autocolor-saw">@profitFiatPerTrade.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) @Model.Summary.MainFiatCurrency</td>
-                <td class="text-right text-autocolor-saw">@Model.PTData.SellLog.FindAll(m => m.Market == marketData.Key).Average(p => p.ProfitPercent).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
+  
 
-  <div id="salesList" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
+  @* <div id="salesList" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
     <div class="modal-dialog modal-full">
       <div class="modal-content">
         <i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i>
       </div><!-- /.modal-content -->
     </div><!-- /.modal-dialog -->
-  </div><!-- /.modal -->
+  </div><!-- /.modal --> *@
 }
 
 @section Scripts {
@@ -402,34 +403,6 @@
       nv.utils.windowResize(lineChart.update);
       return lineChart;
     });
-@* 
-    nv.addGraph(function () {
-      var lineChart = nv.models.lineChart();
-      var height = 300;
-      /**/
-      var chartData = @Html.Raw(Model.ProfitChartDataJSON);
-      /**/
-      lineChart.useInteractiveGuideline(true);
-      lineChart.xAxis.tickFormat(function (d) { return d3.time.format('%Y/%m/%d')(new Date(d)); });
-      lineChart.yAxis.axisLabel('Daily Profit').tickFormat(d3.format(',.2f'));
-      d3.select('.profit-chart svg').attr('perserveAspectRatio', 'xMinYMid').datum(chartData).transition().duration(500).call(lineChart);
-      nv.utils.windowResize(lineChart.update);
-      return lineChart;
-    });
-
-    nv.addGraph(function () {
-      var lineChart = nv.models.lineChart();
-      var height = 400;
-      /**/
-      var chartData = @Html.Raw(Model.BalanceChartDataJSON);
-      /**/
-      lineChart.useInteractiveGuideline(true);
-      lineChart.xAxis.tickFormat(function (d) { return d3.time.format('%Y/%m/%d')(new Date(d)); });
-      lineChart.yAxis.axisLabel('Profit').tickFormat(d3.format(',.2f'));
-      d3.select('.balance-chart svg').attr('perserveAspectRatio', 'xMinYMid').datum(chartData).transition().duration(500).call(lineChart);
-      nv.utils.windowResize(lineChart.update);
-      return lineChart;
-    }); *@
 
     $("#salesList").on("show.bs.modal", function (e) {
       $(this).find(".modal-content").html('<i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i>');
@@ -481,6 +454,7 @@
               d3.select('.nvtooltip').style('opacity', 0);
             }
           });
+          nv.utils.windowResize(cumulativeProfitChart.update);
           return cumulativeProfitChart;
         });
       </text>
@@ -528,6 +502,7 @@
               d3.select('.nvtooltip').style('opacity', 0);
             }
           });
+          nv.utils.windowResize(TCVChart.update);
           return TCVChart;
         });
       </text>
@@ -575,6 +550,7 @@
             d3.select('.nvtooltip').style('opacity', 0);
           }
         });
+        nv.utils.windowResize(profitChart.update);
         return profitChart;
       });
     </text>

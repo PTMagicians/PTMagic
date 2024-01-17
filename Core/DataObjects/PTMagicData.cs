@@ -467,7 +467,13 @@ namespace Core.Main.DataObjects.PTMagicData
     public double TotalSales { get; set; }
     public double AvgGrowth { get; set; }
     public double Order { get; set; }
-    
+  }  
+  public class ProfitablePairsData  
+  {
+    public string Coin { get; set; }
+    public double ProfitCurrency { get; set; }
+    public int SoldTimes { get; set; }
+    public double Avg { get; set; }
   }  
   
   public class PTStrategy
