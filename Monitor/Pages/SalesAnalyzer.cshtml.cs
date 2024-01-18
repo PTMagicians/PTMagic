@@ -6,6 +6,7 @@ using System.Globalization;
 using Core.Main.DataObjects;
 using Core.Main.DataObjects.PTMagicData;
 
+
 namespace Monitor.Pages
 {
   public class SalesAnalyzer : _Internal.BasePageModelSecure
@@ -17,21 +18,21 @@ namespace Monitor.Pages
     public List<DailyPNLData> DailyPNL { get; set; }
     public List<DailyTCVData> DailyTCV { get; set; }
     public List<ProfitablePairsData> ProfitablePairs { get; set; }
+    public List<DailyStatsData> DailyStats { get; set; }
     public int ProfitDays { get; set; }
     public int TCVDays { get; set; }
+    public int SalesDays { get; set; }
     public List<MonthlyStatsData> MonthlyStats { get; set; }
 
     public string TradesChartDataJSON = "";
     public string CumulativeProfitChartDataJSON = "";
     public string TCVChartDataJSON = "";
     public string ProfitChartDataJSON = "";
-    public string BalanceChartDataJSON = "";
+    public string SalesChartDataJSON = "";
     public IEnumerable<KeyValuePair<string, double>> TopMarkets = null;
     public DateTime MinSellLogDate = Constants.confMinDate;
-    public Dictionary<DateTime, double> DailyGains = new Dictionary<DateTime, double>();
-    public Dictionary<DateTime, double> MonthlyGains = new Dictionary<DateTime, double>();
     public DateTimeOffset DateTimeNow = Constants.confMinDate;
-    public double totalCurrentValue = 0;
+
     
     public void OnGet()
     {
@@ -50,6 +51,7 @@ namespace Monitor.Pages
       DailyPNL = this.PTData.DailyPNL;
       DailyTCV = this.PTData.DailyTCV;
       ProfitablePairs = this.PTData.ProfitablePairs;
+      DailyStats = this.PTData.DailyStats;
       
       // Convert local offset time to UTC
       TimeSpan offsetTimeSpan = TimeSpan.Parse(PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
@@ -60,6 +62,7 @@ namespace Monitor.Pages
       BuildCumulativeProfitChartData();
       BuildTCVChartData();
     }
+
     private void BuildTCVChartData()
     {
         List<object> TCVPerDayList = new List<object>();
@@ -284,52 +287,69 @@ namespace Monitor.Pages
                   weight = 1;
               }
             totalMonths += weight;
-            //Console.WriteLine("Month: {0}, Weight: {1}", monthStat.Month, weight);
         }
         return (totalMonths, startDate, endDate);
     }
-    private void BuildTopMarkets()
-    {
-      var markets = PTData.SellLog.GroupBy(m => m.Market);
-      Dictionary<string, double> topMarketsDic = new Dictionary<string, double>();
-      foreach (var market in markets)
-      {
-        double totalProfit = 0;
-        totalProfit = PTData.SellLog.FindAll(m => m.Market == market.Key).Sum(m => m.Profit);
-        topMarketsDic.Add(market.Key, totalProfit);
-      }
-      TopMarkets = new SortedDictionary<string, double>(topMarketsDic).OrderByDescending(m => m.Value).Take(PTMagicConfiguration.GeneralSettings.Monitor.MaxTopMarkets);
-    }
+
+
     private void BuildSalesChartData()
     {
-      if (PTData.SellLog.Count > 0)
-      {
-        MinSellLogDate = PTData.SellLog.OrderBy(sl => sl.SoldDate).First().SoldDate.Date;
-        DateTime graphStartDate = DateTimeNow.DateTime.Date.AddDays(-1850);
-        if (MinSellLogDate > graphStartDate) graphStartDate = MinSellLogDate;
+        List<object> salesPerDayList = new List<object>();
+        List<object> buysPerDayList = new List<object>(); // New list for daily buys
 
-        int tradeDayIndex = 0;
-        string tradesPerDayJSON = "";
-        for (DateTime salesDate = graphStartDate; salesDate <= DateTimeNow.DateTime.Date; salesDate = salesDate.AddDays(1))
+        if (PTData.DailyStats.Count > 0)
         {
-          if (tradeDayIndex > 0)
-          {
-            tradesPerDayJSON += ",\n";
-          }
-          int trades = PTData.SellLog.FindAll(t => t.SoldDate.Date == salesDate.Date).Count;
-          tradesPerDayJSON += "{x: new Date('" + salesDate.Date.ToString("yyyy-MM-dd") + "'), y: " + trades + "}";
-          tradeDayIndex++;
-        }
-        TradesChartDataJSON = "[";
-        TradesChartDataJSON += "{";
-        TradesChartDataJSON += "key: 'Sales',";
-        TradesChartDataJSON += "color: '" + Constants.ChartLineColors[0] + "',";
-        TradesChartDataJSON += "values: [" + tradesPerDayJSON + "]";
-        TradesChartDataJSON += "}";
-        TradesChartDataJSON += "]";
+            // Get timezone offset
+            TimeSpan offset;
+            bool isNegative = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.StartsWith("-");
+            string offsetWithoutSign = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.TrimStart('+', '-');
 
-        
-      }
+            if (!TimeSpan.TryParse(offsetWithoutSign, out offset))
+            {
+                offset = TimeSpan.Zero; // If offset is invalid, set it to zero
+            }
+
+            DateTime endDate = DateTime.UtcNow.Add(isNegative ? -offset : offset).Date;
+
+            // Parse dates once and adjust them to the local timezone
+            Dictionary<DateTime, DailyStatsData> salesCountByDate = PTData.DailyStats
+                .ToDictionary(
+                    data => DateTime.ParseExact(data.Date, "d-M-yyyy", CultureInfo.InvariantCulture),
+                    data => data
+                );
+
+            DateTime earliestDataDate = salesCountByDate.Keys.Min();
+            DateTime startDate = earliestDataDate;
+
+            // Calculate the total days of data available
+            SalesDays = (endDate - startDate).Days;
+            int counter = 0; 
+            for (DateTime date = startDate; date <= endDate && counter < 30; date = date.AddDays(1)) // Check the counter
+            {
+                if (salesCountByDate.TryGetValue(date, out DailyStatsData dailyStatsData))
+                {
+                    // Use the totalSales value directly
+                    salesPerDayList.Add(new { x = new DateTimeOffset(date).ToUnixTimeMilliseconds(), y = dailyStatsData.TotalSales });
+
+                    // Add daily buys to the list
+                    buysPerDayList.Add(new { x = new DateTimeOffset(date).ToUnixTimeMilliseconds(), y = dailyStatsData.TotalBuys });
+                }
+            }
+
+            // Convert the lists to a JSON string using Newtonsoft.Json
+            SalesChartDataJSON = Newtonsoft.Json.JsonConvert.SerializeObject(new[] {
+                new {
+                    key = "Sales",
+                    color = Constants.ChartLineColors[1],
+                    values = salesPerDayList
+                },
+                new { // New JSON object for daily buys
+                    key = "Buys",
+                    color = Constants.ChartLineColors[0], // Use a different color for buys
+                    values = buysPerDayList
+                }
+            });
+        }
     }
-  }
+    }
 }

@@ -475,7 +475,16 @@ namespace Core.Main.DataObjects.PTMagicData
     public int SoldTimes { get; set; }
     public double Avg { get; set; }
   }  
-  
+  public class DailyStatsData  
+  {
+    public string Date { get; set; }
+    public int TotalSales { get; set; }
+    public int TotalBuys { get; set; }
+    public double TotalProfit { get; set; }
+    public double AvgProfit { get; set; }
+    
+    public double AvgGrowth { get; set; }
+  }  
   public class PTStrategy
   {
     public string type { get; set; }

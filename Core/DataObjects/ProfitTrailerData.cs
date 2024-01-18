@@ -22,6 +22,7 @@ namespace Core.Main.DataObjects
     private List<DailyTCVData> _dailyTCV = new List<DailyTCVData>();
     private List<MonthlyStatsData> _monthlyStats = new List<MonthlyStatsData>();
     private List<ProfitablePairsData> _profitablePairs = new List<ProfitablePairsData>();
+    private List<DailyStatsData> _dailyStats = new List<DailyStatsData>();
     private decimal? _totalProfit = null;
     public decimal? TotalProfit
     {
@@ -49,7 +50,8 @@ namespace Core.Main.DataObjects
     private DateTime _dcaLogRefresh = DateTime.UtcNow;
     private DateTime _miscRefresh = DateTime.UtcNow;
     private DateTime _propertiesRefresh = DateTime.UtcNow;  
-    private DateTime _profitablePairsRefresh = DateTime.UtcNow;  
+    private DateTime _profitablePairsRefresh = DateTime.UtcNow; 
+    private DateTime _dailyStatsRefresh = DateTime.UtcNow; 
     private volatile object _dailyPNLLock = new object();    
     private volatile object _dailyTCVLock = new object();       
     private volatile object _monthlyStatsLock = new object();    
@@ -59,8 +61,9 @@ namespace Core.Main.DataObjects
     private volatile object _dcaLock = new object();
     private volatile object _miscLock = new object();
     private volatile object _propertiesLock = new object();  
-    private volatile object _profitablePairsLock = new object();     
-    private TimeSpan? _offsetTimeSpan = null;  
+    private volatile object _profitablePairsLock = new object(); 
+    private volatile object _dailyStatsLock = new object();    
+    private TimeSpan? _offsetTimeSpan = null;
     public void DoLog(string message)
     {
         // Implement your logging logic here
@@ -132,6 +135,74 @@ namespace Core.Main.DataObjects
         TimeZoneOffset = PTData.timeZoneOffset,
       };
     }
+    public List<DailyStatsData> DailyStats
+    {
+      get
+      {
+          if (_dailyStats == null || DateTime.UtcNow > _dailyStatsRefresh)
+          {
+              lock (_dailyStatsLock)
+              {
+                  if (_dailyStats == null || DateTime.UtcNow > _dailyStatsRefresh)
+                  {
+                      using (var stream = GetDataFromProfitTrailerAsStream("/api/v2/data/stats"))
+                      using (var reader = new StreamReader(stream))
+                      using (var jsonReader = new JsonTextReader(reader))
+                      {
+                          JObject basicSection = null;
+                          JObject extraSection = null;
+
+                          while (jsonReader.Read())
+                          {
+                              if (jsonReader.TokenType == JsonToken.PropertyName)
+                              {
+                                  if ((string)jsonReader.Value == "basic")
+                                  {
+                                      jsonReader.Read(); // Move to the value of the "basic" property
+                                      basicSection = JObject.Load(jsonReader);
+                                  }
+                                  else if ((string)jsonReader.Value == "extra")
+                                  {
+                                      jsonReader.Read(); // Move to the value of the "extra" property
+                                      extraSection = JObject.Load(jsonReader);
+                                  }
+                              }
+
+                              if (basicSection != null && extraSection != null)
+                              {
+                                  break;
+                              }
+                          }
+
+                          if (basicSection != null)
+                          {
+                             if (extraSection != null)
+                              {
+                                  JArray dailyStatsSection = (JArray)extraSection["dailyStats"];
+                                  _dailyStats = dailyStatsSection.Select(j => BuildDailyStatsData(j as JObject)).ToList();
+                                  _dailyStatsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+          return _dailyStats;
+        }
+    }
+    private DailyStatsData BuildDailyStatsData(dynamic dailyStatsDataJson)
+    {
+        return new DailyStatsData()
+        {
+            Date = dailyStatsDataJson["date"],
+            TotalSales = dailyStatsDataJson["totalSales"],
+            TotalBuys = dailyStatsDataJson["totalBuys"],
+            TotalProfit = dailyStatsDataJson["totalProfitCurrency"],
+            AvgProfit = dailyStatsDataJson["avgProfit"], 
+            AvgGrowth = dailyStatsDataJson["avgGrowth"], 
+        };
+    }
+
     public PropertiesData Properties
     {
       get
@@ -198,7 +269,6 @@ namespace Core.Main.DataObjects
             return _stats;
         }
     }
-
     private StatsData BuildStatsData(dynamic statsDataJson)
     {
         return new StatsData()
@@ -295,10 +365,6 @@ namespace Core.Main.DataObjects
           return _dailyPNL;
         }
     }
-    public int GetTotalDays()
-    {
-        return DailyPNL?.Count ?? 0;
-    }
     private DailyPNLData BuildDailyPNLData(dynamic dailyPNLDataJson)
     {
         return new DailyPNLData()
@@ -345,14 +411,8 @@ namespace Core.Main.DataObjects
                                     break;
                                 }
                             }
-                            if (basicSection != null) // && 
-                                //((_totalProfit == null || 
-                                //!Decimal.Equals(_totalProfit.Value, basicSection["totalProfit"].Value<decimal>())) ||
-                                //(_totalSales == null || 
-                                //!Decimal.Equals(_totalSales.Value, basicSection["totalSales"].Value<decimal>()))))
-                            {
-                                //_totalProfit = basicSection["totalProfit"].Value<decimal>();
-                                //_totalSales = basicSection["totalSales"].Value<decimal>();
+                            if (basicSection != null) 
+                              {
                                 if (extraSection != null)
                                   {
                                       JObject profitablePairsSection = (JObject)extraSection["profitablePairs"];
@@ -390,10 +450,6 @@ namespace Core.Main.DataObjects
         };
     }
 
-
-
-
-
     public List<DailyTCVData> DailyTCV
     {
       get
@@ -408,47 +464,40 @@ namespace Core.Main.DataObjects
                       using (var reader = new StreamReader(stream))
                       using (var jsonReader = new JsonTextReader(reader))
                       {
-                          JObject basicSection = null;
-                          JObject extraSection = null;
+                        JObject basicSection = null;
+                        JObject extraSection = null;
 
                           while (jsonReader.Read())
                           {
-                              if (jsonReader.TokenType == JsonToken.PropertyName)
-                              {
-                                  if ((string)jsonReader.Value == "basic")
-                                  {
-                                      jsonReader.Read(); // Move to the value of the "basic" property
-                                      basicSection = JObject.Load(jsonReader);
-                                  }
-                                  else if ((string)jsonReader.Value == "extra")
-                                  {
-                                      jsonReader.Read(); // Move to the value of the "extra" property
-                                      extraSection = JObject.Load(jsonReader);
-                                  }
-                              }
+                            if (jsonReader.TokenType == JsonToken.PropertyName)
+                            {
+                                if ((string)jsonReader.Value == "basic")
+                                {
+                                    jsonReader.Read(); // Move to the value of the "basic" property
+                                    basicSection = JObject.Load(jsonReader);
+                                }
+                                else if ((string)jsonReader.Value == "extra")
+                                {
+                                    jsonReader.Read(); // Move to the value of the "extra" property
+                                    extraSection = JObject.Load(jsonReader);
+                                }
+                            }
 
-                              if (basicSection != null && extraSection != null)
-                              {
-                                  break;
-                              }
+                            if (basicSection != null && extraSection != null)
+                            {
+                                break;
+                            }
                           }
 
-                          if (basicSection != null) // && 
-                              //((_totalProfit == null || 
-                              //!Decimal.Equals(_totalProfit.Value, basicSection["totalProfit"].Value<decimal>())) ||
-                              //(_totalSales == null || 
-                              //!Decimal.Equals(_totalSales.Value, basicSection["totalSales"].Value<decimal>()))))
-                          {
-                              //_totalProfit = basicSection["totalProfit"].Value<decimal>();
-                              //_totalSales = basicSection["totalSales"].Value<decimal>();
-
+                          if (basicSection != null)
+                            {
                               if (extraSection != null)
                               {
                                   JArray dailyTCVSection = (JArray)extraSection["dailyTCVStats"];
                                   _dailyTCV = dailyTCVSection.Select(j => BuildDailyTCVData(j as JObject)).ToList();
                                   _dailyTCVRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
                               }
-                          }
+                            }
                       }
                   }
               }
@@ -509,14 +558,7 @@ namespace Core.Main.DataObjects
                             }
 
                             if (basicSection != null)// && 
-                                //((_totalProfit == null || 
-                                //!Decimal.Equals(_totalProfit.Value, basicSection["totalProfit"].Value<decimal>())) ||
-                                //(_totalSales == null || 
-                                //!Decimal.Equals(_totalSales.Value, basicSection["totalSales"].Value<decimal>()))))
-                            {
-                                //_totalProfit = basicSection["totalProfit"].Value<decimal>();
-                                //_totalSales = basicSection["totalSales"].Value<decimal>();
-
+                              {
                                 if (extraSection != null)
                                 {
                                     JArray monthlyStatsSection = (JArray)extraSection["monthlyStats"];
@@ -530,11 +572,6 @@ namespace Core.Main.DataObjects
             }
             return _monthlyStats;
         }
-    }
-
-    public int GetTotalMonths()
-    {
-        return MonthlyStats?.Count ?? 0;
     }
 
     private MonthlyStatsData BuildMonthlyStatsData(dynamic monthlyStatsDataJson)
@@ -580,7 +617,7 @@ namespace Core.Main.DataObjects
                     this.BuildSellLogData(sellDataPage);
                     pageIndex++;
                     requestedPages++;
-Console.WriteLine($"Importing sale: {pageIndex}");
+Console.WriteLine($"Importing salesLog: {pageIndex}");
 
                   }
                   else

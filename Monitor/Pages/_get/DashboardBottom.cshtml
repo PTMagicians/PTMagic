@@ -25,7 +25,8 @@
   
   <div class="col-md-3 px-1">
     <div class="card-box px-3" style="height:340px;">
-      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
+      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59" 
+      title="All charts set to refresh every @Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds seconds in your general settings."></div>
       @{
       string totalCurrentValueString = Model.totalCurrentValue.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
       if (Model.totalCurrentValue > 100) {
@@ -66,18 +67,21 @@
 
 <div class="row">
   <div class="col-md-5 px-1">
-    <div class="card-box px-2">
-      @* <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
+    <div class="card-box px-3">
+      @* <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeco;nds * 1000)" data-color="#aaa,#414d59"></div>
       <br> *@
-      <h4 class="m-t-0 m-b-20 header-title"><b>Market Trends at @Model.PTMagicConfiguration.GeneralSettings.Application.Exchange</b>
-      <small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)MarketAnalyzer">more</a></small></h4>
+      <h4 class="m-t-0 m-b-20 header-title">Live Trends <small>&nbsp;&nbsp;(@Model.PTMagicConfiguration.GeneralSettings.Application.Exchange)&nbsp;&nbsp</small> 
+        <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Set to refresh every @Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds seconds in general settings."></i>
+        <small class="pull-right" style="font-size: small"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)MarketAnalyzer">ANALYZER</a></small>
+      </h4>
       <table class="table table-sm">
         <thead>
           <tr>
             <th>Name</th>
             <th class="text-right">Markets</th>
             <th class="text-right">Timeframe</th>
-            <th class="text-right" data-toggle="tooltip" data-placement="top" title="Pairs exceeding this threshold are excluded from the trend average.">Threshold %</th>
+            <th class="text-right">Threshold&nbsp;&nbsp;<i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Pairs exceeding this threshold are excluded from the trend average."></i>
+            </th>
             <th class="text-right">Change</th>
           </tr>
         </thead>
@@ -109,9 +113,9 @@
                   }
                   else
                   {
-                    <td class="text-right">@marketTrend.TrendThreshold</td>
+                    <td class="text-right">@marketTrend.TrendThreshold %</td>
                   }
-                  <td class="text-right text-autocolor">@trendChangeOutput%</td>
+                  <td class="text-right text-autocolor" style="font-weight:bold;">@trendChangeOutput%</td>
                 </tr>
               }
             }
@@ -121,10 +125,11 @@
   </div>
   
   <div class="col-md-7 px-1">
-    <div class="card-box px-2">
-      @*<div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
-      <br>*@
-      <h4 class="m-t-0 m-b-20 header-title"><b>Sales Overview</b><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)SalesAnalyzer">more</a></small></h4>
+    <div class="card-box px-3">
+      <h4 class="m-t-0 m-b-20 header-title">Sales Overview
+        <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="All data acquired via Profit Trailer API."></i>
+        <small class="pull-right" style="font-size: small"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)SalesAnalyzer">ANALYZER</a></small>
+      </h4>
       @{
 
         double avgGrowthThisMonth = Model.PTData.MonthlyStats.FirstOrDefault(data => data.Order == 1)?.AvgGrowth ?? 0.0;
@@ -182,7 +187,7 @@
             <th class="text-right">Profit @Model.PTData.Misc.Market</th>
             @if (futuresFunding)
                 {
-                    <th class="text-right">Funding @Model.PTData.Misc.Market</th>
+                    <th class="text-right">Funding</th>
                 }
             <th class="text-right">@Model.PTData.Properties.Currency</th>
             <th class="text-right">Gain</th>
@@ -212,7 +217,7 @@
             <td class="text-right text-autocolor">@yesterdaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
           </tr>
           <tr>
-            <th>Last 7 Days</th>
+            <th>7 Days</th>
             <td class="text-right">@last7DaysSales</td>
             <td class="text-right text-autocolor">@last7DaysProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
              @if (futuresFunding)
@@ -223,7 +228,15 @@
             <td class="text-right text-autocolor">@last7DaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
           </tr>
           <tr>
-            <th>This Month</th>
+           @{
+                var timeParts = @Model.MiscData.TimeZoneOffset.Split(':');
+                var timeZoneOffsetHours = int.Parse(timeParts[0]);
+                var timeZoneOffset = TimeSpan.FromHours(timeZoneOffsetHours);
+                var timeZoneInfo = TimeZoneInfo.CreateCustomTimeZone("Custom", timeZoneOffset, "Custom", "Custom");
+                var currentDateTime = TimeZoneInfo.ConvertTime(DateTime.UtcNow, timeZoneInfo);
+                var currentMonthName = currentDateTime.ToString("MMMM");
+            }
+            <th>@currentMonthName</th>
             <td class="text-right">@thisMonthSales</td>
             <td class="text-right text-autocolor">@thisMonthProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
              @if (futuresFunding)
@@ -234,7 +247,11 @@
             <td class="text-right text-autocolor">@thisMonthPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
           </tr>
           <tr>
-            <th>Last Month</th>
+            @{
+              var previousMonthDateTime = currentDateTime.AddMonths(-1);
+              var previousMonthName = previousMonthDateTime.ToString("MMMM");
+            }
+            <th>@previousMonthName</th>
             <td class="text-right">@lastMonthSales</td>
             <td class="text-right text-autocolor">@lastMonthProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
              @if (futuresFunding)

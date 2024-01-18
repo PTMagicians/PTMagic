@@ -1,5 +1,6 @@
 ﻿@page
 @model SalesAnalyzer
+@using System.Globalization
 @{
   ViewData["Title"] = "";
 }
@@ -59,21 +60,39 @@
     </div>
   </div>
 
-@if (Model.PTData.SellLog.Count == 0) {
+
   <div class="row">
-    <div class="col-md-12">
-      <div class="card-box">
-        <h4 class="m-t-0 header-title">No Sales!</h4>
-        <p>Sorry, but your Profit Trailer did not sell anything so far. Please wait for the bot to have at least one sale and you will start seeing data in here.</p>
+    <div class="col-md-6">
+      <div class="card-box px-3" style="height:340px;">
+        @{ 
+          var days = Math.Min(Model.DailyStats.Count, 30);
+        }
+      <h4 class="m-t-0 m-b-20 header-title"><b>Daily Buys/Sales (@days Days) </b>
+        <div class="sales-chart">
+          <svg style="height:300px;width:100%"></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card-box px-3" style="height:340px;">
+        <h4 class="m-t-0 m-b-20 header-title"><b>Daily Profit (All Time) </b>
+        @if (!Model.ProfitChartDataJSON.Equals("")) {
+          <div class="profit-chart">
+            <svg style="height:300px;width:100%"></svg>
+          </div>
+        } else {
+          <p>Unable to load graph, no sales data found.</p>
+        }
       </div>
     </div>
   </div>
-} else {
+
   <div class="row">
     <div class="col-md-6">
       <div class="card-box">
         @{
-          int totalDays = Model.PTData.GetTotalDays();
+          int totalDays = Model.PTData.DailyPNL.Count;
           double startBalance = Model.MiscData.StartBalance;
           double totalSales = Model.PTData.Stats.TotalSales;
           double totalProfit = Model.PTData.Stats.TotalProfit;
@@ -92,14 +111,14 @@
           double avgMonthlyGain = totalPercentGain / totalMonths;
           double avgMonthlyFunding = totalFundingFees / totalMonths;
         }
-        <h4 class="m-t-0 header-title" style="display: inline;">Sales Analysis</h4>&nbsp;&nbsp;&nbsp;&nbsp;<span style="font-size: x-small"> (@startDate - @endDate)</span>
+        <h4 class="m-t-0 header-title" style="display: inline;">Averages</h4>&nbsp;&nbsp;&nbsp;&nbsp;<span style="font-size: x-small"> (@startDate - @endDate)</span>
         <table class="table table-striped table-sm">
           <thead>
             <tr>
               <th></th>
               <th class="text-right">Total</th>
-              <th class="text-right">AVG/Day (@totalDays Days)</th>
-              <th class="text-right">AVG/Month (@totalMonths Months) <small><i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" 
+              <th class="text-right">AVG/Day</span></th>
+              <th class="text-right">AVG/Month (@totalMonths Months)</span> <small><i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" 
                   title="Total months is based on the size of the actual calendar months."></i></small></th>
             </tr>
           </thead>
@@ -111,7 +130,7 @@
               <td class="text-right">@avgMonthlySales</td>
             </tr>
             <tr>
-              <th>Profit @Model.PTData.Misc.Market</th>
+              <th> @Model.PTData.Misc.Market</th>
               <td class="text-right text-autocolor">@totalProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
               <td class="text-right text-autocolor">@Math.Round(totalProfit / totalDays, 8).ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
               <td class="text-right text-autocolor">@avgMonthlyProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
@@ -119,14 +138,14 @@
              @if(Model.PropertiesData.IsLeverageExchange)
               {
                 <tr>
-                  <th>Funding Fees</th>
+                  <th>Funding</th>
                   <td class="text-right text-autocolor">@Html.Raw(Math.Round(totalFundingFees,8).ToString("#0.00000000", new System.Globalization.CultureInfo("en-US")))</td>
                   <td class="text-right text-autocolor">@Html.Raw(Math.Round(totalFundingFees / totalDays,8).ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US")))</td>
                   <td class="text-right text-autocolor">@Html.Raw(Math.Round(totalFundingFees / totalMonths,8).ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US")))</td>
                 </tr>
               }
             <tr>
-              <th>Profit @Model.PTData.Properties.Currency</th>
+              <th>@Model.PTData.Properties.Currency</th>
               <td class="text-right text-autocolor">@Html.Raw(Math.Round(totalProfitFiat,0).ToString("#,#0", new System.Globalization.CultureInfo("en-US")))</td>
               <td class="text-right text-autocolor">@Html.Raw(Math.Round(totalProfitFiat / totalDays, 0).ToString("#,#0", new System.Globalization.CultureInfo("en-US")))</td>
               <td class="text-right text-autocolor">@Html.Raw(Math.Round(totalProfitFiat / totalMonths, 0).ToString("#,#0", new System.Globalization.CultureInfo("en-US")))</td>
@@ -200,30 +219,87 @@
 
   <div class="row">
     <div class="col-md-6">
-      <div class="card-box px-3" style="height:340px;">
-      <h4 class="m-t-0 m-b-20 header-title"><b>Daily Sales </b>
-        <div class="trades-chart">
-          <svg style="height:300px;width:100%"></svg>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-6">
-      <div class="card-box px-3" style="height:340px;">
-        <h4 class="m-t-0 m-b-20 header-title"><b>Daily Profit  </b>
-        @if (!Model.ProfitChartDataJSON.Equals("")) {
-          <div class="profit-chart">
-            <svg style="height:300px;width:100%"></svg>
-          </div>
-        } else {
-          <p>Unable to load graph, no sales data found.</p>
+      <div class="card-box">
+        @{ 
+          var maxDays = Math.Min(Model.DailyStats.Count, Math.Min(Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxDailySummaries, 30));
         }
+        <h4 class="m-t-0 header-title">Last @maxDays Days</h4>
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>Day</th>
+              <th class="text-right">Buys</th>
+              <th class="text-right">Sales</th>
+              <th class="text-right">Profit @Model.Summary.MainMarket</th>
+              <th class="text-right">Profit @Model.PTData.Properties.Currency</th>
+              <th class="text-right">% Gain</th>
+            </tr>
+          </thead>
+          <tbody>
+            @{
+              for (int i = 0; i < maxDays; i++)
+              {
+                DateTime salesDate = DateTime.ParseExact(Model.PTData.DailyStats[i].Date, "d-M-yyyy", CultureInfo.InvariantCulture);
+                var buys = Model.PTData.DailyStats[i].TotalBuys;
+                var sales = Model.PTData.DailyStats[i].TotalSales;
+                var profit = Model.PTData.DailyStats[i].TotalProfit;
+                var avgProfit = Model.PTData.DailyStats[i].AvgProfit;
+                var profitFiat = Math.Round(profit * Model.PTData.Misc.FiatConversionRate, 0);
+
+              <tr>
+                <td>@salesDate.ToString("yyyy-MM-dd")</td>
+                <td class="text-right text-autocolor"">@buys</td>
+                <td class="text-right text-autocolor"">@sales</td>
+                <td class="text-right text-autocolor">@profit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
+                <td class="text-right text-autocolor">@Math.Round(profitFiat,0).ToString("#,#0", new System.Globalization.CultureInfo("en-US"))</td>
+                <td class="text-right text-autocolor">@avgProfit.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+              </tr>
+              }
+            }
+          </tbody>
+        </table>
       </div>
     </div>
-  </div>
 
-  <div class="row">
-    <div class="col-sm-12">
+    <div class="col-sm-6">
+      <div class="card-box">
+        @{ 
+            var maxMonths = Math.Min(Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxMonthlySummaries, Model.MonthlyStats.Count);
+          }
+        <h4 class="m-t-0 header-title">Last @maxMonths months</h4>
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th class="text-right">Sales</th>
+              <th class="text-right">Profit @Model.Summary.MainMarket</th>
+              <th class="text-right">Profit @Model.PTData.Properties.Currency</th>
+              <th class="text-right">% Growth</th>
+            </tr>
+          </thead>
+          <tbody>
+            @{
+              for (int i = 0; i < maxMonths; i++)
+              {
+                DateTime monthDate = DateTime.ParseExact(Model.PTData.MonthlyStats[i].Month, "M-yyyy", CultureInfo.InvariantCulture);
+                string monthName = monthDate.ToString("MMMM yyyy", CultureInfo.InvariantCulture);
+                var sales = Model.PTData.MonthlyStats[i].TotalSales;
+                var profit = Model.PTData.MonthlyStats[i].TotalProfitCurrency;
+                var profitFiat = Math.Round(profit * Model.PTData.Misc.FiatConversionRate, 0);
+                var growth = Model.PTData.MonthlyStats[i].AvgGrowth;
+              <tr>
+                <td>@monthName</td>
+                <td class="text-right text-autocolor">@sales</td>
+                <td class="text-right text-autocolor">@profit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
+                <td class="text-right text-autocolor">@profitFiat</td>
+                <td class="text-right text-autocolor">@growth %</td>
+              </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
       <div class="card-box">
         <h4 class="m-t-0 header-title"><b>Top @Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxTopMarkets Sales Markets</b></h4>
         <table class="tablesaw table m-b-0" data-tablesaw-sortable data-tablesaw-sortable-switch>
@@ -262,109 +338,8 @@
         </table>
       </div>
     </div>
-  </div>
 
-  <div class="row">
-    <div class="col-md-6">
-      <div class="card-box">
-        <h4 class="m-t-0 header-title">Last @Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxDailySummaries days</h4>
-        <table class="table table-sm">
-          <thead>
-            <tr>
-              <th>Day</th>
-              <th class="text-right">Sales</th>
-              <th class="text-right">Profit @Model.Summary.MainMarket</th>
-              <th class="text-right">Profit @Model.Summary.MainFiatCurrency</th>
-              <th class="text-right">% Gain</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (DateTime salesDate = Model.DateTimeNow.DateTime.Date; salesDate >= Model.DateTimeNow.DateTime.AddDays(-Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxDailySummaries) && salesDate >= Model.MinSellLogDate; salesDate = salesDate.AddDays(-1)) {
-              List<Core.Main.DataObjects.PTMagicData.SellLogData> salesDateSales = Model.PTData.SellLog.FindAll(sl => sl.SoldDate.Date == salesDate);
-              double salesDateProfit = 0;
-              salesDateProfit = salesDateSales.Sum(sl => sl.Profit);
-              double salesDateProfitFiat = Math.Round(salesDateProfit * Model.Summary.MainMarketPrice, 2);
-              double salesDateStartBalance = Model.PTData.GetSnapshotBalance(salesDate);
-              double salesDateGain = Math.Round(salesDateProfit / salesDateStartBalance * 100, 2);
-              <tr>
-                <td><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)_get/SalesList/?d=@salesDate.ToString("yyyy-MM-dd")" data-remote="false" data-toggle="modal" data-target="#salesList">@salesDate.ToShortDateString()</a></td>
-                <td class="text-right">@salesDateSales.Count</td>
-                <td class="text-right text-autocolor">@salesDateProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
-                <td class="text-right text-autocolor">@Html.Raw(Model.MainFiatCurrencySymbol + salesDateProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
-                <td class="text-right text-autocolor">@salesDateGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="col-md-6">
-      <div class="card-box">
-        <h4 class="m-t-0 header-title">Last @Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxMonthlySummaries months</h4>
-
-        <table class="table table-sm">
-          <thead>
-            <tr>
-              <th>Month</th>
-              <th class="text-right">Sales</th>
-              <th class="text-right">Profit @Model.Summary.MainMarket</th>
-              <th class="text-right">Profit @Model.Summary.MainFiatCurrency</th>
-              <th class="text-right">% Gain</th>
-              <th class="text-right">AVG %/Day</th>
-            </tr>
-          </thead>
-          <tbody>
-            @{
-              DateTime minSellLogMonthDate = new DateTime(Model.MinSellLogDate.Year, Model.MinSellLogDate.Month, 1).Date;
-              DateTime salesMonthStartDate = new DateTime(Model.DateTimeNow.DateTime.Year, Model.DateTimeNow.DateTime.Month, 1).Date;
-            }
-            @for (DateTime salesMonthDate = salesMonthStartDate.Date; salesMonthDate >= Model.DateTimeNow.DateTime.AddMonths(-Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxMonthlySummaries) && salesMonthDate >= minSellLogMonthDate; salesMonthDate = salesMonthDate.AddMonths(-1)) {
-              List<Core.Main.DataObjects.PTMagicData.SellLogData> salesMonthSales = Model.PTData.SellLog.FindAll(sl => sl.SoldDate.Date.Month == salesMonthDate.Month && sl.SoldDate.Date.Year == salesMonthDate.Year);
-              double salesDateProfit = 0;
-              salesDateProfit = salesMonthSales.Sum(sl => sl.Profit);
-              double salesDateProfitFiat = Math.Round(salesDateProfit * Model.Summary.MainMarketPrice, 2);
-              double salesDateStartBalance = Model.PTData.GetSnapshotBalance(salesMonthDate);
-              double salesDateGain = Math.Round(salesDateProfit / salesDateStartBalance * 100, 2);
-              double salesDateAVGDailyGain = 0;
-              double monthDailyProfit = 0;
-              int days = 0;
-              for (int d = 1; d <= DateTime.DaysInMonth(salesMonthDate.Year, salesMonthDate.Month); d++) {
-                DateTime monthDay = salesMonthDate.AddDays(-salesMonthDate.Day + d);
-                if (monthDay <= Model.DateTimeNow) {
-                  days++;
-                  List<Core.Main.DataObjects.PTMagicData.SellLogData> monthDaySales = Model.PTData.SellLog.FindAll(sl => sl.SoldDate.Date == monthDay.Date);
-                  double monthDayProfit = 0;
-                  monthDayProfit = monthDaySales.Sum(sl => sl.Profit);
-                  double monthDayStartBalance = Model.PTData.GetSnapshotBalance(monthDay);
-                  monthDailyProfit += Math.Round(monthDayProfit / monthDayStartBalance * 100, 2);
-                }
-              }
-              salesDateAVGDailyGain = Math.Round(monthDailyProfit / days, 2);
-            <tr>
-              <td><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)_get/SalesList/?m=@salesMonthDate.ToString("yyyy-MM")" data-remote="false" data-toggle="modal" data-target="#salesList">@salesMonthDate.ToString("MMMM", new System.Globalization.CultureInfo("en-US"))</a></td>
-              <td class="text-right text-autocolor">@salesMonthSales.Count</td>
-              <td class="text-right text-autocolor">@salesDateProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
-              <td class="text-right text-autocolor">@Html.Raw(Model.MainFiatCurrencySymbol + salesDateProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
-              <td class="text-right text-autocolor">@salesDateGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
-              <td class="text-right text-autocolor">@salesDateAVGDailyGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
-            </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  
-
-  @* <div id="salesList" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
-    <div class="modal-dialog modal-full">
-      <div class="modal-content">
-        <i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i>
-      </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-  </div><!-- /.modal --> *@
+   </div>
 }
 
 @section Scripts {
@@ -387,32 +362,54 @@
   <script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/datatables/buttons.print.min.js"></script>
   <script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/datatables/buttons.colVis.min.js"></script>
 
+
   <script type="text/javascript">
   (function ($) {
     'use strict';
-    nv.addGraph(function () {
-      var lineChart = nv.models.lineChart();
-      var height = 300;
-      /**/
-      var chartData = @Html.Raw(Model.TradesChartDataJSON);
-      /**/
-      lineChart.useInteractiveGuideline(true);
-      lineChart.xAxis.tickFormat(function (d) { return d3.time.format('%Y/%m/%d')(new Date(d)); });
-      lineChart.yAxis.axisLabel('Daily Sales').tickFormat(d3.format(','));
-      d3.select('.trades-chart svg').attr('perserveAspectRatio', 'xMinYMid').datum(chartData).transition().duration(500).call(lineChart);
-      nv.utils.windowResize(lineChart.update);
-      return lineChart;
-    });
+    $('[role="tooltip"]').remove();
+    $('[data-toggle="tooltip"]').tooltip();
+    $('.text-autocolor').autocolor(false);
 
-    $("#salesList").on("show.bs.modal", function (e) {
-      $(this).find(".modal-content").html('<i class="fa fa-circle-o-notch fa-spin fa-3x fa-fw"></i>');
-      var link = $(e.relatedTarget);
-      $(this).find(".modal-content").load(link.attr("href"), function () {
-        $('.text-autocolor').autocolor(false);
+    var salesChart;  // Keep a reference to the chart
+    var salesData;  // Keep a reference to the data
+
+    @if (!Model.SalesChartDataJSON.Equals("")) {
+    <text>
+      nv.addGraph(function () {
+        salesChart = nv.models.lineChart();
+        var height = 300;
+        salesChart.useInteractiveGuideline(true);
+        salesChart.xAxis.tickFormat(function (d) { return d3.time.format('%m/%d')(new Date(d)); });
+        salesChart.yAxis.axisLabel('').tickFormat(d3.format(',.2f'));
+
+        salesData = @Html.Raw(Model.SalesChartDataJSON);
+
+        d3.select('.sales-chart svg')
+          .datum(salesData)
+          .transition().duration(0)
+          .call(salesChart);
+
+          // Add mouseleave, and mousemove event listeners to hide tooltip
+        d3.select('.sales-chart').on('mouseleave', function() {
+          d3.select('.nvtooltip').style('opacity', 0);
+        });
+
+        d3.select('body').on('mousemove', function() {
+          var chartBounds = d3.select('.sales-chart')[0][0].getBoundingClientRect();
+          var mouseX = d3.event.clientX;
+          var mouseY = d3.event.clientY;
+
+          if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
+            d3.select('.nvtooltip').style('opacity', 0);
+          }
+        });
+        nv.utils.windowResize(salesChart.update);
+        return salesChart;
       });
-    });
+    </text>
+    }
   })(jQuery);
-  </script>
+</script>
 
   <script type="text/javascript">
     (function ($) {
