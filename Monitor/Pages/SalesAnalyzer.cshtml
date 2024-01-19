@@ -118,8 +118,8 @@
               <th></th>
               <th class="text-right">Total</th>
               <th class="text-right">AVG/Day</span></th>
-              <th class="text-right">AVG/Month (@totalMonths Months)</span> <small><i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" 
-                  title="Total months is based on the size of the actual calendar months."></i></small></th>
+              <th class="text-right">AVG/Month</span> <small><i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" 
+                  title="Months are based on the size of the calendar months.  Weighted to compensate for partial months."></i></small></th>
             </tr>
           </thead>
           <tbody>
@@ -130,7 +130,7 @@
               <td class="text-right">@avgMonthlySales</td>
             </tr>
             <tr>
-              <th> @Model.PTData.Misc.Market</th>
+              <th>@Model.PTData.Misc.Market</th>
               <td class="text-right text-autocolor">@totalProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
               <td class="text-right text-autocolor">@Math.Round(totalProfit / totalDays, 8).ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
               <td class="text-right text-autocolor">@avgMonthlyProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
@@ -151,10 +151,10 @@
               <td class="text-right text-autocolor">@Html.Raw(Math.Round(totalProfitFiat / totalMonths, 0).ToString("#,#0", new System.Globalization.CultureInfo("en-US")))</td>
             </tr>
             <tr>
-              <th>% Gain</th>
-              <td class="text-right text-autocolor">@totalPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
-              <td class="text-right text-autocolor">@avgDailyGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
-              <td class="text-right text-autocolor">@avgMonthlyGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+              <th>Gain</th>
+              <td class="text-right text-autocolor">@totalPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</td>
+              <td class="text-right text-autocolor">@avgDailyGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</td>
+              <td class="text-right text-autocolor">@avgMonthlyGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</td>
             </tr>
           </tbody>
         </table>
@@ -175,9 +175,9 @@
           <thead>
             <tr>
               <th class="text-right"></th>
-              <th class="text-right">Est. TCV</th>
-              <th class="text-right">Est. @Model.PTData.Properties.Currency Value</th>
-              <th class="text-right">Est. Gain</th>
+              <th class="text-right">@Model.PTData.Misc.Market</th>
+              <th class="text-right">@Model.PTData.Properties.Currency</th>
+              <th class="text-right">Gain</th>
             </tr>
           </thead>
           <tbody>
@@ -185,37 +185,40 @@
               <th>1 Week</th>
               <td class="text-right text-autocolor">@estimatedBalance1Week.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
               <td class="text-right text-autocolor">@Html.Raw(Math.Round(estimatedBalance1Week * Model.MiscData.FiatConversionRate, 0).ToString("#,#0", new System.Globalization.CultureInfo("en-US")))</td>
-              <td class="text-right text-autocolor">@Math.Round((estimatedBalance1Week - totalCurrentValue) / totalCurrentValue * 100, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+              <td class="text-right text-autocolor">@Math.Round((estimatedBalance1Week - totalCurrentValue) / totalCurrentValue * 100, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</td>
             </tr>
             <tr>
               <th>1 Month</th>
               <td class="text-right text-autocolor">@estimatedBalance1Month.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
               <td class="text-right text-autocolor">@Html.Raw(Math.Round(estimatedBalance1Month * Model.MiscData.FiatConversionRate, 0).ToString("#,#0", new System.Globalization.CultureInfo("en-US")))</td>
-              <td class="text-right text-autocolor">@Math.Round((estimatedBalance1Month - totalCurrentValue) / totalCurrentValue * 100, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+              <td class="text-right text-autocolor">@Math.Round((estimatedBalance1Month - totalCurrentValue) / totalCurrentValue * 100, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</td>
             </tr>
             <tr>
               <th>3 Months</th>
               <td class="text-right text-autocolor">@estimatedBalance3Months.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
               <td class="text-right text-autocolor">@Html.Raw(Math.Round(estimatedBalance3Months * Model.MiscData.FiatConversionRate, 0).ToString("#,#0", new System.Globalization.CultureInfo("en-US")))</td>
-              <td class="text-right text-autocolor">@Math.Round((estimatedBalance3Months - totalCurrentValue) / totalCurrentValue * 100, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+              <td class="text-right text-autocolor">@Math.Round((estimatedBalance3Months - totalCurrentValue) / totalCurrentValue * 100, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</td>
             </tr>
             <tr>
               <th>6 Months</th>
               <td class="text-right text-autocolor">@estimatedBalance6Months.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
               <td class="text-right text-autocolor">@Html.Raw(Math.Round(estimatedBalance6Months * Model.MiscData.FiatConversionRate, 0).ToString("#,#0", new System.Globalization.CultureInfo("en-US")))</td>
-              <td class="text-right text-autocolor">@Math.Round((estimatedBalance6Months - totalCurrentValue) / totalCurrentValue * 100, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+              <td class="text-right text-autocolor">@Math.Round((estimatedBalance6Months - totalCurrentValue) / totalCurrentValue * 100, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</td>
             </tr>
             <tr>
               <th>1 Year</th>
               <td class="text-right text-autocolor">@estimatedBalance1Year.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
               <td class="text-right text-autocolor">@Html.Raw(Math.Round(estimatedBalance1Year * Model.MiscData.FiatConversionRate, 0).ToString("#,#0", new System.Globalization.CultureInfo("en-US")))</td>
-              <td class="text-right text-autocolor">@Math.Round((estimatedBalance1Year - totalCurrentValue) / totalCurrentValue * 100, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+              <td class="text-right text-autocolor">@Math.Round((estimatedBalance1Year - totalCurrentValue) / totalCurrentValue * 100, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
+
+  
+    
 
   <div class="row">
     <div class="col-md-6">
@@ -232,7 +235,7 @@
               <th class="text-right">Sales</th>
               <th class="text-right">Profit @Model.Summary.MainMarket</th>
               <th class="text-right">Profit @Model.PTData.Properties.Currency</th>
-              <th class="text-right">% Gain</th>
+              <th class="text-right">Gain</th>
             </tr>
           </thead>
           <tbody>
@@ -252,7 +255,7 @@
                 <td class="text-right text-autocolor"">@sales</td>
                 <td class="text-right text-autocolor">@profit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
                 <td class="text-right text-autocolor">@Math.Round(profitFiat,0).ToString("#,#0", new System.Globalization.CultureInfo("en-US"))</td>
-                <td class="text-right text-autocolor">@avgProfit.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+                <td class="text-right text-autocolor">@avgProfit.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</td>
               </tr>
               }
             }
@@ -261,7 +264,7 @@
       </div>
     </div>
 
-    <div class="col-sm-6">
+    <div class="col-md-6">
       <div class="card-box">
         @{ 
             var maxMonths = Math.Min(Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxMonthlySummaries, Model.MonthlyStats.Count);
@@ -274,7 +277,7 @@
               <th class="text-right">Sales</th>
               <th class="text-right">Profit @Model.Summary.MainMarket</th>
               <th class="text-right">Profit @Model.PTData.Properties.Currency</th>
-              <th class="text-right">% Growth</th>
+              <th class="text-right">Growth</th>
             </tr>
           </thead>
           <tbody>
@@ -282,11 +285,11 @@
               for (int i = 0; i < maxMonths; i++)
               {
                 DateTime monthDate = DateTime.ParseExact(Model.PTData.MonthlyStats[i].Month, "M-yyyy", CultureInfo.InvariantCulture);
-                string monthName = monthDate.ToString("MMMM yyyy", CultureInfo.InvariantCulture);
+                string monthName = monthDate.ToString("MMMM", CultureInfo.InvariantCulture);
                 var sales = Model.PTData.MonthlyStats[i].TotalSales;
                 var profit = Model.PTData.MonthlyStats[i].TotalProfitCurrency;
                 var profitFiat = Math.Round(profit * Model.PTData.Misc.FiatConversionRate, 0);
-                var growth = Model.PTData.MonthlyStats[i].AvgGrowth;
+                var growth = Math.Round(Model.PTData.MonthlyStats[i].AvgGrowth,2);
               <tr>
                 <td>@monthName</td>
                 <td class="text-right text-autocolor">@sales</td>
@@ -298,8 +301,10 @@
             }
           </tbody>
         </table>
-      </div>
+      </div
+    </div> 
 
+    @* <div class="col-md-6"> *@
       <div class="card-box">
         <h4 class="m-t-0 header-title"><b>Top @Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxTopMarkets Sales Markets</b></h4>
         <table class="tablesaw table m-b-0" data-tablesaw-sortable data-tablesaw-sortable-switch>
@@ -310,7 +315,6 @@
               <th scope="col" class="text-right" data-tablesaw-sortable-col>Profit @Model.PTData.Misc.Market</th>
               <th scope="col" class="text-right" data-tablesaw-sortable-col>Sales</th>
               <th scope="col" class="text-right" data-tablesaw-sortable-col>Avg/Trade</th>
-              <th scope="col" class="text-right" data-tablesaw-sortable-col>Profit @Model.PTData.Properties.Currency</th>
             </tr>
           </thead>
           <tbody>
@@ -329,7 +333,6 @@
                 <td class="text-right text-autocolor-saw">@profit</td>
                 <td class="text-right">@sales</td>
                 <td class="text-right text-autocolor-saw">@avg </td>
-                <td class="text-right text-autocolor-saw">@profitFiat</td>
               </tr>
               rank++;
               }
@@ -337,9 +340,9 @@
           </tbody>
         </table>
       </div>
-    </div>
+    @* </div> *@
 
-   </div>
+  </div>
 }
 
 @section Scripts {

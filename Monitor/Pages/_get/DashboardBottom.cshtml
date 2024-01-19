@@ -12,7 +12,7 @@
 <div class="row">
   <div class="col-md-5 px-1">
     <div class="card-box px-2" style="height:340px;">
-      <h4 class="m-t-0 m-b-20 header-title" style="display: inline;"><b>Market Trend History  </b><i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="@Math.Round(Model.DataHours, 1) hours of data available. Currently set to show @Model.PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours hours in general settings."></i></h4>
+      <h4 class="m-t-0 m-b-20 header-title" style="display: inline;"><b>Market Trend History  </b><i class="fa fa-info-circle text-muted"  style="font-size x-small" data-toggle="tooltip" data-placement="top" title="@Math.Round(Model.DataHours, 1) hours of data available. Currently set to show @Model.PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours hours in general settings."></i></h4>
       @if (!Model.TrendChartDataJSON.Equals("")) {
         <div class="trend-chart">
           <svg style="height: 300px;width: 100%;"></svg>
@@ -53,7 +53,7 @@
   <div class="col-md-4 px-1">
     @*<div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>*@
     <div class="card-box px-2" style="height:340px;">
-      <h4 class="m-t-0 m-b-20 header-title" style="display: inline;"><b>Daily Profit  </b><i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="@Model.ProfitDays days of data available. Currently Set to @Model.PTMagicConfiguration.GeneralSettings.Monitor.ProfitsMaxTimeframeDays days in general settings."></i>
+      <h4 class="m-t-0 m-b-20 header-title" style="display: inline;">Daily Profit <i class="fa fa-info-circle text-muted"  style="font-size x-small" data-toggle="tooltip" data-placement="top" title="@Model.ProfitDays days of data available. Currently Set to @Model.PTMagicConfiguration.GeneralSettings.Monitor.ProfitsMaxTimeframeDays days in general settings."></i>
       @if (!Model.ProfitChartDataJSON.Equals("")) {
         <div class="profit-chart">
           <svg style="height:300px;width:100%"></svg>
@@ -70,9 +70,9 @@
     <div class="card-box px-3">
       @* <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeco;nds * 1000)" data-color="#aaa,#414d59"></div>
       <br> *@
-      <h4 class="m-t-0 m-b-20 header-title">Live Trends <small>&nbsp;&nbsp;(@Model.PTMagicConfiguration.GeneralSettings.Application.Exchange)&nbsp;&nbsp</small> 
-        <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Set to refresh every @Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds seconds in general settings."></i>
-        <small class="pull-right" style="font-size: small"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)MarketAnalyzer">ANALYZER</a></small>
+      <h4 class="m-t-0 m-b-20 header-title">Live Trends 
+        <i class="fa fa-info-circle text-muted"  style="font-size small" data-toggle="tooltip" data-placement="top" title="Set to refresh every @Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds seconds in general settings."></i>
+        <small class="pull-right" style="font-size: x-small"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)MarketAnalyzer">ANALYZER</a></small>
       </h4>
       <table class="table table-sm">
         <thead>
@@ -80,7 +80,7 @@
             <th>Name</th>
             <th class="text-right">Markets</th>
             <th class="text-right">Timeframe</th>
-            <th class="text-right">Threshold&nbsp;&nbsp;<i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Pairs exceeding this threshold are excluded from the trend average."></i>
+            <th class="text-right">Threshold&nbsp;&nbsp;<i class="fa fa-info-circle text-muted"  data-toggle="tooltip" data-placement="top" title="Pairs exceeding this threshold are excluded from the trend average."></i>
             </th>
             <th class="text-right">Change</th>
           </tr>
@@ -115,7 +115,7 @@
                   {
                     <td class="text-right">@marketTrend.TrendThreshold %</td>
                   }
-                  <td class="text-right text-autocolor" style="font-weight:bold;">@trendChangeOutput%</td>
+                  <td class="text-right text-autocolor" style="font-weight:bold;">@trendChangeOutput %</td>
                 </tr>
               }
             }
@@ -127,7 +127,7 @@
   <div class="col-md-7 px-1">
     <div class="card-box px-3">
       <h4 class="m-t-0 m-b-20 header-title">Sales Overview
-        <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="All data acquired via Profit Trailer API."></i>
+        <i class="fa fa-info-circle text-muted" style="font-size x-small" data-toggle="tooltip" data-placement="top" title="All data acquired via Profit Trailer API."></i>
         <small class="pull-right" style="font-size: small"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)SalesAnalyzer">ANALYZER</a></small>
       </h4>
       @{
@@ -203,7 +203,7 @@
                   <td class="text-right text-autocolor">@todaysFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
                 }
             <td class="text-right text-autocolor">@Html.Raw(todaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
-            <td class="text-right text-autocolor">@todaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+            <td class="text-right text-autocolor">@todaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</td>
           </tr>
           <tr>
             <th>Yesterday</th>
@@ -214,7 +214,7 @@
                   <td class="text-right text-autocolor">@yesterdaysFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
                 }
             <td class="text-right text-autocolor">@Html.Raw(yesterdaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
-            <td class="text-right text-autocolor">@yesterdaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+            <td class="text-right text-autocolor">@yesterdaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</td>
           </tr>
           <tr>
             <th>7 Days</th>
@@ -225,7 +225,7 @@
                   <td class="text-right text-autocolor">@last7DaysFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
                   }
             <td class="text-right text-autocolor">@Html.Raw(last7DaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
-            <td class="text-right text-autocolor">@last7DaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+            <td class="text-right text-autocolor">@last7DaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</td>
           </tr>
           <tr>
            @{
@@ -244,7 +244,7 @@
                   <td class="text-right text-autocolor">@thisMonthFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
                   }
             <td class="text-right text-autocolor">@Html.Raw(thisMonthProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
-            <td class="text-right text-autocolor">@thisMonthPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+            <td class="text-right text-autocolor">@thisMonthPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</td>
           </tr>
           <tr>
             @{
@@ -259,7 +259,7 @@
                   <td class="text-right text-autocolor">@lastMonthFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
                   }
             <td class="text-right text-autocolor">@Html.Raw(lastMonthProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
-            <td class="text-right text-autocolor">@lastMonthPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+            <td class="text-right text-autocolor">@lastMonthPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</td>
           </tr>
           <tr>
             <th>Total</th>
@@ -270,7 +270,7 @@
                   <td class="text-right text-autocolor">@totalFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
                   }
             <td class="text-right text-autocolor">@Html.Raw(totalProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
-            <td class="text-right text-autocolor">@totalPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+            <td class="text-right text-autocolor">@totalPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</td>
           </tr>
         </tbody>
       </table>

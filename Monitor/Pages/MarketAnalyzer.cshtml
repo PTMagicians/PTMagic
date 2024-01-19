@@ -155,14 +155,14 @@ else
 <div class="row">
   <div class="col-sm-12">
     <div class="card-box">
-      <h4 class="m-t-0 m-b-20 header-title"><b>Market Trend Averages at @Model.PTMagicConfiguration.GeneralSettings.Application.Exchange</b></h4>
+      <h4 class="m-t-0 m-b-20 header-title"><b>Live Trends at @Model.PTMagicConfiguration.GeneralSettings.Application.Exchange</b></h4>
       <table class="table table-sm">
         <thead>
           <tr>
             <th>Name</th>
             <th class="text-right">Markets</th>
             <th class="text-right">Timeframe</th>
-            <th class="text-right">Threshold %</th>
+            <th class="text-right">Threshold <i class="fa fa-info-circle text-muted"  data-toggle="tooltip" data-placement="top" title="Pairs exceeding this threshold are excluded from the trend average."></i></th>
             <th class="text-right">Change</th>
           </tr>
         </thead>
@@ -190,9 +190,9 @@ else
                   }
                   else
                   {
-                    <td class="text-right">@marketTrend.TrendThreshold</td>
+                    <td class="text-right">@marketTrend.TrendThreshold %</td>
                   }
-                <td class="text-right text-autocolor">@trendChangeOutput%</td>
+                <td class="text-right text-autocolor bold-text" >@trendChangeOutput%</td>
               </tr>
             }
           }
