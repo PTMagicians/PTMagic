@@ -30,7 +30,7 @@ namespace Monitor.Pages
     public string ProfitChartDataJSON = "";
     public string SalesChartDataJSON = "";
     public IEnumerable<KeyValuePair<string, double>> TopMarkets = null;
-    public DateTime MinSellLogDate = Constants.confMinDate;
+    //public DateTime MinSellLogDate = Constants.confMinDate;
     public DateTimeOffset DateTimeNow = Constants.confMinDate;
 
     

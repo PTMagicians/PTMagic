@@ -247,12 +247,12 @@
                 </div>
               </div>
 
-              <div class="form-group row">
+              @* <div class="form-group row">
                 <label class="col-md-4 col-form-label">Max Sales Records<i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The number of sales records PTMagic pulls from Profit Trailer.  Changes require a Monitor Restart."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Monitor_MaxSalesRecords" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxSalesRecords.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>
-              </div>
+              </div> *@
 
              <div class="form-group row">
                 <label class="col-md-4 col-form-label">Max Top Markets <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The amount of top markets being show in your Sales Analyzer."></i></label>
@@ -276,7 +276,7 @@
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Max Dashboard Buy Entries <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The amount of entries being shown in your dashboard for possible buys."></i></label>
+                <label class="col-md-4 col-form-label">Max Dashboard Buy Entries <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The amount of possible buys shown in your dashboard. Setting this to 0 completely hides the PBL table."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Monitor_MaxDashboardBuyEntries" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxDashboardBuyEntries.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>

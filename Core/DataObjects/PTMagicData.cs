@@ -61,7 +61,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public int RefreshSeconds { get; set; } = 30;
     public int BagAnalyzerRefreshSeconds { get; set; } = 5;
     public int BuyAnalyzerRefreshSeconds { get; set; } = 5;
-    public int MaxSalesRecords { get; set; } = 99999;
+    //public int MaxSalesRecords { get; set; } = 99999;
     public int MaxTopMarkets { get; set; } = 20;
     public int MaxDailySummaries { get; set; } = 10;
     public int MaxMonthlySummaries { get; set; } = 10;
@@ -399,20 +399,20 @@ namespace Core.Main.DataObjects.PTMagicData
     public double Last24hVolume { get; set; } = 0;
   }
  
- public class SellLogData
-  {
-    public double SoldAmount { get; set; }
-    public DateTime SoldDate { get; set; }
-    public int BoughtTimes { get; set; }
-    public string Market { get; set; }
-    public double ProfitPercent { get; set; }
-    public double Profit { get; set; }
-    public double AverageBuyPrice { get; set; }
-    public double TotalCost { get; set; }
-    public double SoldPrice { get; set; }
-    public double SoldValue { get; set; }
-    public double TotalSales { get; set; } 
-  }
+//  public class SellLogData
+//   {
+//     public double SoldAmount { get; set; }
+//     public DateTime SoldDate { get; set; }
+//     public int BoughtTimes { get; set; }
+//     public string Market { get; set; }
+//     public double ProfitPercent { get; set; }
+//     public double Profit { get; set; }
+//     public double AverageBuyPrice { get; set; }
+//     public double TotalCost { get; set; }
+//     public double SoldPrice { get; set; }
+//     public double SoldValue { get; set; }
+//     public double TotalSales { get; set; } 
+//   }
 
   public class StatsData  
   {

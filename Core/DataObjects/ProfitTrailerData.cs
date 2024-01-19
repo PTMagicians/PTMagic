@@ -35,7 +35,7 @@ namespace Core.Main.DataObjects
         get { return _totalSales; }
         set { _totalSales = value; }
     }
-    private List<SellLogData> _sellLog = new List<SellLogData>();
+    //private List<SellLogData> _sellLog = new List<SellLogData>();
     private List<DCALogData> _dcaLog = new List<DCALogData>();
     private List<BuyLogData> _buyLog = new List<BuyLogData>();
     private string _ptmBasePath = "";
@@ -46,7 +46,7 @@ namespace Core.Main.DataObjects
     private DateTime _monthlyStatsRefresh = DateTime.UtcNow;
     private DateTime _statsRefresh = DateTime.UtcNow;
     private DateTime _buyLogRefresh = DateTime.UtcNow;
-    private DateTime _sellLogRefresh = DateTime.UtcNow;
+    //private DateTime _sellLogRefresh = DateTime.UtcNow;
     private DateTime _dcaLogRefresh = DateTime.UtcNow;
     private DateTime _miscRefresh = DateTime.UtcNow;
     private DateTime _propertiesRefresh = DateTime.UtcNow;  
@@ -585,56 +585,56 @@ namespace Core.Main.DataObjects
             Order = monthlyStatsDataJson["order"],
         };
     }
-    public List<SellLogData> SellLog
-    {
-      get
-      {
+//     public List<SellLogData> SellLog
+//     {
+//       get
+//       {
          
-        if (_sellLog == null || (DateTime.UtcNow > _sellLogRefresh))
-        {
-            lock (_sellLock)
-            {
-              // Thread double locking
-              if (_sellLog == null || (DateTime.UtcNow > _sellLogRefresh))
-              {
-                _sellLog.Clear();
+//         if (_sellLog == null || (DateTime.UtcNow > _sellLogRefresh))
+//         {
+//             lock (_sellLock)
+//             {
+//               // Thread double locking
+//               if (_sellLog == null || (DateTime.UtcNow > _sellLogRefresh))
+//               {
+//                 _sellLog.Clear();
 
 
-                // Page through the sales data summarizing it.
-                bool exitLoop = false;
-                int pageIndex = 1;
+//                 // Page through the sales data summarizing it.
+//                 bool exitLoop = false;
+//                 int pageIndex = 1;
                 
-                // 1 record per page to allow user to set max records to retrieve
-                int maxPages = _systemConfiguration.GeneralSettings.Monitor.MaxSalesRecords;
-                int requestedPages = 0;
+//                 // 1 record per page to allow user to set max records to retrieve
+//                 int maxPages = _systemConfiguration.GeneralSettings.Monitor.MaxSalesRecords;
+//                 int requestedPages = 0;
                 
-                while (!exitLoop && requestedPages < maxPages)
-                {
-                  var sellDataPage = GetDataFromProfitTrailer("/api/v2/data/sales?Page=1&perPage=1&sort=SOLDDATE&sortDirection=DESCENDING&page=" + pageIndex);
-                  if (sellDataPage != null && sellDataPage.data.Count > 0)
-                  {
-                    // Add sales data page to collection
-                    this.BuildSellLogData(sellDataPage);
-                    pageIndex++;
-                    requestedPages++;
-Console.WriteLine($"Importing salesLog: {pageIndex}");
+//                 while (!exitLoop && requestedPages < maxPages)
+//                 {
+//                   var sellDataPage = GetDataFromProfitTrailer("/api/v2/data/sales?Page=1&perPage=1&sort=SOLDDATE&sortDirection=DESCENDING&page=" + pageIndex);
+//                   if (sellDataPage != null && sellDataPage.data.Count > 0)
+//                   {
+//                     // Add sales data page to collection
+//                     this.BuildSellLogData(sellDataPage);
+//                     pageIndex++;
+//                     requestedPages++;
+// Console.WriteLine($"Importing salesLog: {pageIndex}");
 
-                  }
-                  else
-                  {
-                    // All data retrieved
-                    exitLoop = true;
-                  }
-                }
+//                   }
+//                   else
+//                   {
+//                     // All data retrieved
+//                     exitLoop = true;
+//                   }
+//                 }
 
-                // Update sell log refresh time
-                _sellLogRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds -1);
-              }
-            }
-          }
-        return _sellLog;
-      }
-    }
+//                 // Update sell log refresh time
+//                 _sellLogRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds -1);
+//               }
+//             }
+//           }
+//         return _sellLog;
+//       }
+//     }
 
 
     public List<DCALogData> DCALog
@@ -736,18 +736,18 @@ Console.WriteLine($"Importing salesLog: {pageIndex}");
     }
     
     
-    public double GetSnapshotBalance(DateTime snapshotDateTime)
-    {
-      double result = _misc.StartBalance;
+    // public double GetSnapshotBalance(DateTime snapshotDateTime)
+    // {
+    //   double result = _misc.StartBalance;
       
-      result += this.SellLog.FindAll(sl => sl.SoldDate.Date < snapshotDateTime.Date).Sum(sl => sl.Profit);
-      result += this.TransactionData.Transactions.FindAll(t => t.UTCDateTime < snapshotDateTime).Sum(t => t.Amount);
+    //   result += this.SellLog.FindAll(sl => sl.SoldDate.Date < snapshotDateTime.Date).Sum(sl => sl.Profit);
+    //   result += this.TransactionData.Transactions.FindAll(t => t.UTCDateTime < snapshotDateTime).Sum(t => t.Amount);
       
-      // Calculate holdings for snapshot date
-      result += this.DCALog.FindAll(pairs => pairs.FirstBoughtDate <= snapshotDateTime).Sum(pairs => pairs.CurrentValue);
+    //   // Calculate holdings for snapshot date
+    //   result += this.DCALog.FindAll(pairs => pairs.FirstBoughtDate <= snapshotDateTime).Sum(pairs => pairs.CurrentValue);
      
-      return result;
-    }
+    //   return result;
+    // }
     
     private dynamic GetDataFromProfitTrailer(string callPath, bool arrayReturned = false)
     {
@@ -803,39 +803,39 @@ Console.WriteLine($"Importing salesLog: {pageIndex}");
     }
 
     
-    private void BuildSellLogData(dynamic rawSellLogData)
-    {
-      foreach (var rsld in rawSellLogData.data)
-      {
-        SellLogData sellLogData = new SellLogData();
-        sellLogData.SoldAmount = rsld.soldAmount;
-        sellLogData.BoughtTimes = rsld.boughtTimes;
-        sellLogData.Market = rsld.market;
-        sellLogData.ProfitPercent = rsld.profit;
-        sellLogData.SoldPrice = rsld.currentPrice;
-        sellLogData.AverageBuyPrice = rsld.avgPrice;
-        sellLogData.TotalCost = rsld.totalCost;
-        sellLogData.Profit = rsld.profitCurrency;
+    // private void BuildSellLogData(dynamic rawSellLogData)
+    // {
+    //   foreach (var rsld in rawSellLogData.data)
+    //   {
+    //     SellLogData sellLogData = new SellLogData();
+    //     sellLogData.SoldAmount = rsld.soldAmount;
+    //     sellLogData.BoughtTimes = rsld.boughtTimes;
+    //     sellLogData.Market = rsld.market;
+    //     sellLogData.ProfitPercent = rsld.profit;
+    //     sellLogData.SoldPrice = rsld.currentPrice;
+    //     sellLogData.AverageBuyPrice = rsld.avgPrice;
+    //     sellLogData.TotalCost = rsld.totalCost;
+    //     sellLogData.Profit = rsld.profitCurrency;
         
         
-        //Convert Unix Timestamp to Datetime
-        System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
-        dtDateTime = dtDateTime.AddSeconds((double)rsld.soldDate).ToUniversalTime();
+    //     //Convert Unix Timestamp to Datetime
+    //     System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
+    //     dtDateTime = dtDateTime.AddSeconds((double)rsld.soldDate).ToUniversalTime();
         
         
-        // Profit Trailer sales are saved in UTC
-        DateTimeOffset ptSoldDate = DateTimeOffset.Parse(dtDateTime.Year.ToString() + "-" + dtDateTime.Month.ToString("00") + "-" + dtDateTime.Day.ToString("00") + "T" + dtDateTime.Hour.ToString("00") + ":" + dtDateTime.Minute.ToString("00") + ":" + dtDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+    //     // Profit Trailer sales are saved in UTC
+    //     DateTimeOffset ptSoldDate = DateTimeOffset.Parse(dtDateTime.Year.ToString() + "-" + dtDateTime.Month.ToString("00") + "-" + dtDateTime.Day.ToString("00") + "T" + dtDateTime.Hour.ToString("00") + ":" + dtDateTime.Minute.ToString("00") + ":" + dtDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
         
         
-        // Convert UTC sales time to local offset time
+    //     // Convert UTC sales time to local offset time
        
-        ptSoldDate = ptSoldDate.ToOffset(OffsetTimeSpan);
+    //     ptSoldDate = ptSoldDate.ToOffset(OffsetTimeSpan);
         
-        sellLogData.SoldDate = ptSoldDate.DateTime;
+    //     sellLogData.SoldDate = ptSoldDate.DateTime;
        
-        _sellLog.Add(sellLogData);
-      }
-    }
+    //     _sellLog.Add(sellLogData);
+    //   }
+    // }
 
     private void BuildDCALogData(dynamic rawDCALogData, dynamic rawPairsLogData, dynamic rawPendingLogData, dynamic rawWatchModeLogData)
     {
