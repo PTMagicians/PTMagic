@@ -32,18 +32,7 @@ namespace Monitor.Pages
         HttpContext.Session.SetString("LoggedIn" + PTMagicConfiguration.GeneralSettings.Monitor.Port.ToString(), DateTime.UtcNow.ToString("yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'fff'Z'"));
         PTMagicConfiguration.GeneralSettings.Monitor.IsPasswordProtected = true;
         //PTMagicConfiguration.WriteGeneralSettings();
-        if (cbRememberMe != null)
-        {
-          if (cbRememberMe.Equals("on", StringComparison.InvariantCultureIgnoreCase))
-          {
-            CookieOptions cookieOption = new CookieOptions();
-            cookieOption.Expires = DateTime.UtcNow.AddYears(1);
-
-            string cookieValue = EncryptionHelper.Encrypt(encryptedPassword);
-
-            Response.Cookies.Append("PTMRememberMeKey", cookieValue, cookieOption);
-          }
-        }
+       
 
         Response.Redirect(PTMagicConfiguration.GeneralSettings.Monitor.RootUrl);
       }
