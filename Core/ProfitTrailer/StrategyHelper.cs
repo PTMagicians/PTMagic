@@ -437,7 +437,7 @@ namespace Core.ProfitTrailer
               }
               else
               {
-                strategyText += "<span class=\"label label-warning\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"CONDITIONAL FORMULA\">FORM</span> ";
+                strategyText += "";
               }
             }
             else

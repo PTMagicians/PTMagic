@@ -50,7 +50,7 @@ namespace Monitor
       services.AddDistributedMemoryCache();
       services.AddSession(options =>
       {
-        options.IdleTimeout = TimeSpan.FromSeconds(900);
+        options.IdleTimeout = TimeSpan.FromSeconds(1800);
         options.Cookie.HttpOnly = true;
         options.Cookie.Name = "PTMagicMonitor" + systemConfiguration.GeneralSettings.Monitor.Port.ToString();
       });

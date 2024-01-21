@@ -11,8 +11,8 @@
 
 <div class="row">
   <div class="col-md-5 px-1">
-    <div class="card-box px-2" style="height:305px;">
-      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
+    <div class="card-box px-2" style="height:340px;">
+      <h4 class="m-t-0 m-b-20 header-title" style="display: inline;"><b>Market Trend History  </b><i class="fa fa-info-circle text-muted"  style="font-size x-small" data-toggle="tooltip" data-placement="top" title="@Math.Round(Model.DataHours, 1) hours of data available. Currently set to show @Model.PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours hours at @Model.PTMagicConfiguration.GeneralSettings.Monitor.GraphIntervalMinutes intervals, in general settings."></i></h4>
       @if (!Model.TrendChartDataJSON.Equals("")) {
         <div class="trend-chart">
           <svg style="height: 300px;width: 100%;"></svg>
@@ -22,9 +22,11 @@
       }
     </div>
   </div>
+  
   <div class="col-md-3 px-1">
-    <div class="card-box px-3" style="height:305px;">
-      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
+    <div class="card-box px-3" style="height:340px;">
+      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59" 
+      title="All charts set to refresh every @Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds seconds in your general settings."></div>
       @{
       string totalCurrentValueString = Model.totalCurrentValue.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
       if (Model.totalCurrentValue > 100) {
@@ -34,8 +36,8 @@
       <div id="AssetDistribution" class="container">        
         <div class="text-center">
           <small>
-            <span data-toggle="tooltip" data-placement="top" title="Starting balance from PTM settings">Start: &nbsp; <text class="text-autocolor"> @Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance @Model.Summary.MainMarket </text></span>
-            <span data-toggle="tooltip" data-placement="top" title="TCV gain on starting balance"> &emsp; &emsp; Gain:&nbsp;<text class="text-autocolor">@Math.Round(((Model.totalCurrentValue - Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance) / Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance) * 100, 2)%</text></span>
+            <span data-toggle="tooltip" data-placement="top" title="Starting balance from PTM settings">Start: &nbsp; <text class="text-autocolor"> @Model.MiscData.StartBalance @Model.Summary.MainMarket </text></span>
+            <span data-toggle="tooltip" data-placement="top" title="TCV gain on starting balance"> &emsp; &emsp; Gain:&nbsp;<text class="text-autocolor">@Math.Round(((Model.totalCurrentValue - Model.MiscData.StartBalance) / Model.MiscData.StartBalance) * 100, 2)%</text></span>
           </small>
         </div>
         <div class="text-center">
@@ -49,8 +51,9 @@
   </div>
 
   <div class="col-md-4 px-1">
-    <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
-    <div class="card-box px-2" style="height:305px;">
+    @*<div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>*@
+    <div class="card-box px-2" style="height:340px;">
+      <h4 class="m-t-0 m-b-20 header-title" style="display: inline;">Daily Profit <i class="fa fa-info-circle text-muted"  style="font-size x-small" data-toggle="tooltip" data-placement="top" title="@Model.ProfitDays days of data available. Currently Set to @Model.PTMagicConfiguration.GeneralSettings.Monitor.ProfitsMaxTimeframeDays days in general settings."></i>
       @if (!Model.ProfitChartDataJSON.Equals("")) {
         <div class="profit-chart">
           <svg style="height:300px;width:100%"></svg>
@@ -61,144 +64,213 @@
     </div>
   </div>
 </div>
+
 <div class="row">
-  <div class="col-md-6 px-1">
-    <div class="card-box px-2">
-      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
-      <br>
-      <h4 class="m-t-0 m-b-20 header-title"><b>Market Trends at @Model.PTMagicConfiguration.GeneralSettings.Application.Exchange</b>
-      <small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)MarketAnalyzer">more</a></small></h4>
+  <div class="col-md-5 px-1">
+    <div class="card-box px-3">
+      @* <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeco;nds * 1000)" data-color="#aaa,#414d59"></div>
+      <br> *@
+      <h4 class="m-t-0 m-b-20 header-title">Live Trends 
+        <i class="fa fa-info-circle text-muted"  style="font-size small" data-toggle="tooltip" data-placement="top" title="Set to refresh every @Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds seconds in general settings."></i>
+        <small class="pull-right" style="font-size: x-small"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)MarketAnalyzer">ANALYZER</a></small>
+      </h4>
       <table class="table table-sm">
         <thead>
           <tr>
             <th>Name</th>
             <th class="text-right">Markets</th>
             <th class="text-right">Timeframe</th>
-            <th class="text-right" data-toggle="tooltip" data-placement="top" title="Pairs exceeding this threshold are excluded from the trend average.">Threshold %</th>
+            <th class="text-right">Threshold&nbsp;&nbsp;<i class="fa fa-info-circle text-muted"  data-toggle="tooltip" data-placement="top" title="Pairs exceeding this threshold are excluded from the trend average."></i>
+            </th>
             <th class="text-right">Change</th>
           </tr>
         </thead>
         <tbody>
           @foreach (var marketTrend in Model.MarketTrends.OrderBy(mt => mt.TrendMinutes)) {
-            if (Model.Summary.MarketTrendChanges.ContainsKey(marketTrend.Name)) {
-              double trendChange = Model.Summary.MarketTrendChanges[marketTrend.Name].OrderByDescending(mtc => mtc.TrendDateTime).First().TrendChange;
-              string trendChangeOutput = trendChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
+              if (Model.Summary.MarketTrendChanges.ContainsKey(marketTrend.Name)) {
+                double trendChange = Model.Summary.MarketTrendChanges[marketTrend.Name].Last().TrendChange;
+                string trendChangeOutput = trendChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
 
-              int marketCount = marketTrend.MaxMarkets;
-              string marketCountString = marketCount.ToString();
+                int marketCount = marketTrend.MaxMarkets;
+                string marketCountString = marketCount.ToString();
 
-              if (marketCount == 0) {
-                marketCountString = "All";
-              } else if (marketCount > Model.Summary.MarketSummary.Keys.Count && marketTrend.Platform.Equals("Exchange", StringComparison.InvariantCultureIgnoreCase)) {
-                marketCountString = Model.Summary.MarketSummary.Keys.Count.ToString();
+                if (marketCount == 0) {
+                  marketCountString = "All";
+                } else if (marketCount > Model.Summary.MarketSummary.Keys.Count && marketTrend.Platform.Equals("Exchange", StringComparison.InvariantCultureIgnoreCase)) {
+                  marketCountString = Model.Summary.MarketSummary.Keys.Count.ToString();
+                }
+
+                // Cache the result of SplitCamelCase(marketTrend.Name)
+                string splitCamelCaseName = Core.Helper.SystemHelper.SplitCamelCase(marketTrend.Name);
+
+                <tr>
+                  <td>@splitCamelCaseName</td> <!-- Use the cached value here -->
+                  <td class="text-right">@marketCountString</td>
+                  <td class="text-right">@Core.Helper.SystemHelper.GetProperDurationTime(marketTrend.TrendMinutes * 60, false)</td>
+                  @if (marketTrend.TrendThreshold == 0)
+                  {
+                    <td class="text-right">--</td>
+                  }
+                  else
+                  {
+                    <td class="text-right">@marketTrend.TrendThreshold %</td>
+                  }
+                  <td class="text-right text-autocolor" style="font-weight:bold;">@trendChangeOutput %</td>
+                </tr>
               }
-              <tr>
-                <td>@Core.Helper.SystemHelper.SplitCamelCase(marketTrend.Name)</td>
-                <td class="text-right">@marketCountString</td>
-                <td class="text-right">@Core.Helper.SystemHelper.GetProperDurationTime(marketTrend.TrendMinutes * 60, false)</td>
-                @if (marketTrend.TrendThreshold == 0)
-                {
-                  <td class="text-right">--</td>
-                }
-                else
-                {
-                  <td class="text-right">@marketTrend.TrendThreshold</td>
-                }
-                <td class="text-right text-autocolor">@trendChangeOutput%</td>
-              </tr>
             }
-          }
         </tbody>
       </table>
     </div>
   </div>
   
-  <div class="col-md-6 px-1">
-    <div class="card-box px-2">
-      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>
-      <br>
-      <h4 class="m-t-0 m-b-20 header-title"><b>Sales Overview</b><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)SalesAnalyzer">more</a></small></h4>
+  <div class="col-md-7 px-1">
+    <div class="card-box px-3">
+      <h4 class="m-t-0 m-b-20 header-title">Sales Overview
+        <i class="fa fa-info-circle text-muted" style="font-size x-small" data-toggle="tooltip" data-placement="top" title="All data acquired via Profit Trailer API."></i>
+        <small class="pull-right" style="font-size: small"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)SalesAnalyzer">ANALYZER</a></small>
+      </h4>
       @{
 
-        double totalProfit = 0;
-        totalProfit = Model.PTData.SellLog.Sum(s => s.Profit);
-        double totalProfitFiat = Math.Round(totalProfit * Model.Summary.MainMarketPrice, 2);
-        double percentGain = Math.Round(totalProfit / Model.PTMagicConfiguration.GeneralSettings.Application.StartBalance * 100, 2);
-        string percentGainText = percentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
-        if (Model.PTData.TransactionData.Transactions.Count > 0) 
-        {
-          percentGainText = "<i class=\"fa fa-info-circle text-muted\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"You have added at least one manual transaction, so the total gain percentage cannot be calculated.\"></i>";
-        }
+        double avgGrowthThisMonth = Model.PTData.MonthlyStats.FirstOrDefault(data => data.Order == 1)?.AvgGrowth ?? 0.0;
+        double avgGrowthLastMonth = Model.PTData.MonthlyStats.FirstOrDefault(data => data.Order == 2)?.AvgGrowth ?? 0.0;
 
-        double todaysProfit = 0;
-        todaysProfit = Model.PTData.SellLogToday.Sum(s => s.Profit);
-        double todaysStartBalance = Model.PTData.GetSnapshotBalance(Model.DateTimeNow.DateTime);
-        double todaysProfitFiat = Math.Round(todaysProfit * Model.Summary.MainMarketPrice, 2);
-        double todaysPercentGain = Math.Round(todaysProfit / todaysStartBalance * 100, 2);
+        //var startingBalance = Model.MiscData.StartBalance;
+        var totalCurrentValue = Model.totalCurrentValue;
+        var overviewStats = Model.StatsData; 
 
-        double yesterdaysProfit = 0;
-        yesterdaysProfit = Model.PTData.SellLogYesterday.Sum(s => s.Profit);
-        double yesterdaysStartBalance = Model.PTData.GetSnapshotBalance(Model.DateTimeNow.DateTime.AddDays(-1));
-        double yesterdaysProfitFiat = Math.Round(yesterdaysProfit * Model.Summary.MainMarketPrice, 2);
-        double yesterdaysPercentGain = Math.Round(yesterdaysProfit / yesterdaysStartBalance * 100, 2);
+        var todaysSales = overviewStats.SalesToday;
+        var todaysProfit = overviewStats.ProfitToday;
+        var todaysFunding = overviewStats.FundingToday;
+        var todaysPercentGain = overviewStats.ProfitPercToday + Model.PTData.Stats.TotalFundingPercToday;
+        
+        var yesterdaysSales = overviewStats.SalesYesterday;
+        var yesterdaysProfit = overviewStats.ProfitYesterday;
+        var yesterdaysFunding = overviewStats.FundingYesterday;
+        var yesterdaysPercentGain = overviewStats.ProfitPercYesterday + Model.PTData.Stats.TotalFundingPercYesterday;
 
-        double last7DaysProfit = 0;
-        last7DaysProfit = Model.PTData.SellLogLast7Days.Sum(s => s.Profit);
-        double last7DaysStartBalance = Model.PTData.GetSnapshotBalance(Model.DateTimeNow.DateTime.AddDays(-7));
-        double last7DaysProfitFiat = Math.Round(last7DaysProfit * Model.Summary.MainMarketPrice, 2);
-        double last7DaysPercentGain = Math.Round(last7DaysProfit / last7DaysStartBalance * 100, 2);
+        var last7DaysSales = overviewStats.SalesWeek;
+        var last7DaysProfit = overviewStats.ProfitWeek;
+        var last7DaysFunding = overviewStats.FundingWeek;
+        var last7DaysPercentGain = overviewStats.ProfitPercWeek + Model.PTData.Stats.TotalFundingPercWeek;
 
-        double last30DaysProfit = 0;
-        last30DaysProfit = Model.PTData.SellLogLast30Days.Sum(s => s.Profit);
-        double last30DaysStartBalance = Model.PTData.GetSnapshotBalance(Model.DateTimeNow.DateTime.AddDays(-30));
-        double last30DaysProfitFiat = Math.Round(last30DaysProfit * Model.Summary.MainMarketPrice, 2);
-        double last30DaysPercentGain = Math.Round(last30DaysProfit / last30DaysStartBalance * 100, 2);
+        var thisMonthSales = overviewStats.SalesThisMonth;
+        var thisMonthProfit = overviewStats.ProfitThisMonth;
+        var thisMonthFunding = overviewStats.FundingThisMonth;
+        var thisMonthPercentGain = avgGrowthThisMonth;
+
+        var lastMonthSales = overviewStats.SalesLastMonth;
+        var lastMonthProfit = overviewStats.ProfitLastMonth;
+        var lastMonthFunding = overviewStats.FundingLastMonth;
+        var lastMonthPercentGain = avgGrowthLastMonth;
+
+        var totalSales = overviewStats.TotalSales;
+        var totalProfit = overviewStats.TotalProfit;
+        var totalFunding = overviewStats.FundingTotal;
+        var totalPercentGain = overviewStats.TotalProfitPerc + Model.PTData.Stats.TotalFundingPerc;
+
+        double todaysProfitFiat = Math.Round((todaysProfit + todaysFunding) * Model.PTData.Misc.FiatConversionRate, 2);
+        double yesterdaysProfitFiat = Math.Round((yesterdaysProfit + yesterdaysFunding) * Model.PTData.Misc.FiatConversionRate, 2);
+        double last7DaysProfitFiat = Math.Round((last7DaysProfit + last7DaysFunding) * Model.PTData.Misc.FiatConversionRate, 2);
+        double thisMonthProfitFiat = Math.Round((thisMonthProfit + thisMonthFunding) * Model.PTData.Misc.FiatConversionRate, 2);
+        double lastMonthProfitFiat = Math.Round((lastMonthProfit + lastMonthFunding) * Model.PTData.Misc.FiatConversionRate, 2);
+        double totalProfitFiat = Math.Round((totalProfit + totalFunding) * Model.PTData.Misc.FiatConversionRate, 2);
+
+        bool futuresFunding = Model.PropertiesData.IsLeverageExchange;
+
       }
       <table class="table table-sm">
         <thead>
           <tr>
             <th></th>
             <th class="text-right">Sales</th>
-            <th class="text-right">Profit @Model.Summary.MainMarket</th>
-            <th class="text-right">Profit @Model.Summary.MainFiatCurrency</th>
+            <th class="text-right">Profit @Model.PTData.Misc.Market</th>
+            @if (futuresFunding)
+                {
+                    <th class="text-right">Funding</th>
+                }
+            <th class="text-right">@Model.PTData.Properties.Currency</th>
             <th class="text-right">Gain</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <th>Today</th>
-            <td class="text-right">@Model.PTData.SellLogToday.Count</td>
+            <td class="text-right">@overviewStats.SalesToday</td>
             <td class="text-right text-autocolor">@todaysProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
-            <td class="text-right text-autocolor">@Html.Raw(Model.MainFiatCurrencySymbol + todaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
-            <td class="text-right text-autocolor">@todaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+             @if (futuresFunding)
+                {
+                  <td class="text-right text-autocolor">@todaysFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
+                }
+            <td class="text-right text-autocolor">@Html.Raw(todaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
+            <td class="text-right text-autocolor">@todaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</td>
           </tr>
           <tr>
             <th>Yesterday</th>
-            <td class="text-right">@Model.PTData.SellLogYesterday.Count</td>
+            <td class="text-right">@yesterdaysSales</td>
             <td class="text-right text-autocolor">@yesterdaysProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
-            <td class="text-right text-autocolor">@Html.Raw(Model.MainFiatCurrencySymbol + yesterdaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
-            <td class="text-right text-autocolor">@yesterdaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+             @if (futuresFunding)
+                {
+                  <td class="text-right text-autocolor">@yesterdaysFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
+                }
+            <td class="text-right text-autocolor">@Html.Raw(yesterdaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
+            <td class="text-right text-autocolor">@yesterdaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</td>
           </tr>
           <tr>
-            <th>Last 7 Days</th>
-            <td class="text-right">@Model.PTData.SellLogLast7Days.Count</td>
+            <th>7 Days</th>
+            <td class="text-right">@last7DaysSales</td>
             <td class="text-right text-autocolor">@last7DaysProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
-            <td class="text-right text-autocolor">@Html.Raw(Model.MainFiatCurrencySymbol + last7DaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
-            <td class="text-right text-autocolor">@last7DaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+             @if (futuresFunding)
+                {
+                  <td class="text-right text-autocolor">@last7DaysFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
+                  }
+            <td class="text-right text-autocolor">@Html.Raw(last7DaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
+            <td class="text-right text-autocolor">@last7DaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</td>
           </tr>
           <tr>
-            <th>Last 30 Days</th>
-            <td class="text-right">@Model.PTData.SellLogLast30Days.Count</td>
-            <td class="text-right text-autocolor">@last30DaysProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
-            <td class="text-right text-autocolor">@Html.Raw(Model.MainFiatCurrencySymbol + last30DaysProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
-            <td class="text-right text-autocolor">@last30DaysPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</td>
+           @{
+                var timeParts = @Model.MiscData.TimeZoneOffset.Split(':');
+                var timeZoneOffsetHours = int.Parse(timeParts[0]);
+                var timeZoneOffset = TimeSpan.FromHours(timeZoneOffsetHours);
+                var timeZoneInfo = TimeZoneInfo.CreateCustomTimeZone("Custom", timeZoneOffset, "Custom", "Custom");
+                var currentDateTime = TimeZoneInfo.ConvertTime(DateTime.UtcNow, timeZoneInfo);
+                var currentMonthName = currentDateTime.ToString("MMMM");
+            }
+            <th>@currentMonthName</th>
+            <td class="text-right">@thisMonthSales</td>
+            <td class="text-right text-autocolor">@thisMonthProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
+             @if (futuresFunding)
+                {
+                  <td class="text-right text-autocolor">@thisMonthFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
+                  }
+            <td class="text-right text-autocolor">@Html.Raw(thisMonthProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
+            <td class="text-right text-autocolor">@thisMonthPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</td>
+          </tr>
+          <tr>
+            @{
+              var previousMonthDateTime = currentDateTime.AddMonths(-1);
+              var previousMonthName = previousMonthDateTime.ToString("MMMM");
+            }
+            <th>@previousMonthName</th>
+            <td class="text-right">@lastMonthSales</td>
+            <td class="text-right text-autocolor">@lastMonthProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
+             @if (futuresFunding)
+                {
+                  <td class="text-right text-autocolor">@lastMonthFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
+                  }
+            <td class="text-right text-autocolor">@Html.Raw(lastMonthProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
+            <td class="text-right text-autocolor">@lastMonthPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</td>
           </tr>
           <tr>
             <th>Total</th>
-            <td class="text-right">@Model.PTData.SellLog.Count</td>
+            <td class="text-right">@totalSales</td>
             <td class="text-right text-autocolor">@totalProfit.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
-            <td class="text-right text-autocolor">@Html.Raw(Model.MainFiatCurrencySymbol + totalProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
-            <td class="text-right text-autocolor">@Html.Raw(percentGainText)</td>
+             @if (futuresFunding)
+                {
+                  <td class="text-right text-autocolor">@totalFunding.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
+                  }
+            <td class="text-right text-autocolor">@Html.Raw(totalProfitFiat.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))</td>
+            <td class="text-right text-autocolor">@totalPercentGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</td>
           </tr>
         </tbody>
       </table>
@@ -210,74 +282,176 @@
 <script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/nvd3/nv.d3.min.js"></script>
 <script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/tablesaw/js/tablesaw.js"></script>
 <script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/tablesaw/js/tablesaw-init.js"></script>
+
 <script type="text/javascript">
-   $(document).ready(function () {
-      $(".cdev").circlos();
-      $('[data-toggle="tooltip"]').tooltip();
-      $('.text-autocolor').autocolor(false);
+  $(document).ready(function () {
+    $(".cdev").circlos();
+    $('[data-toggle="tooltip"]').tooltip();
+    $('.text-autocolor').autocolor(false);
 
-      @if (!Model.AssetDistributionData.Equals("")) {
-      <text>
-        nv.addGraph(function() {
-          var chart = nv.models.pieChart()
-            .x(function(d) { return d.label })
-            .y(function(d) { return d.value })
-            .showLabels(true)     //Display pie labels
-            .labelThreshold(.1)   //Configure the minimum slice size for labels to show up
-            .labelType("percent") //Configure what type of data to show in the label. Can be "key", "value" or "percent"
-            .donut(true)          //Turn on Donut mode. Makes pie chart look tasty!
-            .donutRatio(0.3)     //Configure how big you want the donut hole size to be.
-            ;
+    var assetDistributionChart;  // Keep a reference to the chart
+    var assetDistributionData;  // Keep a reference to the data
+
+    @if (!Model.AssetDistributionData.Equals("")) {
+    <text>
+      nv.addGraph(function() {
+        assetDistributionChart = nv.models.pieChart()
+          .x(function(d) { return d.label })
+          .y(function(d) { return d.value })
+          .showLabels(true)
+          .labelThreshold(.1)
+          .labelType("percent")
+          .donut(true)
+          .donutRatio(0.3);
+
+        assetDistributionData = @Html.Raw(Model.AssetDistributionData);
+
         d3.select("#AssetDistribution svg")
-          .datum(@Html.Raw(Model.AssetDistributionData))
-          .transition().duration(350)
-          .call(chart);
-        return chart;
-      });
-      </text>
-      }
-    });
+          .datum(assetDistributionData)
+          .transition().duration(0)
+          .call(assetDistributionChart);
 
+           // Add mouseleave, and mousemove event listeners to hide tooltip
+        d3.select('.profit-chart').on('mouseleave', function() {
+          d3.select('.nvtooltip').style('opacity', 0);
+        });
+
+        d3.select('body').on('mousemove', function() {
+          var chartBounds = d3.select('.profit-chart')[0][0].getBoundingClientRect();
+          var mouseX = d3.event.clientX;
+          var mouseY = d3.event.clientY;
+
+          if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
+            d3.select('.nvtooltip').style('opacity', 0);
+          }
+        });
+        nv.utils.windowResize(assetDistributionChart.update);
+        return assetDistributionChart;
+      });
+    </text>
+    }
+  });
+</script>
+
+<script type="text/javascript">
   (function ($) {
     'use strict';
     $('[role="tooltip"]').remove();
     $('[data-toggle="tooltip"]').tooltip();
     $('.text-autocolor').autocolor(false);
 
-    @if (!Model.Summary.CurrentGlobalSetting.SettingName.Equals(Model.LastGlobalSetting)) {
-      <text>
-        $.Notification.notify('success', 'top left', '@Core.Helper.SystemHelper.SplitCamelCase(Model.Summary.CurrentGlobalSetting.SettingName) now active!', 'PTMagic switched Profit Trailer settings to "@Core.Helper.SystemHelper.SplitCamelCase(Model.Summary.CurrentGlobalSetting.SettingName)".');
-      </text>
-    }
+    var trendChart;  // Keep a reference to the chart
+    var trendData;  // Keep a reference to the data
+
     @if (!Model.TrendChartDataJSON.Equals("")) {
-      <text>
-        nv.addGraph(function () {
-          var lineChart = nv.models.lineChart();
-          var height = 300;
-          var chartData = @Html.Raw(Model.TrendChartDataJSON);
-        lineChart.useInteractiveGuideline(true);
-        lineChart.xAxis.tickFormat(function (d) { return d3.time.format('%H:%M')(new Date(d)); });
-        lineChart.yAxis.axisLabel('Trend %').tickFormat(d3.format(',.2f'));
-        d3.select('.trend-chart svg').attr('perserveAspectRatio', 'xMinYMid').datum(chartData).transition().duration(500).call(lineChart);
-        //nv.utils.windowResize(lineChart.update); v1.3.0 => Removed this line to prevent memory leak
-        return lineChart;
+    <text>
+      nv.addGraph(function () {
+        trendChart = nv.models.lineChart();
+        var height = 300;
+        trendChart.useInteractiveGuideline(true);
+        trendChart.xAxis.tickFormat(function (d) { return d3.time.format('%H:%M')(new Date(d)); });
+        trendChart.yAxis.axisLabel('Trend %').tickFormat(d3.format(',.2f'));
+
+        trendData = @Html.Raw(Model.TrendChartDataJSON);
+
+        d3.select('.trend-chart svg')
+          .datum(trendData)
+          .transition().duration(0)
+          .call(trendChart);
+           // Add mouseleave, and mousemove event listeners to hide tooltip
+        d3.select('.profit-chart').on('mouseleave', function() {
+          d3.select('.nvtooltip').style('opacity', 0);
+        });
+
+        d3.select('body').on('mousemove', function() {
+          var chartBounds = d3.select('.profit-chart')[0][0].getBoundingClientRect();
+          var mouseX = d3.event.clientX;
+          var mouseY = d3.event.clientY;
+
+          if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
+            d3.select('.nvtooltip').style('opacity', 0);
+          }
+        });
+        nv.utils.windowResize(trendChart.update);
+        return trendChart;
       });
-      </text>
+    </text>
     }
+  })(jQuery);
+</script>
+
+<script type="text/javascript">
+  (function ($) {
+    'use strict';
+    $('[role="tooltip"]').remove();
+    $('[data-toggle="tooltip"]').tooltip();
+    $('.text-autocolor').autocolor(false);
+
+    var profitChart;  // Keep a reference to the chart
+    var profitData;  // Keep a reference to the data
+
     @if (!Model.ProfitChartDataJSON.Equals("")) {
-      <text>
-        nv.addGraph(function () {
-          var lineChart = nv.models.lineChart();
-          var height = 300;
-          var chartData = @Html.Raw(Model.ProfitChartDataJSON);
-        lineChart.useInteractiveGuideline(true);
-        lineChart.xAxis.tickFormat(function (d) { return d3.time.format('%Y/%m/%d')(new Date(d)); });
-        lineChart.yAxis.axisLabel('Daily Profit').tickFormat(d3.format(',.2f'));
-        d3.select('.profit-chart svg').attr('perserveAspectRatio', 'xMinYMid').datum(chartData).transition().duration(500).call(lineChart);
-        //nv.utils.windowResize(lineChart.update); v1.3.0 => Removed this line to prevent memory leak
-        return lineChart;
+    <text>
+      nv.addGraph(function () {
+        profitChart = nv.models.lineChart();
+        var height = 300;
+        profitChart.useInteractiveGuideline(true);
+        profitChart.xAxis.tickFormat(function (d) { return d3.time.format('%m/%d')(new Date(d)); });
+        profitChart.yAxis.axisLabel('Daily Profit').tickFormat(d3.format(',.2f'));
+
+        profitData = @Html.Raw(Model.ProfitChartDataJSON);
+
+        d3.select('.profit-chart svg')
+          .datum(profitData)
+          .transition().duration(0)
+          .call(profitChart);
+
+          // Add mouseleave, and mousemove event listeners to hide tooltip
+        d3.select('.profit-chart').on('mouseleave', function() {
+          d3.select('.nvtooltip').style('opacity', 0);
+        });
+
+        d3.select('body').on('mousemove', function() {
+          var chartBounds = d3.select('.profit-chart')[0][0].getBoundingClientRect();
+          var mouseX = d3.event.clientX;
+          var mouseY = d3.event.clientY;
+
+          if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
+            d3.select('.nvtooltip').style('opacity', 0);
+          }
+        });
+        nv.utils.windowResize(profitChart.update);
+        return profitChart;
       });
-      </text>
+    </text>
     }
-    })(jQuery);
+  })(jQuery);
+</script>
+
+<script type="text/javascript">
+  $(document).ready(function(){
+    var originalLeave = $.fn.tooltip.Constructor.prototype.leave;
+    $.fn.tooltip.Constructor.prototype.leave = function(obj){
+      var self = obj instanceof this.constructor ?
+        obj : $(obj.currentTarget)[this.type](this.getDelegateOptions()).data('bs.' + this.type);
+      var container, timeout;
+
+      originalLeave.call(this, obj);
+
+      if(obj.currentTarget) {
+        container = $(obj.currentTarget).siblings('.tooltip');
+        timeout = self.timeout;
+        container.one('mouseenter', function(){
+          //We entered the actual tooltip – call off the dogs
+          clearTimeout(timeout);
+          //Let's monitor tooltip content instead
+          container.one('mouseleave', function(){
+            $.fn.tooltip.Constructor.prototype.leave.call(self, self);
+          });
+        });
+      }
+    };
+
+    $('[data-toggle="tooltip"]').tooltip();
+  });
 </script>

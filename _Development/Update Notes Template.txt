@@ -16,7 +16,7 @@
 - This version of PT Magic only works with Profit Trailer v2.4.x and above
 
 ### .Net
-- PTMagic requires .Net Core Runtime 3.1 on the host operating system (download: https://dotnet.microsoft.com/download)
+- PTMagic requires .Net Core Runtime 7 on the host operating system (download: https://dotnet.microsoft.com/download)
 
 ### Settings
 - **If you are updating from any version of PTMagic prior to 2.4.1,** check the default settings included with this release for any new lines that might need to be added to your settings.general.json file.

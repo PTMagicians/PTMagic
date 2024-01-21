@@ -82,9 +82,9 @@
   double sellTriggerPrice = Model.DCALogData.AverageBuyPrice + (Model.DCALogData.AverageBuyPrice * Model.DCALogData.SellTrigger / 100);
 
   double averageProfitPercent = 0;
-  if (Model.PTData.SellLog.FindAll(m => m.Market == Model.DCALogData.Market).Count > 0) {
+  @* if (Model.PTData.SellLog.FindAll(m => m.Market == Model.DCALogData.Market).Count > 0) {
     averageProfitPercent = Model.PTData.SellLog.FindAll(m => m.Market == Model.DCALogData.Market).Average(p => p.ProfitPercent);
-  }
+  } *@
 
   double investedFiatValue = Math.Round(Model.DCALogData.TotalCost * Model.Summary.MainMarketPrice, 2);
   double currentValue = Math.Round(Model.DCALogData.Amount * Model.DCALogData.CurrentPrice, 8);
