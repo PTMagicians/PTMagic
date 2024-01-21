@@ -8,7 +8,6 @@ using Core.Main.DataObjects;
 using Core.Main.DataObjects.PTMagicData;
 using System.Globalization;
 using System.Text;
-using System.Diagnostics;
 
 namespace Monitor.Pages
 {

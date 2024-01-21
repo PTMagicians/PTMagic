@@ -379,9 +379,11 @@
     @if (!Model.SalesChartDataJSON.Equals("")) {
     <text>
       nv.addGraph(function () {
-        salesChart = nv.models.lineChart();
+        salesChart = nv.models.multiBarChart();
         var height = 300;
-        salesChart.useInteractiveGuideline(true);
+        salesChart.groupSpacing(0.5); 
+        salesChart.showControls(false);
+        //salesChart.useInteractiveGuideline(true);
         salesChart.xAxis.tickFormat(function (d) { return d3.time.format('%m/%d')(new Date(d)); });
         salesChart.yAxis.axisLabel('').tickFormat(d3.format(',.2f'));
 

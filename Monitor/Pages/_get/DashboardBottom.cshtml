@@ -12,7 +12,7 @@
 <div class="row">
   <div class="col-md-5 px-1">
     <div class="card-box px-2" style="height:340px;">
-      <h4 class="m-t-0 m-b-20 header-title" style="display: inline;"><b>Market Trend History  </b><i class="fa fa-info-circle text-muted"  style="font-size x-small" data-toggle="tooltip" data-placement="top" title="@Math.Round(Model.DataHours, 1) hours of data available. Currently set to show @Model.PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours hours in general settings."></i></h4>
+      <h4 class="m-t-0 m-b-20 header-title" style="display: inline;"><b>Market Trend History  </b><i class="fa fa-info-circle text-muted"  style="font-size x-small" data-toggle="tooltip" data-placement="top" title="@Math.Round(Model.DataHours, 1) hours of data available. Currently set to show @Model.PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours hours at @Model.PTMagicConfiguration.GeneralSettings.Monitor.GraphIntervalMinutes intervals, in general settings."></i></h4>
       @if (!Model.TrendChartDataJSON.Equals("")) {
         <div class="trend-chart">
           <svg style="height: 300px;width: 100%;"></svg>

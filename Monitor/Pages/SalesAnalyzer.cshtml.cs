@@ -10,7 +10,7 @@ using Core.Main.DataObjects.PTMagicData;
 namespace Monitor.Pages
 {
   public class SalesAnalyzer : _Internal.BasePageModelSecure
-  {
+    {
     public ProfitTrailerData PTData = null;
     public MiscData MiscData { get; set; }
     public PropertiesData PropertiesData { get; set; }
@@ -328,28 +328,25 @@ namespace Monitor.Pages
             {
                 if (salesCountByDate.TryGetValue(date, out DailyStatsData dailyStatsData))
                 {
-                    // Use the totalSales value directly
-                    salesPerDayList.Add(new { x = new DateTimeOffset(date).ToUnixTimeMilliseconds(), y = dailyStatsData.TotalSales });
-
-                    // Add daily buys to the list
-                    buysPerDayList.Add(new { x = new DateTimeOffset(date).ToUnixTimeMilliseconds(), y = dailyStatsData.TotalBuys });
+                    buysPerDayList.Add(new { x = new DateTimeOffset(date).ToUnixTimeMilliseconds(), y = Convert.ToInt32(dailyStatsData.TotalBuys) });
+                    salesPerDayList.Add(new { x = new DateTimeOffset(date).ToUnixTimeMilliseconds(), y = Convert.ToInt32(dailyStatsData.TotalSales) });
                 }
             }
 
             // Convert the lists to a JSON string using Newtonsoft.Json
             SalesChartDataJSON = Newtonsoft.Json.JsonConvert.SerializeObject(new[] {
+                new { // New JSON object for daily buys
+                    key = "Buys",
+                    color = Constants.ChartLineColors[19], // Use a different color for buys
+                    values = buysPerDayList
+                },
                 new {
                     key = "Sales",
                     color = Constants.ChartLineColors[1],
                     values = salesPerDayList
-                },
-                new { // New JSON object for daily buys
-                    key = "Buys",
-                    color = Constants.ChartLineColors[0], // Use a different color for buys
-                    values = buysPerDayList
                 }
             });
         }
-    }
+    }      
     }
 }
