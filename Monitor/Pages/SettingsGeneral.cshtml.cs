@@ -1,16 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Core.Main;
 using Core.Helper;
+using Core.Main.DataObjects;
 using Core.Main.DataObjects.PTMagicData;
+
 
 namespace Monitor.Pages
 {
   public class SettingsGeneralModel : _Internal.BasePageModelSecure
   {
-    public string ValidationMessage = "";
+  public string ValidationMessage = ""; 
+  public ProfitTrailerData PTData = null;
+  public MiscData MiscData { get; set; }
 
     private string GetTimezoneOffsetString(TimeZoneInfo tzi)
     {
@@ -51,6 +54,8 @@ namespace Monitor.Pages
     public void OnGet()
     {
       base.Init();
+      PTData = this.PtDataObject;
+      MiscData = this.PTData.Misc;
 
       string notification = GetStringParameter("n", "");
       if (notification.Equals("BackupRestored"))
@@ -68,27 +73,29 @@ namespace Monitor.Pages
       // Read the new settings
       PTMagicConfiguration.GeneralSettings.Application.IsEnabled = HttpContext.Request.Form["Application_IsEnabled"].Equals("on");
       PTMagicConfiguration.GeneralSettings.Application.TestMode = HttpContext.Request.Form["Application_TestMode"].Equals("on");
-      PTMagicConfiguration.GeneralSettings.Application.StartBalance = SystemHelper.TextToDouble(HttpContext.Request.Form["Application_StartBalance"], PTMagicConfiguration.GeneralSettings.Application.StartBalance, "en-US");
+      //PTMagicConfiguration.GeneralSettings.Application.StartBalance = SystemHelper.TextToDouble(HttpContext.Request.Form["Application_StartBalance"], PTMagicConfiguration.GeneralSettings.Application.StartBalance, "en-US");
       PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName = HttpContext.Request.Form["Application_ProfitTrailerDefaultSettingName"];
       PTMagicConfiguration.GeneralSettings.Application.Exchange = HttpContext.Request.Form["Application_Exchange"];
       PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL = HttpContext.Request.Form["Application_ProfitTrailerMonitorURL"];
       PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken = HttpContext.Request.Form["Application_ProfitTrailerServerAPIToken"];
       PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset = HttpContext.Request.Form["Application_TimezoneOffset"];
-      PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency = HttpContext.Request.Form["Application_MainFiatCurrency"];
+      //PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency = HttpContext.Request.Form["Application_MainFiatCurrency"];
       PTMagicConfiguration.GeneralSettings.Application.FloodProtectionMinutes = SystemHelper.TextToInteger(HttpContext.Request.Form["Application_FloodProtectionMinutes"], PTMagicConfiguration.GeneralSettings.Application.FloodProtectionMinutes);
       PTMagicConfiguration.GeneralSettings.Application.InstanceName = HttpContext.Request.Form["Application_InstanceName"];
       PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey = HttpContext.Request.Form["Application_CoinMarketCapAPIKey"];
-      PTMagicConfiguration.GeneralSettings.Application.FreeCurrencyConverterAPIKey = HttpContext.Request.Form["Application_FreeCurrencyConverterAPIKey"];
+      //PTMagicConfiguration.GeneralSettings.Application.FreeCurrencyConverterAPIKey = HttpContext.Request.Form["Application_FreeCurrencyConverterAPIKey"];
       PTMagicConfiguration.GeneralSettings.Monitor.IsPasswordProtected = HttpContext.Request.Form["Monitor_IsPasswordProtected"].Equals("on");
       PTMagicConfiguration.GeneralSettings.Monitor.OpenBrowserOnStart = HttpContext.Request.Form["Monitor_OpenBrowserOnStart"].Equals("on");
       PTMagicConfiguration.GeneralSettings.Monitor.AnalyzerChart = HttpContext.Request.Form["Monitor_AnalyzerChart"];
       PTMagicConfiguration.GeneralSettings.Monitor.Port = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_Port"], PTMagicConfiguration.GeneralSettings.Monitor.Port);
       PTMagicConfiguration.GeneralSettings.Monitor.GraphIntervalMinutes = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_GraphIntervalMinutes"], PTMagicConfiguration.GeneralSettings.Monitor.GraphIntervalMinutes);
       PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_GraphMaxTimeframeHours"], PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours);
+      PTMagicConfiguration.GeneralSettings.Monitor.ProfitsMaxTimeframeDays = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_ProfitsMaxTimeframeDays"], PTMagicConfiguration.GeneralSettings.Monitor.ProfitsMaxTimeframeDays);
       PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_RefreshSeconds"], PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds);
       PTMagicConfiguration.GeneralSettings.Monitor.BagAnalyzerRefreshSeconds = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_BagAnalyzerRefreshSeconds"], PTMagicConfiguration.GeneralSettings.Monitor.BagAnalyzerRefreshSeconds);
       PTMagicConfiguration.GeneralSettings.Monitor.BuyAnalyzerRefreshSeconds = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_BuyAnalyzerRefreshSeconds"], PTMagicConfiguration.GeneralSettings.Monitor.BuyAnalyzerRefreshSeconds);
       PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform = HttpContext.Request.Form["Monitor_LinkPlatform"];
+      //PTMagicConfiguration.GeneralSettings.Monitor.MaxSalesRecords = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_MaxSalesRecords"], PTMagicConfiguration.GeneralSettings.Monitor.MaxSalesRecords);
       PTMagicConfiguration.GeneralSettings.Monitor.MaxTopMarkets = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_MaxTopMarkets"], PTMagicConfiguration.GeneralSettings.Monitor.MaxTopMarkets);
       PTMagicConfiguration.GeneralSettings.Monitor.MaxDailySummaries = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_MaxDailySummaries"], PTMagicConfiguration.GeneralSettings.Monitor.MaxDailySummaries);
       PTMagicConfiguration.GeneralSettings.Monitor.MaxMonthlySummaries = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_MaxMonthlySummaries"], PTMagicConfiguration.GeneralSettings.Monitor.MaxMonthlySummaries);

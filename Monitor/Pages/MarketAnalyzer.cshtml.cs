@@ -4,6 +4,7 @@ using System.Linq;
 using Core.Main;
 using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
+using System.Globalization;
 
 namespace Monitor.Pages
 {
@@ -11,6 +12,7 @@ namespace Monitor.Pages
   {
     public List<MarketTrend> MarketTrends { get; set; } = new List<MarketTrend>();
     public string TrendChartDataJSON = "";
+    public double DataHours { get; set; }
 
     public void OnGet()
     {
@@ -28,77 +30,85 @@ namespace Monitor.Pages
 
     private void BuildMarketTrendChartData()
     {
-      if (MarketTrends.Count > 0)
-      {
-        TrendChartDataJSON = "[";
-        int mtIndex = 0;
-        foreach (MarketTrend mt in MarketTrends)
+        List<string> trendChartData = new List<string>();
+        if (MarketTrends.Count > 0)
         {
-          if (mt.DisplayGraph)
-          {
-            string lineColor = "";
-            if (mtIndex < Constants.ChartLineColors.Length)
+        
+            int mtIndex = 0;
+            foreach (MarketTrend mt in MarketTrends)
             {
-              lineColor = Constants.ChartLineColors[mtIndex];
-            }
-            else
-            {
-              lineColor = Constants.ChartLineColors[mtIndex - 20];
-            }
-
-            if (Summary.MarketTrendChanges.ContainsKey(mt.Name))
-            {
-              List<MarketTrendChange> marketTrendChangeSummaries = Summary.MarketTrendChanges[mt.Name];
-
-              if (marketTrendChangeSummaries.Count > 0)
-              {
-                if (!TrendChartDataJSON.Equals("[")) TrendChartDataJSON += ",";
-
-                TrendChartDataJSON += "{";
-                TrendChartDataJSON += "key: '" + SystemHelper.SplitCamelCase(mt.Name) + "',";
-                TrendChartDataJSON += "color: '" + lineColor + "',";
-                TrendChartDataJSON += "values: [";
-
-                // Get trend ticks for chart
-                DateTime currentDateTime = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, DateTime.UtcNow.Hour, 0, 0);
-                DateTime startDateTime = currentDateTime.AddHours(-PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours);
-                DateTime endDateTime = currentDateTime;
-                int trendChartTicks = 0;
-                for (DateTime tickTime = startDateTime; tickTime <= endDateTime; tickTime = tickTime.AddMinutes(PTMagicConfiguration.GeneralSettings.Monitor.GraphIntervalMinutes))
+                if (mt.DisplayGraph)
                 {
-                  List<MarketTrendChange> tickRange = marketTrendChangeSummaries.FindAll(m => m.TrendDateTime >= tickTime).OrderBy(m => m.TrendDateTime).ToList();
-                  if (tickRange.Count > 0)
-                  {
-                    MarketTrendChange mtc = tickRange.First();
-                    if (tickTime != startDateTime) TrendChartDataJSON += ",\n";
-                    if (Double.IsInfinity(mtc.TrendChange)) mtc.TrendChange = 0;
+                    string lineColor = mtIndex < Constants.ChartLineColors.Length
+                        ? Constants.ChartLineColors[mtIndex]
+                        : Constants.ChartLineColors[mtIndex - 20];
 
-                    TrendChartDataJSON += "{ x: new Date('" + tickTime.ToString("yyyy-MM-ddTHH:mm:ss").Replace(".", ":") + "'), y: " + mtc.TrendChange.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "}";
-                    trendChartTicks++;
-                  }
+                    if (Summary.MarketTrendChanges.ContainsKey(mt.Name))
+                    {
+                        List<MarketTrendChange> marketTrendChangeSummaries = Summary.MarketTrendChanges[mt.Name];
+
+                        if (marketTrendChangeSummaries.Count > 0)
+                        {
+                            List<string> trendValues = new List<string>();
+
+                            // Sort marketTrendChangeSummaries by TrendDateTime
+                            marketTrendChangeSummaries = marketTrendChangeSummaries.OrderBy(m => m.TrendDateTime).ToList();
+
+                            // Get trend ticks for chart
+                            TimeSpan offset;
+                            bool isNegative = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.StartsWith("-");
+                            string offsetWithoutSign = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.TrimStart('+', '-');
+
+                            if (!TimeSpan.TryParse(offsetWithoutSign, out offset))
+                            {
+                                offset = TimeSpan.Zero; // If offset is invalid, set it to zero
+                            }
+
+                            DateTime currentDateTime = DateTime.UtcNow;
+                            DateTime startDateTime = currentDateTime.AddHours(-PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours);
+                            DateTime endDateTime = currentDateTime;
+
+                            // Ensure startDateTime doesn't exceed the available data
+                            DateTime earliestTrendDateTime = marketTrendChangeSummaries.Min(mtc => mtc.TrendDateTime);
+                            startDateTime = startDateTime > earliestTrendDateTime ? startDateTime : earliestTrendDateTime;
+                            DataHours = (currentDateTime - earliestTrendDateTime).TotalHours;
+
+                            // Cache the result of SplitCamelCase(mt.Name)
+                            string splitCamelCaseName = SystemHelper.SplitCamelCase(mt.Name);
+
+                            for (DateTime tickTime = startDateTime; tickTime <= endDateTime; tickTime = tickTime.AddMinutes(PTMagicConfiguration.GeneralSettings.Monitor.GraphIntervalMinutes))
+                            {
+                                // Use binary search to find the range of items that match the condition
+                                int index = marketTrendChangeSummaries.BinarySearch(new MarketTrendChange { TrendDateTime = tickTime }, Comparer<MarketTrendChange>.Create((x, y) => x.TrendDateTime.CompareTo(y.TrendDateTime)));
+                                if (index < 0) index = ~index;
+                                if (index < marketTrendChangeSummaries.Count)
+                                {
+                                    MarketTrendChange mtc = marketTrendChangeSummaries[index];
+                                    if (Double.IsInfinity(mtc.TrendChange)) mtc.TrendChange = 0;
+
+                                    // Adjust tickTime to the desired timezone before converting to string
+                                    DateTime adjustedTickTime = tickTime.Add(isNegative ? -offset : offset);
+                                    trendValues.Add("{ x: new Date('" + adjustedTickTime.ToString("yyyy-MM-ddTHH:mm:ss").Replace(".", ":") + "'), y: " + mtc.TrendChange.ToString("0.00", CultureInfo.InvariantCulture) + "}");
+                                }
+                            }
+
+                            // Add most recent tick
+                            MarketTrendChange latestMtc = marketTrendChangeSummaries.Last();
+                            if (Double.IsInfinity(latestMtc.TrendChange)) latestMtc.TrendChange = 0;
+
+                            // Adjust latestMtc.TrendDateTime to the desired timezone before converting to string
+                            DateTime adjustedLatestTrendDateTime = latestMtc.TrendDateTime.Add(isNegative ? -offset : offset);
+                            trendValues.Add("{ x: new Date('" + adjustedLatestTrendDateTime.ToString("yyyy-MM-ddTHH:mm:ss").Replace(".", ":") + "'), y: " + latestMtc.TrendChange.ToString("0.00", CultureInfo.InvariantCulture) + "}");
+
+                            // Use cached splitCamelCaseName
+                            trendChartData.Add("{ key: '" + splitCamelCaseName + "', color: '" + lineColor + "', values: [" + string.Join(",\n", trendValues) + "] }");
+                            mtIndex++;
+                        }
+                    }
                 }
-
-                // Add most recent tick
-                List<MarketTrendChange> latestTickRange = marketTrendChangeSummaries.OrderByDescending(m => m.TrendDateTime).ToList();
-                if (latestTickRange.Count > 0)
-                {
-                  MarketTrendChange mtc = latestTickRange.First();
-                  if (trendChartTicks > 0) TrendChartDataJSON += ",\n";
-                  if (Double.IsInfinity(mtc.TrendChange)) mtc.TrendChange = 0;
-
-                  TrendChartDataJSON += "{ x: new Date('" + mtc.TrendDateTime.ToString("yyyy-MM-ddTHH:mm:ss").Replace(".", ":") + "'), y: " + mtc.TrendChange.ToString("0.00", new System.Globalization.CultureInfo("en-US")) + "}";
-                }
-
-                TrendChartDataJSON += "]";
-                TrendChartDataJSON += "}";
-
-                mtIndex++;
-              }
             }
-          }
         }
-        TrendChartDataJSON += "]";
-      }
+        TrendChartDataJSON = "[" + string.Join(",", trendChartData) + "]";
     }
   }
 }

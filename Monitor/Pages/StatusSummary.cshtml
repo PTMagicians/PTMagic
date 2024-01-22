@@ -10,7 +10,8 @@
 }
 
 <div class="row">
-  <div class="col-md-5">
+
+  <div class="col-md-6">
     <div class="card-box">
       <h4 class="m-t-0 header-title">PTMagic Status <small id="last-refresh" class="pull-right"></small></h4>
       @{
@@ -67,11 +68,10 @@
     </div>
 
     <div class="card-box">
-      <h4 class="m-t-0 header-title">Active Settings</h4>
+      <h4 class="m-t-0 header-title">Active Settings &nbsp;  <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="If DYNAMIC formulas are used in PT for these settings, the values will not be properly displayed here."></i></h4>
       @{
         string maxCostCaption = "Initial";
       }
-
       <table class="table table-striped table-sm">
         <tbody>
           <tr>
@@ -86,8 +86,6 @@
             }
           </tr>
           <tr>
-            <td>DCA Level</td>
-            <td class="text-right">@Model.Summary.DCALevels.ToString(new System.Globalization.CultureInfo("en-US"))</td>
             <td>Min Vol.</td>
             <td class="text-right">@Model.Summary.MinBuyVolume.ToString(new System.Globalization.CultureInfo("en-US"))</td>
           </tr>
@@ -101,124 +99,63 @@
       </table>
     </div>
 
-    <div class="card-box">
-      <h4 class="m-t-0 header-title">Active Buy Strategies</h4>
-
-      <table class="table table-striped table-sm">
-        <tbody>
-          @if (Model.Summary.BuyStrategies.Count == 0) {
-            <tr>
-              <td>Buy Strat.</td>
-              <td class="text-right">@Model.Summary.BuyStrategy</td>
-              <td>Buy Value</td>
-              <td class="text-right">@Model.Summary.BuyValue.ToString(new System.Globalization.CultureInfo("en-US"))</td>
-            </tr>
-          } else {
-            char buyStrategyIndex = 'A';
-            foreach (Core.Main.DataObjects.PTMagicData.StrategySummary buyStrategy in Model.Summary.BuyStrategies) {
-              <tr>
-                <td>Buy Strat. @buyStrategyIndex</td>
-                <td class="text-right">@buyStrategy.Name</td>
-                <td>Buy Value @buyStrategyIndex</td>
-                <td class="text-right">@buyStrategy.Value.ToString(new System.Globalization.CultureInfo("en-US"))</td>
-              </tr>
-              buyStrategyIndex++;
-            }
-          }
-        </tbody>
-      </table>
-    </div>
-
-    <div class="card-box">
-      <h4 class="m-t-0 header-title">Active Sell Strategies</h4>
-
-      <table class="table table-striped table-sm">
-        <tbody>
-          @if (Model.Summary.SellStrategies.Count == 0) {
-            <tr>
-              <td>Sell Strat.</td>
-              <td class="text-right">@Model.Summary.SellStrategy</td>
-              <td>Sell Value</td>
-              <td class="text-right">@Model.Summary.SellValue.ToString(new System.Globalization.CultureInfo("en-US"))</td>
-            </tr>
-          } else {
-            char sellStrategyIndex = 'A';
-            foreach (Core.Main.DataObjects.PTMagicData.StrategySummary sellStrategy in Model.Summary.SellStrategies) {
-              <tr>
-                <td>Sell Strat. @sellStrategyIndex</td>
-                <td class="text-right">@sellStrategy.Name</td>
-                <td>Sell Value @sellStrategyIndex</td>
-                <td class="text-right">@sellStrategy.Value.ToString(new System.Globalization.CultureInfo("en-US"))</td>
-              </tr>
-              sellStrategyIndex++;
-            }
-          }
-        </tbody>
-      </table>
-    </div>
   </div>
 
-  <div class="col-md-7">
-    <div class="row">
-      <div class="col-md-6">
-        <div class="card-box">
-          <h4 class="m-t-0 header-title">Settings Active Time (Last 24h)</h4>
-
-          <div id="gsChart24h">
-            <svg style="height:300px;width:100%"></svg>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-6">
-        <div class="card-box">
-          <h4 class="m-t-0 header-title">Settings Active Time (Last 3 days)</h4>
-
-          <div id="gsChart3d">
-            <svg style="height:300px;width:100%"></svg>
-          </div>
-        </div>
-
+  <div class="col-md-6">
+    <div class="card-box">
+      <h4 class="m-t-0 header-title">Settings Active Time (Last 24h)</h4>
+      <div id="gsChart24h">
+        <svg style="height:200px;width:100%"></svg>
       </div>
     </div>
 
-
     <div class="card-box">
-      <h4 class="m-t-0 header-title">Global Settings Log</h4>
-
-      <table class="table table-striped table-sm">
-        <thead>
-          <tr>
-            <th data-toggle="tooltip" data-placement="top" title="Time the setting got activated.">Activation Time</th>
-            <th data-toggle="tooltip" data-placement="top" title="Name of the global setting.">Setting</th>
-            <th data-toggle="tooltip" data-placement="top" title="Amount of time the setting is or was active">Active Time</th>
-            <th data-toggle="tooltip" data-placement="top" title="Market trends values from the time the setting got activated.">Market Trends</th>
-          </tr>
-        </thead>
-        <tbody>
-          @foreach (Core.Main.DataObjects.PTMagicData.GlobalSettingSummary gss in Model.Summary.GlobalSettingSummary.OrderByDescending(g => g.SwitchDateTime).Take(Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxSettingsLogEntries)) {
-            TimeSpan offsetTimeSpan = TimeSpan.Parse(Model.PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
-            DateTimeOffset settingActivationTime = gss.SwitchDateTime;
-            settingActivationTime = settingActivationTime.ToOffset(offsetTimeSpan);
-
-            string marketTrendsSummary = "";
-            foreach (string mt in gss.MarketTrendChanges.Keys) {
-              if (!marketTrendsSummary.Equals("")) {
-                marketTrendsSummary += "<br />";
-              }
-              marketTrendsSummary += Core.Helper.SystemHelper.SplitCamelCase(mt) + ": " + gss.MarketTrendChanges[mt].TrendChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
-            }
-            <tr>
-              <td>@settingActivationTime.DateTime.ToShortDateString() @settingActivationTime.DateTime.ToShortTimeString()</td>
-              <td>@Core.Helper.SystemHelper.SplitCamelCase(gss.SettingName)</td>
-              <td>@Core.Helper.SystemHelper.GetProperDurationTime(gss.ActiveSeconds)</td>
-              <td>@Html.Raw(marketTrendsSummary)</td>
-            </tr>
-          }
-        </tbody>
-      </table>
+      <h4 class="m-t-0 header-title">Settings Active Time (Last 3 days)</h4>
+      <div id="gsChart3d">
+        <svg style="height:200px;width:100%"></svg>
+      </div>
     </div>
   </div>
 
+    
+
+</div>
+
+
+
+<div class="card-box">
+  <h4 class="m-t-0 header-title">Global Settings Log</h4>
+  <table class="table table-striped table-sm">
+    <thead>
+      <tr>
+        <th data-toggle="tooltip" data-placement="top" title="Time the setting got activated.">Activation Time</th>
+        <th data-toggle="tooltip" data-placement="top" title="Name of the global setting.">Setting</th>
+        <th data-toggle="tooltip" data-placement="top" title="Amount of time the setting is or was active">Active Time</th>
+        <th data-toggle="tooltip" data-placement="top" title="Market trends values from the time the setting got activated.">Market Trends</th>
+      </tr>
+    </thead>
+    <tbody>
+      @foreach (Core.Main.DataObjects.PTMagicData.GlobalSettingSummary gss in Model.Summary.GlobalSettingSummary.OrderByDescending(g => g.SwitchDateTime).Take(Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxSettingsLogEntries)) {
+        TimeSpan offsetTimeSpan = TimeSpan.Parse(Model.PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
+        DateTimeOffset settingActivationTime = gss.SwitchDateTime;
+        settingActivationTime = settingActivationTime.ToOffset(offsetTimeSpan);
+
+        string marketTrendsSummary = "";
+        foreach (string mt in gss.MarketTrendChanges.Keys) {
+          if (!marketTrendsSummary.Equals("")) {
+            marketTrendsSummary += "<br />";
+          }
+          marketTrendsSummary += Core.Helper.SystemHelper.SplitCamelCase(mt) + ": " + gss.MarketTrendChanges[mt].TrendChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
+        }
+        <tr>
+          <td>@settingActivationTime.DateTime.ToShortDateString() @settingActivationTime.DateTime.ToShortTimeString()</td>
+          <td>@Core.Helper.SystemHelper.SplitCamelCase(gss.SettingName)</td>
+          <td>@Core.Helper.SystemHelper.GetProperDurationTime(gss.ActiveSeconds)</td>
+          <td>@Html.Raw(marketTrendsSummary)</td>
+        </tr>
+      }
+    </tbody>
+  </table>
 </div>
 
 

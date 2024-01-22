@@ -14,12 +14,11 @@ namespace Core.Main
 {
   public class PTMagic
   {
-
     public PTMagic(LogHelper log)
     {
       this.Log = log;
     }
-
+    
     #region Properties
     private LogHelper _log;
     private PTMagicConfiguration _systemConfiguration;
@@ -84,7 +83,10 @@ namespace Core.Main
         _systemConfiguration = value;
       }
     }
-
+    public class IsAnalzyerRunning
+    {
+      private string _isAnalyzerRunning;
+    }
     public System.Timers.Timer Timer
     {
       get
@@ -720,15 +722,6 @@ namespace Core.Main
             this.Log.DoLogInfo("No CoinMarketCap API KEY specified! That's ok, but you can't use CoinMarketCap in your settings.analyzer.json");
           }
 
-          // Check for CurrencyConverterApi Key
-          if (!this.PTMagicConfiguration.GeneralSettings.Application.FreeCurrencyConverterAPIKey.Equals(""))
-          {
-            this.Log.DoLogInfo("FreeCurrencyConverterApi KEY found");
-          }
-          else
-          {
-            this.Log.DoLogInfo("No FreeCurrencyConverterApi KEY specified. That's ok!  But you can only use USD; apply for a key at: https://freecurrencyrates.com/en");
-          }
         }
         catch (System.NullReferenceException)
         {
@@ -870,9 +863,6 @@ namespace Core.Main
 
               // Check for latest GitHub version
               this.CheckLatestGitHubVersion(this.LastRuntimeSummary.Version);
-
-              // Get latest main fiat currency exchange rate
-              this.GetMainFiatCurrencyDetails();
 
               // Load current PT files
               this.LoadCurrentProfitTrailerProperties();
@@ -1123,35 +1113,6 @@ namespace Core.Main
         if (!SystemHelper.IsRecentVersion(currentVersion, this.LatestVersion))
         {
           this.Log.DoLogWarn("Your bot is out of date! The most recent version of PTMagic is " + this.LatestVersion);
-        }
-      }
-    }
-
-    private void GetMainFiatCurrencyDetails()
-    {
-      this.LastRuntimeSummary.MainFiatCurrency = this.LastMainFiatCurrency;
-      this.LastRuntimeSummary.MainFiatCurrencyExchangeRate = this.LastMainFiatCurrencyExchangeRate;
-
-      if (this.LastFiatCurrencyCheck < DateTime.UtcNow.AddHours(-12) && !this.PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency.Equals("USD", StringComparison.InvariantCultureIgnoreCase))
-      {
-        try
-        {
-          this.LastRuntimeSummary.MainFiatCurrency = this.PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency;
-          this.LastRuntimeSummary.MainFiatCurrencyExchangeRate = BaseAnalyzer.GetMainFiatCurrencyRate(this.PTMagicConfiguration.GeneralSettings.Application.MainFiatCurrency, this.PTMagicConfiguration.GeneralSettings.Application.FreeCurrencyConverterAPIKey, this.Log);
-          this.LastMainFiatCurrency = this.LastRuntimeSummary.MainFiatCurrency;
-          this.LastMainFiatCurrencyExchangeRate = this.LastRuntimeSummary.MainFiatCurrencyExchangeRate;
-
-          this.LastFiatCurrencyCheck = DateTime.UtcNow;
-        }
-        catch (Exception ex)
-        {
-
-          // Fallback to USD in case something went wrong
-          this.Log.DoLogError("Fixer.io exchange rate check error: " + ex.Message);
-          this.LastRuntimeSummary.MainFiatCurrency = "USD";
-          this.LastRuntimeSummary.MainFiatCurrencyExchangeRate = 1;
-          this.LastMainFiatCurrency = "USD";
-          this.LastMainFiatCurrencyExchangeRate = 1;
         }
       }
     }

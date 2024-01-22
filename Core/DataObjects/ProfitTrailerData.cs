@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Core.Main.DataObjects.PTMagicData;
 
@@ -14,18 +15,60 @@ namespace Core.Main.DataObjects
 
   public class ProfitTrailerData
   {
-    private SummaryData _summary = null;
-    private Properties _properties = null;
-    private List<SellLogData> _sellLog = new List<SellLogData>();
+    private MiscData _misc = null;
+    private PropertiesData _properties = null;
+    private StatsData _stats = null;
+    private List<DailyPNLData> _dailyPNL = new List<DailyPNLData>();
+    private List<DailyTCVData> _dailyTCV = new List<DailyTCVData>();
+    private List<MonthlyStatsData> _monthlyStats = new List<MonthlyStatsData>();
+    private List<ProfitablePairsData> _profitablePairs = new List<ProfitablePairsData>();
+    private List<DailyStatsData> _dailyStats = new List<DailyStatsData>();
+    private decimal? _totalProfit = null;
+    public decimal? TotalProfit
+    {
+        get { return _totalProfit; }
+        set { _totalProfit = value; }
+    }
+    private decimal? _totalSales = null;
+    public decimal? TotalSales
+    {
+        get { return _totalSales; }
+        set { _totalSales = value; }
+    }
+    //private List<SellLogData> _sellLog = new List<SellLogData>();
     private List<DCALogData> _dcaLog = new List<DCALogData>();
     private List<BuyLogData> _buyLog = new List<BuyLogData>();
     private string _ptmBasePath = "";
     private PTMagicConfiguration _systemConfiguration = null;
     private TransactionData _transactionData = null;
-    private DateTime _buyLogRefresh = DateTime.UtcNow, _sellLogRefresh = DateTime.UtcNow, _dcaLogRefresh = DateTime.UtcNow, _summaryRefresh = DateTime.UtcNow, _propertiesRefresh = DateTime.UtcNow;
-    private volatile object _buyLock = new object(), _sellLock = new object(), _dcaLock = new object(), _summaryLock = new object(), _propertiesLock = new object();
+    private DateTime _dailyPNLRefresh = DateTime.UtcNow;
+    private DateTime _dailyTCVRefresh = DateTime.UtcNow;
+    private DateTime _monthlyStatsRefresh = DateTime.UtcNow;
+    private DateTime _statsRefresh = DateTime.UtcNow;
+    private DateTime _buyLogRefresh = DateTime.UtcNow;
+    //private DateTime _sellLogRefresh = DateTime.UtcNow;
+    private DateTime _dcaLogRefresh = DateTime.UtcNow;
+    private DateTime _miscRefresh = DateTime.UtcNow;
+    private DateTime _propertiesRefresh = DateTime.UtcNow;  
+    private DateTime _profitablePairsRefresh = DateTime.UtcNow; 
+    private DateTime _dailyStatsRefresh = DateTime.UtcNow; 
+    private volatile object _dailyPNLLock = new object();    
+    private volatile object _dailyTCVLock = new object();       
+    private volatile object _monthlyStatsLock = new object();    
+    private volatile object _statsLock = new object();
+    private volatile object _buyLock = new object();
+    private volatile object _sellLock = new object();
+    private volatile object _dcaLock = new object();
+    private volatile object _miscLock = new object();
+    private volatile object _propertiesLock = new object();  
+    private volatile object _profitablePairsLock = new object(); 
+    private volatile object _dailyStatsLock = new object();    
     private TimeSpan? _offsetTimeSpan = null;
-
+    public void DoLog(string message)
+    {
+        // Implement your logging logic here
+        Console.WriteLine(message);
+    }
     // Constructor
     public ProfitTrailerData(PTMagicConfiguration systemConfiguration)
     {
@@ -56,27 +99,111 @@ namespace Core.Main.DataObjects
       }
     }
 
-    public SummaryData Summary
+    public MiscData Misc
     {
       get
       {
-        if (_summary == null || (DateTime.UtcNow > _summaryRefresh))
+        if (_misc == null || (DateTime.UtcNow > _miscRefresh))
         {
-          lock (_summaryLock)
+          lock (_miscLock)
           {
             // Thread double locking
-            if (_summary == null || (DateTime.UtcNow > _summaryRefresh))
+            if (_misc == null || (DateTime.UtcNow > _miscRefresh))
             {
-              _summary = BuildSummaryData(GetDataFromProfitTrailer("api/v2/data/misc"));
-              _summaryRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+              _misc = BuildMiscData(GetDataFromProfitTrailer("api/v2/data/misc"));
+              _miscRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
             }
           }
         }
-
-        return _summary;
+        
+        return _misc;
       }
     }
-    public Properties Properties
+    private MiscData BuildMiscData(dynamic PTData)
+    {
+      return new MiscData()
+      {
+        Market = PTData.market,
+        FiatConversionRate = PTData.priceDataFiatConversionRate,
+        Balance = PTData.realBalance,
+        PairsValue = PTData.totalPairsCurrentValue,
+        DCAValue = PTData.totalDCACurrentValue,
+        PendingValue = PTData.totalPendingCurrentValue,
+        DustValue = PTData.totalDustCurrentValue,
+        StartBalance = PTData.startBalance,
+        TotalCurrentValue = PTData.totalCurrentValue,
+        TimeZoneOffset = PTData.timeZoneOffset,
+      };
+    }
+    public List<DailyStatsData> DailyStats
+    {
+      get
+      {
+          if (_dailyStats == null || DateTime.UtcNow > _dailyStatsRefresh)
+          {
+              lock (_dailyStatsLock)
+              {
+                  if (_dailyStats == null || DateTime.UtcNow > _dailyStatsRefresh)
+                  {
+                      using (var stream = GetDataFromProfitTrailerAsStream("/api/v2/data/stats"))
+                      using (var reader = new StreamReader(stream))
+                      using (var jsonReader = new JsonTextReader(reader))
+                      {
+                          JObject basicSection = null;
+                          JObject extraSection = null;
+
+                          while (jsonReader.Read())
+                          {
+                              if (jsonReader.TokenType == JsonToken.PropertyName)
+                              {
+                                  if ((string)jsonReader.Value == "basic")
+                                  {
+                                      jsonReader.Read(); // Move to the value of the "basic" property
+                                      basicSection = JObject.Load(jsonReader);
+                                  }
+                                  else if ((string)jsonReader.Value == "extra")
+                                  {
+                                      jsonReader.Read(); // Move to the value of the "extra" property
+                                      extraSection = JObject.Load(jsonReader);
+                                  }
+                              }
+
+                              if (basicSection != null && extraSection != null)
+                              {
+                                  break;
+                              }
+                          }
+
+                          if (basicSection != null)
+                          {
+                             if (extraSection != null)
+                              {
+                                  JArray dailyStatsSection = (JArray)extraSection["dailyStats"];
+                                  _dailyStats = dailyStatsSection.Select(j => BuildDailyStatsData(j as JObject)).ToList();
+                                  _dailyStatsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+          return _dailyStats;
+        }
+    }
+    private DailyStatsData BuildDailyStatsData(dynamic dailyStatsDataJson)
+    {
+        return new DailyStatsData()
+        {
+            Date = dailyStatsDataJson["date"],
+            TotalSales = dailyStatsDataJson["totalSales"],
+            TotalBuys = dailyStatsDataJson["totalBuys"],
+            TotalProfit = dailyStatsDataJson["totalProfitCurrency"],
+            AvgProfit = dailyStatsDataJson["avgProfit"], 
+            AvgGrowth = dailyStatsDataJson["avgGrowth"], 
+        };
+    }
+
+    public PropertiesData Properties
     {
       get
       {
@@ -96,80 +223,419 @@ namespace Core.Main.DataObjects
         return _properties;
       }
     }
-    public List<SellLogData> SellLog
+    private PropertiesData BuildProptertiesData(dynamic PTProperties)
     {
-      get
+      return new PropertiesData()
       {
-        if (_sellLog == null || (DateTime.UtcNow > _sellLogRefresh))
+        Currency = PTProperties.currency,
+        Shorting = PTProperties.shorting,
+        Margin = PTProperties.margin,
+        UpTime = PTProperties.upTime,
+        Port = PTProperties.port,
+        IsLeverageExchange = PTProperties.isLeverageExchange,
+        BaseUrl = PTProperties.baseUrl
+      };
+    }
+
+    public StatsData Stats
+    {
+        get
         {
-          lock (_sellLock)
-          {
-            // Thread double locking
-            if (_sellLog == null || (DateTime.UtcNow > _sellLogRefresh))
+            if (_stats == null || DateTime.UtcNow > _statsRefresh)
             {
-              _sellLog.Clear();
-
-              // Page through the sales data summarizing it.
-              bool exitLoop = false;
-              int pageIndex = 1;
-
-              while (!exitLoop)
-              {
-                var sellDataPage = GetDataFromProfitTrailer("/api/v2/data/sales?perPage=5000&sort=SOLDDATE&sortDirection=ASCENDING&page=" + pageIndex);
-                if (sellDataPage != null && sellDataPage.data.Count > 0)
+                lock (_statsLock)
                 {
-                  // Add sales data page to collection
-                  this.BuildSellLogData(sellDataPage);
-                  pageIndex++;
+                    if (_stats == null || DateTime.UtcNow > _statsRefresh)
+                    {
+                        using (var stream = GetDataFromProfitTrailerAsStream("/api/v2/data/stats"))
+                        using (var reader = new StreamReader(stream))
+                        using (var jsonReader = new JsonTextReader(reader))
+                        {
+                            while (jsonReader.Read())
+                            {
+                                if (jsonReader.TokenType == JsonToken.PropertyName && (string)jsonReader.Value == "basic")
+                                {
+                                    jsonReader.Read(); // Move to the value of the "basic" property
+                                    JObject basicSection = JObject.Load(jsonReader);
+                                    _stats = BuildStatsData(basicSection);
+                                    _statsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
-                else
-                {
-                  // All data retrieved
-                  exitLoop = true;
-                }
-              }
-              
-              // Update sell log refresh time
-              _sellLogRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
             }
-          }
+            return _stats;
         }
-
-        return _sellLog;
-      }
     }
-
-    public List<SellLogData> SellLogToday
+    private StatsData BuildStatsData(dynamic statsDataJson)
+    {
+        return new StatsData()
+        {
+            SalesToday = statsDataJson["totalSalesToday"],
+            ProfitToday = statsDataJson["totalProfitToday"],
+            ProfitPercToday = statsDataJson["totalProfitPercToday"],
+            SalesYesterday = statsDataJson["totalSalesYesterday"],
+            ProfitYesterday = statsDataJson["totalProfitYesterday"],
+            ProfitPercYesterday = statsDataJson["totalProfitPercYesterday"],
+            SalesWeek = statsDataJson["totalSalesWeek"],
+            ProfitWeek = statsDataJson["totalProfitWeek"],
+            ProfitPercWeek = statsDataJson["totalProfitPercWeek"],
+            SalesThisMonth = statsDataJson["totalSalesThisMonth"],
+            ProfitThisMonth = statsDataJson["totalProfitThisMonth"],
+            ProfitPercThisMonth = statsDataJson["totalProfitPercThisMonth"],
+            SalesLastMonth = statsDataJson["totalSalesLastMonth"],
+            ProfitLastMonth = statsDataJson["totalProfitLastMonth"],
+            ProfitPercLastMonth = statsDataJson["totalProfitPercLastMonth"],
+            TotalProfit = statsDataJson["totalProfit"],
+            TotalSales = statsDataJson["totalSales"],
+            TotalProfitPerc = statsDataJson["totalProfitPerc"],
+            FundingToday = statsDataJson["totalFundingToday"],
+            FundingYesterday = statsDataJson["totalFundingYesterday"],
+            FundingWeek = statsDataJson["totalFundingWeek"],
+            FundingThisMonth = statsDataJson["totalFundingThisMonth"],
+            FundingLastMonth = statsDataJson["totalFundingLastMonth"],
+            FundingTotal = statsDataJson["totalFunding"],
+            TotalFundingPerc = statsDataJson["totalFundingPerc"],
+            TotalFundingPercYesterday = statsDataJson["totalFundingPercYesterday"],
+            TotalFundingPercWeek = statsDataJson["totalFundingPercWeekPerc"],
+            TotalFundingPercToday = statsDataJson["totalFundingPercTodayPerc"]
+        };
+    }
+    public List<DailyPNLData> DailyPNL
     {
       get
       {
-        return SellLog.FindAll(sl => sl.SoldDate.Date == LocalizedTime.DateTime.Date);
-      }
+          if (_dailyPNL == null || DateTime.UtcNow > _dailyPNLRefresh)
+          {
+              lock (_dailyPNLLock)
+              {
+                  if (_dailyPNL == null || DateTime.UtcNow > _dailyPNLRefresh)
+                  {
+                      using (var stream = GetDataFromProfitTrailerAsStream("/api/v2/data/stats"))
+                      using (var reader = new StreamReader(stream))
+                      using (var jsonReader = new JsonTextReader(reader))
+                      {
+                          JObject basicSection = null;
+                          JObject extraSection = null;
+
+                          while (jsonReader.Read())
+                          {
+                              if (jsonReader.TokenType == JsonToken.PropertyName)
+                              {
+                                  if ((string)jsonReader.Value == "basic")
+                                  {
+                                      jsonReader.Read(); // Move to the value of the "basic" property
+                                      basicSection = JObject.Load(jsonReader);
+                                  }
+                                  else if ((string)jsonReader.Value == "extra")
+                                  {
+                                      jsonReader.Read(); // Move to the value of the "extra" property
+                                      extraSection = JObject.Load(jsonReader);
+                                  }
+                              }
+
+                              if (basicSection != null && extraSection != null)
+                              {
+                                  break;
+                              }
+                          }
+
+                          if (basicSection != null && 
+                              ((_totalProfit == null || 
+                              !Decimal.Equals(_totalProfit.Value, basicSection["totalProfit"].Value<decimal>())) ||
+                              (_totalSales == null || 
+                              !Decimal.Equals(_totalSales.Value, basicSection["totalSales"].Value<decimal>()))))
+                          {
+                              _totalProfit = basicSection["totalProfit"].Value<decimal>();
+                              _totalSales = basicSection["totalSales"].Value<decimal>();
+
+                              if (extraSection != null)
+                              {
+                                  JArray dailyPNLSection = (JArray)extraSection["dailyPNLStats"];
+                                  _dailyPNL = dailyPNLSection.Select(j => BuildDailyPNLData(j as JObject)).ToList();
+                                  _dailyPNLRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+          return _dailyPNL;
+        }
+    }
+    private DailyPNLData BuildDailyPNLData(dynamic dailyPNLDataJson)
+    {
+        return new DailyPNLData()
+        {
+            Date = dailyPNLDataJson["date"],
+            CumulativeProfitCurrency = dailyPNLDataJson["cumulativeProfitCurrency"],
+            Order = dailyPNLDataJson["order"],
+        };
+    }
+    public List<ProfitablePairsData> ProfitablePairs
+    {
+        get
+        {
+            if (_profitablePairs == null || DateTime.UtcNow > _profitablePairsRefresh)
+            {
+                lock (_profitablePairsLock)
+                {
+                    if (_profitablePairs == null || DateTime.UtcNow > _profitablePairsRefresh)
+                    {
+                        using (var stream = GetDataFromProfitTrailerAsStream("/api/v2/data/stats"))
+                        using (var reader = new StreamReader(stream))
+                        using (var jsonReader = new JsonTextReader(reader))
+                        {
+                            JObject basicSection = null;
+                            JObject extraSection = null;
+                            while (jsonReader.Read())
+                            {
+                                if (jsonReader.TokenType == JsonToken.PropertyName)
+                                {
+                                    if ((string)jsonReader.Value == "basic")
+                                    {
+                                        jsonReader.Read(); // Move to the value of the "basic" property
+                                        basicSection = JObject.Load(jsonReader);
+                                    }
+                                    else if ((string)jsonReader.Value == "extra")
+                                    {
+                                        jsonReader.Read(); // Move to the value of the "extra" property
+                                        extraSection = JObject.Load(jsonReader);
+                                    }
+                                }
+
+                                if (basicSection != null && extraSection != null)
+                                {
+                                    break;
+                                }
+                            }
+                            if (basicSection != null) 
+                              {
+                                if (extraSection != null)
+                                  {
+                                      JObject profitablePairsSection = (JObject)extraSection["profitablePairs"];
+                                      _profitablePairs = new List<ProfitablePairsData>();
+                                      int counter = 0;
+                                      foreach (var j in profitablePairsSection)
+                                      {
+                                          if (counter >= _systemConfiguration.GeneralSettings.Monitor.MaxTopMarkets)
+                                          {
+                                              break;
+                                          }
+                                          // Process each JObject in the dictionary
+                                          JObject profitablePair = (JObject)j.Value;
+                                          _profitablePairs.Add(BuildProfitablePairs(profitablePair));
+                                          counter++;
+                                      }
+                                      _profitablePairsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                                  }
+                            }
+                        }
+                    }
+                }
+            }
+            return _profitablePairs;
+        }
+    }
+    private ProfitablePairsData BuildProfitablePairs(JObject profitablePairsJson)
+    {
+        return new ProfitablePairsData()
+        {
+            Coin = profitablePairsJson["coin"].Value<string>(),
+            ProfitCurrency = profitablePairsJson["profitCurrency"].Value<double>(),
+            SoldTimes = profitablePairsJson["soldTimes"].Value<int>(),
+            Avg = profitablePairsJson["avg"].Value<double>(),
+        };
     }
 
-    public List<SellLogData> SellLogYesterday
+    public List<DailyTCVData> DailyTCV
     {
       get
       {
-        return SellLog.FindAll(sl => sl.SoldDate.Date == LocalizedTime.DateTime.AddDays(-1).Date);
-      }
+          if (_dailyTCV == null || DateTime.UtcNow > _dailyTCVRefresh)
+          {
+              lock (_dailyTCVLock)
+              {
+                  if (_dailyTCV == null || DateTime.UtcNow > _dailyTCVRefresh)
+                  {
+                      using (var stream = GetDataFromProfitTrailerAsStream("/api/v2/data/stats"))
+                      using (var reader = new StreamReader(stream))
+                      using (var jsonReader = new JsonTextReader(reader))
+                      {
+                        JObject basicSection = null;
+                        JObject extraSection = null;
+
+                          while (jsonReader.Read())
+                          {
+                            if (jsonReader.TokenType == JsonToken.PropertyName)
+                            {
+                                if ((string)jsonReader.Value == "basic")
+                                {
+                                    jsonReader.Read(); // Move to the value of the "basic" property
+                                    basicSection = JObject.Load(jsonReader);
+                                }
+                                else if ((string)jsonReader.Value == "extra")
+                                {
+                                    jsonReader.Read(); // Move to the value of the "extra" property
+                                    extraSection = JObject.Load(jsonReader);
+                                }
+                            }
+
+                            if (basicSection != null && extraSection != null)
+                            {
+                                break;
+                            }
+                          }
+
+                          if (basicSection != null)
+                            {
+                              if (extraSection != null)
+                              {
+                                  JArray dailyTCVSection = (JArray)extraSection["dailyTCVStats"];
+                                  _dailyTCV = dailyTCVSection.Select(j => BuildDailyTCVData(j as JObject)).ToList();
+                                  _dailyTCVRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                              }
+                            }
+                      }
+                  }
+              }
+          }
+          return _dailyTCV;
+        }
+    }
+    public int GetTotalTCVDays()
+    {
+        return DailyTCV?.Count ?? 0;
+    }
+    private DailyTCVData BuildDailyTCVData(dynamic dailyTCVDataJson)
+    {
+        return new DailyTCVData()
+        {
+            Date = dailyTCVDataJson["date"],
+            TCV = dailyTCVDataJson["TCV"],
+            Order = dailyTCVDataJson["order"],
+        };
+    }
+    public List<MonthlyStatsData> MonthlyStats
+    {
+        get
+        {
+            if (_monthlyStats == null || DateTime.UtcNow > _monthlyStatsRefresh)
+            {
+                lock (_monthlyStatsLock)
+                {
+                    if (_monthlyStats == null || DateTime.UtcNow > _monthlyStatsRefresh)
+                    {
+                        using (var stream = GetDataFromProfitTrailerAsStream("/api/v2/data/stats"))
+                        using (var reader = new StreamReader(stream))
+                        using (var jsonReader = new JsonTextReader(reader))
+                        {
+                            JObject basicSection = null;
+                            JObject extraSection = null;
+
+                            while (jsonReader.Read())
+                            {
+                                if (jsonReader.TokenType == JsonToken.PropertyName)
+                                {
+                                    if ((string)jsonReader.Value == "basic")
+                                    {
+                                        jsonReader.Read(); // Move to the value of the "basic" property
+                                        basicSection = JObject.Load(jsonReader);
+                                    }
+                                    else if ((string)jsonReader.Value == "extra")
+                                    {
+                                        jsonReader.Read(); // Move to the value of the "extra" property
+                                        extraSection = JObject.Load(jsonReader);
+                                    }
+                                }
+
+                                if (basicSection != null && extraSection != null)
+                                {
+                                    break;
+                                }
+                            }
+
+                            if (basicSection != null)// && 
+                              {
+                                if (extraSection != null)
+                                {
+                                    JArray monthlyStatsSection = (JArray)extraSection["monthlyStats"];
+                                    _monthlyStats = monthlyStatsSection.Select(j => BuildMonthlyStatsData(j as JObject)).ToList();
+                                    _monthlyStatsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return _monthlyStats;
+        }
     }
 
-    public List<SellLogData> SellLogLast7Days
+    private MonthlyStatsData BuildMonthlyStatsData(dynamic monthlyStatsDataJson)
     {
-      get
-      {
-        return SellLog.FindAll(sl => sl.SoldDate.Date >= LocalizedTime.DateTime.AddDays(-7).Date);
-      }
+        return new MonthlyStatsData()
+        {
+            Month = monthlyStatsDataJson["month"],
+            TotalSales = monthlyStatsDataJson["totalSales"],
+            TotalProfitCurrency = monthlyStatsDataJson["totalProfitCurrency"],
+            AvgGrowth = monthlyStatsDataJson["avgGrowth"],
+            Order = monthlyStatsDataJson["order"],
+        };
     }
+//     public List<SellLogData> SellLog
+//     {
+//       get
+//       {
+         
+//         if (_sellLog == null || (DateTime.UtcNow > _sellLogRefresh))
+//         {
+//             lock (_sellLock)
+//             {
+//               // Thread double locking
+//               if (_sellLog == null || (DateTime.UtcNow > _sellLogRefresh))
+//               {
+//                 _sellLog.Clear();
 
-    public List<SellLogData> SellLogLast30Days
-    {
-      get
-      {
-        return SellLog.FindAll(sl => sl.SoldDate.Date >= LocalizedTime.DateTime.AddDays(-30).Date);
-      }
-    }
+
+//                 // Page through the sales data summarizing it.
+//                 bool exitLoop = false;
+//                 int pageIndex = 1;
+                
+//                 // 1 record per page to allow user to set max records to retrieve
+//                 int maxPages = _systemConfiguration.GeneralSettings.Monitor.MaxSalesRecords;
+//                 int requestedPages = 0;
+                
+//                 while (!exitLoop && requestedPages < maxPages)
+//                 {
+//                   var sellDataPage = GetDataFromProfitTrailer("/api/v2/data/sales?Page=1&perPage=1&sort=SOLDDATE&sortDirection=DESCENDING&page=" + pageIndex);
+//                   if (sellDataPage != null && sellDataPage.data.Count > 0)
+//                   {
+//                     // Add sales data page to collection
+//                     this.BuildSellLogData(sellDataPage);
+//                     pageIndex++;
+//                     requestedPages++;
+// Console.WriteLine($"Importing salesLog: {pageIndex}");
+
+//                   }
+//                   else
+//                   {
+//                     // All data retrieved
+//                     exitLoop = true;
+//                   }
+//                 }
+
+//                 // Update sell log refresh time
+//                 _sellLogRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds -1);
+//               }
+//             }
+//           }
+//         return _sellLog;
+//       }
+//     }
+
 
     public List<DCALogData> DCALog
     {
@@ -196,7 +662,6 @@ namespace Core.Main.DataObjects
               () =>
               {
                 pendingData = GetDataFromProfitTrailer("/api/v2/data/pending", true);
-
               },
               () =>
               {
@@ -247,42 +712,43 @@ namespace Core.Main.DataObjects
     public double GetCurrentBalance()
     {
       return
-      (this.Summary.Balance);
+      (this.Misc.Balance);
     }
     public double GetPairsBalance()
     {
       return
-      (this.Summary.PairsValue);
+      (this.Misc.PairsValue);
     }
     public double GetDCABalance()
     {
       return
-      (this.Summary.DCAValue);
+      (this.Misc.DCAValue);
     }
     public double GetPendingBalance()
     {
       return
-      (this.Summary.PendingValue);
+      (this.Misc.PendingValue);
     }
     public double GetDustBalance()
     {
       return
-      (this.Summary.DustValue);
+      (this.Misc.DustValue);
     }
-
-    public double GetSnapshotBalance(DateTime snapshotDateTime)
-    {
-      double result = _systemConfiguration.GeneralSettings.Application.StartBalance;
-
-      result += this.SellLog.FindAll(sl => sl.SoldDate.Date < snapshotDateTime.Date).Sum(sl => sl.Profit);
-      result += this.TransactionData.Transactions.FindAll(t => t.UTCDateTime < snapshotDateTime).Sum(t => t.Amount);
-
-      // Calculate holdings for snapshot date
-      result += this.DCALog.FindAll(pairs => pairs.FirstBoughtDate <= snapshotDateTime).Sum(pairs => pairs.CurrentValue);
-
-      return result;
-    }
-
+    
+    
+    // public double GetSnapshotBalance(DateTime snapshotDateTime)
+    // {
+    //   double result = _misc.StartBalance;
+      
+    //   result += this.SellLog.FindAll(sl => sl.SoldDate.Date < snapshotDateTime.Date).Sum(sl => sl.Profit);
+    //   result += this.TransactionData.Transactions.FindAll(t => t.UTCDateTime < snapshotDateTime).Sum(t => t.Amount);
+      
+    //   // Calculate holdings for snapshot date
+    //   result += this.DCALog.FindAll(pairs => pairs.FirstBoughtDate <= snapshotDateTime).Sum(pairs => pairs.CurrentValue);
+     
+    //   return result;
+    // }
+    
     private dynamic GetDataFromProfitTrailer(string callPath, bool arrayReturned = false)
     {
       string rawBody = "";
@@ -290,15 +756,15 @@ namespace Core.Main.DataObjects
       callPath,
       callPath.Contains("?") ? "&" : "?", 
       _systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken);
-
+      
       // Get the data from PT
       Debug.WriteLine(String.Format("{0} - Calling '{1}'", DateTime.UtcNow, url));
       HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
       request.AutomaticDecompression = DecompressionMethods.GZip;
       request.KeepAlive = true;
-
+      
       WebResponse response = request.GetResponse();
-
+      
       using (Stream dataStream = response.GetResponseStream())
       {
         StreamReader reader = new StreamReader(dataStream);
@@ -307,95 +773,90 @@ namespace Core.Main.DataObjects
       }
 
       response.Close();
-
-      // Parse the JSON and build the data sets
+      
+      
       if (!arrayReturned)
-      {
-        return JObject.Parse(rawBody);
-      }
-      else
-      {
-        return JArray.Parse(rawBody);
-      }
+        {
+            return JObject.Parse(rawBody);
+        }
+        else
+        {
+            return JArray.Parse(rawBody);
+        }
     }
-
-    private SummaryData BuildSummaryData(dynamic PTData)
+    private Stream GetDataFromProfitTrailerAsStream(string callPath)
     {
-      return new SummaryData()
-      {
-        Market = PTData.market,
-        Balance = PTData.realBalance,
-        PairsValue = PTData.totalPairsCurrentValue,
-        DCAValue = PTData.totalDCACurrentValue,
-        PendingValue = PTData.totalPendingCurrentValue,
-        DustValue = PTData.totalDustCurrentValue
-      };
+        string url = string.Format("{0}{1}{2}token={3}", _systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL, 
+        callPath,
+        callPath.Contains("?") ? "&" : "?", 
+        _systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken);
+        
+        // Get the data from PT
+        Debug.WriteLine(String.Format("{0} - Calling '{1}'", DateTime.UtcNow, url));
+        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
+        request.AutomaticDecompression = DecompressionMethods.GZip;
+        request.KeepAlive = true;
+        
+        WebResponse response = request.GetResponse();
+        
+        return response.GetResponseStream();
     }
-    private Properties BuildProptertiesData(dynamic PTProperties)
-    {
-      return new Properties()
-      {
-        Currency = PTProperties.currency,
-        Shorting = PTProperties.shorting,
-        Margin = PTProperties.margin,
-        UpTime = PTProperties.upTime,
-        Port = PTProperties.port,
-        IsLeverageExchange = PTProperties.isLeverageExchange,
-        BaseUrl = PTProperties.baseUrl
-      };
-    }
-    private void BuildSellLogData(dynamic rawSellLogData)
-    {
-      foreach (var rsld in rawSellLogData.data)
-      {
-        SellLogData sellLogData = new SellLogData();
-        sellLogData.SoldAmount = rsld.soldAmount;
-        sellLogData.BoughtTimes = rsld.boughtTimes;
-        sellLogData.Market = rsld.market;
-        sellLogData.ProfitPercent = rsld.profit;
-        sellLogData.SoldPrice = rsld.currentPrice;
-        sellLogData.AverageBuyPrice = rsld.avgPrice;
-        sellLogData.TotalCost = rsld.totalCost;
-        sellLogData.Profit = rsld.profitCurrency;
 
-
-        //Convert Unix Timestamp to Datetime
-        System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
-        dtDateTime = dtDateTime.AddSeconds((double)rsld.soldDate).ToUniversalTime();
-
-        // Profit Trailer sales are saved in UTC
-        DateTimeOffset ptSoldDate = DateTimeOffset.Parse(dtDateTime.Year.ToString() + "-" + dtDateTime.Month.ToString("00") + "-" + dtDateTime.Day.ToString("00") + "T" + dtDateTime.Hour.ToString("00") + ":" + dtDateTime.Minute.ToString("00") + ":" + dtDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
-
-        // Convert UTC sales time to local offset time
-        ptSoldDate = ptSoldDate.ToOffset(OffsetTimeSpan);
-
-        sellLogData.SoldDate = ptSoldDate.DateTime;
-
-        _sellLog.Add(sellLogData);
-      }
-    }
+    
+    // private void BuildSellLogData(dynamic rawSellLogData)
+    // {
+    //   foreach (var rsld in rawSellLogData.data)
+    //   {
+    //     SellLogData sellLogData = new SellLogData();
+    //     sellLogData.SoldAmount = rsld.soldAmount;
+    //     sellLogData.BoughtTimes = rsld.boughtTimes;
+    //     sellLogData.Market = rsld.market;
+    //     sellLogData.ProfitPercent = rsld.profit;
+    //     sellLogData.SoldPrice = rsld.currentPrice;
+    //     sellLogData.AverageBuyPrice = rsld.avgPrice;
+    //     sellLogData.TotalCost = rsld.totalCost;
+    //     sellLogData.Profit = rsld.profitCurrency;
+        
+        
+    //     //Convert Unix Timestamp to Datetime
+    //     System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
+    //     dtDateTime = dtDateTime.AddSeconds((double)rsld.soldDate).ToUniversalTime();
+        
+        
+    //     // Profit Trailer sales are saved in UTC
+    //     DateTimeOffset ptSoldDate = DateTimeOffset.Parse(dtDateTime.Year.ToString() + "-" + dtDateTime.Month.ToString("00") + "-" + dtDateTime.Day.ToString("00") + "T" + dtDateTime.Hour.ToString("00") + ":" + dtDateTime.Minute.ToString("00") + ":" + dtDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
+        
+        
+    //     // Convert UTC sales time to local offset time
+       
+    //     ptSoldDate = ptSoldDate.ToOffset(OffsetTimeSpan);
+        
+    //     sellLogData.SoldDate = ptSoldDate.DateTime;
+       
+    //     _sellLog.Add(sellLogData);
+    //   }
+    // }
 
     private void BuildDCALogData(dynamic rawDCALogData, dynamic rawPairsLogData, dynamic rawPendingLogData, dynamic rawWatchModeLogData)
     {
       // Parse DCA data
       _dcaLog.AddRange(ParsePairsData(rawDCALogData, true));
-
+      
       // Parse Pairs data
       _dcaLog.AddRange(ParsePairsData(rawPairsLogData, false));
-
+      
       // Parse pending pairs data
       _dcaLog.AddRange(ParsePairsData(rawPendingLogData, false));
-
+      
       // Parse watch only pairs data
       _dcaLog.AddRange(ParsePairsData(rawWatchModeLogData, false));
-
     }
 
     // Parse the pairs data from PT to our own common data structure.
     private List<DCALogData> ParsePairsData(dynamic pairsData, bool processBuyStrategies)
     {
       List<DCALogData> pairs = new List<DCALogData>();
-
+      
       foreach (var pair in pairsData)
       {
         DCALogData dcaLogData = new DCALogData();
@@ -416,7 +877,7 @@ namespace Core.Main.DataObjects
         dcaLogData.BuyStrategy = pair.buyStrategy == null ? "" : pair.buyStrategy;
         dcaLogData.SellStrategy = pair.sellStrategy == null ? "" : pair.sellStrategy;
         dcaLogData.IsTrailing = false;
-
+        
         // See if they are using PT 2.5 (buyStrategiesData) or 2.4 (buyStrategies)
         var buyStrats = pair.buyStrategies != null ? pair.buyStrategies : pair.buyStrategiesData.data;
         if (buyStrats != null && processBuyStrategies)
@@ -434,7 +895,7 @@ namespace Core.Main.DataObjects
             buyStrategy.Decimals = bs.decimals;
             buyStrategy.IsTrailing = bs.trailing;
             buyStrategy.IsTrue = bs.strategyResult;
-
+           
             dcaLogData.BuyStrategies.Add(buyStrategy);
           }
         }
@@ -456,9 +917,9 @@ namespace Core.Main.DataObjects
             sellStrategy.Decimals = ss.decimals;
             sellStrategy.IsTrailing = ss.trailing;
             sellStrategy.IsTrue = ss.strategyResult;
-
+            
             dcaLogData.SellStrategies.Add(sellStrategy);
-
+            
             // Find the target percentage gain to sell.
             if (sellStrategy.Name.Contains("GAIN", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -470,14 +931,14 @@ namespace Core.Main.DataObjects
             }
           }
         }
-
+        
         // Calculate current value
         dcaLogData.CurrentValue = dcaLogData.CurrentPrice * dcaLogData.Amount;
-
+        
         // Convert Unix Timestamp to Datetime
         System.DateTime rdldDateTime = new DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
         rdldDateTime = rdldDateTime.AddSeconds((double)pair.firstBoughtDate).ToUniversalTime();
-
+        
         // Profit Trailer bought times are saved in UTC
         if (pair.firstBoughtDate > 0)
         {
@@ -492,7 +953,7 @@ namespace Core.Main.DataObjects
         {
           dcaLogData.FirstBoughtDate = Constants.confMinDate;
         }
-
+        
         _dcaLog.Add(dcaLogData);
       }
 
@@ -509,7 +970,7 @@ namespace Core.Main.DataObjects
         buyLogData.CurrentPrice = rbld.currentPrice;
         buyLogData.PercChange = rbld.percChange;
         buyLogData.Volume24h = rbld.volume;
-
+        
         if (rbld.positive != null)
         {
           buyLogData.IsTrailing = ((string)(rbld.positive)).IndexOf("trailing", StringComparison.InvariantCultureIgnoreCase) > -1;
@@ -518,10 +979,10 @@ namespace Core.Main.DataObjects
         else
         {
           // Parse buy strategies
-
+          
           // See if they are using PT 2.5 (buyStrategiesData) or 2.4 (buyStrategies)
           var buyStrats = rbld.buyStrategies != null ? rbld.buyStrategies : rbld.buyStrategiesData.data;
-
+          
           if (buyStrats != null)
           {
             foreach (var bs in buyStrats)
@@ -537,17 +998,17 @@ namespace Core.Main.DataObjects
               buyStrategy.Decimals = bs.decimals;
               buyStrategy.IsTrailing = bs.trailing;
               buyStrategy.IsTrue = bs.strategyResult;
-
+              
               // Is SOM?
               buyLogData.IsSom = buyLogData.IsSom || buyStrategy.Name.Contains("som enabled", StringComparison.OrdinalIgnoreCase);
-
+              
               // Is the pair trailing?
               buyLogData.IsTrailing = buyLogData.IsTrailing || buyStrategy.IsTrailing;
               buyLogData.IsTrue = buyLogData.IsTrue || buyStrategy.IsTrue;
-
+              
               // True status strategy count total
               buyLogData.TrueStrategyCount += buyStrategy.IsTrue ? 1 : 0;
-
+              
               // Add
               buyLogData.BuyStrategies.Add(buyStrategy);
             }
