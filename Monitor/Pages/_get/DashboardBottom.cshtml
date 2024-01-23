@@ -10,7 +10,48 @@
 }
 
 <div class="row">
-  <div class="col-md-5 px-1">
+
+  <div class="col-md-3 px-1">
+    <div class="card-box px-1" style="height:240px;">
+      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59" 
+        title="All charts set to refresh every @Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds seconds in your general settings."></div>
+        @{
+        string totalCurrentValueString = Model.totalCurrentValue.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
+        if (Model.totalCurrentValue > 100) {
+          totalCurrentValueString = Math.Round(Model.totalCurrentValue, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
+          }
+        }   
+        <div id="AssetDistribution" class="container" style="height: 100%; width: 100%;">        
+          <div class="text-center">
+            <span data-toggle="tooltip" data-placement="top" title="Total current account value">TCV: <text class="text-autocolor">@totalCurrentValueString @Model.Summary.MainMarket </text> </span>
+          </div>
+          <div class="text-center">
+            <small>
+            <span data-toggle="tooltip" data-placement="top" title="Starting balance from PTM settings">Start: <text class="text-autocolor">@Model.MiscData.StartBalance </text></span>
+            <span data-toggle="tooltip" data-placement="top" title="TCV gain on starting balance">&emsp; Gain: <text class="text-autocolor">@Math.Round(((Model.totalCurrentValue - Model.MiscData.StartBalance) / Model.MiscData.StartBalance) * 100, 2)%</text></span>
+            </small>
+          </div>
+          <svg style="height:100%;width:100%"></svg>
+      </div>
+    </div>
+  </div>
+    
+  <div class="col-md-9">
+    <div class="card-box px-2" style="height:240px;">
+      <h4 class="m-t-0 header-title"><b>Live TCV Trend </b><i class="fa fa-info-circle text-muted"  style="font-size x-small" data-toggle="tooltip" data-placement="top" title="Data is added while the monitor is running. Currently set to show the past @Model.PTMagicConfiguration.GeneralSettings.Monitor.LiveTCVTimeframeMinutes minutes in your monitor settings."></i>
+      @if (!Model.TotalCurrentValueLiveChartDataJSON.Equals("")) {
+        <div class="TCVLive-chart">
+          <svg style="height:220px;width:100%"></svg>
+        </div>
+      } else {
+        <p>Unable to load graph, no sales data found.</p>
+      }
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6 px-1">
     <div class="card-box px-2" style="height:340px;">
       <h4 class="m-t-0 m-b-20 header-title" style="display: inline;"><b>Market Trend History  </b><i class="fa fa-info-circle text-muted"  style="font-size x-small" data-toggle="tooltip" data-placement="top" title="@Math.Round(Model.DataHours, 1) hours of data available. Currently set to show @Model.PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours hours at @Model.PTMagicConfiguration.GeneralSettings.Monitor.GraphIntervalMinutes intervals, in general settings."></i></h4>
       @if (!Model.TrendChartDataJSON.Equals("")) {
@@ -23,37 +64,12 @@
     </div>
   </div>
   
-  <div class="col-md-3 px-1">
-    <div class="card-box px-3" style="height:340px;">
-      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59" 
-      title="All charts set to refresh every @Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds seconds in your general settings."></div>
-      @{
-      string totalCurrentValueString = Model.totalCurrentValue.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
-      if (Model.totalCurrentValue > 100) {
-        totalCurrentValueString = Math.Round(Model.totalCurrentValue, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
-        }
-      }   
-      <div id="AssetDistribution" class="container">        
-        <div class="text-center">
-          <small>
-            <span data-toggle="tooltip" data-placement="top" title="Starting balance from PTM settings">Start: &nbsp; <text class="text-autocolor"> @Model.MiscData.StartBalance @Model.Summary.MainMarket </text></span>
-            <span data-toggle="tooltip" data-placement="top" title="TCV gain on starting balance"> &emsp; &emsp; Gain:&nbsp;<text class="text-autocolor">@Math.Round(((Model.totalCurrentValue - Model.MiscData.StartBalance) / Model.MiscData.StartBalance) * 100, 2)%</text></span>
-          </small>
-        </div>
-        <div class="text-center">
-          <span data-toggle="tooltip" data-placement="top" title="Total current account value">TCV: &nbsp; <text class="text-autocolor"> @totalCurrentValueString @Model.Summary.MainMarket </text> </span>
-        </div>
-        <div class="row px1">
-          <svg style="height:260px;width:100%"></svg>
-        </div>
-      </div>
-    </div>
-  </div>
+  
 
-  <div class="col-md-4 px-1">
+  <div class="col-md-6 px-1">
     @*<div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>*@
     <div class="card-box px-2" style="height:340px;">
-      <h4 class="m-t-0 m-b-20 header-title" style="display: inline;">Daily Profit <i class="fa fa-info-circle text-muted"  style="font-size x-small" data-toggle="tooltip" data-placement="top" title="@Model.ProfitDays days of data available. Currently Set to @Model.PTMagicConfiguration.GeneralSettings.Monitor.ProfitsMaxTimeframeDays days in general settings."></i>
+      <h4 class="m-t-0 m-b-20 header-title" style="display: inline;">Daily Profit <i class="fa fa-info-circle text-muted"  style="font-size x-small" data-toggle="tooltip" data-placement="top" title="@Model.PTData.DailyPNL.Count days of data available. Currently Set to @Model.PTMagicConfiguration.GeneralSettings.Monitor.ProfitsMaxTimeframeDays days in general settings."></i>
       @if (!Model.ProfitChartDataJSON.Equals("")) {
         <div class="profit-chart">
           <svg style="height:300px;width:100%"></svg>
@@ -70,9 +86,9 @@
     <div class="card-box px-3">
       @* <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeco;nds * 1000)" data-color="#aaa,#414d59"></div>
       <br> *@
-      <h4 class="m-t-0 m-b-20 header-title">Live Trends 
+      <h4 class="m-t-0 m-b-20 header-title">Live Market Trends 
         <i class="fa fa-info-circle text-muted"  style="font-size small" data-toggle="tooltip" data-placement="top" title="Set to refresh every @Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds seconds in general settings."></i>
-        <small class="pull-right" style="font-size: x-small"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)MarketAnalyzer">ANALYZER</a></small>
+        <small class="pull-right" style="font-size: small"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)MarketAnalyzer">ANALYZER</a></small>
       </h4>
       <table class="table table-sm">
         <thead>
@@ -302,18 +318,23 @@
           .labelThreshold(.1)
           .labelType("percent")
           .donut(true)
-          .donutRatio(0.3);
+          .donutRatio(0.3)
+          .margin({top: 10, bottom: 10})
+          .showLegend(false); // Hide the legend
 
         assetDistributionData = @Html.Raw(Model.AssetDistributionData);
 
         d3.select("#AssetDistribution svg")
+          .style('height', '90%')
+          .style('width', '100%')
           .datum(assetDistributionData)
           .transition().duration(0)
           .call(assetDistributionChart);
+            
 
-           // Add mouseleave, and mousemove event listeners to hide tooltip
+        // Add mouseleave, and mousemove event listeners to hide tooltip
         d3.select('.profit-chart').on('mouseleave', function() {
-          d3.select('.nvtooltip').style('opacity', 0);
+        d3.select('.nvtooltip').style('opacity', 0);
         });
 
         d3.select('body').on('mousemove', function() {
@@ -455,3 +476,50 @@
     $('[data-toggle="tooltip"]').tooltip();
   });
 </script>
+<script type="text/javascript">
+    (function ($) {
+      'use strict';
+      $('[role="tooltip"]').remove();
+      $('[data-toggle="tooltip"]').tooltip();
+      $('.text-autocolor').autocolor(false);
+
+      var TCVLiveChart;  // Keep a reference to the chart
+      var TCVLiveData;  // Keep a reference to the data
+
+      @if (!Model.TotalCurrentValueLiveChartDataJSON.Equals("")) {
+      <text>
+        nv.addGraph(function () {
+          TCVLiveChart = nv.models.lineChart();
+          TCVLiveChart.useInteractiveGuideline(true);
+          TCVLiveChart.xAxis.tickFormat(function (d) { return d3.time.format('%H:%M:%S')(new Date(d)); });
+          TCVLiveChart.yAxis.axisLabel('').tickFormat(d3.format(',.2f'));
+
+          TCVLiveData = @Html.Raw(Model.TotalCurrentValueLiveChartDataJSON);
+
+          d3.select('.TCVLive-chart svg')
+            .style('width', '100%')
+            .datum(TCVLiveData)
+            .transition().duration(0)
+            .call(TCVLiveChart);
+            
+            // Add mouseleave, and mousemove event listeners to hide tooltip
+            d3.select('.TCVLive-chart').on('mouseleave', function() {
+            d3.select('.nvtooltip').style('opacity', 0);
+          });
+
+          d3.select('body').on('mousemove', function() {
+            var chartBounds = d3.select('.TCVLive-chart')[0][0].getBoundingClientRect();
+            var mouseX = d3.event.clientX;
+            var mouseY = d3.event.clientY;
+
+            if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
+              d3.select('.nvtooltip').style('opacity', 0);
+            }
+          });
+          nv.utils.windowResize(TCVLiveChart.update);
+          return TCVLiveChart;
+        });
+      </text>
+      }
+    })(jQuery);
+  </script>

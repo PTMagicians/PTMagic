@@ -69,7 +69,7 @@
           <tr>
             <th>
               @if (!lastMarket.Equals(smsSummary.Market)) {
-                <a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform, Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, smsSummary.Market, Model.Summary.MainMarket)" target="_blank">@smsSummary.Market</a>
+                <a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform, Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, smsSummary.Market, Model.Summary.MainMarket, Model.PTMagicConfiguration.GeneralSettings.Monitor.TVCustomLayout)" target="_blank">@smsSummary.Market</a>
               }
             </th>
             <td>

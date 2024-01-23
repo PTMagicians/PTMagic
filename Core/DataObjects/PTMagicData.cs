@@ -42,7 +42,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public int FloodProtectionMinutes { get; set; } = 15;
     public string Exchange { get; set; }
     public string InstanceName { get; set; } = "PT Magic";
-    public string TimezoneOffset { get; set; } = "+0:00";
+    //public string TimezoneOffset { get; set; } = "+0:00";
     public string CoinMarketCapAPIKey { get; set; }
     //public string FreeCurrencyConverterAPIKey { get; set; }
   }
@@ -55,13 +55,13 @@ namespace Core.Main.DataObjects.PTMagicData
     public bool OpenBrowserOnStart { get; set; } = false;
     public int Port { get; set; } = 5000;
     public string AnalyzerChart { get; set; } = "";
+    public int LiveTCVTimeframeMinutes { get; set; } = 60;
     public int GraphIntervalMinutes { get; set; } = 60;
     public int GraphMaxTimeframeHours { get; set; } = 24;
     public int ProfitsMaxTimeframeDays { get; set; } = 60;
     public int RefreshSeconds { get; set; } = 30;
     public int BagAnalyzerRefreshSeconds { get; set; } = 5;
     public int BuyAnalyzerRefreshSeconds { get; set; } = 5;
-    //public int MaxSalesRecords { get; set; } = 99999;
     public int MaxTopMarkets { get; set; } = 20;
     public int MaxDailySummaries { get; set; } = 10;
     public int MaxMonthlySummaries { get; set; } = 10;
@@ -70,6 +70,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public int MaxDCAPairs { get; set; } = 24;
     public int MaxSettingsLogEntries { get; set; } = 20;
     public string LinkPlatform { get; set; } = "TradingView";
+    public string TVCustomLayout { get; set; } = "";
     public string DefaultDCAMode { get; set; } = "Simple";
     public string TvStudyA { get; set; } = "";
     public string TvStudyB { get; set; } = "";
@@ -572,5 +573,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public string Market { get; set; }
     public string TotalCurrentValue { get; set; }
     public string TimeZoneOffset { get; set; }
+    public string ExchangeURL { get; set; }
+    public string PTVersion { get; set; }
   }
 }

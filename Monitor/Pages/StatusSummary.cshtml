@@ -116,12 +116,7 @@
       </div>
     </div>
   </div>
-
-    
-
 </div>
-
-
 
 <div class="card-box">
   <h4 class="m-t-0 header-title">Global Settings Log</h4>
@@ -136,7 +131,7 @@
     </thead>
     <tbody>
       @foreach (Core.Main.DataObjects.PTMagicData.GlobalSettingSummary gss in Model.Summary.GlobalSettingSummary.OrderByDescending(g => g.SwitchDateTime).Take(Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxSettingsLogEntries)) {
-        TimeSpan offsetTimeSpan = TimeSpan.Parse(Model.PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
+        TimeSpan offsetTimeSpan = TimeSpan.Parse(Model.MiscData.TimeZoneOffset.Replace("+", ""));
         DateTimeOffset settingActivationTime = gss.SwitchDateTime;
         settingActivationTime = settingActivationTime.ToOffset(offsetTimeSpan);
 

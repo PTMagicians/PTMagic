@@ -329,7 +329,7 @@
               double profitFiat = Math.Round(profit * Model.MiscData.FiatConversionRate, 0);
               <tr>
                 <td>@rank</td>
-                <td><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform, Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, coin, Model.PTData.Misc.Market)" target="_blank">@coin</a></td>
+                <td><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform, Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, coin, Model.PTData.Misc.Market, Model.PTMagicConfiguration.GeneralSettings.Monitor.TVCustomLayout)" target="_blank">@coin</a></td>
                 <td class="text-right text-autocolor-saw">@profit</td>
                 <td class="text-right">@sales</td>
                 <td class="text-right text-autocolor-saw">@avg </td>

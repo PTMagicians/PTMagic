@@ -10,7 +10,7 @@
       "ProfitTrailerMonitorURLXtra": "", // URLs for additional bots you want PTM to update (optional  - comma separated list)
       "ProfitTrailerDefaultSettingName": "default", // Your Profit Trailer default setting name (needed to change your settings)
       "Exchange": "Bittrex", // The exchange your are running Profit Trailer on
-      "TimezoneOffset": "+0:00", // Your timezone offset from UTC time
+      //"TimezoneOffset": "+0:00", // Your timezone offset from UTC time
       "FloodProtectionMinutes": 0, // If a price trend is just zig-zagging around its trigger, you may want to protect your settings from getting switched back and forth every minute
       "InstanceName": "PT Magic", // The name of the instance of this bot. This will be used in your monitor and your Telegram messages. In case you are running more than one bot, you may set different names to separate them
       //"FreeCurrencyConverterAPIKey": "" // If "MainFiatCurrency" above is anything other than USD, you must obtain an API key from https://free.currencyconverterapi.com/free-api-key 

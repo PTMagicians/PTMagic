@@ -82,8 +82,11 @@ namespace Core.Main.DataObjects
       {
         if (!_offsetTimeSpan.HasValue)
         {
-          // Get offset for settings.
-          _offsetTimeSpan = TimeSpan.Parse(_systemConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
+          // Ensure Misc is populated
+          var misc = this.Misc;
+
+          // Get offset from Misc
+          _offsetTimeSpan = TimeSpan.Parse(misc.TimeZoneOffset);
         }
 
         return _offsetTimeSpan.Value;
@@ -133,6 +136,8 @@ namespace Core.Main.DataObjects
         StartBalance = PTData.startBalance,
         TotalCurrentValue = PTData.totalCurrentValue,
         TimeZoneOffset = PTData.timeZoneOffset,
+        ExchangeURL = PTData.exchangeUrl,
+        PTVersion = PTData.version,
       };
     }
     public List<DailyStatsData> DailyStats
@@ -585,57 +590,6 @@ namespace Core.Main.DataObjects
             Order = monthlyStatsDataJson["order"],
         };
     }
-//     public List<SellLogData> SellLog
-//     {
-//       get
-//       {
-         
-//         if (_sellLog == null || (DateTime.UtcNow > _sellLogRefresh))
-//         {
-//             lock (_sellLock)
-//             {
-//               // Thread double locking
-//               if (_sellLog == null || (DateTime.UtcNow > _sellLogRefresh))
-//               {
-//                 _sellLog.Clear();
-
-
-//                 // Page through the sales data summarizing it.
-//                 bool exitLoop = false;
-//                 int pageIndex = 1;
-                
-//                 // 1 record per page to allow user to set max records to retrieve
-//                 int maxPages = _systemConfiguration.GeneralSettings.Monitor.MaxSalesRecords;
-//                 int requestedPages = 0;
-                
-//                 while (!exitLoop && requestedPages < maxPages)
-//                 {
-//                   var sellDataPage = GetDataFromProfitTrailer("/api/v2/data/sales?Page=1&perPage=1&sort=SOLDDATE&sortDirection=DESCENDING&page=" + pageIndex);
-//                   if (sellDataPage != null && sellDataPage.data.Count > 0)
-//                   {
-//                     // Add sales data page to collection
-//                     this.BuildSellLogData(sellDataPage);
-//                     pageIndex++;
-//                     requestedPages++;
-// Console.WriteLine($"Importing salesLog: {pageIndex}");
-
-//                   }
-//                   else
-//                   {
-//                     // All data retrieved
-//                     exitLoop = true;
-//                   }
-//                 }
-
-//                 // Update sell log refresh time
-//                 _sellLogRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds -1);
-//               }
-//             }
-//           }
-//         return _sellLog;
-//       }
-//     }
-
 
     public List<DCALogData> DCALog
     {
@@ -677,26 +631,30 @@ namespace Core.Main.DataObjects
         return _dcaLog;
       }
     }
-
+    
     public List<BuyLogData> BuyLog
     {
       get
       {
-        if (_buyLog == null || (DateTime.UtcNow > _buyLogRefresh))
-        {
-          lock (_buyLock)
+          if (_systemConfiguration.GeneralSettings.Monitor.MaxDashboardBuyEntries == 0)
           {
-            // Thread double locking
-            if (_buyLog == null || (DateTime.UtcNow > _buyLogRefresh))
-            {
-              _buyLog.Clear();
-              this.BuildBuyLogData(GetDataFromProfitTrailer("/api/v2/data/pbl", true));
-              _buyLogRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.BuyAnalyzerRefreshSeconds - 1);
-            }
+              return _buyLog;
           }
-        }
 
-        return _buyLog;
+          if (_buyLog == null || (DateTime.UtcNow > _buyLogRefresh))
+          {
+              lock (_buyLock)
+              {
+                  if (_buyLog == null || (DateTime.UtcNow > _buyLogRefresh))
+                  {
+                      _buyLog.Clear();
+                      this.BuildBuyLogData(GetDataFromProfitTrailer("/api/v2/data/pbl", true));
+                      _buyLogRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.BuyAnalyzerRefreshSeconds - 1);
+                  }
+              }
+          }
+
+          return _buyLog;
       }
     }
 

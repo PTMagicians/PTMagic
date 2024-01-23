@@ -63,21 +63,8 @@
     };
 
     var loadDashboardBottom = function () {
-      //destroy all d3 svg graph to avoid memory leak
-      setTimeout(function()
-        {  
-          $(".nvtooltip").remove();
-          $("svg > *").remove();
-          $("svg").remove();
-          nv.charts = {};
-          nv.graphs = [];
-          nv.logs = {};
-          nv.tooltip = {};
-        }, 10 * intervalDashboardBottom * 1000); // 10 times intervalDashboardBottom in milliseconds
-
-      // Clear exisitng interval to stop multiple attempts to load at the same time.
-      if (intervalDashboardBottom != null)
-      {
+      // Clear existing interval to stop multiple attempts to load at the same time.
+      if (intervalDashboardBottom != null) {
         clearInterval(intervalDashboardBottom);
       }
 
@@ -92,6 +79,17 @@
           window.location.replace("@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)Login");
         } else {
           errCountIndex["DashboardBottom"] = 0;
+
+          // Destroy all d3 svg graph to avoid memory leak
+          setTimeout(function() {  
+            $(".nvtooltip").remove();
+            $("svg > *").remove();
+            $("svg").remove();
+            nv.charts = {};
+            nv.graphs = [];
+            nv.logs = {};
+            nv.tooltip = {};
+          }, 30 * @Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000); // every 30 refreshes
         }
 
         // Reinstate the interval.
