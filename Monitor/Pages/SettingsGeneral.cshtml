@@ -202,42 +202,42 @@
                 </div>
               </div>
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Market Trend Chart Interval (Minutes) <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The time interval for the market trend graph (Dashboard and Sales Analyzer) between data points. Very small intervals on large timeframe graphs can significantly impact performance."></i></label>
+                <label class="col-md-4 col-form-label">Trend Chart Interval (Minutes) <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The time interval for the market trend graph (Dashboard and Sales Analyzer) between data points. Very small intervals on large timeframe graphs can significantly impact performance."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Monitor_GraphIntervalMinutes" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.GraphIntervalMinutes.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Market Trend Chart Max Timeframe (Hours) <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This defines the total timeframe for the market trends graph (Dashboard and Sales Analyzer) in hours. Large timeframe graphs can significantly impact performance."></i></label>
+                <label class="col-md-4 col-form-label">Trend Chart Timeframe (Hours) <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This defines the total timeframe for the market trends graph (Dashboard and Sales Analyzer) in hours. Large timeframe graphs can significantly impact performance."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Monitor_GraphMaxTimeframeHours" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Daily Profit Graph Max Timeframe (Days) <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This defines the total timeframe for the daily profits graph on the dashboard in days.  Large timeframes can significantly impact performance."></i></label>
+                <label class="col-md-4 col-form-label">Daily Profit Chart Timeframe (Days) <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This defines the total timeframe for the daily profits graph on the dashboard in days.  Large timeframes can significantly impact performance."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Monitor_ProfitsMaxTimeframeDays" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.ProfitsMaxTimeframeDays.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Dashboard Bottom Refresh (Seconds) <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The refresh interval in seconds, of the charts and graphs on then main page."></i></label>
+                <label class="col-md-4 col-form-label">Dashboard Charts Refresh (Seconds) <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The refresh interval in seconds, of the charts and graphs on then main page."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Monitor_RefreshSeconds" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Bag AnalyzerRefresh (Seconds) <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The refresh interval of your monitor bag analyzer page."></i></label>
+                <label class="col-md-4 col-form-label">Bag Analyzer Refresh (Seconds) <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The refresh interval of your monitor bag analyzer page."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Monitor_BagAnalyzerRefreshSeconds" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.BagAnalyzerRefreshSeconds.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Buy AnalyzerRefresh (Seconds) <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The refresh interval of your monitor buy analyzer page."></i></label>
+                <label class="col-md-4 col-form-label">Buy Analyzer Refresh (Seconds) <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The refresh interval of your monitor buy analyzer page."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Monitor_BuyAnalyzerRefreshSeconds" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.BuyAnalyzerRefreshSeconds.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>

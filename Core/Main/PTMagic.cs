@@ -59,6 +59,7 @@ namespace Core.Main
     private Dictionary<string, int> _singleMarketSettingsCount = new Dictionary<string, int>();
     Dictionary<string, List<SingleMarketSetting>> _triggeredSingleMarketSettings = new Dictionary<string, List<SingleMarketSetting>>();
     private static volatile object _lockObj = new object();
+    private Mutex mutex = new Mutex(false, "analyzerStateMutex");
 
     public LogHelper Log
     {
@@ -122,6 +123,22 @@ namespace Core.Main
         _state = value;
       }
     }
+    public void WriteStateToFile()
+    {
+      try
+      {
+        mutex.WaitOne(); // Acquire the mutex
+
+        string filePath = "_data/AnalyzerState.";
+        File.WriteAllText(filePath, this.State.ToString());
+
+      }
+      finally
+      {
+        mutex.ReleaseMutex(); // Release the mutex even if exceptions occur
+      }
+    }
+
 
     public int RunCount
     {
@@ -840,6 +857,7 @@ namespace Core.Main
           {
             // Change state to "Running"
             this.State = Constants.PTMagicBotState_Running;
+            this.WriteStateToFile();
             this.RunCount++;
             this.LastRuntime = DateTime.UtcNow;
 
@@ -975,6 +993,7 @@ namespace Core.Main
 
             // Change state to Finished / Stopped
             this.State = Constants.PTMagicBotState_Idle;
+            this.WriteStateToFile();
           }
         }
       }
@@ -991,6 +1010,7 @@ namespace Core.Main
             {
               Log.DoLogWarn("PTMagic raid " + this.RunCount.ToString() + " is taking longer than expected.  Consider increasing your IntervalMinues setting, reducing other processes on your PC, or raising PTMagic's priority.");
               this.State = Constants.PTMagicBotState_Idle;
+              this.WriteStateToFile();
               Log.DoLogInfo("PTMagic status reset, waiting for the next raid to be good to go again.");
             }
           }
@@ -998,6 +1018,7 @@ namespace Core.Main
           {
             Log.DoLogWarn("No LastRuntimeSummary.json found after raid " + this.RunCount.ToString() + ", trying to reset PT Magic status...");
             this.State = Constants.PTMagicBotState_Idle;
+            this.WriteStateToFile();
             Log.DoLogInfo("PTMagic status reset, waiting for the next raid to be good to go again.");
           }
         }

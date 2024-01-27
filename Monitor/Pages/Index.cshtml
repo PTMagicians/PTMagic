@@ -25,7 +25,8 @@
   <script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/nvd3/nv.d3.min.js"></script>
 
   <script type="text/javascript">
-    var errCountIndex = [];
+    var errCountIndex = [];  
+    var counterIndex = []; // Add this line
     var intervalDashboardTop;
     var intervalDashboardBottom;
 
@@ -80,8 +81,11 @@
         } else {
           errCountIndex["DashboardBottom"] = 0;
 
-          // Destroy all d3 svg graph to avoid memory leak
-          setTimeout(function() {  
+          // Increment the counter
+          counterIndex["DashboardBottom"] = (counterIndex["DashboardBottom"] || 0) + 1;
+
+          // Destroy all d3 svg graph to avoid memory leak every 30 refreshes of Dashboard Bottom
+          if (counterIndex["DashboardBottom"] >= 30) {
             $(".nvtooltip").remove();
             $("svg > *").remove();
             $("svg").remove();
@@ -89,7 +93,9 @@
             nv.graphs = [];
             nv.logs = {};
             nv.tooltip = {};
-          }, 30 * @Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000); // every 30 refreshes
+            // Reset the counter
+            counterIndex["DashboardBottom"] = 0;
+          }
         }
 
         // Reinstate the interval.
