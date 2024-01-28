@@ -4,6 +4,8 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.IO;
 using System.Linq;
+using System.Linq.Dynamic.Core;
+using System.Linq.Expressions;
 using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
 using Core.MarketAnalyzer;
@@ -1321,86 +1323,122 @@ namespace Core.Main
 
     private void CheckGlobalSettingsTriggers(ref GlobalSetting triggeredSetting, ref List<string> matchedTriggers)
     {
-      this.Log.DoLogInfo("Checking global settings triggers...");
-      foreach (GlobalSetting globalSetting in this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings)
-      {
-        // Reset triggers for each setting
-        matchedTriggers = new List<string>();
+        this.Log.DoLogInfo("Checking global settings triggers...");
 
-        if (globalSetting.Triggers.Count > 0)
+        foreach (GlobalSetting globalSetting in this.PTMagicConfiguration.AnalyzerSettings.GlobalSettings)
         {
-          this.Log.DoLogInfo("Checking triggers for '" + globalSetting.SettingName + "'...");
-          List<bool> triggerResults = new List<bool>();
-          foreach (Trigger trigger in globalSetting.Triggers)
-          {
-            MarketTrend marketTrend = this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends.Find(mt => mt.Name == trigger.MarketTrendName);
-            if (marketTrend != null)
+            // Reset triggers for each setting
+            matchedTriggers = new List<string>();
+
+            if (globalSetting.Triggers.Count > 0)
             {
-
-              // Get market trend change for trigger
-              if (this.AverageMarketTrendChanges.ContainsKey(marketTrend.Name))
-              {
-                double averageMarketTrendChange = this.AverageMarketTrendChanges[marketTrend.Name];
-                if (averageMarketTrendChange >= trigger.MinChange && averageMarketTrendChange < trigger.MaxChange)
+                this.Log.DoLogInfo("Checking triggers for '" + globalSetting.SettingName + "'...");
+                Dictionary<string, bool> triggerResults = new Dictionary<string, bool>();
+                foreach (Trigger trigger in globalSetting.Triggers)
                 {
+                    MarketTrend marketTrend = this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends.Find(mt => mt.Name == trigger.MarketTrendName);
+                    if (marketTrend != null)
+                    {
+                        // Get market trend change for trigger
+                        if (this.AverageMarketTrendChanges.ContainsKey(marketTrend.Name))
+                        {
+                            double averageMarketTrendChange = this.AverageMarketTrendChanges[marketTrend.Name];
+                            bool isTriggered = averageMarketTrendChange >= trigger.MinChange && averageMarketTrendChange < trigger.MaxChange;
+                            triggerResults[trigger.Letter] = isTriggered;
 
-                  // Trigger met!
-                  this.Log.DoLogInfo("Trigger '" + trigger.MarketTrendName + "' triggered! TrendChange = " + averageMarketTrendChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%");
+                            if (isTriggered)
+                            {
+                                // Trigger met!
+                                this.Log.DoLogInfo("Trigger '" + trigger.MarketTrendName + "' triggered! TrendChange = " + averageMarketTrendChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%");
 
-                  string triggerContent = trigger.MarketTrendName + " - ";
-                  if (trigger.MinChange != Constants.MinTrendChange)
-                  {
-                    triggerContent += " - Min: " + trigger.MinChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
-                  }
+                                string triggerContent = trigger.MarketTrendName + " - ";
+                                if (trigger.MinChange != Constants.MinTrendChange)
+                                {
+                                    triggerContent += " - Min: " + trigger.MinChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
+                                }
 
-                  if (trigger.MaxChange != Constants.MaxTrendChange)
-                  {
-                    triggerContent += " - Max: " + trigger.MaxChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
-                  }
+                                if (trigger.MaxChange != Constants.MaxTrendChange)
+                                {
+                                    triggerContent += " - Max: " + trigger.MaxChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%";
+                                }
 
-                  matchedTriggers.Add(triggerContent);
+                                matchedTriggers.Add(triggerContent);
+                            }
+                            else
+                            {
+                                this.Log.DoLogDebug("Trigger '" + trigger.MarketTrendName + "' not triggered. TrendChange = " + averageMarketTrendChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%");
+                            }
+                        }
+                        else
+                        {
+                            this.Log.DoLogError("Trigger '" + trigger.MarketTrendName + "' not found in this.AverageMarketTrendChanges[] (" + SystemHelper.ConvertListToTokenString(this.AverageMarketTrendChanges.Keys.ToList(), ",", true) + "). Unable to load recent trends?");
+                        }
+                    }
+                    else
+                    {
+                        this.Log.DoLogWarn("Market Trend '" + trigger.MarketTrendName + "' not found! Trigger ignored!");
+                    }
+                }
 
-                  triggerResults.Add(true);
+                // Check if the TriggerConnection field exists
+                if (!string.IsNullOrEmpty(globalSetting.TriggerConnection))
+                {
+                    // Check if TriggerConnection is using the old logic
+                    if (globalSetting.TriggerConnection.ToLower() == "and" || globalSetting.TriggerConnection.ToLower() == "or")
+                    {
+                        // Old logic
+                        bool settingTriggered = false;
+                        switch (globalSetting.TriggerConnection.ToLower())
+                        {
+                            case "and":
+                                settingTriggered = triggerResults.Values.All(tr => tr);
+                                break;
+                            case "or":
+                                settingTriggered = triggerResults.Values.Any(tr => tr);
+                                break;
+                        }
+
+                        // Setting got triggered -> Activate it!
+                        if (settingTriggered)
+                        {
+                            triggeredSetting = globalSetting;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        // New logic
+                        string triggerLogic = globalSetting.TriggerConnection;
+                        foreach (var triggerResult in triggerResults)
+                        {
+                            triggerLogic = triggerLogic.Replace(triggerResult.Key, triggerResult.Value.ToString().ToLower());
+                        }
+
+                        try
+                        {
+                            bool settingTriggered = (bool)System.Linq.Dynamic.Core.DynamicExpressionParser.ParseLambda(System.Linq.Dynamic.Core.ParsingConfig.Default, new ParameterExpression[0], typeof(bool), triggerLogic).Compile().DynamicInvoke();
+
+                            // Setting got triggered -> Activate it!
+                            if (settingTriggered)
+                            {
+                                triggeredSetting = globalSetting;
+                                break;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Log.DoLogError($"ERROR: Trigger Connection for global setting {globalSetting.SettingName} is invalid or missing. Program halted.");
+                            Environment.Exit(1); // Stop the program
+                        }
+                    }
                 }
                 else
                 {
-                  this.Log.DoLogDebug("Trigger '" + trigger.MarketTrendName + "' not triggered. TrendChange = " + averageMarketTrendChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%");
-                  triggerResults.Add(false);
+                    this.Log.DoLogError($"ERROR: Trigger Connection for global setting {globalSetting.SettingName} is missing. Program halted.");
+                    Environment.Exit(1); // Stop the program
                 }
-              }
-              else
-              {
-                this.Log.DoLogError("Trigger '" + trigger.MarketTrendName + "' not found in this.AverageMarketTrendChanges[] (" + SystemHelper.ConvertListToTokenString(this.AverageMarketTrendChanges.Keys.ToList(), ",", true) + "). Unable to load recent trends?");
-                triggerResults.Add(false);
-              }
             }
-            else
-            {
-              this.Log.DoLogWarn("Market Trend '" + trigger.MarketTrendName + "' not found! Trigger ignored!");
-              triggerResults.Add(false);
-            }
-          }
-
-          // Check if all triggers have to get triggered or just one
-          bool settingTriggered = false;
-          switch (globalSetting.TriggerConnection.ToLower())
-          {
-            case "and":
-              settingTriggered = triggerResults.FindAll(tr => tr == false).Count == 0;
-              break;
-            case "or":
-              settingTriggered = triggerResults.FindAll(tr => tr == true).Count > 0;
-              break;
-          }
-
-          // Setting got triggered -> Activate it!
-          if (settingTriggered)
-          {
-            triggeredSetting = globalSetting;
-            break;
-          }
         }
-      }
     }
 
     private void ActivateSetting(ref GlobalSetting triggeredSetting, ref List<string> matchedTriggers)

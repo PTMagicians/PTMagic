@@ -2,33 +2,44 @@
   "GeneralSettings": {
     "Application": {
       "IsEnabled": true, // Enables the PTMagic bot (needs restart to take effect)
-      "TestMode": false, // If TestMode is active, no properties files will be changed
+      "TestMode": true, // If TestMode is active, no properties files will be changed
       "ProfitTrailerLicense": "ptlicense1asdf234fljlasdf014325ehm", // Your Profit Trailer license key (needed to change your settings)
       "ProfitTrailerLicenseXtra": "", // Licenses for additional bots for PTM to update (optional - comma separated list)
       "ProfitTrailerServerAPIToken": "", //Your Profit Trailer Server API Token
       "ProfitTrailerMonitorURL": "http://localhost:8081/", // The URL to your profit trailer monitor (needed to change your settings)
       "ProfitTrailerMonitorURLXtra": "", // URLs for additional bots you want PTM to update (optional  - comma separated list)
       "ProfitTrailerDefaultSettingName": "default", // Your Profit Trailer default setting name (needed to change your settings)
-      "Exchange": "Bittrex", // The exchange your are running Profit Trailer on
-      //"TimezoneOffset": "+0:00", // Your timezone offset from UTC time
-      "FloodProtectionMinutes": 0, // If a price trend is just zig-zagging around its trigger, you may want to protect your settings from getting switched back and forth every minute
-      "InstanceName": "PT Magic", // The name of the instance of this bot. This will be used in your monitor and your Telegram messages. In case you are running more than one bot, you may set different names to separate them
-      //"FreeCurrencyConverterAPIKey": "" // If "MainFiatCurrency" above is anything other than USD, you must obtain an API key from https://free.currencyconverterapi.com/free-api-key 
+      "Exchange": "BinanceFutures", // The exchange your are running Profit Trailer on
+       "FloodProtectionMinutes": 0, // If a price trend is just zig-zagging around its trigger, you may want to protect your settings from 
+                                    // getting switched back and forth every minute
+      "InstanceName": "MyBTCbot", // The name of the instance of this bot. This will be used in your monitor and your Telegram messages. 
+                                  //In case you are running more than one bot, you may set different names to separate them
+      "CoinMarketCapAPIKey": "", //CoinMarketCap Api
     },
     "Monitor": {
       "IsPasswordProtected": true, // Defines if your monitor will be asking to setup a password on its first start
-      "OpenBrowserOnStart": false, // If active, a browser window will open as soon as you start the monitor
-      "Port": 8080, // The port you want to run your monitor on
-      "RootUrl": "/", // The root Url of your monitor
-      "AnalyzerChart": "", // By default the chart on the Market Analyzer page will use your default currency against USD.  You can change that here. (eg., BTCEUR)
+      "OpenBrowserOnStart": true, // If active, a browser window will open as soon as you start the monitor
+      "Port": 8080, // The port you want to run your PTMagic monitor on, to connect via browser. The url will be your IP:Port or localhost:Port
+      "AnalyzerChart": "", // By default the chart on the Market Analyzer page will use your market currency against USD.  
+                              //You can change that here. (eg., BTCEUR)
+      "LiveTCVTimeframeMinutes": 10, // The timeframe for the live TCV chart on the dashboard
       "GraphIntervalMinutes": 60, // The interval for the monitor market trend graph to draw points in minutes
       "GraphMaxTimeframeHours": 24, // This will enable you to define the timeframe that your graph for market trends covers in hours
       "ProfitsMaxTimeframeDays": 30, // This will enable you to define the timeframe for your dashboard profits graph in days
       "RefreshSeconds": 30, // The refresh interval of your monitor main page
-      "LinkPlatform": "TradingView", // The platform to which the pair name will link if you click on it
+      "BagAnalyzerRefreshSeconds": 60,
+      "BuyAnalyzerRefreshSeconds": 60,
+      "MaxDashboardBuyEntries": 5, // The number of coins in your Possible Buy List on the dashboard.  Set to 0 to hide the list completely
+      "MaxDashboardBagEntries": 9999, // The number of coins in your Positions List on the dashboard. 
       "MaxTopMarkets": 20, // The amount of top markets being shown in your Sales Analyzer
       "MaxDailySummaries": 10, // The amount of "Last Days" being shown in your Sales Analyzer
+      "MaxDCAPairs": 25, // For DCA calculations in the DCA Analyzer.
+      "DefaultDCAMode": "Advanced", // The default DCA mode to use in the DCA Analyzer.  Options are "Simple" or "Advanced"
+      "MaxSettingsLogEntries": 500, // The number of entries in the Global Settings Log on the Status & Summary page
       "MaxMonthlySummaries": 10, // The amount of "Last Months" being shown in your Sales Analyzer
+      "LinkPlatform": "TradingView", // The platform to which the pair name will link if you click on it
+      "TVCustomLayout": "EbSR85R8",  // A TradingView layout to use when clicking on a pair name while using TradingView as your platform
+                                     // When saving a custom layout in TV, you will get a URL like this: https://www.tradingview.com/chart/EbSR85R8/
       "TvStudyA": "BB@tv-basicstudies", // See available STUDIES at https://www.tradingview.com/wiki/Widget:TradingView_Widget
       "TvStudyB": "",
       "TvStudyC": "",

@@ -156,6 +156,7 @@ namespace Core.Main.DataObjects.PTMagicData
   {
     public string SettingName { get; set; }
     public string TriggerConnection { get; set; } = "AND";
+    public string TriggerLogic { get; set; } = "";
     public List<Trigger> Triggers { get; set; } = new List<Trigger>();
     public Dictionary<string, object> PairsProperties { get; set; } = new Dictionary<string, object>();
     public Dictionary<string, object> DCAProperties { get; set; } = new Dictionary<string, object>();
@@ -165,6 +166,9 @@ namespace Core.Main.DataObjects.PTMagicData
   public class SingleMarketSetting
   {
     public string SettingName { get; set; }
+
+    public string TriggerLogic { get; set; } = "AND";
+    
     public string TriggerConnection { get; set; } = "AND";
 
     [DefaultValue("AND")]
@@ -195,7 +199,10 @@ namespace Core.Main.DataObjects.PTMagicData
   }
 
   public class Trigger
-  {
+  { 
+    [DefaultValue("")]
+    public string Letter { get; set; } = "";
+
     [DefaultValue("")]
     public string MarketTrendName { get; set; } = "";
 
@@ -219,7 +226,10 @@ namespace Core.Main.DataObjects.PTMagicData
   }
 
   public class OffTrigger
-  {
+  { 
+    [DefaultValue("")]
+    public string Letter { get; set; } = "";
+
     [DefaultValue("")]
     public string MarketTrendName { get; set; } = "";
 
@@ -399,21 +409,6 @@ namespace Core.Main.DataObjects.PTMagicData
     public double LastPrice { get; set; } = 0;
     public double Last24hVolume { get; set; } = 0;
   }
- 
-//  public class SellLogData
-//   {
-//     public double SoldAmount { get; set; }
-//     public DateTime SoldDate { get; set; }
-//     public int BoughtTimes { get; set; }
-//     public string Market { get; set; }
-//     public double ProfitPercent { get; set; }
-//     public double Profit { get; set; }
-//     public double AverageBuyPrice { get; set; }
-//     public double TotalCost { get; set; }
-//     public double SoldPrice { get; set; }
-//     public double SoldValue { get; set; }
-//     public double TotalSales { get; set; } 
-//   }
 
   public class StatsData  
   {
