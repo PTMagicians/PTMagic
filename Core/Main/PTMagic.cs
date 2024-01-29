@@ -1344,7 +1344,7 @@ namespace Core.Main
                         {
                             double averageMarketTrendChange = this.AverageMarketTrendChanges[marketTrend.Name];
                             bool isTriggered = averageMarketTrendChange >= trigger.MinChange && averageMarketTrendChange < trigger.MaxChange;
-                            triggerResults[trigger.Letter] = isTriggered;
+                            triggerResults[trigger.Tag] = isTriggered;
 
                             if (isTriggered)
                             {

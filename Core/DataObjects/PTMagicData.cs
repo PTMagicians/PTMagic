@@ -201,7 +201,7 @@ namespace Core.Main.DataObjects.PTMagicData
   public class Trigger
   { 
     [DefaultValue("")]
-    public string Letter { get; set; } = "";
+    public string Tag { get; set; } = "";
 
     [DefaultValue("")]
     public string MarketTrendName { get; set; } = "";
@@ -228,7 +228,7 @@ namespace Core.Main.DataObjects.PTMagicData
   public class OffTrigger
   { 
     [DefaultValue("")]
-    public string Letter { get; set; } = "";
+    public string Tag { get; set; } = "";
 
     [DefaultValue("")]
     public string MarketTrendName { get; set; } = "";

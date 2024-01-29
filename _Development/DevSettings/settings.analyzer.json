@@ -71,20 +71,20 @@
       {
         "SettingName": "EndOfTheWorld", // ANY UNIQUE name of your setting
         "TriggerConnection": "AND", // Define if triggers will be connected by AND or OR.  
-                                    //If you give each trigger a letter, then you can use more robust boolean logic, such as: (A && B) || (B && C)
+                                    //If you give each trigger a Tag, then you can use more robust boolean logic, such as: (A && B) || (B && C)
         "Triggers": [ // Your triggers for this setting.  You can use any of your defined trends from above
           {
-            "Letter": "A",  // OPTIONAL: Give your triggers letters, so you can use more robust boolean logic, such as: (A && B) || (C && D)
+            "Tag": "A",  // OPTIONAL: Give your triggers Tags, so you can use more robust boolean logic, such as: (A && B) || (C && D)
             "MarketTrendName": "1h", // Reference to the market trend specified above
             "MaxChange": 0  // The maximum value for this trigger. (Any value below "0" will trigger this)
           },
           {
-            "Letter": "B",
+            "Tag": "B",
             "MarketTrendName": "12h",
             "MaxChange": -2
           },
           {
-            "Letter": "C",
+            "Tag": "C",
             "MarketTrendName": "24h",
             "MaxChange": -5
           }
@@ -276,7 +276,7 @@
         "TriggerConnection": "A || B || C",
         "Triggers": [
           {
-            "Letter": "A",
+            "Tag": "A",
             "MarketTrendName": "1h",
             "MarketTrendRelation": "Relative",  // The relation of the single market trend. Relative = The trend of the coin market 
 			                                          // is compared to the average trend of all other coins in the market market. 
@@ -284,13 +284,13 @@
             "MinChange": 8
           },
           {
-            "Letter": "B",
+            "Tag": "B",
             "MarketTrendName": "12h",
             "MarketTrendRelation": "Relative",
             "MinChange": 10
           },
           {
-            "Letter": "C",
+            "Tag": "C",
             "MarketTrendName": "24h",
             "MarketTrendRelation": "Relative",
             "MinChange": 12
