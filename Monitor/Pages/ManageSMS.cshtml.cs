@@ -46,7 +46,6 @@ namespace Monitor.Pages
         string webRootParent = Directory.GetParent(_hostingEnvironment.WebRootPath).FullName;
         string ptMagicRoot = Directory.GetParent(webRootParent).FullName;
         string analyzerStatePath = Path.Combine(ptMagicRoot, "_data", "AnalyzerState");
-        Console.WriteLine("analyzerStatePath: " + analyzerStatePath);
 
         // Read the AnalyzerState file
         if (System.IO.File.Exists(analyzerStatePath))

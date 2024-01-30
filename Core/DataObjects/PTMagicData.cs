@@ -156,7 +156,6 @@ namespace Core.Main.DataObjects.PTMagicData
   {
     public string SettingName { get; set; }
     public string TriggerConnection { get; set; } = "AND";
-    public string TriggerLogic { get; set; } = "";
     public List<Trigger> Triggers { get; set; } = new List<Trigger>();
     public Dictionary<string, object> PairsProperties { get; set; } = new Dictionary<string, object>();
     public Dictionary<string, object> DCAProperties { get; set; } = new Dictionary<string, object>();

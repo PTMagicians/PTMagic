@@ -1408,15 +1408,15 @@ namespace Core.Main
                     else
                     {
                         // New logic
-                        string triggerLogic = globalSetting.TriggerConnection;
+                        string triggerConnection = globalSetting.TriggerConnection;
                         foreach (var triggerResult in triggerResults)
                         {
-                            triggerLogic = triggerLogic.Replace(triggerResult.Key, triggerResult.Value.ToString().ToLower());
+                            triggerConnection = triggerConnection.Replace(triggerResult.Key, triggerResult.Value.ToString().ToLower());
                         }
 
                         try
                         {
-                            bool settingTriggered = (bool)System.Linq.Dynamic.Core.DynamicExpressionParser.ParseLambda(System.Linq.Dynamic.Core.ParsingConfig.Default, new ParameterExpression[0], typeof(bool), triggerLogic).Compile().DynamicInvoke();
+                            bool settingTriggered = (bool)System.Linq.Dynamic.Core.DynamicExpressionParser.ParseLambda(System.Linq.Dynamic.Core.ParsingConfig.Default, new ParameterExpression[0], typeof(bool), triggerConnection).Compile().DynamicInvoke();
 
                             // Setting got triggered -> Activate it!
                             if (settingTriggered)

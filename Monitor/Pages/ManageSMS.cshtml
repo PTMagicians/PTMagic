@@ -30,7 +30,7 @@
                   <td><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)SettingsAnalyzer#SingleMarketSetting_@sms">@sms</a>:&nbsp;@smsCount &emsp; &emsp;</td>
                 }
               @if (Model.PTMagicConfiguration.GeneralSettings.Monitor.IsPasswordProtected) {
-                  <a class="btn btn-danger btn-sm btn-custom btn-block text-uppercase btn-deletefile" style="margin-top: 10px;" data-filename="SingleMarketSettingSummary.json" href="#">Reset ALL Single MarketSettings</a>
+                  <a class="btn btn-danger btn-sm btn-custom btn-block text-uppercase btn-deleteall" style="margin-top: 10px;" data-filename="SingleMarketSettingSummary.json" href="#">Reset ALL Single MarketSettings</a>
                 } else {
                   <a class="btn btn-danger btn-custom btn-block text-uppercase" data-toggle="tooltip" data-placement="top" title="This is only accessible when you protect your monitor with a password!"><i class="fa fa-lock text-danger"></i> Delete File</a>
                 } 
@@ -202,7 +202,7 @@
         </button>
       </div>
       <div class="modal-body">
-        Do you really want to reset ALL Single Market Settings for the next Analyzer run?
+        Do you really want to reset this Single Market Settings for the next Analyzer run?
         <p class="m-t-10"><span class="text-warning">Please note:</span> Even if you reset a setting, it may get triggered again on the next run depending on current market conditions.</p>
       </div>
       <div class="modal-footer">
@@ -227,7 +227,7 @@
         <p class="m-t-10"><span class="text-warning">Please note:</span> Even if you reset your settings, they may get triggered again on the next run depending on current market conditions.</p>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-ptmagic text-uppercase waves-effect waves-light btn-resetsetting" data-datatarget="" data-setting="">Yes, do it!</button>
+        <button type="button" class="btn btn-ptmagic text-uppercase waves-effect waves-light btn-confirmdelete" data-datatarget="" data-setting="">Yes, do it!</button>
         <button type="button" class="btn btn-secondary text-uppercase" data-dismiss="modal">No...</button>
       </div>
     </div>
@@ -236,40 +236,63 @@
 
 @section Scripts {
   <script type="text/javascript">
-  $(document).on('click', '.btn-deletefile', function(e) {
+  $(document).on('click', '.btn-deleteall', function(e) {
     e.preventDefault();
 
     var filename = $(this).data("filename");
 
+    // Store the filename in the modal's data
+    $('#modalDeleteFile').data('filename', filename);
+
     // Show the modal
     $('#modalDeleteFile').modal('show');
+  });
 
-    // Attach a one-time event handler for the 'Yes, do it!' button in the modal
-    $('.btn-deletefile').one('click', function() {
-      var baseUrl = "@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)";
-      var endpoint = "ManageSMS?handler=DeleteFile";
-      var url = baseUrl + endpoint;
+  $(document).on('click', '.btn-confirmdelete', function(e) {
+    e.preventDefault();
 
-      $.ajax({
-        url: url,
-        type: 'POST',
-        beforeSend: function(xhr) {
-          xhr.setRequestHeader("XSRF-TOKEN",
-            $('input:hidden[name="__RequestVerificationToken"]').val());
-        },
-        data: { filename: filename },
-        success: function(result) {
-          // Update the modal's content
-          $('#modalDeleteFile .modal-title').text('Success');
-          $('#modalDeleteFile .modal-body').html(result.message);
-        },
-        error: function(xhr, status, error) {
-          var response = JSON.parse(xhr.responseText);
-          // Show an alert for error
-          alert(response.message);
-        }
-      });
+    // Retrieve the filename from the modal's data
+    var filename = $('#modalDeleteFile').data('filename');
+
+    var baseUrl = "@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)";
+    var endpoint = "ManageSMS?handler=DeleteFile";
+    var url = baseUrl + endpoint;
+
+    $.ajax({
+      url: url,
+      type: 'POST',
+      beforeSend: function(xhr) {
+        xhr.setRequestHeader("XSRF-TOKEN",
+          $('input:hidden[name="__RequestVerificationToken"]').val());
+      },
+      data: { filename: filename },
+      success: function(result) {
+      if (result.success) {
+        // If the server returned success, display the success message
+        $.Notification.notify('success', 'top left', 'Success', result.message);
+        // Wait for 5 seconds, then refresh the page
+        setTimeout(function() {
+          location.reload();
+        }, 5000);
+      } else {
+        // If the server returned failure, display the error message
+        $.Notification.notify('error', 'top left', 'Error', result.message);
+      }
+
+        // Close the modal
+      $('#modalDeleteFile').modal('hide');
+      },
+      error: function(xhr, status, error) {
+        var response = JSON.parse(xhr.responseText);
+        // Show an alert for error
+        alert(response.message);
+      }
     });
+  });
+  $('#modalDeleteFile').on('hidden.bs.modal', function (e) {
+    // Reset the modal's content
+    $('#modalDeleteFile .modal-title').text('Are you sure?');
+    $('#modalDeleteFile .modal-body').html('Do you really want to reset ALL Single Market Settings for the next Analyzer run? <p class="m-t-10"><span class="text-warning">Please note:</span> Even if you reset your settings, they may get triggered again on the next run depending on current market conditions.</p>');
   });
   </script>
 
