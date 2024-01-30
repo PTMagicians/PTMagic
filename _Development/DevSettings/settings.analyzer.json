@@ -22,7 +22,8 @@
           "TrendCurrency": "Market",  // Trend Currency to build the trend against. If set to "Fiat", the trend will
 		                                  // take the USD value of your main currency into account to build the trend. 
                                       // "Market" will build a trend against your base currency, such as BTC or USDT.
-          "TrendThreshold": 15,  // Any coin that is above 15% or below -15% for this timeframe will not be used when calculating the market average.
+          "TrendThreshold": 15,  // Any coin that is above 15% or below -15% for this timeframe will be considered an outlier, 
+                                // and not used when calculating the market average.
 		      "DisplayGraph": false,  //  Use this trend in the graph on the PTM Monitor dashboard and market analyzer
 		      "DisplayOnMarketAnalyzerList": false  //  Disply this trend for all coins on the PTM Monitor market analyzer
         },

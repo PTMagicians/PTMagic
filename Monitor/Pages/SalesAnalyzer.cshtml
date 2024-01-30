@@ -396,7 +396,7 @@
 
           // Add mouseleave, and mousemove event listeners to hide tooltip
         d3.select('.sales-chart').on('mouseleave', function() {
-          d3.select('.nvtooltip').style('opacity', 0);
+          d3.select('.nvtooltip').remove();
         });
 
         d3.select('body').on('mousemove', function() {
@@ -405,7 +405,7 @@
           var mouseY = d3.event.clientY;
 
           if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
-            d3.select('.nvtooltip').style('opacity', 0);
+            d3.select('.nvtooltip').remove();
           }
         });
         nv.utils.windowResize(salesChart.update);
@@ -444,7 +444,7 @@
 
             // Add mouseleave, and mousemove event listeners to hide tooltip
           d3.select('.cumulative-profit-chart').on('mouseleave', function() {
-            d3.select('.nvtooltip').style('opacity', 0);
+            d3.select('.nvtooltip').remove();
           });
 
           d3.select('body').on('mousemove', function() {
@@ -453,7 +453,7 @@
             var mouseY = d3.event.clientY;
 
             if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
-              d3.select('.nvtooltip').style('opacity', 0);
+              d3.select('.nvtooltip').remove();
             }
           });
           nv.utils.windowResize(cumulativeProfitChart.update);
@@ -490,9 +490,9 @@
             .transition().duration(0)
             .call(TCVChart);
 
-            // Add mouseleave, and mousemove event listeners to hide tooltip
+          // Add mouseleave, and mousemove event listeners to hide tooltip
           d3.select('.TCV-chart').on('mouseleave', function() {
-            d3.select('.nvtooltip').style('opacity', 0);
+            d3.select('.nvtooltip').remove();
           });
 
           d3.select('body').on('mousemove', function() {
@@ -501,7 +501,7 @@
             var mouseY = d3.event.clientY;
 
             if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
-              d3.select('.nvtooltip').style('opacity', 0);
+              d3.select('.nvtooltip').remove();
             }
           });
           nv.utils.windowResize(TCVChart.update);
@@ -538,9 +538,32 @@
           .transition().duration(0)
           .call(profitChart);
 
-          // Add mouseleave, and mousemove event listeners to hide tooltip
+
+        profitChart.dispatch.on('renderEnd', function() {
+        // Get the chart's container
+        var container = d3.select('.profit-chart .nv-wrap.nv-lineChart .nv-linesWrap');
+
+        // Check if profitData[0].values is not empty
+        if (profitData[0].values.length > 0) {
+          // Get the x-values of the first and last data points
+          var xMin = profitChart.xAxis.scale()(profitData[0].values[0].x);
+          var xMax = profitChart.xAxis.scale()(profitData[0].values[profitData[0].values.length - 1].x);
+
+          // Add a line at y=0
+          container.insert('line', ':first-child')
+            .attr('x1', xMin)  // x position of the first end of the line
+            .attr('y1', profitChart.yAxis.scale()(0))  // y position of the first end of the line
+            .attr('x2', xMax)  // x position of the second end of the line
+            .attr('y2', profitChart.yAxis.scale()(0))  // y position of the second end of the line
+            .attr('stroke', 'gray')  // color of the line
+            .attr('stroke-width', 2);  // width of the line
+        }
+        });
+
+
+        // Add mouseleave, and mousemove event listeners to hide tooltip
         d3.select('.profit-chart').on('mouseleave', function() {
-          d3.select('.nvtooltip').style('opacity', 0);
+          d3.select('.nvtooltip').remove();
         });
 
         d3.select('body').on('mousemove', function() {
@@ -549,7 +572,7 @@
           var mouseY = d3.event.clientY;
 
           if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
-            d3.select('.nvtooltip').style('opacity', 0);
+            d3.select('.nvtooltip').remove();
           }
         });
         nv.utils.windowResize(profitChart.update);
