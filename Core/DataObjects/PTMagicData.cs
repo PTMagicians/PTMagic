@@ -166,8 +166,6 @@ namespace Core.Main.DataObjects.PTMagicData
   public class SingleMarketSetting
   {
     public string SettingName { get; set; }
-
-    public string TriggerLogic { get; set; } = "AND";
     
     public string TriggerConnection { get; set; } = "AND";
 
