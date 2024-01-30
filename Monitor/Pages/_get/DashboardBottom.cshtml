@@ -493,33 +493,30 @@
   </script>
 
   <script type="text/javascript">
-   function attachTooltipRemoval(chartClass) {
-  d3.selectAll(chartClass).on('mouseleave', function() {
-    var tooltip = d3.select(this).select('.nvtooltip');
-    if (!tooltip.empty()) {
-      tooltip.style('opacity', 0);
+    function attachTooltipRemoval(chartClass) {
+      d3.selectAll(chartClass).on('mouseleave', function() {
+        var tooltip = d3.select(this).select('.nvtooltip');
+        if (!tooltip.empty()) {
+          tooltip.style('opacity', 0);
+        }
+      });
+
+      d3.selectAll(chartClass).on('mouseenter', function() {
+        var tooltip = d3.select(this).select('.nvtooltip');
+        if (!tooltip.empty()) {
+          tooltip.style('opacity', 1);
+        }
+      });
     }
-  });
+    $(document).ready(function () {
+      // Hide all tooltips when the page is loaded
+      d3.selectAll('.nvtooltip').style('opacity', 0);
 
-  d3.selectAll(chartClass).on('mouseenter', function() {
-    var tooltip = d3.select(this).select('.nvtooltip');
-    if (!tooltip.empty()) {
-      tooltip.style('opacity', 1);
-    }
-  });
-}
-
-
-  $(document).ready(function () {
-    // Hide all tooltips when the page is loaded
-    d3.selectAll('.nvtooltip').style('opacity', 0);
-
-    // Call the function for each chart
-    attachTooltipRemoval('.asset-distribution svg');
-    attachTooltipRemoval('.trend-chart svg');
-    attachTooltipRemoval('.profit-chart svg');
-    attachTooltipRemoval('.TCVLive-chart svg');
-    // Add other charts as needed
-  });
-
+      // Call the function for each chart
+      attachTooltipRemoval('.asset-distribution svg');
+      attachTooltipRemoval('.trend-chart svg');
+      attachTooltipRemoval('.profit-chart svg');
+      attachTooltipRemoval('.TCVLive-chart svg');
+      // Add other charts as needed
+    });
 </script>
