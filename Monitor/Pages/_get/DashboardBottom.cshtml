@@ -300,12 +300,19 @@
 <script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/tablesaw/js/tablesaw-init.js"></script>
 
 <script type="text/javascript">
+  $(document).ready(function(){
+    $('[data-toggle="tooltip"]').tooltip();
+  });
+</script>
+
+
+
+<script type="text/javascript">
   $(document).ready(function () {
     $(".cdev").circlos();
     $('[data-toggle="tooltip"]').tooltip();
     $('.text-autocolor').autocolor(false);
 
-    var assetDistributionChart;  // Keep a reference to the chart
     var assetDistributionData;  // Keep a reference to the data
 
     @if (!Model.AssetDistributionData.Equals("")) {
@@ -367,27 +374,27 @@
           .call(trendChart);
 
         trendChart.dispatch.on('renderEnd', function() {
-        // Get the chart's container
-        var container = d3.select('.trend-chart .nv-wrap.nv-lineChart .nv-linesWrap');
+          // Get the chart's container
+          var container = d3.select('.trend-chart .nv-wrap.nv-lineChart .nv-linesWrap');
 
-        // Get the x-values of the first and last data points
-        var xRange = trendChart.xAxis.scale().range();
-        var xMin = xRange[0];
-        var xMax = xRange[1];
+          // Remove any existing y=0 line
+          container.selectAll('.zero-line').remove();
 
+          // Get the x-values of the first and last data points
+          var xRange = trendChart.xAxis.scale().range();
+          var xMin = xRange[0];
+          var xMax = xRange[1];
 
-        // Add a line at y=0
-        container.insert('line', ':first-child')
-          .attr('x1', xMin)  // x position of the first end of the line
-          .attr('y1', trendChart.yAxis.scale()(0))  // y position of the first end of the line
-          .attr('x2', xMax)  // x position of the second end of the line
-          .attr('y2', trendChart.yAxis.scale()(0))  // y position of the second end of the line
-          .attr('stroke', 'gray')  // color of the line
-          .attr('stroke-width', 2);  // width of the line
+          // Add a line at y=0
+          container.insert('line', ':first-child')
+            .attr('class', 'zero-line')  // Add a class to the line for easy selection
+            .attr('x1', xMin)  // x position of the first end of the line
+            .attr('y1', trendChart.yAxis.scale()(0))  // y position of the first end of the line
+            .attr('x2', xMax)  // x position of the second end of the line
+            .attr('y2', trendChart.yAxis.scale()(0))  // y position of the second end of the line
+            .attr('stroke', 'gray')  // color of the line
+            .attr('stroke-width', 2);  // width of the line
         });
-
-        
-
         nv.utils.windowResize(trendChart.update);
         return trendChart;
       });
@@ -405,6 +412,7 @@
 
     var profitChart;  // Keep a reference to the chart
     var profitData;  // Keep a reference to the data
+    
 
     @if (!Model.ProfitChartDataJSON.Equals("")) {
     <text>
@@ -426,6 +434,9 @@
         // Get the chart's container
         var container = d3.select('.profit-chart .nv-wrap.nv-lineChart .nv-linesWrap');
 
+        // Remove any existing y=0 line
+        container.selectAll('.zero-line').remove();
+
         // Check if profitData[0].values is not empty
         if (profitData[0].values.length > 0) {
           // Get the x-values of the first and last data points
@@ -434,12 +445,15 @@
 
           // Add a line at y=0
           container.insert('line', ':first-child')
+            .attr('class', 'zero-line')  // Add a class to the line for easy selection
             .attr('x1', xMin)  // x position of the first end of the line
             .attr('y1', profitChart.yAxis.scale()(0))  // y position of the first end of the line
             .attr('x2', xMax)  // x position of the second end of the line
             .attr('y2', profitChart.yAxis.scale()(0))  // y position of the second end of the line
             .attr('stroke', 'gray')  // color of the line
             .attr('stroke-width', 2);  // width of the line
+          
+          window.profitChartUpdate = nv.utils.windowResize(function() { profitChart.update(); });
         }
         });
     
@@ -449,12 +463,6 @@
     </text>
     }
   })(jQuery);
-</script>
-
-<script type="text/javascript">
-  $(document).ready(function(){
-    $('[data-toggle="tooltip"]').tooltip();
-  });
 </script>
 
 <script type="text/javascript">
@@ -519,4 +527,17 @@
       attachTooltipRemoval('.TCVLive-chart svg');
       // Add other charts as needed
     });
+</script>
+
+<script type="text/javascript">
+  window.cleanupData = function() {
+    TCVLiveChart = null;
+    TCVLiveData = null;
+    assetDistributionChart = null;
+    assetDistributionData = null;
+    trendChart = null;
+    trendData = null;
+    profitChart = null;
+    profitData = null;
+  };
 </script>

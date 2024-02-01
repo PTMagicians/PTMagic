@@ -503,6 +503,9 @@
         // Get the chart's container
         var container = d3.select('.profit-chart .nv-wrap.nv-lineChart .nv-linesWrap');
 
+        // Remove any existing y=0 line
+        container.selectAll('.zero-line').remove();
+
         // Check if profitData[0].values is not empty
         if (profitData[0].values.length > 0) {
           // Get the x-values of the first and last data points
@@ -511,6 +514,7 @@
 
           // Add a line at y=0
           container.insert('line', ':first-child')
+          .attr('class', 'zero-line')  // Add a class to the line for easy selection
             .attr('x1', xMin)  // x position of the first end of the line
             .attr('y1', profitChart.yAxis.scale()(0))  // y position of the first end of the line
             .attr('x2', xMax)  // x position of the second end of the line
