@@ -75,7 +75,7 @@ namespace Monitor.Pages
 
 public void StartUpdatingTotalCurrentValueLive()
 {
-    int liveTCVInterval = PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds;
+    int liveTCVInterval = PTMagicConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds;
     if (timer != null)
     {
         // Timer is already running

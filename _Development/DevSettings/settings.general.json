@@ -26,7 +26,7 @@
       "GraphIntervalMinutes": 60, // The interval for the monitor market trend graph to draw points in minutes
       "GraphMaxTimeframeHours": 24, // This will enable you to define the timeframe that your graph for market trends covers in hours
       "ProfitsMaxTimeframeDays": 30, // This will enable you to define the timeframe for your dashboard profits graph in days
-      "RefreshSeconds": 30, // The refresh interval of your monitor main page
+      "DashboardChartsRefreshSeconds": 30, // The refresh interval of your dashboard charts in seconds
       "BagAnalyzerRefreshSeconds": 60,
       "BuyAnalyzerRefreshSeconds": 60,
       "MaxDashboardBuyEntries": 5, // The number of coins in your Possible Buy List on the dashboard.  Set to 0 to hide the list completely

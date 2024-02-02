@@ -13,8 +13,8 @@
 
   <div class="col-md-3 px-1">
     <div class="card-box px-1" style="height:240px;">
-      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59" 
-        title="All charts set to refresh every @Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds seconds in your general settings."></div>
+      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds * 1000)" data-color="#aaa,#414d59" 
+        title="All charts set to refresh every @Model.PTMagicConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds seconds in your general settings."></div>
         @{
         string totalCurrentValueString = Model.totalCurrentValue.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
         if (Model.totalCurrentValue > 100) {
@@ -87,7 +87,7 @@
       @* <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeco;nds * 1000)" data-color="#aaa,#414d59"></div>
       <br> *@
       <h4 class="m-t-0 m-b-20 header-title">Live Market Trends 
-        <i class="fa fa-info-circle text-muted"  style="font-size small" data-toggle="tooltip" data-placement="top" title="Set to refresh every @Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds seconds in general settings."></i>
+        <i class="fa fa-info-circle text-muted"  style="font-size small" data-toggle="tooltip" data-placement="top" title="Set to refresh every @Model.PTMagicConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds seconds in general settings."></i>
         <small class="pull-right" style="font-size: small"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)MarketAnalyzer">ANALYZER</a></small>
       </h4>
       <table class="table table-sm">

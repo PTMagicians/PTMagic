@@ -62,7 +62,7 @@ namespace Monitor.Pages
       PTMagicConfiguration.GeneralSettings.Monitor.GraphIntervalMinutes = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_GraphIntervalMinutes"], PTMagicConfiguration.GeneralSettings.Monitor.GraphIntervalMinutes);
       PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_GraphMaxTimeframeHours"], PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours);
       PTMagicConfiguration.GeneralSettings.Monitor.ProfitsMaxTimeframeDays = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_ProfitsMaxTimeframeDays"], PTMagicConfiguration.GeneralSettings.Monitor.ProfitsMaxTimeframeDays);
-      PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_RefreshSeconds"], PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds);
+      PTMagicConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_RefreshSeconds"], PTMagicConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds);
       PTMagicConfiguration.GeneralSettings.Monitor.BagAnalyzerRefreshSeconds = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_BagAnalyzerRefreshSeconds"], PTMagicConfiguration.GeneralSettings.Monitor.BagAnalyzerRefreshSeconds);
       PTMagicConfiguration.GeneralSettings.Monitor.BuyAnalyzerRefreshSeconds = SystemHelper.TextToInteger(HttpContext.Request.Form["Monitor_BuyAnalyzerRefreshSeconds"], PTMagicConfiguration.GeneralSettings.Monitor.BuyAnalyzerRefreshSeconds);
       PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform = HttpContext.Request.Form["Monitor_LinkPlatform"];

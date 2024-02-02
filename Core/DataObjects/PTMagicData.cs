@@ -59,7 +59,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public int GraphIntervalMinutes { get; set; } = 60;
     public int GraphMaxTimeframeHours { get; set; } = 24;
     public int ProfitsMaxTimeframeDays { get; set; } = 60;
-    public int RefreshSeconds { get; set; } = 30;
+    public int DashboardChartsRefreshSeconds { get; set; } = 30;
     public int BagAnalyzerRefreshSeconds { get; set; } = 5;
     public int BuyAnalyzerRefreshSeconds { get; set; } = 5;
     public int MaxTopMarkets { get; set; } = 20;

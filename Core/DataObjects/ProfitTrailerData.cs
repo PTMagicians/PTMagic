@@ -114,7 +114,7 @@ namespace Core.Main.DataObjects
             if (_misc == null || (DateTime.UtcNow > _miscRefresh))
             {
               _misc = BuildMiscData(GetDataFromProfitTrailer("api/v2/data/misc"));
-              _miscRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+              _miscRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds - 1);
             }
           }
         }
@@ -185,7 +185,7 @@ namespace Core.Main.DataObjects
                               {
                                   JArray dailyStatsSection = (JArray)extraSection["dailyStats"];
                                   _dailyStats = dailyStatsSection.Select(j => BuildDailyStatsData(j as JObject)).ToList();
-                                  _dailyStatsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                                  _dailyStatsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds - 1);
                               }
                           }
                       }
@@ -220,7 +220,7 @@ namespace Core.Main.DataObjects
             if (_properties == null || (DateTime.UtcNow > _propertiesRefresh))
             {
               _properties = BuildProptertiesData(GetDataFromProfitTrailer("api/v2/data/properties"));
-              _propertiesRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+              _propertiesRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds - 1);
             }
           }
         }
@@ -263,7 +263,7 @@ namespace Core.Main.DataObjects
                                     jsonReader.Read(); // Move to the value of the "basic" property
                                     JObject basicSection = JObject.Load(jsonReader);
                                     _stats = BuildStatsData(basicSection);
-                                    _statsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                                    _statsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds - 1);
                                     break;
                                 }
                             }
@@ -360,7 +360,7 @@ namespace Core.Main.DataObjects
                               {
                                   JArray dailyPNLSection = (JArray)extraSection["dailyPNLStats"];
                                   _dailyPNL = dailyPNLSection.Select(j => BuildDailyPNLData(j as JObject)).ToList();
-                                  _dailyPNLRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                                  _dailyPNLRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds - 1);
                               }
                           }
                       }
@@ -434,7 +434,7 @@ namespace Core.Main.DataObjects
                                           _profitablePairs.Add(BuildProfitablePairs(profitablePair));
                                           counter++;
                                       }
-                                      _profitablePairsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                                      _profitablePairsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds - 1);
                                   }
                             }
                         }
@@ -500,7 +500,7 @@ namespace Core.Main.DataObjects
                               {
                                   JArray dailyTCVSection = (JArray)extraSection["dailyTCVStats"];
                                   _dailyTCV = dailyTCVSection.Select(j => BuildDailyTCVData(j as JObject)).ToList();
-                                  _dailyTCVRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                                  _dailyTCVRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds - 1);
                               }
                             }
                       }
@@ -568,7 +568,7 @@ namespace Core.Main.DataObjects
                                 {
                                     JArray monthlyStatsSection = (JArray)extraSection["monthlyStats"];
                                     _monthlyStats = monthlyStatsSection.Select(j => BuildMonthlyStatsData(j as JObject)).ToList();
-                                    _monthlyStatsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.RefreshSeconds - 1);
+                                    _monthlyStatsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds - 1);
                                 }
                             }
                         }

@@ -27,26 +27,30 @@ namespace Monitor.Pages {
     }
     public bool IsAnalyzerRunning()
     {
-      // Acquire the mutex before accessing the file
-      try
-      {
-        mutex.WaitOne(0);
-
-        string webRootParent = Directory.GetParent(_hostingEnvironment.WebRootPath).FullName;
-        string ptMagicRoot = Directory.GetParent(webRootParent).FullName;
-        string analyzerStatePath = Path.Combine(ptMagicRoot, "_data", "AnalyzerState");
-        if (System.IO.File.Exists(analyzerStatePath))
+        bool ownsMutex = false;
+        try
         {
-          string state = System.IO.File.ReadAllText(analyzerStatePath);
-          return state == "1";
-        }
-        return false;
+            // Try to acquire the mutex.
+            ownsMutex = mutex.WaitOne(0);
 
-      }
-      finally
-      {
-        mutex.ReleaseMutex(); // Always release the mutex
-      }
+            string webRootParent = Directory.GetParent(_hostingEnvironment.WebRootPath).FullName;
+            string ptMagicRoot = Directory.GetParent(webRootParent).FullName;
+            string analyzerStatePath = Path.Combine(ptMagicRoot, "_data", "AnalyzerState");
+            if (System.IO.File.Exists(analyzerStatePath))
+            {
+                string state = System.IO.File.ReadAllText(analyzerStatePath);
+                return state == "1";
+            }
+            return false;
+        }
+        finally
+        {
+            // Only release the mutex if this thread owns it.
+            if (ownsMutex)
+            {
+                mutex.ReleaseMutex();
+            }
+        }
     }
 
     private void BindData() {
