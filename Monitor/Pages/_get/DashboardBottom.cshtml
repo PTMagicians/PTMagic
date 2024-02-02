@@ -10,7 +10,48 @@
 }
 
 <div class="row">
-  <div class="col-md-5 px-1">
+
+  <div class="col-md-3 px-1">
+    <div class="card-box px-1" style="height:240px;">
+      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds * 1000)" data-color="#aaa,#414d59" 
+        title="All charts set to refresh every @Model.PTMagicConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds seconds in your general settings."></div>
+        @{
+        string totalCurrentValueString = Model.totalCurrentValue.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
+        if (Model.totalCurrentValue > 100) {
+          totalCurrentValueString = Math.Round(Model.totalCurrentValue, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
+          }
+        }   
+        <div class="asset-distribution container" style="height: 100%; width: 100%;">        
+          <div class="text-center">
+            <span data-toggle="tooltip" data-placement="top" title="Total current account value">TCV: <text class="text-autocolor">@totalCurrentValueString @Model.Summary.MainMarket </text> </span>
+          </div>
+          <div class="text-center">
+            <small>
+            <span data-toggle="tooltip" data-placement="top" title="Starting balance from PTM settings">Start: <text class="text-autocolor">@Model.MiscData.StartBalance </text></span>
+            <span data-toggle="tooltip" data-placement="top" title="TCV gain on starting balance">&emsp; Gain: <text class="text-autocolor">@Math.Round(((Model.totalCurrentValue - Model.MiscData.StartBalance) / Model.MiscData.StartBalance) * 100, 2)%</text></span>
+            </small>
+          </div>
+          <svg style="height:100%;width:100%"></svg>
+      </div>
+    </div>
+  </div>
+    
+  <div class="col-md-9">
+    <div class="card-box px-2" style="height:240px;">
+      <h4 class="m-t-0 header-title"><b>Live TCV Trend </b><i class="fa fa-info-circle text-muted"  style="font-size x-small" data-toggle="tooltip" data-placement="top" title="Data is added while the monitor is running. Currently set to show the past @Model.PTMagicConfiguration.GeneralSettings.Monitor.LiveTCVTimeframeMinutes minutes in your monitor settings."></i>
+      @if (!Model.TotalCurrentValueLiveChartDataJSON.Equals("")) {
+        <div class="TCVLive-chart">
+          <svg style="height:220px;width:100%"></svg>
+        </div>
+      } else {
+        <p>Unable to load graph, no sales data found.</p>
+      }
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6 px-1">
     <div class="card-box px-2" style="height:340px;">
       <h4 class="m-t-0 m-b-20 header-title" style="display: inline;"><b>Market Trend History  </b><i class="fa fa-info-circle text-muted"  style="font-size x-small" data-toggle="tooltip" data-placement="top" title="@Math.Round(Model.DataHours, 1) hours of data available. Currently set to show @Model.PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours hours at @Model.PTMagicConfiguration.GeneralSettings.Monitor.GraphIntervalMinutes intervals, in general settings."></i></h4>
       @if (!Model.TrendChartDataJSON.Equals("")) {
@@ -23,37 +64,12 @@
     </div>
   </div>
   
-  <div class="col-md-3 px-1">
-    <div class="card-box px-3" style="height:340px;">
-      <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59" 
-      title="All charts set to refresh every @Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds seconds in your general settings."></div>
-      @{
-      string totalCurrentValueString = Model.totalCurrentValue.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"));
-      if (Model.totalCurrentValue > 100) {
-        totalCurrentValueString = Math.Round(Model.totalCurrentValue, 2).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"));
-        }
-      }   
-      <div id="AssetDistribution" class="container">        
-        <div class="text-center">
-          <small>
-            <span data-toggle="tooltip" data-placement="top" title="Starting balance from PTM settings">Start: &nbsp; <text class="text-autocolor"> @Model.MiscData.StartBalance @Model.Summary.MainMarket </text></span>
-            <span data-toggle="tooltip" data-placement="top" title="TCV gain on starting balance"> &emsp; &emsp; Gain:&nbsp;<text class="text-autocolor">@Math.Round(((Model.totalCurrentValue - Model.MiscData.StartBalance) / Model.MiscData.StartBalance) * 100, 2)%</text></span>
-          </small>
-        </div>
-        <div class="text-center">
-          <span data-toggle="tooltip" data-placement="top" title="Total current account value">TCV: &nbsp; <text class="text-autocolor"> @totalCurrentValueString @Model.Summary.MainMarket </text> </span>
-        </div>
-        <div class="row px1">
-          <svg style="height:260px;width:100%"></svg>
-        </div>
-      </div>
-    </div>
-  </div>
+  
 
-  <div class="col-md-4 px-1">
+  <div class="col-md-6 px-1">
     @*<div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds * 1000)" data-color="#aaa,#414d59"></div>*@
     <div class="card-box px-2" style="height:340px;">
-      <h4 class="m-t-0 m-b-20 header-title" style="display: inline;">Daily Profit <i class="fa fa-info-circle text-muted"  style="font-size x-small" data-toggle="tooltip" data-placement="top" title="@Model.ProfitDays days of data available. Currently Set to @Model.PTMagicConfiguration.GeneralSettings.Monitor.ProfitsMaxTimeframeDays days in general settings."></i>
+      <h4 class="m-t-0 m-b-20 header-title" style="display: inline;">Daily Profit <i class="fa fa-info-circle text-muted"  style="font-size x-small" data-toggle="tooltip" data-placement="top" title="@Model.PTData.DailyPNL.Count days of data available. Currently Set to @Model.PTMagicConfiguration.GeneralSettings.Monitor.ProfitsMaxTimeframeDays days in general settings."></i>
       @if (!Model.ProfitChartDataJSON.Equals("")) {
         <div class="profit-chart">
           <svg style="height:300px;width:100%"></svg>
@@ -70,9 +86,9 @@
     <div class="card-box px-3">
       @* <div class="cdev" data-percent="100" data-duration="@Html.Raw(@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeco;nds * 1000)" data-color="#aaa,#414d59"></div>
       <br> *@
-      <h4 class="m-t-0 m-b-20 header-title">Live Trends 
-        <i class="fa fa-info-circle text-muted"  style="font-size small" data-toggle="tooltip" data-placement="top" title="Set to refresh every @Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds seconds in general settings."></i>
-        <small class="pull-right" style="font-size: x-small"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)MarketAnalyzer">ANALYZER</a></small>
+      <h4 class="m-t-0 m-b-20 header-title">Live Market Trends 
+        <i class="fa fa-info-circle text-muted"  style="font-size small" data-toggle="tooltip" data-placement="top" title="Set to refresh every @Model.PTMagicConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds seconds in general settings."></i>
+        <small class="pull-right" style="font-size: small"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)MarketAnalyzer">ANALYZER</a></small>
       </h4>
       <table class="table table-sm">
         <thead>
@@ -80,7 +96,7 @@
             <th>Name</th>
             <th class="text-right">Markets</th>
             <th class="text-right">Timeframe</th>
-            <th class="text-right">Threshold&nbsp;&nbsp;<i class="fa fa-info-circle text-muted"  data-toggle="tooltip" data-placement="top" title="Pairs exceeding this threshold are excluded from the trend average."></i>
+            <th class="text-right">Threshold&nbsp;&nbsp;<i class="fa fa-info-circle text-muted"  data-toggle="tooltip" data-placement="top" title="Pairs exceeding this threshold are considered outliers that are excluded from the trend average."></i>
             </th>
             <th class="text-right">Change</th>
           </tr>
@@ -284,12 +300,19 @@
 <script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/tablesaw/js/tablesaw-init.js"></script>
 
 <script type="text/javascript">
+  $(document).ready(function(){
+    $('[data-toggle="tooltip"]').tooltip();
+  });
+</script>
+
+
+
+<script type="text/javascript">
   $(document).ready(function () {
     $(".cdev").circlos();
     $('[data-toggle="tooltip"]').tooltip();
     $('.text-autocolor').autocolor(false);
 
-    var assetDistributionChart;  // Keep a reference to the chart
     var assetDistributionData;  // Keep a reference to the data
 
     @if (!Model.AssetDistributionData.Equals("")) {
@@ -302,29 +325,19 @@
           .labelThreshold(.1)
           .labelType("percent")
           .donut(true)
-          .donutRatio(0.3);
+          .donutRatio(0.3)
+          .margin({top: 10, bottom: 10})
+          .showLegend(false); // Hide the legend
 
         assetDistributionData = @Html.Raw(Model.AssetDistributionData);
 
-        d3.select("#AssetDistribution svg")
+        d3.select(".asset-distribution svg")  // Change this line
+          .style('height', '90%')
+          .style('width', '100%')
           .datum(assetDistributionData)
           .transition().duration(0)
           .call(assetDistributionChart);
-
-           // Add mouseleave, and mousemove event listeners to hide tooltip
-        d3.select('.profit-chart').on('mouseleave', function() {
-          d3.select('.nvtooltip').style('opacity', 0);
-        });
-
-        d3.select('body').on('mousemove', function() {
-          var chartBounds = d3.select('.profit-chart')[0][0].getBoundingClientRect();
-          var mouseX = d3.event.clientX;
-          var mouseY = d3.event.clientY;
-
-          if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
-            d3.select('.nvtooltip').style('opacity', 0);
-          }
-        });
+            
         nv.utils.windowResize(assetDistributionChart.update);
         return assetDistributionChart;
       });
@@ -354,23 +367,33 @@
 
         trendData = @Html.Raw(Model.TrendChartDataJSON);
 
-        d3.select('.trend-chart svg')
+        var svg = d3.select('.trend-chart svg').node();
+        d3.select(svg)
           .datum(trendData)
           .transition().duration(0)
           .call(trendChart);
-           // Add mouseleave, and mousemove event listeners to hide tooltip
-        d3.select('.profit-chart').on('mouseleave', function() {
-          d3.select('.nvtooltip').style('opacity', 0);
-        });
 
-        d3.select('body').on('mousemove', function() {
-          var chartBounds = d3.select('.profit-chart')[0][0].getBoundingClientRect();
-          var mouseX = d3.event.clientX;
-          var mouseY = d3.event.clientY;
+        trendChart.dispatch.on('renderEnd', function() {
+          // Get the chart's container
+          var container = d3.select('.trend-chart .nv-wrap.nv-lineChart .nv-linesWrap');
 
-          if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
-            d3.select('.nvtooltip').style('opacity', 0);
-          }
+          // Remove any existing y=0 line
+          container.selectAll('.zero-line').remove();
+
+          // Get the x-values of the first and last data points
+          var xRange = trendChart.xAxis.scale().range();
+          var xMin = xRange[0];
+          var xMax = xRange[1];
+
+          // Add a line at y=0
+          container.insert('line', ':first-child')
+            .attr('class', 'zero-line')  // Add a class to the line for easy selection
+            .attr('x1', xMin)  // x position of the first end of the line
+            .attr('y1', trendChart.yAxis.scale()(0))  // y position of the first end of the line
+            .attr('x2', xMax)  // x position of the second end of the line
+            .attr('y2', trendChart.yAxis.scale()(0))  // y position of the second end of the line
+            .attr('stroke', 'gray')  // color of the line
+            .attr('stroke-width', 2);  // width of the line
         });
         nv.utils.windowResize(trendChart.update);
         return trendChart;
@@ -389,6 +412,7 @@
 
     var profitChart;  // Keep a reference to the chart
     var profitData;  // Keep a reference to the data
+    
 
     @if (!Model.ProfitChartDataJSON.Equals("")) {
     <text>
@@ -406,20 +430,33 @@
           .transition().duration(0)
           .call(profitChart);
 
-          // Add mouseleave, and mousemove event listeners to hide tooltip
-        d3.select('.profit-chart').on('mouseleave', function() {
-          d3.select('.nvtooltip').style('opacity', 0);
-        });
+        profitChart.dispatch.on('renderEnd', function() {
+        // Get the chart's container
+        var container = d3.select('.profit-chart .nv-wrap.nv-lineChart .nv-linesWrap');
 
-        d3.select('body').on('mousemove', function() {
-          var chartBounds = d3.select('.profit-chart')[0][0].getBoundingClientRect();
-          var mouseX = d3.event.clientX;
-          var mouseY = d3.event.clientY;
+        // Remove any existing y=0 line
+        container.selectAll('.zero-line').remove();
 
-          if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
-            d3.select('.nvtooltip').style('opacity', 0);
-          }
+        // Check if profitData[0].values is not empty
+        if (profitData[0].values.length > 0) {
+          // Get the x-values of the first and last data points
+          var xMin = profitChart.xAxis.scale()(profitData[0].values[0].x);
+          var xMax = profitChart.xAxis.scale()(profitData[0].values[profitData[0].values.length - 1].x);
+
+          // Add a line at y=0
+          container.insert('line', ':first-child')
+            .attr('class', 'zero-line')  // Add a class to the line for easy selection
+            .attr('x1', xMin)  // x position of the first end of the line
+            .attr('y1', profitChart.yAxis.scale()(0))  // y position of the first end of the line
+            .attr('x2', xMax)  // x position of the second end of the line
+            .attr('y2', profitChart.yAxis.scale()(0))  // y position of the second end of the line
+            .attr('stroke', 'gray')  // color of the line
+            .attr('stroke-width', 2);  // width of the line
+          
+          window.profitChartUpdate = nv.utils.windowResize(function() { profitChart.update(); });
+        }
         });
+    
         nv.utils.windowResize(profitChart.update);
         return profitChart;
       });
@@ -429,29 +466,78 @@
 </script>
 
 <script type="text/javascript">
-  $(document).ready(function(){
-    var originalLeave = $.fn.tooltip.Constructor.prototype.leave;
-    $.fn.tooltip.Constructor.prototype.leave = function(obj){
-      var self = obj instanceof this.constructor ?
-        obj : $(obj.currentTarget)[this.type](this.getDelegateOptions()).data('bs.' + this.type);
-      var container, timeout;
+    (function ($) {
+      'use strict';
+      $('[role="tooltip"]').remove();
+      $('[data-toggle="tooltip"]').tooltip();
+      $('.text-autocolor').autocolor(false);
 
-      originalLeave.call(this, obj);
+      var TCVLiveChart;  // Keep a reference to the chart
+      var TCVLiveData;  // Keep a reference to the data
 
-      if(obj.currentTarget) {
-        container = $(obj.currentTarget).siblings('.tooltip');
-        timeout = self.timeout;
-        container.one('mouseenter', function(){
-          //We entered the actual tooltip – call off the dogs
-          clearTimeout(timeout);
-          //Let's monitor tooltip content instead
-          container.one('mouseleave', function(){
-            $.fn.tooltip.Constructor.prototype.leave.call(self, self);
-          });
+      @if (!Model.TotalCurrentValueLiveChartDataJSON.Equals("")) {
+      <text>
+        nv.addGraph(function () {
+          TCVLiveChart = nv.models.lineChart();
+          TCVLiveChart.useInteractiveGuideline(true);
+          TCVLiveChart.xAxis.tickFormat(function (d) { return d3.time.format('%H:%M:%S')(new Date(d)); });
+          TCVLiveChart.yAxis.axisLabel('').tickFormat(d3.format(',.2f'));
+
+          TCVLiveData = @Html.Raw(Model.TotalCurrentValueLiveChartDataJSON);
+
+          d3.select('.TCVLive-chart svg')
+            .style('width', '100%')
+            .datum(TCVLiveData)
+            .transition().duration(0)
+            .call(TCVLiveChart);
+            
+            
+          nv.utils.windowResize(TCVLiveChart.update);
+          return TCVLiveChart;
         });
+      </text>
       }
-    };
+    })(jQuery);
+  </script>
 
-    $('[data-toggle="tooltip"]').tooltip();
-  });
+  <script type="text/javascript">
+    function attachTooltipRemoval(chartClass) {
+      d3.selectAll(chartClass).on('mouseleave', function() {
+        var tooltip = d3.select(this).select('.nvtooltip');
+        if (!tooltip.empty()) {
+          tooltip.style('opacity', 0);
+        }
+      });
+
+      d3.selectAll(chartClass).on('mouseenter', function() {
+        var tooltip = d3.select(this).select('.nvtooltip');
+        if (!tooltip.empty()) {
+          tooltip.style('opacity', 1);
+        }
+      });
+    }
+    $(document).ready(function () {
+      // Hide all tooltips when the page is loaded
+      d3.selectAll('.nvtooltip').style('opacity', 0);
+
+      // Call the function for each chart
+      attachTooltipRemoval('.asset-distribution svg');
+      attachTooltipRemoval('.trend-chart svg');
+      attachTooltipRemoval('.profit-chart svg');
+      attachTooltipRemoval('.TCVLive-chart svg');
+      // Add other charts as needed
+    });
+</script>
+
+<script type="text/javascript">
+  window.cleanupData = function() {
+    TCVLiveChart = null;
+    TCVLiveData = null;
+    assetDistributionChart = null;
+    assetDistributionData = null;
+    trendChart = null;
+    trendData = null;
+    profitChart = null;
+    profitData = null;
+  };
 </script>

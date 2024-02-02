@@ -117,12 +117,12 @@
                 </div>
               </div>
 
-               <div class="form-group row">
+               @* <div class="form-group row">
                 <label class="col-md-4 col-form-label">Timezone Offset <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The time difference between your current location and UTC time. Examples: +7:00, -3:00"></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Application_TimezoneOffset" value="@Model.PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset">
                 </div>
-              </div>
+              </div> *@
 
                @* <div class="form-group row">
                 <label class="col-md-4 col-form-label">Main Fiat Currency <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This is the local currency you want PTM to use when showing your sales and account value in fiat."></i></label>
@@ -196,42 +196,48 @@
                 </div>
               </div>
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Market Trend Graph Interval Minutes <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The time interval for the market trend graph (Dashboard and Sales Analyzer) between data points. Very small intervals on large timeframe graphs can significantly impact performance."></i></label>
+                <label class="col-md-4 col-form-label">Live TCV Timeframe (Minutes) <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The total timeframe for the Live TCV chart on the Dashboard. Very large timeframes can significantly impact performance."></i></label>
+                <div class="col-md-8">
+                  <input type="text" class="form-control" name="Monitor_LiveTCVTimeframeMinutes" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.LiveTCVTimeframeMinutes.ToString(new System.Globalization.CultureInfo("en-US"))">
+                </div>
+              </div>
+              <div class="form-group row">
+                <label class="col-md-4 col-form-label">Trend Chart Interval (Minutes) <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The time interval for the market trend graph (Dashboard and Sales Analyzer) between data points. Very small intervals on large timeframe graphs can significantly impact performance."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Monitor_GraphIntervalMinutes" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.GraphIntervalMinutes.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Market Trend Graph Max Timeframe <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This defines the total timeframe for the market trends graph (Dashboard and Sales Analyzer) in hours. Large timeframe graphs can significantly impact performance."></i></label>
+                <label class="col-md-4 col-form-label">Trend Chart Timeframe (Hours) <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This defines the total timeframe for the market trends graph (Dashboard and Sales Analyzer) in hours. Large timeframe graphs can significantly impact performance."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Monitor_GraphMaxTimeframeHours" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.GraphMaxTimeframeHours.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Daily Profit Graph Max Timeframe <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This defines the total timeframe for the daily profits graph on the dashboard in days.  Large timeframes can significantly impact performance."></i></label>
+                <label class="col-md-4 col-form-label">Daily Profit Chart Timeframe (Days) <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="This defines the total timeframe for the daily profits graph on the dashboard in days.  Large timeframes can significantly impact performance."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Monitor_ProfitsMaxTimeframeDays" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.ProfitsMaxTimeframeDays.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Dashboard Bottom Refresh <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The refresh interval in seconds, of the charts and graphs on then main page."></i></label>
+                <label class="col-md-4 col-form-label">Dashboard Charts Refresh (Seconds) <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The refresh interval in seconds, of the charts and graphs on then main page."></i></label>
                 <div class="col-md-8">
-                  <input type="text" class="form-control" name="Monitor_RefreshSeconds" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.RefreshSeconds.ToString(new System.Globalization.CultureInfo("en-US"))">
+                  <input type="text" class="form-control" name="Monitor_RefreshSeconds" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Bag AnalyzerRefresh Seconds <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The refresh interval of your monitor bag analyzer page."></i></label>
+                <label class="col-md-4 col-form-label">Bag Analyzer Refresh (Seconds) <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The refresh interval of your monitor bag analyzer page."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Monitor_BagAnalyzerRefreshSeconds" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.BagAnalyzerRefreshSeconds.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>
               </div>
 
               <div class="form-group row">
-                <label class="col-md-4 col-form-label">Buy AnalyzerRefresh Seconds <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The refresh interval of your monitor buy analyzer page."></i></label>
+                <label class="col-md-4 col-form-label">Buy Analyzer Refresh (Seconds) <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The refresh interval of your monitor buy analyzer page."></i></label>
                 <div class="col-md-8">
                   <input type="text" class="form-control" name="Monitor_BuyAnalyzerRefreshSeconds" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.BuyAnalyzerRefreshSeconds.ToString(new System.Globalization.CultureInfo("en-US"))">
                 </div>
@@ -247,12 +253,12 @@
                 </div>
               </div>
 
-              @* <div class="form-group row">
-                <label class="col-md-4 col-form-label">Max Sales Records<i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The number of sales records PTMagic pulls from Profit Trailer.  Changes require a Monitor Restart."></i></label>
+              <div class="form-group row">
+                <label class="col-md-4 col-form-label">TV Custom Chart <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="If TradingView is selected above, you can use the custom layout code found in your TV URL - ex. AGrfHNiI."></i></label>
                 <div class="col-md-8">
-                  <input type="text" class="form-control" name="Monitor_MaxSalesRecords" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxSalesRecords.ToString(new System.Globalization.CultureInfo("en-US"))">
+                  <input type="text" class="form-control" name="Monitor_TVCustomLayout" value="@Model.PTMagicConfiguration.GeneralSettings.Monitor.TVCustomLayout">
                 </div>
-              </div> *@
+              </div>
 
              <div class="form-group row">
                 <label class="col-md-4 col-form-label">Max Top Markets <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="The amount of top markets being show in your Sales Analyzer."></i></label>

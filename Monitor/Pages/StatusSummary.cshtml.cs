@@ -4,6 +4,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Core.Main;
 using Core.Helper;
+using Core.Main.DataObjects;
 using Core.Main.DataObjects.PTMagicData;
 
 namespace Monitor.Pages
@@ -14,6 +15,8 @@ namespace Monitor.Pages
     public string SettingsDistribution24hChartDataJSON = "";
     public string SettingsDistribution3dChartDataJSON = "";
     private Dictionary<string, string> settingsChartColors = new Dictionary<string, string>();
+    public ProfitTrailerData PTData = null;
+    public MiscData MiscData { get; set; }
 
     public void OnGet()
     {
@@ -24,6 +27,8 @@ namespace Monitor.Pages
 
     private void BindData()
     {
+      PTData = this.PtDataObject;
+      MiscData = this.PTData.Misc;
       BuildMarketsWithSingleSettings();
       BuildChartColors();
       Build24hChartData();

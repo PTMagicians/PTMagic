@@ -3,7 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Hosting;
 using Core.Main;
 using Core.Main.DataObjects.PTMagicData;
 using Newtonsoft.Json;
@@ -13,7 +14,12 @@ namespace Monitor.Pages
   public class ManageSMSModel : _Internal.BasePageModelSecure
   {
     public List<SingleMarketSettingSummary> SingleMarketSettingSummaries = new List<SingleMarketSettingSummary>();
+    private readonly IWebHostEnvironment _hostingEnvironment;
 
+    public ManageSMSModel(IWebHostEnvironment hostingEnvironment)
+    {
+        _hostingEnvironment = hostingEnvironment;
+    }
     public void OnGet()
     {
       base.Init();
@@ -33,6 +39,38 @@ namespace Monitor.Pages
           smsList.Add(smsSummary.SingleMarketSetting.SettingName);
         }
       }
+    }
+    
+    public IActionResult OnPostDeleteFile(string filename)
+    {
+        string webRootParent = Directory.GetParent(_hostingEnvironment.WebRootPath).FullName;
+        string ptMagicRoot = Directory.GetParent(webRootParent).FullName;
+        string analyzerStatePath = Path.Combine(ptMagicRoot, "_data", "AnalyzerState");
+
+        // Read the AnalyzerState file
+        if (System.IO.File.Exists(analyzerStatePath))
+        {
+            string state = System.IO.File.ReadAllText(analyzerStatePath);
+            if (state != "0")
+            {
+                return new JsonResult(new { success = false, message = "Tha Analyzer is in the middle of a run.  Try again in a moment." });
+            }
+        }
+
+        // If state is "0", proceed to delete the file
+        try
+        {
+            string path = Path.Combine(ptMagicRoot, "_data", filename);
+            if (System.IO.File.Exists(path))
+            {
+                System.IO.File.Delete(path);
+            }
+            return new JsonResult(new { success = true, message = "All SMS settings reset!" });
+        }
+        catch (Exception ex)
+        {
+            return new JsonResult(new { success = false, message = ex.Message });
+        }
     }
 
     private void BindData()

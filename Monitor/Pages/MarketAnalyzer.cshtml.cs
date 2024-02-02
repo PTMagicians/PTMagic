@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Core.Main;
 using Core.Helper;
+using Core.Main.DataObjects;
 using Core.Main.DataObjects.PTMagicData;
 using System.Globalization;
 
@@ -11,6 +12,8 @@ namespace Monitor.Pages
   public class MarketAnalyzerModel : _Internal.BasePageModelSecure
   {
     public List<MarketTrend> MarketTrends { get; set; } = new List<MarketTrend>();
+    public ProfitTrailerData PTData = null;
+    public MiscData MiscData { get; set; }
     public string TrendChartDataJSON = "";
     public double DataHours { get; set; }
 
@@ -22,7 +25,8 @@ namespace Monitor.Pages
 
     private void BindData()
     {
-      // Get market trends
+      PTData = this.PtDataObject;
+      MiscData = this.PTData.Misc;  
       MarketTrends = PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends.OrderBy(mt => mt.TrendMinutes).ThenByDescending(mt => mt.Platform).ToList();
 
       BuildMarketTrendChartData();
@@ -56,8 +60,8 @@ namespace Monitor.Pages
 
                             // Get trend ticks for chart
                             TimeSpan offset;
-                            bool isNegative = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.StartsWith("-");
-                            string offsetWithoutSign = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.TrimStart('+', '-');
+                            bool isNegative = MiscData.TimeZoneOffset.StartsWith("-");
+                            string offsetWithoutSign = MiscData.TimeZoneOffset.TrimStart('+', '-');
 
                             if (!TimeSpan.TryParse(offsetWithoutSign, out offset))
                             {

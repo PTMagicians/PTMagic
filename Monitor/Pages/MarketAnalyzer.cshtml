@@ -162,7 +162,7 @@ else
             <th>Name</th>
             <th class="text-right">Markets</th>
             <th class="text-right">Timeframe</th>
-            <th class="text-right">Threshold <i class="fa fa-info-circle text-muted"  data-toggle="tooltip" data-placement="top" title="Pairs exceeding this threshold are excluded from the trend average."></i></th>
+            <th class="text-right">Threshold <i class="fa fa-info-circle text-muted"  data-toggle="tooltip" data-placement="top" title="Pairs exceeding this threshold are considered outliers that are excluded from the trend average."></i></th>
             <th class="text-right">Change</th>
           </tr>
         </thead>
@@ -271,9 +271,9 @@ else
                 }
               </th>
               @if (mps.ActiveSingleSettings == null || mps.ActiveSingleSettings.Count == 0) {
-                <th><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, market, Model.Summary.MainMarket)" target="_blank">@market</a></th>
+                <th><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, market, Model.Summary.MainMarket, Model.PTMagicConfiguration.GeneralSettings.Monitor.TVCustomLayout)" target="_blank">@market</a></th>
               } else {
-                <th><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, market, Model.Summary.MainMarket)" target="_blank">@market</a> <i class="fa fa-exclamation-triangle text-highlight" data-toggle="tooltip" data-placement="top" data-html="true" title="@await Component.InvokeAsync("PairIcon", mps)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner pair-tooltip'></div></div>"></i></th>
+                <th><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, market, Model.Summary.MainMarket, Model.PTMagicConfiguration.GeneralSettings.Monitor.TVCustomLayout)" target="_blank">@market</a> <i class="fa fa-exclamation-triangle text-highlight" data-toggle="tooltip" data-placement="top" data-html="true" title="@await Component.InvokeAsync("PairIcon", mps)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner pair-tooltip'></div></div>"></i></th>
               }
               <td class="text-right">@mps.LatestPrice.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US")) @Model.Summary.MainMarket</td>
               <td class="text-right">@Math.Round(mps.Latest24hVolume, 0).ToString("#,#0", new System.Globalization.CultureInfo("en-US")) @Model.Summary.MainMarket</td>
@@ -336,9 +336,9 @@ else
                 }
               </th>
               @if (mps.ActiveSingleSettings == null || mps.ActiveSingleSettings.Count == 0) {
-                <th><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, market, Model.Summary.MainMarket)" target="_blank">@market</a></th>
+                <th><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, market, Model.Summary.MainMarket, Model.PTMagicConfiguration.GeneralSettings.Monitor.TVCustomLayout)" target="_blank">@market</a></th>
               } else {
-                <th><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, market, Model.Summary.MainMarket)" target="_blank">@market</a> <i class="fa fa-exclamation-triangle text-highlight" data-toggle="tooltip" data-placement="top" data-html="true" title="@await Component.InvokeAsync("PairIcon", mps)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner pair-tooltip'></div></div>"></i></th>
+                <th><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, market, Model.Summary.MainMarket, Model.PTMagicConfiguration.GeneralSettings.Monitor.TVCustomLayout)" target="_blank">@market</a> <i class="fa fa-exclamation-triangle text-highlight" data-toggle="tooltip" data-placement="top" data-html="true" title="@await Component.InvokeAsync("PairIcon", mps)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner pair-tooltip'></div></div>"></i></th>
               }
               <td class="text-right">@mps.LatestPrice.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
               <td class="text-right">@Math.Round(mps.Latest24hVolume, 0).ToString("#,#0", new System.Globalization.CultureInfo("en-US"))</td>
@@ -368,41 +368,81 @@ else
   <script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/tablesaw/js/tablesaw-init.js"></script>
 
   <script type="text/javascript">
-    $(function () {
-      $('.btn-trend-relation').click(function () {
-        var relation = $(this).data('trend-relation');
+      $(function () {
+        $('.btn-trend-relation').click(function () {
+          var relation = $(this).data('trend-relation');
 
-        $('.btn-trend-relation').addClass('btn-custom');
-        $(this).removeClass('btn-custom');
+          $('.btn-trend-relation').addClass('btn-custom');
+          $(this).removeClass('btn-custom');
 
-        if (relation == 'absolute') {
-          $('#trends-absolute').removeClass('hidden');
-          $('#trends-relative').addClass('hidden');
+          if (relation == 'absolute') {
+            $('#trends-absolute').removeClass('hidden');
+            $('#trends-relative').addClass('hidden');
 
-        } else {
-          $('#trends-absolute').addClass('hidden');
-          $('#trends-relative').removeClass('hidden');
-        }
+          } else {
+            $('#trends-absolute').addClass('hidden');
+            $('#trends-relative').removeClass('hidden');
+          }
 
-        $('[data-toggle="tooltip"]').tooltip();
-      });
-
-      @if (!Model.TrendChartDataJSON.Equals("")) {
-        <text>
-          nv.addGraph(function () {
-            var lineChart = nv.models.lineChart();
-            var height = 300;
-            var chartData = @Html.Raw(Model.TrendChartDataJSON);
-          lineChart.useInteractiveGuideline(true);
-          lineChart.xAxis.tickFormat(function (d) { return d3.time.format('%H:%M')(new Date(d)); });
-          lineChart.yAxis.axisLabel('Trend %').tickFormat(d3.format(',.2f'));
-          d3.select('.trend-chart svg').attr('perserveAspectRatio', 'xMinYMid').datum(chartData).transition().duration(500).call(lineChart);
-          //nv.utils.windowResize(lineChart.update); v1.3.0 => Removed this line to prevent memory leak
-
-          return lineChart;
+          $('[data-toggle="tooltip"]').tooltip();
         });
-        </text>
-      }
-    })
+
+        @if (!Model.TrendChartDataJSON.Equals("")) {
+          <text>
+            nv.addGraph(function () {
+          lineChart = nv.models.lineChart();
+              var height = 300;
+              var chartData = @Html.Raw(Model.TrendChartDataJSON);
+              lineChart.useInteractiveGuideline(true);
+              lineChart.xAxis.tickFormat(function (d) { return d3.time.format('%H:%M')(new Date(d)); });
+              lineChart.yAxis.axisLabel('Trend %').tickFormat(d3.format(',.2f'));
+
+              d3.select('.trend-chart svg').attr('perserveAspectRatio', 'xMinYMid').datum(chartData).transition().duration(500).call(lineChart);
+              //nv.utils.windowResize(lineChart.update); v1.3.0 => Removed this line to prevent memory leak
+
+              lineChart.dispatch.on('renderEnd', function() {
+              // Get the chart's container
+              var container = d3.select('.trend-chart .nv-wrap.nv-lineChart .nv-linesWrap');
+
+              // Remove any existing y=0 line
+              container.selectAll('.zero-line').remove();
+
+              // Get the x-values of the first and last data points
+              var xRange = lineChart.xAxis.scale().range();
+              var xMin = xRange[0];
+              var xMax = xRange[1];
+
+
+              // Add a line at y=0
+              container.insert('line', ':first-child')
+                .attr('class', 'zero-line')  // Add a class to the line for easy 
+                .attr('x1', xMin)  // x position of the first end of the line
+                .attr('y1', lineChart.yAxis.scale()(0))  // y position of the first end of the line
+                .attr('x2', xMax)  // x position of the second end of the line
+                .attr('y2', lineChart.yAxis.scale()(0))  // y position of the second end of the line
+                .attr('stroke', 'gray')  // color of the line
+                .attr('stroke-width', 2);  // width of the line
+              });
+
+              // Add mouseleave, and mousemove event listeners to hide tooltip
+              d3.select('.trend-chart').on('mouseleave', function() {
+                  d3.select('.nvtooltip').remove();
+              });
+
+              d3.select('.trend-chart').on('mousemove', function() {
+                  var chartBounds = d3.select('.trend-chart')[0][0].getBoundingClientRect();
+                  var mouseX = d3.event.clientX;
+                  var mouseY = d3.event.clientY;
+
+                  if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
+                      d3.select('.nvtooltip').remove();
+                  }
+              });
+
+              return lineChart;
+            });
+          </text>
+        }
+      })
   </script>
 }

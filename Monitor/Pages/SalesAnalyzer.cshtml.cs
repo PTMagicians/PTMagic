@@ -54,7 +54,7 @@ namespace Monitor.Pages
       DailyStats = this.PTData.DailyStats;
       
       // Convert local offset time to UTC
-      TimeSpan offsetTimeSpan = TimeSpan.Parse(PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.Replace("+", ""));
+      TimeSpan offsetTimeSpan = TimeSpan.Parse(MiscData.TimeZoneOffset.Replace("+", ""));
       DateTimeNow = DateTimeOffset.UtcNow.ToOffset(offsetTimeSpan);
 
       BuildSalesChartData();
@@ -71,8 +71,8 @@ namespace Monitor.Pages
         {
             // Get timezone offset
             TimeSpan offset;
-            bool isNegative = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.StartsWith("-");
-            string offsetWithoutSign = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.TrimStart('+', '-');
+            bool isNegative = MiscData.TimeZoneOffset.StartsWith("-");
+            string offsetWithoutSign = MiscData.TimeZoneOffset.TrimStart('+', '-');
 
             if (!TimeSpan.TryParse(offsetWithoutSign, out offset))
             {
@@ -129,8 +129,8 @@ namespace Monitor.Pages
         {
             // Get timezone offset
             TimeSpan offset;
-            bool isNegative = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.StartsWith("-");
-            string offsetWithoutSign = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.TrimStart('+', '-');
+            bool isNegative = MiscData.TimeZoneOffset.StartsWith("-");
+            string offsetWithoutSign = MiscData.TimeZoneOffset.TrimStart('+', '-');
 
             if (!TimeSpan.TryParse(offsetWithoutSign, out offset))
             {
@@ -190,8 +190,8 @@ namespace Monitor.Pages
         {
             // Get timezone offset
             TimeSpan offset;
-            bool isNegative = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.StartsWith("-");
-            string offsetWithoutSign = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.TrimStart('+', '-');
+            bool isNegative = MiscData.TimeZoneOffset.StartsWith("-");
+            string offsetWithoutSign = MiscData.TimeZoneOffset.TrimStart('+', '-');
 
             if (!TimeSpan.TryParse(offsetWithoutSign, out offset))
             {
@@ -301,8 +301,8 @@ namespace Monitor.Pages
         {
             // Get timezone offset
             TimeSpan offset;
-            bool isNegative = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.StartsWith("-");
-            string offsetWithoutSign = PTMagicConfiguration.GeneralSettings.Application.TimezoneOffset.TrimStart('+', '-');
+            bool isNegative = MiscData.TimeZoneOffset.StartsWith("-");
+            string offsetWithoutSign = MiscData.TimeZoneOffset.TrimStart('+', '-');
 
             if (!TimeSpan.TryParse(offsetWithoutSign, out offset))
             {
