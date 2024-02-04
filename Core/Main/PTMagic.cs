@@ -125,21 +125,26 @@ namespace Core.Main
         _state = value;
       }
     }
-    public void WriteStateToFile()
+   public void WriteStateToFile()
+{
+    try
     {
-      try
-      {
         mutex.WaitOne(); // Acquire the mutex
 
-        string filePath = "_data/AnalyzerState.";
+        string dirPath = "_data";
+        string filePath = Path.Combine(dirPath, "AnalyzerState.");
+
+        // Ensure the directory exists
+        Directory.CreateDirectory(dirPath);
+
         File.WriteAllText(filePath, this.State.ToString());
 
-      }
-      finally
-      {
-        mutex.ReleaseMutex(); // Release the mutex even if exceptions occur
-      }
     }
+    finally
+    {
+        mutex.ReleaseMutex(); // Release the mutex even if exceptions occur
+    }
+}
 
 
     public int RunCount
