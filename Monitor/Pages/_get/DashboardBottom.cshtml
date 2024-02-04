@@ -349,6 +349,7 @@
 <script type="text/javascript">
   (function ($) {
     'use strict';
+    // $('head').append('<style>.nv-point { stroke-width: 1px; }</style>');
     $('[role="tooltip"]').remove();
     $('[data-toggle="tooltip"]').tooltip();
     $('.text-autocolor').autocolor(false);
@@ -362,6 +363,7 @@
         trendChart = nv.models.lineChart();
         var height = 300;
         trendChart.useInteractiveGuideline(true);
+        trendChart.pointSize(0.25);  // Set the point size to a smaller value
         trendChart.xAxis.tickFormat(function (d) { return d3.time.format('%H:%M')(new Date(d)); });
         trendChart.yAxis.axisLabel('Trend %').tickFormat(d3.format(',.2f'));
 
