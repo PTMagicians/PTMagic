@@ -29,20 +29,14 @@
         <div class="form-group row">
           <label class="col-md-4 col-form-label">Trigger Connection <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Define if triggers will be connected by AND or OR"></i></label>
           <div class="col-md-8">
-            <select name="MarketAnalyzer_SingleMarketSetting_@(Model.SettingName)|TriggerConnection" class="form-control">
-              <option selected="@(Model.SingleMarketSetting.TriggerConnection.Equals("AND", StringComparison.InvariantCultureIgnoreCase))">AND</option>
-              <option selected="@(Model.SingleMarketSetting.TriggerConnection.Equals("OR", StringComparison.InvariantCultureIgnoreCase))">OR</option>
-            </select>
+            <input type="text" name="MarketAnalyzer_SingleMarketSetting_@(Model.SettingName)|TriggerConnection" class="form-control" value="@Model.SingleMarketSetting.TriggerConnection" />
           </div>
         </div>
 
         <div class="form-group row">
           <label class="col-md-4 col-form-label">Off Trigger Connection <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Define if off triggers will be connected by AND or OR"></i></label>
           <div class="col-md-8">
-            <select name="MarketAnalyzer_SingleMarketSetting_@(Model.SettingName)|OffTriggerConnection" class="form-control">
-              <option selected="@(Model.SingleMarketSetting.OffTriggerConnection.Equals("AND", StringComparison.InvariantCultureIgnoreCase))">AND</option>
-              <option selected="@(Model.SingleMarketSetting.OffTriggerConnection.Equals("OR", StringComparison.InvariantCultureIgnoreCase))">OR</option>
-            </select>
+            <input type="text" name="MarketAnalyzer_SingleMarketSetting_@(Model.SettingName)|OffTriggerConnection" class="form-control" value="@Model.SingleMarketSetting.OffTriggerConnection" />
           </div>
         </div>
 
