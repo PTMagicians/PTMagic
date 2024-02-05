@@ -1,4 +1,5 @@
 using System;
+using System.Data;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Threading;
@@ -852,6 +853,8 @@ namespace Core.Main
 
     #region PTMagic Interval Methods
 
+
+
     public void PTMagicIntervalTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
     {
       // Check if the bot is idle
@@ -1297,6 +1300,8 @@ namespace Core.Main
       }
     }
 
+
+
     private void BuildGlobalMarketTrends()
     {
       this.Log.DoLogInfo("Build global market trends...");
@@ -1416,7 +1421,15 @@ namespace Core.Main
                         string triggerConnection = globalSetting.TriggerConnection;
                         foreach (var triggerResult in triggerResults)
                         {
-                            triggerConnection = triggerConnection.Replace(triggerResult.Key, triggerResult.Value.ToString().ToLower());
+                          if (!string.IsNullOrEmpty(triggerResult.Key))
+                          {
+                              triggerConnection = triggerConnection.Replace(triggerResult.Key, triggerResult.Value.ToString().ToLower());
+                          }
+                          else
+                          {
+                              this.Log.DoLogError($"ERROR: A required trigger Tag is missing for global setting {globalSetting.SettingName}. Program halted.");
+                              Environment.Exit(1); // Stop the program
+                          }
                         }
 
                         try
@@ -1815,6 +1828,14 @@ namespace Core.Main
               Dictionary<int, double> relevantTriggers = new Dictionary<int, double>();
               int triggerIndex = 0;
 
+              // Create a dictionary to store the tag and its corresponding result
+              Dictionary<string, bool> triggerTagsResults = new Dictionary<string, bool>();
+              // Initialize all tags with a value of false
+              foreach (Trigger trigger in marketSetting.Triggers)
+              {
+                  triggerTagsResults[trigger.Tag] = false;
+              }
+
               // Loop through SMS triggers
               foreach (Trigger trigger in marketSetting.Triggers)
               {
@@ -1850,6 +1871,7 @@ namespace Core.Main
                         matchedSingleMarketTriggers.Add(marketSetting.SettingName + ": " + triggerContent + " - 24h volume = " + mtc.Volume24h.ToString(new System.Globalization.CultureInfo("en-US")) + " " + this.LastRuntimeSummary.MainMarket);
 
                         triggerResults.Add(true);
+                        triggerTagsResults[trigger.Tag] = true;
                       }
                       else
                       {
@@ -1880,6 +1902,7 @@ namespace Core.Main
 
                       relevantTriggers.Add(triggerIndex, marketAge);
                       triggerResults.Add(true);
+                      triggerTagsResults[trigger.Tag] = true;
                     }
                     else
                     {
@@ -1961,6 +1984,7 @@ namespace Core.Main
                           matchedSingleMarketTriggers.Add(marketSetting.SettingName + ": " + triggerContent + " - TrendChange (" + trigger.MarketTrendRelation + ") = " + trendChange.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) + "%");
 
                           triggerResults.Add(true);
+                          triggerTagsResults[trigger.Tag] = true;
                         }
                         else
                         {
@@ -2002,19 +2026,53 @@ namespace Core.Main
                 triggerIndex++;
               } // End loop SMS triggers
 
+
               // Check if all triggers have to get triggered or just one
               bool settingTriggered = false;
-              switch (marketSetting.TriggerConnection.ToLower())
+              if (marketSetting.TriggerConnection.ToLower() == "and" || marketSetting.TriggerConnection.ToLower() == "or")
               {
-                case "and":
-                  settingTriggered = triggerResults.FindAll(tr => tr == false).Count == 0;
-                  break;
-                case "or":
-                  settingTriggered = triggerResults.FindAll(tr => tr == true).Count > 0;
-                  break;
+                  switch (marketSetting.TriggerConnection.ToLower())
+                  {
+                      case "and":
+                          settingTriggered = triggerResults.FindAll(tr => tr == false).Count == 0;
+                          break;
+                      case "or":
+                          settingTriggered = triggerResults.FindAll(tr => tr == true).Count > 0;
+                          break;
+                  }
+              }
+              else
+              {
+                
+                // Parse the TriggerConnection string into a logical expression
+                string triggerConnection = marketSetting.TriggerConnection;
+                foreach (var triggerResult in triggerTagsResults)
+                {
+                    // Replace the tag in the expression with its corresponding value from triggerTagsResults
+                    if (!string.IsNullOrEmpty(triggerResult.Key))
+                    {
+                        triggerConnection = triggerConnection.Replace(triggerResult.Key, triggerResult.Value.ToString().ToLower());
+                    }
+                    else
+                    {
+                        this.Log.DoLogError($"ERROR: A required trigger Tag is missing for global setting {marketSetting.SettingName}. Program halted.");
+                        Environment.Exit(1); // Stop the program
+                    }
+                }
+                try
+                  {
+
+                    // Evaluate the expression using ParseLambda
+                    settingTriggered = (bool)DynamicExpressionParser.ParseLambda(ParsingConfig.Default, new ParameterExpression[0], typeof(bool), triggerConnection).Compile().DynamicInvoke();
+                  }
+                  catch (Exception ex)
+                  {
+                      this.Log.DoLogError($"ERROR: Trigger Connection for global setting {marketSetting.SettingName} is invalid or missing. Program halted.");
+                      Environment.Exit(1); // Stop the program
+                  }
               }
               #endregion
-
+              
               bool isFreshTrigger = true;
 
               // Setting not triggered -> Check if it is already active as a long term SMS using Off Triggers
