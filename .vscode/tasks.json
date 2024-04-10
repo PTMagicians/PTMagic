@@ -10,9 +10,9 @@
                 "PTMagic"
             ],
             "group": {
-                "kind":"build",
+                "kind": "build",
                 "isDefault": true
-            }, 
+            },
             "presentation": {
                 "reveal": "always",
                 "focus": true
@@ -104,6 +104,13 @@
                 "focus": true
             },
             "problemMatcher": "$msCompile"
+        },
+        {
+            "type": "dotnet",
+            "task": "build",
+            "group": "build",
+            "problemMatcher": [],
+            "label": "dotnet: build"
         }
     ]
 }

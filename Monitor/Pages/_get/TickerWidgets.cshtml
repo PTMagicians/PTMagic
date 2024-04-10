@@ -31,6 +31,9 @@
     ptMagicHealthTooltip = "PT Magic seems to have problems, check the logs!  Time elapsed since last run:  " + Math.Round(elapsedSecondsSinceRuntime / 60, 1) + " mins.";
     healthIconColor = "text-danger";
   }
+  if (Model.IsAnalyzerRunning()) {
+  ptMagicHealthIcon = "fa-cog fa-spin";
+  }
 }
 
 <div class="card-box card-box-mini card-box-ptmagic-outlined @globalIconColor">

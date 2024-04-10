@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Text.RegularExpressions;
-using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using System.Net;
@@ -535,18 +533,22 @@ namespace Core.Helper
       }
     }
 
-    public static string GetMarketLink(string platform, string exchange, string market, string mainMarket)
+    public static string GetMarketLink(string platform, string exchange, string market, string mainMarket, string tvCustomLayout)
     {
       string result = "#";
+      if (tvCustomLayout.Length > 0)
+      {
+        tvCustomLayout += "/";
+      }
       if (platform.Equals("TradingView"))
       {
         if (exchange.Equals("binancefutures", StringComparison.InvariantCultureIgnoreCase))
         {
-          result = "https://uk.tradingview.com/chart/?symbol=BINANCE:" + market.ToUpper() + "PERP";
+          result = "https://uk.tradingview.com/chart/"+tvCustomLayout+"?symbol=BINANCE:" + market.ToUpper() + ".P";
         }
         else
         {
-          result = "https://uk.tradingview.com/chart/?symbol=" + exchange.ToUpper() + ":" + market.ToUpper();
+          result = "https://uk.tradingview.com/chart/"+tvCustomLayout+"?symbol=" + exchange.ToUpper() + ":" + market.ToUpper();
         }
       }
       else

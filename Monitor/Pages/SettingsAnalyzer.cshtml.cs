@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc;
 using Core.Main;
 using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
-using Microsoft.Extensions.Primitives;
 
 namespace Monitor.Pages
 {

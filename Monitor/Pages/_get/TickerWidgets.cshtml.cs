@@ -1,22 +1,56 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.AspNetCore.Http;
-using Core.Main;
 using Core.Main.DataObjects;
 using Core.Main.DataObjects.PTMagicData;
-using Core.MarketAnalyzer;
+using System.IO; 
+using Microsoft.AspNetCore.Hosting; 
+using System.Threading;
 
 namespace Monitor.Pages {
   public class TickerWidgetsModel : _Internal.BasePageModelSecureAJAX {
     public ProfitTrailerData PTData = null;
     public List<string> MarketsWithSingleSettings = new List<string>();
+    private readonly IWebHostEnvironment _hostingEnvironment; 
+    private Mutex mutex = new Mutex(false, "analyzerStateMutex");
+
+    public TickerWidgetsModel(IWebHostEnvironment hostingEnvironment) // Add this constructor
+    {
+        _hostingEnvironment = hostingEnvironment;
+    }
 
     public void OnGet() {
       // Initialize Config
       base.Init();
       
       BindData();
+    }
+    public bool IsAnalyzerRunning()
+    {
+        bool ownsMutex = false;
+        try
+        {
+            // Try to acquire the mutex.
+            ownsMutex = mutex.WaitOne(0);
+
+            string webRootParent = Directory.GetParent(_hostingEnvironment.WebRootPath).FullName;
+            string ptMagicRoot = Directory.GetParent(webRootParent).FullName;
+            string analyzerStatePath = Path.Combine(ptMagicRoot, "_data", "AnalyzerState");
+            if (System.IO.File.Exists(analyzerStatePath))
+            {
+                string state = System.IO.File.ReadAllText(analyzerStatePath);
+                return state == "1";
+            }
+            return false;
+        }
+        finally
+        {
+            // Only release the mutex if this thread owns it.
+            if (ownsMutex)
+            {
+                mutex.ReleaseMutex();
+            }
+        }
     }
 
     private void BindData() {

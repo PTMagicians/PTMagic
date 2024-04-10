@@ -78,7 +78,7 @@
         </div>
 
         <div class="form-group row">
-          <label class="col-md-4 col-form-label">Trend Threshold <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Exclude coins above/below this value when calculing market trend average."></i></label>
+          <label class="col-md-4 col-form-label">Trend Threshold <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Exclude coins above/below this value as outliers, when calculing market trend average."></i></label>
           <div class="col-md-8">
             <input type="text" class="form-control" name="MarketAnalyzer_MarketTrend_@(Model.MarketTrendName)|TrendThreshold" value="@Model.MarketTrend.TrendThreshold.ToString()">
             <span class="help-block"><small>Leave empty to exclude none</small></span>

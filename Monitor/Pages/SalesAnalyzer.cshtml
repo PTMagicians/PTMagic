@@ -329,7 +329,7 @@
               double profitFiat = Math.Round(profit * Model.MiscData.FiatConversionRate, 0);
               <tr>
                 <td>@rank</td>
-                <td><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform, Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, coin, Model.PTData.Misc.Market)" target="_blank">@coin</a></td>
+                <td><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform, Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, coin, Model.PTData.Misc.Market, Model.PTMagicConfiguration.GeneralSettings.Monitor.TVCustomLayout)" target="_blank">@coin</a></td>
                 <td class="text-right text-autocolor-saw">@profit</td>
                 <td class="text-right">@sales</td>
                 <td class="text-right text-autocolor-saw">@avg </td>
@@ -394,20 +394,7 @@
           .transition().duration(0)
           .call(salesChart);
 
-          // Add mouseleave, and mousemove event listeners to hide tooltip
-        d3.select('.sales-chart').on('mouseleave', function() {
-          d3.select('.nvtooltip').style('opacity', 0);
-        });
-
-        d3.select('body').on('mousemove', function() {
-          var chartBounds = d3.select('.sales-chart')[0][0].getBoundingClientRect();
-          var mouseX = d3.event.clientX;
-          var mouseY = d3.event.clientY;
-
-          if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
-            d3.select('.nvtooltip').style('opacity', 0);
-          }
-        });
+        
         nv.utils.windowResize(salesChart.update);
         return salesChart;
       });
@@ -442,20 +429,7 @@
             .transition().duration(0)
             .call(cumulativeProfitChart);
 
-            // Add mouseleave, and mousemove event listeners to hide tooltip
-          d3.select('.cumulative-profit-chart').on('mouseleave', function() {
-            d3.select('.nvtooltip').style('opacity', 0);
-          });
-
-          d3.select('body').on('mousemove', function() {
-            var chartBounds = d3.select('.cumulative-profit-chart')[0][0].getBoundingClientRect();
-            var mouseX = d3.event.clientX;
-            var mouseY = d3.event.clientY;
-
-            if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
-              d3.select('.nvtooltip').style('opacity', 0);
-            }
-          });
+           
           nv.utils.windowResize(cumulativeProfitChart.update);
           return cumulativeProfitChart;
         });
@@ -490,20 +464,6 @@
             .transition().duration(0)
             .call(TCVChart);
 
-            // Add mouseleave, and mousemove event listeners to hide tooltip
-          d3.select('.TCV-chart').on('mouseleave', function() {
-            d3.select('.nvtooltip').style('opacity', 0);
-          });
-
-          d3.select('body').on('mousemove', function() {
-            var chartBounds = d3.select('.TCV-chart')[0][0].getBoundingClientRect();
-            var mouseX = d3.event.clientX;
-            var mouseY = d3.event.clientY;
-
-            if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
-              d3.select('.nvtooltip').style('opacity', 0);
-            }
-          });
           nv.utils.windowResize(TCVChart.update);
           return TCVChart;
         });
@@ -538,20 +498,33 @@
           .transition().duration(0)
           .call(profitChart);
 
-          // Add mouseleave, and mousemove event listeners to hide tooltip
-        d3.select('.profit-chart').on('mouseleave', function() {
-          d3.select('.nvtooltip').style('opacity', 0);
+
+        profitChart.dispatch.on('renderEnd', function() {
+        // Get the chart's container
+        var container = d3.select('.profit-chart .nv-wrap.nv-lineChart .nv-linesWrap');
+
+        // Remove any existing y=0 line
+        container.selectAll('.zero-line').remove();
+
+        // Check if profitData[0].values is not empty
+        if (profitData[0].values.length > 0) {
+          // Get the x-values of the first and last data points
+          var xMin = profitChart.xAxis.scale()(profitData[0].values[0].x);
+          var xMax = profitChart.xAxis.scale()(profitData[0].values[profitData[0].values.length - 1].x);
+
+          // Add a line at y=0
+          container.insert('line', ':first-child')
+          .attr('class', 'zero-line')  // Add a class to the line for easy selection
+            .attr('x1', xMin)  // x position of the first end of the line
+            .attr('y1', profitChart.yAxis.scale()(0))  // y position of the first end of the line
+            .attr('x2', xMax)  // x position of the second end of the line
+            .attr('y2', profitChart.yAxis.scale()(0))  // y position of the second end of the line
+            .attr('stroke', 'gray')  // color of the line
+            .attr('stroke-width', 2);  // width of the line
+        }
         });
 
-        d3.select('body').on('mousemove', function() {
-          var chartBounds = d3.select('.profit-chart')[0][0].getBoundingClientRect();
-          var mouseX = d3.event.clientX;
-          var mouseY = d3.event.clientY;
 
-          if (mouseX < chartBounds.left || mouseX > chartBounds.right || mouseY < chartBounds.top || mouseY > chartBounds.bottom) {
-            d3.select('.nvtooltip').style('opacity', 0);
-          }
-        });
         nv.utils.windowResize(profitChart.update);
         return profitChart;
       });
@@ -559,4 +532,34 @@
     }
   })(jQuery);
 </script>
+
+<script type="text/javascript">
+    function attachTooltipRemoval(chartClass) {
+      d3.selectAll(chartClass).on('mouseleave', function() {
+        var tooltip = d3.select(this).select('.nvtooltip');
+        if (!tooltip.empty()) {
+          tooltip.style('opacity', 0);
+        }
+      });
+
+      d3.selectAll(chartClass).on('mouseenter', function() {
+        var tooltip = d3.select(this).select('.nvtooltip');
+        if (!tooltip.empty()) {
+          tooltip.style('opacity', 1);
+        }
+      });
+    }
+    $(document).ready(function () {
+      // Hide all tooltips when the page is loaded
+      d3.selectAll('.nvtooltip').style('opacity', 0);
+
+      // Call the function for each chart
+      attachTooltipRemoval('.asset-distribution svg');
+      attachTooltipRemoval('.trend-chart svg');
+      attachTooltipRemoval('.profit-chart svg');
+      attachTooltipRemoval('.TCVLive-chart svg');
+      // Add other charts as needed
+    });
+</script>
+
 }

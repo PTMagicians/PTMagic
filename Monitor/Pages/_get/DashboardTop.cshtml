@@ -3,13 +3,15 @@
 @{
   Layout = null;
 }
-
-<div class="row">
+@{
+  bool sideBySide = true;
+  }
+<div class="@(sideBySide ? "row" : "col-md-12")">
   @if (Model.PTMagicConfiguration.GeneralSettings.Monitor.MaxDashboardBuyEntries>0)
   {
-  <div class="col-md-6 px-1">
+  <div class="col-md px-1">
     <div class="card-box px-2">
-      <h4 class="m-t-0 m-b-20 header-title"><b>Possible Buys (@Model.PTData.BuyLog.Count)</b><small id="buylist-refresh-icon"></small><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)BuyAnalyzer">more</a></small></h4>
+      <h4 class="m-t-0 m-b-20 header-title"><b>Possible Buys (@Model.PTData.BuyLog.Count)</b><small id="buylist-refresh-icon"><i class="fa fa-info-circle text-muted"  style="font-size x-small" data-toggle="tooltip" data-placement="top" title="Set 'Max Dashboard Buy Entries' to zero in Monitor Settings, to hide this table."></i></small><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)BuyAnalyzer">more</a></small></h4>
       @if (Model.PTData.BuyLog.Count == 0) 
       {
         <p>Your Profit Trailer did not find anything worth buying so far.</p>
@@ -19,11 +21,10 @@
         <table class="table table-sm m-b-0">
           <thead>
             <tr>
-              <th>Market</th>
-              <th class="text-left" data-toggle="tooltip" data-placement="top" title="24 Hour price trend">24H</th>
-              <th class="text-left" data-toggle="tooltip" data-placement="top" title="24 Hour trading volume">Volume</th>
-              <th class="text-left" data-toggle="tooltip" data-placement="top" title="Current ask price for this market">Ask</th>
-              <th>Buy Strategies</th>
+              <th><strong>Market </strong><i class="fa fa-info-circle text-muted" style="font-size: x-small" data-toggle="tooltip" data-placement="top" title="Market and 24h CHANGE"></i></th>
+              <th><strong>Volume </strong><i class="fa fa-info-circle text-muted" style="font-size: x-small" data-toggle="tooltip" data-placement="top" title="24h VOLUME"></i></th>
+              <th><strong>Ask </strong></th>
+              <th><strong>Buy Strategies </strong></th>
             </tr>
           </thead>
           <tbody>
@@ -57,13 +58,21 @@
 
             <tr>
               @if (mps == null || mps.ActiveSingleSettings == null || mps.ActiveSingleSettings.Count == 0) {
-                <th class="align-top"><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, buyLogEntry.Market, Model.Summary.MainMarket)" target="_blank">@buyLogEntry.Market</a></th>
+                <th>
+                  <span style="font-size: 1.3em;"><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, buyLogEntry.Market, Model.Summary.MainMarket, Model.PTMagicConfiguration.GeneralSettings.Monitor.TVCustomLayout)" target="_blank">@buyLogEntry.Market</span>
+                  <br><span class="text-autocolor">@Html.Raw((buyLogEntry.PercChange * 100).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))) % </span>
+                </th>
               } else {
-                <th class="align-top; text-nowrap"><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, buyLogEntry.Market, Model.Summary.MainMarket)" target="_blank">@buyLogEntry.Market &nbsp;</a> <i class="fa fa-exclamation-triangle text-highlight" data-toggle="tooltip" data-placement="top" data-html="true" title="@await Component.InvokeAsync("PairIcon", mps)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner pair-tooltip'></div></div>"></i></th>
+                <th>
+                  <div style="white-space: nowrap;">
+                    <span style="font-size: 1.3em;"><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, buyLogEntry.Market, Model.Summary.MainMarket, Model.PTMagicConfiguration.GeneralSettings.Monitor.TVCustomLayout)" target="_blank">@buyLogEntry.Market</a></span>
+                    &nbsp;<i class="fa fa-exclamation-triangle text-highlight" data-toggle="tooltip" data-placement="top" data-html="true" title="@await Component.InvokeAsync("PairIcon", mps)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner pair-tooltip'></div></div>"></i>
+                  </div>
+                  <span class="text-autocolor">@Html.Raw((buyLogEntry.PercChange * 100).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))) % </span>
+                </th>
               }
-              <td class="text-autocolor">@string.Format("{0}%", (buyLogEntry.PercChange * 100).ToString("#,#0.00"))</td>
-              <td class="text">@string.Format("{0}", (buyLogEntry.Volume24h).ToString())</td>
-              <td class="text-left">@buyLogEntry.CurrentPrice.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
+              <td >@string.Format("{0}", (buyLogEntry.Volume24h).ToString())</td>
+              <td >@buyLogEntry.CurrentPrice.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
 
               @if (buyDisabled) {
                 <td>@Html.Raw(buyStrategyText)</td>
@@ -85,7 +94,7 @@
   
   <div class="col-md px-1">    
     <div class="card-box px-2">
-      <h4 class="m-t-0 m-b-20 header-title"><b>Pairs / DCA / Pending (@Model.PTData.DCALog.Count)</b><small id="baglist-refresh-icon"></small><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)BagAnalyzer">more</a></small></h4>
+      <h4 class="m-t-0 m-b-20 header-title"><b>Positions (@Model.PTData.DCALog.Count)</b><small id="baglist-refresh-icon"></small><small class="pull-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)BagAnalyzer">more</a></small></h4>
 
       @if (Model.PTData.DCALog.Count == 0) 
       {
@@ -94,16 +103,15 @@
       else 
       {
         <div class="table-responsive">
-          <table class="table table-sm m-b-0">
+          <table class="table table-sm m-b-0 table-auto-width">
             <thead>
               <tr>
-                <th>Market</th>    
-                <th class="text-left" data-toggle="tooltip" data-placement="top" title="24 Hour Trend">24H</th>
-                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Total Buy Cost">Cost</th>
+                <th><strong>Market </strong><i class="fa fa-info-circle text-muted" style="font-size: x-small" data-toggle="tooltip" data-placement="top" title="Market and 24h CHANGE"></i></th> 
+                <th><strong>Cost </strong><i class="fa fa-info-circle text-muted" style="font-size: x-small" data-toggle="tooltip" data-placement="top" title="Total COST and TIME HELD"></i></th>
                 <th></th>
-                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Active Buy Strategies">DCA</th>
-                <th class="text-left" data-toggle="tooltip" data-placement="top" title="Active Sell Strategies">Sell</th>
-                <th class="text-left" data-toggle="tooltip" data-html="true" data-placement="top" title="Profit Target <br> Current Profit">Profit</th>
+                <th><strong>DCA </strong></th>
+                <th><strong>Sell </strong></th>
+                <th><strong>Profit </strong><i class="fa fa-info-circle text-muted" style="font-size: x-small" data-toggle="tooltip" data-placement="top" title="Proft TARGET and CURRENT Profit"></i></th>
                 <th></th>
               </tr>
             </thead>
@@ -142,7 +150,6 @@
                 if (dcaLogEntry.SellStrategies.Count > 0) {
                   isSellStrategyTrue = (dcaLogEntry.SellStrategies.FindAll(ss => !ss.IsTrue).Count == 0);
                 }
-
                 string leverage = "";
                 double leverageValue = 1;
                 string buyStrategyText = Core.ProfitTrailer.StrategyHelper.GetStrategyText(Model.Summary, dcaLogEntry.BuyStrategies, dcaLogEntry.BuyStrategy, isBuyStrategyTrue, isTrailingBuyActive);
@@ -154,55 +161,38 @@
 
                 // Profit percentage
                 var profitPercentage = dcaLogEntry.ProfitPercent;
-                     
-                // if (dcaLogEntry.SellStrategies != null)
-                // {
-                //   var gainStrategy = dcaLogEntry.SellStrategies.FirstOrDefault(x => x.Name.Contains(" GAIN", StringComparison.InvariantCultureIgnoreCase));
-                //   if (gainStrategy != null)
-                //   {
-                //     // Use the gain percentage value as it is accurate to what can be achieved with the order book!
-                //     profitPercentage = gainStrategy.CurrentValue;
-                //   }
-                // }
                 
                 // Render the row
-
-                 if (!sellStrategyText.Contains("PENDING-BUY"))
+                if (!sellStrategyText.Contains("PENDING-BUY"))
                 {
-
                 <tr @(lostValue ? "class=errorRow" : "") >
-
                   <!-- Market -->
                   <td class="align-top; text-nowrap">
                     <b>
                       @if (mps == null || mps.ActiveSingleSettings == null || mps.ActiveSingleSettings.Count == 0) 
                       {
-                        <a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, dcaLogEntry.Market, Model.Summary.MainMarket)" target="_blank">@dcaLogEntry.Market</a>
+                        <span style="font-size: 1.3em;"><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, dcaLogEntry.Market, Model.Summary.MainMarket, Model.PTMagicConfiguration.GeneralSettings.Monitor.TVCustomLayout)" target="_blank">@dcaLogEntry.Market</a></span>
                       } else 
                       {
-                        <a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, dcaLogEntry.Market, Model.Summary.MainMarket)" target="_blank">@dcaLogEntry.Market &nbsp;</a><i class="fa fa-exclamation-triangle text-highlight" data-toggle="tooltip" data-placement="top" data-html="true" title="@await Component.InvokeAsync("PairIcon", mps)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner pair-tooltip'></div></div>"></i>
-                        
+                        <span style="font-size: 1.3em;"><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, dcaLogEntry.Market, Model.Summary.MainMarket, Model.PTMagicConfiguration.GeneralSettings.Monitor.TVCustomLayout)" target="_blank">@dcaLogEntry.Market &nbsp;</a></span><i class="fa fa-exclamation-triangle text-highlight" data-toggle="tooltip" data-placement="top" data-html="true" title="@await Component.InvokeAsync("PairIcon", mps)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner pair-tooltip'></div></div>"></i> 
                       }
                     </b>
-                    <br>
-                    @bagAgeText
+                    <br><span class="text-autocolor">@Html.Raw((dcaLogEntry.PercChange * 100).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))) %</span>
+                    
                   </td>
-
-                  <!-- 24hr change -->
-                  <td class="text-autocolor">@Html.Raw((dcaLogEntry.PercChange * 100).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))%</td>
                   <!-- Cost -->
-                  <td class="text-left">@Html.Raw(dcaLogEntry.TotalCost.ToString("#,#0.000000", new System.Globalization.CultureInfo("en-US")))</td>
+                  <td class="text-left">@Html.Raw(dcaLogEntry.TotalCost.ToString("#,#0.000000", new System.Globalization.CultureInfo("en-US")))<br><span class="text-highlight">@bagAgeText</span></td>
                   <!-- DCA Count -->
                   <td class="text-right">
                     @if (dcaEnabled) 
                     {
-                      @if (dcaLogEntry.BoughtTimes > 0) 
+                      if (dcaLogEntry.BoughtTimes > 0) 
                       {
                         @dcaLogEntry.BoughtTimes;
                       }
                     } else 
                     {
-                      <span data-toggle="tooltip" data-placement="top" title="DCA is disabled"><i class="fa fa-ban text-highlight"></i></span>
+                      <span data-toggle="tooltip" data-placement="top" title="DCA disabled"><i class="fa fa-ban text-highlight"></i></span>
                     }
                   </td>
                   <!-- DCA Strategy -->
@@ -231,10 +221,10 @@
 
                       @if ( !(sellStrategyText.Contains("WATCHMODE")) && !(sellStrategyText.Contains("PENDING")))
                       {
-                        double TargetGain = leverageValue * dcaLogEntry.TargetGainValue.Value;
+                        double TargetGain = leverageValue * dcaLogEntry.TargetGainValue.GetValueOrDefault();
                         <td>@TargetGain.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%
                           <br>
-                          <div class="text-autocolor">@profitPercentage.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</div>
+                          <div class="text-autocolor" style="font-size: 1.2em; white-space: nowrap;">@profitPercentage.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</div>
                         </td>
                       }
                       else
@@ -242,7 +232,7 @@
                         <td>
                           <div class="text-left">None</div>
                           <br>
-                          <div class="text-autocolor">@profitPercentage.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))%</div>
+                          <div class="text-autocolor">@profitPercentage.ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")) %</div>
                         </td>
                       }
 
@@ -255,24 +245,22 @@
                   }
                   <!-- Bag details -->
                   <td class="text-right"><a href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)_get/BagDetails/?m=@dcaLogEntry.Market" data-remote="false" data-toggle="modal" data-target="#dca-chart"><i class="fa fa-plus-circle"></i></a></td>
-                </tr>
-                {
-                  // Aggregate totals
-                  double bagGain = (profitPercentage / 100) * dcaLogEntry.TotalCost;
-                  Model.TotalBagCost = Model.TotalBagCost + dcaLogEntry.TotalCost;
-                  Model.TotalBagGain =  Model.TotalBagGain + bagGain;
-                }
-
+                  </tr>
+                  {
+                    // Aggregate totals
+                    double bagGain = (profitPercentage / 100) * dcaLogEntry.TotalCost;
+                    Model.TotalBagCost = Model.TotalBagCost + dcaLogEntry.TotalCost;
+                    Model.TotalBagGain =  Model.TotalBagGain + bagGain;
+                  }
                 } 
-
-              }
-            <td>Totals:</td>
-            <td></td>
-            <td>@Html.Raw(Model.TotalBagCost.ToString("#,#0.000000", new System.Globalization.CultureInfo("en-US")))</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td class="text-autocolor">@Html.Raw((((Model.TotalBagGain) / Model.TotalBagCost) * 100).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US")))%</td>
+                }
+                <td style="font-size: 1.2em;"><strong>Totals:</strong></td>
+                <td style="font-size: 1.2em;"><strong>@Html.Raw(Model.TotalBagCost.ToString("#,#0.000000", new System.Globalization.CultureInfo("en-US")))</strong></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="text-autocolor; font-size: 1.2em;"><strong>@Html.Raw((((Model.TotalBagGain) / Model.TotalBagCost) * 100).ToString("#,#0.00", new System.Globalization.CultureInfo("en-US"))) %</strong></td>
+                <td></td>
             </tbody>
           </table>
         </div>
