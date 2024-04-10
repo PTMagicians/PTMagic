@@ -38,7 +38,7 @@
     
   <div class="col-md-9">
     <div class="card-box px-2" style="height:240px;">
-      <h4 class="m-t-0 header-title"><b>Live TCV Trend </b><i class="fa fa-info-circle text-muted"  style="font-size x-small" data-toggle="tooltip" data-placement="top" title="Data is added while the monitor is running. Currently set to show the past @Model.PTMagicConfiguration.GeneralSettings.Monitor.LiveTCVTimeframeMinutes minutes in your monitor settings."></i>
+      <h4 class="m-t-0 header-title"><b>TCV Trend </b><i class="fa fa-info-circle text-muted"  style="font-size x-small" data-toggle="tooltip" data-placement="top" title="Data is added while the monitor is running. Currently set to show the past @Model.PTMagicConfiguration.GeneralSettings.Monitor.LiveTCVTimeframeMinutes minutes in your monitor settings."></i>
       @if (!Model.TotalCurrentValueLiveChartDataJSON.Equals("")) {
         <div class="TCVLive-chart">
           <svg style="height:220px;width:100%"></svg>
