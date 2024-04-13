@@ -567,7 +567,10 @@ namespace Core.Main.DataObjects
                                 if (extraSection != null)
                                 {
                                     JArray monthlyStatsSection = (JArray)extraSection["monthlyStats"];
-                                    _monthlyStats = monthlyStatsSection.Select(j => BuildMonthlyStatsData(j as JObject)).ToList();
+                                    _monthlyStats = monthlyStatsSection
+                                        .Where(j => j["totalSales"] != null && (double)j["totalSales"] != 0 && j["avgGrowth"] != null)
+                                        .Select(j => BuildMonthlyStatsData(j as JObject))
+                                        .ToList();
                                     _monthlyStatsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds - 1);
                                 }
                             }
