@@ -1,902 +1,1425 @@
-﻿using System;
-using System.IO;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
-using System.Threading.Tasks;
-using System.Diagnostics;
+using System.Text;
+using Core.Helper;
+using Core.Main;
+using Core.Main.DataObjects;
+using Core.MarketAnalyzer;
+using Core.ProfitTrailer;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Core.Main.DataObjects.PTMagicData;
 
 namespace Core.Main.DataObjects
 {
-
   public class ProfitTrailerData
   {
-    private MiscData _misc = null;
-    private PropertiesData _properties = null;
-    private StatsData _stats = null;
-    private List<DailyPNLData> _dailyPNL = new List<DailyPNLData>();
-    private List<DailyTCVData> _dailyTCV = new List<DailyTCVData>();
-    private List<MonthlyStatsData> _monthlyStats = new List<MonthlyStatsData>();
-    private List<ProfitablePairsData> _profitablePairs = new List<ProfitablePairsData>();
-    private List<DailyStatsData> _dailyStats = new List<DailyStatsData>();
-    private decimal? _totalProfit = null;
-    public decimal? TotalProfit
-    {
-        get { return _totalProfit; }
-        set { _totalProfit = value; }
-    }
-    private decimal? _totalSales = null;
-    public decimal? TotalSales
-    {
-        get { return _totalSales; }
-        set { _totalSales = value; }
-    }
-    //private List<SellLogData> _sellLog = new List<SellLogData>();
-    private List<DCALogData> _dcaLog = new List<DCALogData>();
+    private static readonly object _lock = new object();
+    private static ProfitTrailerData _instance;
+
+    private readonly PTMagic _ptMagic;
+    private readonly LogHelper _log;
+    private readonly DateTime _lastChanged = DateTime.MinValue;
+    private DateTime _lastDcaLogLoad = DateTime.MinValue;
+    private DateTime _lastPairsLogLoad = DateTime.MinValue;
+    private DateTime _lastPendingLogLoad = DateTime.MinValue;
+    private DateTime _lastBuyLogLoad = DateTime.MinValue;
+    private DateTime _lastPossibleBuyLogLoad = DateTime.MinValue;
+    private DateTime _lastSalesLogLoad = DateTime.MinValue;
+    private DateTime _lastDCALogLoad = DateTime.MinValue;
+    private List<PairLogData> _pairsLog = new List<PairLogData>();
+    private List<PendingLogData> _pendingLog = new List<PendingLogData>();
     private List<BuyLogData> _buyLog = new List<BuyLogData>();
-    private string _ptmBasePath = "";
-    private PTMagicConfiguration _systemConfiguration = null;
-    private TransactionData _transactionData = null;
-    private DateTime _dailyPNLRefresh = DateTime.UtcNow;
-    private DateTime _dailyTCVRefresh = DateTime.UtcNow;
-    private DateTime _monthlyStatsRefresh = DateTime.UtcNow;
-    private DateTime _statsRefresh = DateTime.UtcNow;
-    private DateTime _buyLogRefresh = DateTime.UtcNow;
-    //private DateTime _sellLogRefresh = DateTime.UtcNow;
-    private DateTime _dcaLogRefresh = DateTime.UtcNow;
-    private DateTime _miscRefresh = DateTime.UtcNow;
-    private DateTime _propertiesRefresh = DateTime.UtcNow;  
-    private DateTime _profitablePairsRefresh = DateTime.UtcNow; 
-    private DateTime _dailyStatsRefresh = DateTime.UtcNow; 
-    private volatile object _dailyPNLLock = new object();    
-    private volatile object _dailyTCVLock = new object();       
-    private volatile object _monthlyStatsLock = new object();    
-    private volatile object _statsLock = new object();
-    private volatile object _buyLock = new object();
-    private volatile object _sellLock = new object();
-    private volatile object _dcaLock = new object();
-    private volatile object _miscLock = new object();
-    private volatile object _propertiesLock = new object();  
-    private volatile object _profitablePairsLock = new object(); 
-    private volatile object _dailyStatsLock = new object();    
-    private TimeSpan? _offsetTimeSpan = null;
-    public void DoLog(string message)
+    private List<BuyLogData> _possibleBuyLog = new List<BuyLogData>();
+    private List<SalesLogData> _salesLog = new List<SalesLogData>();
+    private List<DCALogData> _dcaLog = new List<DCALogData>();
+    private GlobalSettingsData _globalSettings = new GlobalSettingsData();
+    private int _marketCount = 0;
+    private int _marketCountBuy = 0;
+    private decimal _totalCurrentValue = 0;
+    private decimal _totalBoughtCost = 0;
+    private decimal _totalProfit = 0;
+    private decimal _totalProfitPercent = 0;
+    private decimal _totalProfitToday = 0;
+    private decimal _totalProfitYesterday = 0;
+    private decimal _totalProfit7Days = 0;
+    private decimal _totalProfit30Days = 0;
+    private decimal _totalProfit365Days = 0;
+    private decimal _totalProfitAll = 0;
+    private decimal _totalProfitAllPercentage = 0;
+    private decimal _totalProfitYesterdayPercentage = 0;
+    private decimal _totalProfit7DaysPercentage = 0;
+    private decimal _totalProfit30DaysPercentage = 0;
+    private decimal _totalProfit365DaysPercentage = 0;
+    private decimal _totalProfitTodayPercentage = 0;
+    private decimal _totalProfitTodayBoughtCost = 0;
+    private decimal _totalProfitYesterdayBoughtCost = 0;
+    private decimal _totalProfit7DaysBoughtCost = 0;
+    private decimal _totalProfit30DaysBoughtCost = 0;
+    private decimal _totalProfit365DaysBoughtCost = 0;
+    private decimal _totalProfitAllBoughtCost = 0;
+    private decimal _totalCurrentValueBTC = 0;
+    private decimal _totalBoughtCostBTC = 0;
+    private decimal _totalProfitBTC = 0;
+    private decimal _totalProfitTodayBTC = 0;
+    private decimal _totalProfitYesterdayBTC = 0;
+    private decimal _totalProfit7DaysBTC = 0;
+    private decimal _totalProfit30DaysBTC = 0;
+    private decimal _totalProfit365DaysBTC = 0;
+    private decimal _totalProfitAllBTC = 0;
+    private decimal _totalProfitTodayBoughtCostBTC = 0;
+    private decimal _totalProfitYesterdayBoughtCostBTC = 0;
+    private decimal _totalProfit7DaysBoughtCostBTC = 0;
+    private decimal _totalProfit30DaysBoughtCostBTC = 0;
+    private decimal _totalProfit365DaysBoughtCostBTC = 0;
+    private decimal _totalProfitAllBoughtCostBTC = 0;
+    private decimal _totalCurrentValueUSD = 0;
+    private decimal _totalBoughtCostUSD = 0;
+    private decimal _totalProfitUSD = 0;
+    private decimal _totalProfitTodayUSD = 0;
+    private decimal _totalProfitYesterdayUSD = 0;
+    private decimal _totalProfit7DaysUSD = 0;
+    private decimal _totalProfit30DaysUSD = 0;
+    private decimal _totalProfit365DaysUSD = 0;
+    private decimal _totalProfitAllUSD = 0;
+    private decimal _totalProfitTodayBoughtCostUSD = 0;
+    private decimal _totalProfitYesterdayBoughtCostUSD = 0;
+    private decimal _totalProfit7DaysBoughtCostUSD = 0;
+    private decimal _totalProfit30DaysBoughtCostUSD = 0;
+    private decimal _totalProfit365DaysBoughtCostUSD = 0;
+    private decimal _totalProfitAllBoughtCostUSD = 0;
+    private decimal _totalCurrentValueUSDT = 0;
+    private decimal _totalBoughtCostUSDT = 0;
+    private decimal _totalProfitUSDT = 0;
+    private decimal _totalProfitTodayUSDT = 0;
+    private decimal _totalProfitYesterdayUSDT = 0;
+    private decimal _totalProfit7DaysUSDT = 0;
+    private decimal _totalProfit30DaysUSDT = 0;
+    private decimal _totalProfit365DaysUSDT = 0;
+    private decimal _totalProfitAllUSDT = 0;
+    private decimal _totalProfitTodayBoughtCostUSDT = 0;
+    private decimal _totalProfitYesterdayBoughtCostUSDT = 0;
+    private decimal _totalProfit7DaysBoughtCostUSDT = 0;
+    private decimal _totalProfit30DaysBoughtCostUSDT = 0;
+    private decimal _totalProfit365DaysBoughtCostUSDT = 0;
+    private decimal _totalProfitAllBoughtCostUSDT = 0;
+    private decimal _totalCurrentValueUSDC = 0;
+    private decimal _totalBoughtCostUSDC = 0;
+    private decimal _totalProfitUSDC = 0;
+    private decimal _totalProfitTodayUSDC = 0;
+    private decimal _totalProfitYesterdayUSDC = 0;
+    private decimal _totalProfit7DaysUSDC = 0;
+    private decimal _totalProfit30DaysUSDC = 0;
+    private decimal _totalProfit365DaysUSDC = 0;
+    private decimal _totalProfitAllUSDC = 0;
+    private decimal _totalProfitTodayBoughtCostUSDC = 0;
+    private decimal _totalProfitYesterdayBoughtCostUSDC = 0;
+    private decimal _totalProfit7DaysBoughtCostUSDC = 0;
+    private decimal _totalProfit30DaysBoughtCostUSDC = 0;
+    private decimal _totalProfit365DaysBoughtCostUSDC = 0;
+    private decimal _totalProfitAllBoughtCostUSDC = 0;
+    private decimal _totalCurrentValueBNB = 0;
+    private decimal _totalBoughtCostBNB = 0;
+    private decimal _totalProfitBNB = 0;
+    private decimal _totalProfitTodayBNB = 0;
+    private decimal _totalProfitYesterdayBNB = 0;
+    private decimal _totalProfit7DaysBNB = 0;
+    private decimal _totalProfit30DaysBNB = 0;
+    private decimal _totalProfit365DaysBNB = 0;
+    private decimal _totalProfitAllBNB = 0;
+    private decimal _totalProfitTodayBoughtCostBNB = 0;
+    private decimal _totalProfitYesterdayBoughtCostBNB = 0;
+    private decimal _totalProfit7DaysBoughtCostBNB = 0;
+    private decimal _totalProfit30DaysBoughtCostBNB = 0;
+    private decimal _totalProfit365DaysBoughtCostBNB = 0;
+    private decimal _totalProfitAllBoughtCostBNB = 0;
+    private decimal _totalCurrentValueETH = 0;
+    private decimal _totalBoughtCostETH = 0;
+    private decimal _totalProfitETH = 0;
+    private decimal _totalProfitTodayETH = 0;
+    private decimal _totalProfitYesterdayETH = 0;
+    private decimal _totalProfit7DaysETH = 0;
+    private decimal _totalProfit30DaysETH = 0;
+    private decimal _totalProfit365DaysETH = 0;
+    private decimal _totalProfitAllETH = 0;
+    private decimal _totalProfitTodayBoughtCostETH = 0;
+    private decimal _totalProfitYesterdayBoughtCostETH = 0;
+    private decimal _totalProfit7DaysBoughtCostETH = 0;
+    private decimal _totalProfit30DaysBoughtCostETH = 0;
+    private decimal _totalProfit365DaysBoughtCostETH = 0;
+    private decimal _totalProfitAllBoughtCostETH = 0;
+    private decimal _balance = 0;
+    private decimal _balanceUSD = 0;
+    private decimal _balanceUSDT = 0;
+    private decimal _balanceUSDC = 0;
+    private decimal _balanceBTC = 0;
+    private decimal _balanceBNB = 0;
+    private decimal _balanceETH = 0;
+    private decimal _availableBalance = 0;
+    private decimal _availableBalanceUSD = 0;
+    private decimal _availableBalanceUSDT = 0;
+    private decimal _availableBalanceUSDC = 0;
+    private decimal _availableBalanceBTC = 0;
+    private decimal _availableBalanceBNB = 0;
+    private decimal _availableBalanceETH = 0;
+    private decimal _pendingOrderCost = 0;
+    private decimal _pendingOrderCostUSD = 0;
+    private decimal _pendingOrderCostUSDT = 0;
+    private decimal _pendingOrderCostUSDC = 0;
+    private decimal _pendingOrderCostBTC = 0;
+    private decimal _pendingOrderCostBNB = 0;
+    private decimal _pendingOrderCostETH = 0;
+    private decimal _exchangeFee = 0;
+    private decimal _exchangeFeeUSD = 0;
+    private decimal _exchangeFeeUSDT = 0;
+    private decimal _exchangeFeeUSDC = 0;
+    private decimal _exchangeFeeBTC = 0;
+    private decimal _exchangeFeeBNB = 0;
+    private decimal _exchangeFeeETH = 0;
+    private decimal _marketValue = 0;
+    private decimal _marketValueUSD = 0;
+    private decimal _marketValueUSDT = 0;
+    private decimal _marketValueUSDC = 0;
+    private decimal _marketValueBTC = 0;
+    private decimal _marketValueBNB = 0;
+    private decimal _marketValueETH = 0;
+    private TimeSpan _offsetTimeSpan = new TimeSpan();
+
+    private ProfitTrailerData(PTMagic ptMagic)
     {
-        // Implement your logging logic here
-        Console.WriteLine(message);
-    }
-    // Constructor
-    public ProfitTrailerData(PTMagicConfiguration systemConfiguration)
-    {
-      _systemConfiguration = systemConfiguration;
+      _ptMagic = ptMagic;
+      _log = _ptMagic.Log;
     }
 
-    // Get a time span for the UTC offset from the settings
-    private TimeSpan OffsetTimeSpan
+    public static ProfitTrailerData Instance(PTMagic ptMagic)
+    {
+      lock (_lock)
+      {
+        if (_instance == null)
+        {
+          _instance = new ProfitTrailerData(ptMagic);
+        }
+      }
+      return _instance;
+    }
+
+    public TimeSpan OffsetTimeSpan
+    {
+      get { return _offsetTimeSpan; }
+      set { _offsetTimeSpan = value; }
+    }
+
+    public List<PairLogData> PairsLog
     {
       get
       {
-        if (!_offsetTimeSpan.HasValue)
+        if ((DateTime.Now - _lastPairsLogLoad).TotalSeconds > 5)
         {
-          // Ensure Misc is populated
-          var misc = this.Misc;
-
-          // Get offset from Misc
-          _offsetTimeSpan = TimeSpan.Parse(misc.TimeZoneOffset);
+          LoadPairsLog();
         }
-
-        return _offsetTimeSpan.Value;
+        return _pairsLog;
       }
     }
 
-    // Get the time with the settings UTC offset applied
-    private DateTimeOffset LocalizedTime
+    public List<PendingLogData> PendingLog
     {
       get
       {
-        return DateTimeOffset.UtcNow.ToOffset(OffsetTimeSpan);
+        if ((DateTime.Now - _lastPendingLogLoad).TotalSeconds > 5)
+        {
+          LoadPendingLog();
+        }
+        return _pendingLog;
       }
     }
 
-    public MiscData Misc
+    public List<BuyLogData> BuyLog
     {
       get
       {
-        if (_misc == null || (DateTime.UtcNow > _miscRefresh))
+        if ((DateTime.Now - _lastBuyLogLoad).TotalSeconds > 5)
         {
-          lock (_miscLock)
-          {
-            // Thread double locking
-            if (_misc == null || (DateTime.UtcNow > _miscRefresh))
-            {
-              _misc = BuildMiscData(GetDataFromProfitTrailer("api/v2/data/misc"));
-              _miscRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds - 1);
-            }
-          }
+          LoadBuyLog();
         }
-        
-        return _misc;
+        return _buyLog;
       }
     }
-    private MiscData BuildMiscData(dynamic PTData)
-    {
-      return new MiscData()
-      {
-        Market = PTData.market,
-        FiatConversionRate = PTData.priceDataFiatConversionRate,
-        Balance = PTData.realBalance,
-        PairsValue = PTData.totalPairsCurrentValue,
-        DCAValue = PTData.totalDCACurrentValue,
-        PendingValue = PTData.totalPendingCurrentValue,
-        DustValue = PTData.totalDustCurrentValue,
-        StartBalance = PTData.startBalance,
-        TotalCurrentValue = PTData.totalCurrentValue,
-        TimeZoneOffset = PTData.timeZoneOffset,
-        ExchangeURL = PTData.exchangeUrl,
-        PTVersion = PTData.version,
-      };
-    }
-    public List<DailyStatsData> DailyStats
+
+    public List<BuyLogData> PossibleBuyLog
     {
       get
       {
-          if (_dailyStats == null || DateTime.UtcNow > _dailyStatsRefresh)
-          {
-              lock (_dailyStatsLock)
-              {
-                  if (_dailyStats == null || DateTime.UtcNow > _dailyStatsRefresh)
-                  {
-                      using (var stream = GetDataFromProfitTrailerAsStream("/api/v2/data/stats"))
-                      using (var reader = new StreamReader(stream))
-                      using (var jsonReader = new JsonTextReader(reader))
-                      {
-                          JObject basicSection = null;
-                          JObject extraSection = null;
-
-                          while (jsonReader.Read())
-                          {
-                              if (jsonReader.TokenType == JsonToken.PropertyName)
-                              {
-                                  if ((string)jsonReader.Value == "basic")
-                                  {
-                                      jsonReader.Read(); // Move to the value of the "basic" property
-                                      basicSection = JObject.Load(jsonReader);
-                                  }
-                                  else if ((string)jsonReader.Value == "extra")
-                                  {
-                                      jsonReader.Read(); // Move to the value of the "extra" property
-                                      extraSection = JObject.Load(jsonReader);
-                                  }
-                              }
-
-                              if (basicSection != null && extraSection != null)
-                              {
-                                  break;
-                              }
-                          }
-
-                          if (basicSection != null)
-                          {
-                             if (extraSection != null)
-                              {
-                                  JArray dailyStatsSection = (JArray)extraSection["dailyStats"];
-                                  _dailyStats = dailyStatsSection.Select(j => BuildDailyStatsData(j as JObject)).ToList();
-                                  _dailyStatsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds - 1);
-                              }
-                          }
-                      }
-                  }
-              }
-          }
-          return _dailyStats;
-        }
-    }
-    private DailyStatsData BuildDailyStatsData(dynamic dailyStatsDataJson)
-    {
-        return new DailyStatsData()
+        if ((DateTime.Now - _lastPossibleBuyLogLoad).TotalSeconds > 5)
         {
-            Date = dailyStatsDataJson["date"],
-            TotalSales = dailyStatsDataJson["totalSales"],
-            TotalBuys = dailyStatsDataJson["totalBuys"],
-            TotalProfit = dailyStatsDataJson["totalProfitCurrency"],
-            AvgProfit = dailyStatsDataJson["avgProfit"], 
-            AvgGrowth = dailyStatsDataJson["avgGrowth"], 
-        };
-    }
-
-    public PropertiesData Properties
-    {
-      get
-      {
-        if (_properties == null || (DateTime.UtcNow > _propertiesRefresh))
-        {
-          lock (_propertiesLock)
-          {
-            // Thread double locking
-            if (_properties == null || (DateTime.UtcNow > _propertiesRefresh))
-            {
-              _properties = BuildProptertiesData(GetDataFromProfitTrailer("api/v2/data/properties"));
-              _propertiesRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds - 1);
-            }
-          }
+          LoadPossibleBuyLog();
         }
-
-        return _properties;
+        return _possibleBuyLog;
       }
     }
-    private PropertiesData BuildProptertiesData(dynamic PTProperties)
-    {
-      return new PropertiesData()
-      {
-        Currency = PTProperties.currency,
-        Shorting = PTProperties.shorting,
-        Margin = PTProperties.margin,
-        UpTime = PTProperties.upTime,
-        Port = PTProperties.port,
-        IsLeverageExchange = PTProperties.isLeverageExchange,
-        BaseUrl = PTProperties.baseUrl
-      };
-    }
 
-    public StatsData Stats
-    {
-        get
-        {
-            if (_stats == null || DateTime.UtcNow > _statsRefresh)
-            {
-                lock (_statsLock)
-                {
-                    if (_stats == null || DateTime.UtcNow > _statsRefresh)
-                    {
-                        using (var stream = GetDataFromProfitTrailerAsStream("/api/v2/data/stats"))
-                        using (var reader = new StreamReader(stream))
-                        using (var jsonReader = new JsonTextReader(reader))
-                        {
-                            while (jsonReader.Read())
-                            {
-                                if (jsonReader.TokenType == JsonToken.PropertyName && (string)jsonReader.Value == "basic")
-                                {
-                                    jsonReader.Read(); // Move to the value of the "basic" property
-                                    JObject basicSection = JObject.Load(jsonReader);
-                                    _stats = BuildStatsData(basicSection);
-                                    _statsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds - 1);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            return _stats;
-        }
-    }
-    private StatsData BuildStatsData(dynamic statsDataJson)
-    {
-        return new StatsData()
-        {
-            SalesToday = statsDataJson["totalSalesToday"],
-            ProfitToday = statsDataJson["totalProfitToday"],
-            ProfitPercToday = statsDataJson["totalProfitPercToday"],
-            SalesYesterday = statsDataJson["totalSalesYesterday"],
-            ProfitYesterday = statsDataJson["totalProfitYesterday"],
-            ProfitPercYesterday = statsDataJson["totalProfitPercYesterday"],
-            SalesWeek = statsDataJson["totalSalesWeek"],
-            ProfitWeek = statsDataJson["totalProfitWeek"],
-            ProfitPercWeek = statsDataJson["totalProfitPercWeek"],
-            SalesThisMonth = statsDataJson["totalSalesThisMonth"],
-            ProfitThisMonth = statsDataJson["totalProfitThisMonth"],
-            ProfitPercThisMonth = statsDataJson["totalProfitPercThisMonth"],
-            SalesLastMonth = statsDataJson["totalSalesLastMonth"],
-            ProfitLastMonth = statsDataJson["totalProfitLastMonth"],
-            ProfitPercLastMonth = statsDataJson["totalProfitPercLastMonth"],
-            TotalProfit = statsDataJson["totalProfit"],
-            TotalSales = statsDataJson["totalSales"],
-            TotalProfitPerc = statsDataJson["totalProfitPerc"],
-            FundingToday = statsDataJson["totalFundingToday"],
-            FundingYesterday = statsDataJson["totalFundingYesterday"],
-            FundingWeek = statsDataJson["totalFundingWeek"],
-            FundingThisMonth = statsDataJson["totalFundingThisMonth"],
-            FundingLastMonth = statsDataJson["totalFundingLastMonth"],
-            FundingTotal = statsDataJson["totalFunding"],
-            TotalFundingPerc = statsDataJson["totalFundingPerc"],
-            TotalFundingPercYesterday = statsDataJson["totalFundingPercYesterday"],
-            TotalFundingPercWeek = statsDataJson["totalFundingPercWeekPerc"],
-            TotalFundingPercToday = statsDataJson["totalFundingPercTodayPerc"]
-        };
-    }
-    public List<DailyPNLData> DailyPNL
+    public List<SalesLogData> SalesLog
     {
       get
       {
-          if (_dailyPNL == null || DateTime.UtcNow > _dailyPNLRefresh)
-          {
-              lock (_dailyPNLLock)
-              {
-                  if (_dailyPNL == null || DateTime.UtcNow > _dailyPNLRefresh)
-                  {
-                      using (var stream = GetDataFromProfitTrailerAsStream("/api/v2/data/stats"))
-                      using (var reader = new StreamReader(stream))
-                      using (var jsonReader = new JsonTextReader(reader))
-                      {
-                          JObject basicSection = null;
-                          JObject extraSection = null;
-
-                          while (jsonReader.Read())
-                          {
-                              if (jsonReader.TokenType == JsonToken.PropertyName)
-                              {
-                                  if ((string)jsonReader.Value == "basic")
-                                  {
-                                      jsonReader.Read(); // Move to the value of the "basic" property
-                                      basicSection = JObject.Load(jsonReader);
-                                  }
-                                  else if ((string)jsonReader.Value == "extra")
-                                  {
-                                      jsonReader.Read(); // Move to the value of the "extra" property
-                                      extraSection = JObject.Load(jsonReader);
-                                  }
-                              }
-
-                              if (basicSection != null && extraSection != null)
-                              {
-                                  break;
-                              }
-                          }
-
-                          if (basicSection != null && 
-                              ((_totalProfit == null || 
-                              !Decimal.Equals(_totalProfit.Value, basicSection["totalProfit"].Value<decimal>())) ||
-                              (_totalSales == null || 
-                              !Decimal.Equals(_totalSales.Value, basicSection["totalSales"].Value<decimal>()))))
-                          {
-                              _totalProfit = basicSection["totalProfit"].Value<decimal>();
-                              _totalSales = basicSection["totalSales"].Value<decimal>();
-
-                              if (extraSection != null)
-                              {
-                                  JArray dailyPNLSection = (JArray)extraSection["dailyPNLStats"];
-                                  _dailyPNL = dailyPNLSection.Select(j => BuildDailyPNLData(j as JObject)).ToList();
-                                  _dailyPNLRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds - 1);
-                              }
-                          }
-                      }
-                  }
-              }
-          }
-          return _dailyPNL;
+        if ((DateTime.Now - _lastSalesLogLoad).TotalSeconds > 5)
+        {
+          LoadSalesLog();
         }
-    }
-    private DailyPNLData BuildDailyPNLData(dynamic dailyPNLDataJson)
-    {
-        return new DailyPNLData()
-        {
-            Date = dailyPNLDataJson["date"],
-            CumulativeProfitCurrency = dailyPNLDataJson["cumulativeProfitCurrency"],
-            Order = dailyPNLDataJson["order"],
-        };
-    }
-    public List<ProfitablePairsData> ProfitablePairs
-    {
-        get
-        {
-            if (_profitablePairs == null || DateTime.UtcNow > _profitablePairsRefresh)
-            {
-                lock (_profitablePairsLock)
-                {
-                    if (_profitablePairs == null || DateTime.UtcNow > _profitablePairsRefresh)
-                    {
-                        using (var stream = GetDataFromProfitTrailerAsStream("/api/v2/data/stats"))
-                        using (var reader = new StreamReader(stream))
-                        using (var jsonReader = new JsonTextReader(reader))
-                        {
-                            JObject basicSection = null;
-                            JObject extraSection = null;
-                            while (jsonReader.Read())
-                            {
-                                if (jsonReader.TokenType == JsonToken.PropertyName)
-                                {
-                                    if ((string)jsonReader.Value == "basic")
-                                    {
-                                        jsonReader.Read(); // Move to the value of the "basic" property
-                                        basicSection = JObject.Load(jsonReader);
-                                    }
-                                    else if ((string)jsonReader.Value == "extra")
-                                    {
-                                        jsonReader.Read(); // Move to the value of the "extra" property
-                                        extraSection = JObject.Load(jsonReader);
-                                    }
-                                }
-
-                                if (basicSection != null && extraSection != null)
-                                {
-                                    break;
-                                }
-                            }
-                            if (basicSection != null) 
-                              {
-                                if (extraSection != null)
-                                  {
-                                      JObject profitablePairsSection = (JObject)extraSection["profitablePairs"];
-                                      _profitablePairs = new List<ProfitablePairsData>();
-                                      int counter = 0;
-                                      foreach (var j in profitablePairsSection)
-                                      {
-                                          if (counter >= _systemConfiguration.GeneralSettings.Monitor.MaxTopMarkets)
-                                          {
-                                              break;
-                                          }
-                                          // Process each JObject in the dictionary
-                                          JObject profitablePair = (JObject)j.Value;
-                                          _profitablePairs.Add(BuildProfitablePairs(profitablePair));
-                                          counter++;
-                                      }
-                                      _profitablePairsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds - 1);
-                                  }
-                            }
-                        }
-                    }
-                }
-            }
-            return _profitablePairs;
-        }
-    }
-    private ProfitablePairsData BuildProfitablePairs(JObject profitablePairsJson)
-    {
-        return new ProfitablePairsData()
-        {
-            Coin = profitablePairsJson["coin"].Value<string>(),
-            ProfitCurrency = profitablePairsJson["profitCurrency"].Value<double>(),
-            SoldTimes = profitablePairsJson["soldTimes"].Value<int>(),
-            Avg = profitablePairsJson["avg"].Value<double>(),
-        };
-    }
-
-    public List<DailyTCVData> DailyTCV
-    {
-      get
-      {
-          if (_dailyTCV == null || DateTime.UtcNow > _dailyTCVRefresh)
-          {
-              lock (_dailyTCVLock)
-              {
-                  if (_dailyTCV == null || DateTime.UtcNow > _dailyTCVRefresh)
-                  {
-                      using (var stream = GetDataFromProfitTrailerAsStream("/api/v2/data/stats"))
-                      using (var reader = new StreamReader(stream))
-                      using (var jsonReader = new JsonTextReader(reader))
-                      {
-                        JObject basicSection = null;
-                        JObject extraSection = null;
-
-                          while (jsonReader.Read())
-                          {
-                            if (jsonReader.TokenType == JsonToken.PropertyName)
-                            {
-                                if ((string)jsonReader.Value == "basic")
-                                {
-                                    jsonReader.Read(); // Move to the value of the "basic" property
-                                    basicSection = JObject.Load(jsonReader);
-                                }
-                                else if ((string)jsonReader.Value == "extra")
-                                {
-                                    jsonReader.Read(); // Move to the value of the "extra" property
-                                    extraSection = JObject.Load(jsonReader);
-                                }
-                            }
-
-                            if (basicSection != null && extraSection != null)
-                            {
-                                break;
-                            }
-                          }
-
-                          if (basicSection != null)
-                            {
-                              if (extraSection != null)
-                              {
-                                  JArray dailyTCVSection = (JArray)extraSection["dailyTCVStats"];
-                                  _dailyTCV = dailyTCVSection.Select(j => BuildDailyTCVData(j as JObject)).ToList();
-                                  _dailyTCVRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds - 1);
-                              }
-                            }
-                      }
-                  }
-              }
-          }
-          return _dailyTCV;
-        }
-    }
-    public int GetTotalTCVDays()
-    {
-        return DailyTCV?.Count ?? 0;
-    }
-    private DailyTCVData BuildDailyTCVData(dynamic dailyTCVDataJson)
-    {
-        return new DailyTCVData()
-        {
-            Date = dailyTCVDataJson["date"],
-            TCV = dailyTCVDataJson["TCV"],
-            Order = dailyTCVDataJson["order"],
-        };
-    }
-    public List<MonthlyStatsData> MonthlyStats
-    {
-        get
-        {
-            if (_monthlyStats == null || DateTime.UtcNow > _monthlyStatsRefresh)
-            {
-                lock (_monthlyStatsLock)
-                {
-                    if (_monthlyStats == null || DateTime.UtcNow > _monthlyStatsRefresh)
-                    {
-                        using (var stream = GetDataFromProfitTrailerAsStream("/api/v2/data/stats"))
-                        using (var reader = new StreamReader(stream))
-                        using (var jsonReader = new JsonTextReader(reader))
-                        {
-                            JObject basicSection = null;
-                            JObject extraSection = null;
-
-                            while (jsonReader.Read())
-                            {
-                                if (jsonReader.TokenType == JsonToken.PropertyName)
-                                {
-                                    if ((string)jsonReader.Value == "basic")
-                                    {
-                                        jsonReader.Read(); // Move to the value of the "basic" property
-                                        basicSection = JObject.Load(jsonReader);
-                                    }
-                                    else if ((string)jsonReader.Value == "extra")
-                                    {
-                                        jsonReader.Read(); // Move to the value of the "extra" property
-                                        extraSection = JObject.Load(jsonReader);
-                                    }
-                                }
-
-                                if (basicSection != null && extraSection != null)
-                                {
-                                    break;
-                                }
-                            }
-
-                            if (basicSection != null)// && 
-                              {
-                                if (extraSection != null)
-                                {
-                                    JArray monthlyStatsSection = (JArray)extraSection["monthlyStats"];
-                                    _monthlyStats = monthlyStatsSection
-                                        .Where(j => j["totalSales"] != null && (double)j["totalSales"] != 0 && j["avgGrowth"] != null)
-                                        .Select(j => BuildMonthlyStatsData(j as JObject))
-                                        .ToList();
-                                    _monthlyStatsRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds - 1);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            return _monthlyStats;
-        }
-    }
-
-    private MonthlyStatsData BuildMonthlyStatsData(dynamic monthlyStatsDataJson)
-    {
-        return new MonthlyStatsData()
-        {
-            Month = monthlyStatsDataJson["month"],
-            TotalSales = monthlyStatsDataJson["totalSales"],
-            TotalProfitCurrency = monthlyStatsDataJson["totalProfitCurrency"],
-            AvgGrowth = monthlyStatsDataJson["avgGrowth"],
-            Order = monthlyStatsDataJson["order"],
-        };
+        return _salesLog;
+      }
     }
 
     public List<DCALogData> DCALog
     {
       get
       {
-        if (_dcaLog == null || (DateTime.UtcNow > _dcaLogRefresh))
+        if ((DateTime.Now - _lastDCALogLoad).TotalSeconds > 5)
         {
-          lock (_dcaLock)
-          {
-            // Thread double locking
-            if (_dcaLog == null || (DateTime.UtcNow > _dcaLogRefresh))
-            {
-              dynamic dcaData = null, pairsData = null, pendingData = null, watchData = null;
-              _dcaLog.Clear();
-
-              Parallel.Invoke(() =>
-              {
-                dcaData = GetDataFromProfitTrailer("/api/v2/data/dca", true);
-              },
-              () =>
-              {
-                pairsData = GetDataFromProfitTrailer("/api/v2/data/pairs", true);
-              },
-              () =>
-              {
-                pendingData = GetDataFromProfitTrailer("/api/v2/data/pending", true);
-              },
-              () =>
-              {
-                watchData = GetDataFromProfitTrailer("/api/v2/data/watchmode", true);
-              });
-
-              this.BuildDCALogData(dcaData, pairsData, pendingData, watchData);
-              _dcaLogRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.BagAnalyzerRefreshSeconds - 1);
-            }
-          }
+          LoadDCALog();
         }
-
         return _dcaLog;
       }
     }
-    
-    public List<BuyLogData> BuyLog
+
+    public GlobalSettingsData GlobalSettings
     {
       get
       {
-          if (_systemConfiguration.GeneralSettings.Monitor.MaxDashboardBuyEntries == 0)
-          {
-              return _buyLog;
-          }
-
-          if (_buyLog == null || (DateTime.UtcNow > _buyLogRefresh))
-          {
-              lock (_buyLock)
-              {
-                  if (_buyLog == null || (DateTime.UtcNow > _buyLogRefresh))
-                  {
-                      _buyLog.Clear();
-                      this.BuildBuyLogData(GetDataFromProfitTrailer("/api/v2/data/pbl", true));
-                      _buyLogRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.BuyAnalyzerRefreshSeconds - 1);
-                  }
-              }
-          }
-
-          return _buyLog;
+        return _globalSettings;
       }
     }
 
-    public TransactionData TransactionData
+    public int MarketCount
     {
-      get
+      get { return _marketCount; }
+      set { _marketCount = value; }
+    }
+
+    public int MarketCountBuy
+    {
+      get { return _marketCountBuy; }
+      set { _marketCountBuy = value; }
+    }
+
+    public decimal TotalCurrentValue
+    {
+      get { return _totalCurrentValue; }
+      set { _totalCurrentValue = value; }
+    }
+
+    public decimal TotalBoughtCost
+    {
+      get { return _totalBoughtCost; }
+      set { _totalBoughtCost = value; }
+    }
+
+    public decimal TotalProfit
+    {
+      get { return _totalProfit; }
+      set { _totalProfit = value; }
+    }
+
+    public decimal TotalProfitPercent
+    {
+      get { return _totalProfitPercent; }
+      set { _totalProfitPercent = value; }
+    }
+
+    public decimal TotalProfitToday
+    {
+      get { return _totalProfitToday; }
+      set { _totalProfitToday = value; }
+    }
+
+    public decimal TotalProfitYesterday
+    {
+      get { return _totalProfitYesterday; }
+      set { _totalProfitYesterday = value; }
+    }
+
+    public decimal TotalProfit7Days
+    {
+      get { return _totalProfit7Days; }
+      set { _totalProfit7Days = value; }
+    }
+
+    public decimal TotalProfit30Days
+    {
+      get { return _totalProfit30Days; }
+      set { _totalProfit30Days = value; }
+    }
+
+    public decimal TotalProfit365Days
+    {
+      get { return _totalProfit365Days; }
+      set { _totalProfit365Days = value; }
+    }
+
+    public decimal TotalProfitAll
+    {
+      get { return _totalProfitAll; }
+      set { _totalProfitAll = value; }
+    }
+
+    public decimal TotalProfitAllPercentage
+    {
+      get { return _totalProfitAllPercentage; }
+      set { _totalProfitAllPercentage = value; }
+    }
+
+    public decimal TotalProfitYesterdayPercentage
+    {
+      get { return _totalProfitYesterdayPercentage; }
+      set { _totalProfitYesterdayPercentage = value; }
+    }
+
+    public decimal TotalProfit7DaysPercentage
+    {
+      get { return _totalProfit7DaysPercentage; }
+      set { _totalProfit7DaysPercentage = value; }
+    }
+
+    public decimal TotalProfit30DaysPercentage
+    {
+      get { return _totalProfit30DaysPercentage; }
+      set { _totalProfit30DaysPercentage = value; }
+    }
+
+    public decimal TotalProfit365DaysPercentage
+    {
+      get { return _totalProfit365DaysPercentage; }
+      set { _totalProfit365DaysPercentage = value; }
+    }
+
+    public decimal TotalProfitTodayPercentage
+    {
+      get { return _totalProfitTodayPercentage; }
+      set { _totalProfitTodayPercentage = value; }
+    }
+
+    public decimal TotalProfitTodayBoughtCost
+    {
+      get { return _totalProfitTodayBoughtCost; }
+      set { _totalProfitTodayBoughtCost = value; }
+    }
+
+    public decimal TotalProfitYesterdayBoughtCost
+    {
+      get { return _totalProfitYesterdayBoughtCost; }
+      set { _totalProfitYesterdayBoughtCost = value; }
+    }
+
+    public decimal TotalProfit7DaysBoughtCost
+    {
+      get { return _totalProfit7DaysBoughtCost; }
+      set { _totalProfit7DaysBoughtCost = value; }
+    }
+
+    public decimal TotalProfit30DaysBoughtCost
+    {
+      get { return _totalProfit30DaysBoughtCost; }
+      set { _totalProfit30DaysBoughtCost = value; }
+    }
+
+    public decimal TotalProfit365DaysBoughtCost
+    {
+      get { return _totalProfit365DaysBoughtCost; }
+      set { _totalProfit365DaysBoughtCost = value; }
+    }
+
+    public decimal TotalProfitAllBoughtCost
+    {
+      get { return _totalProfitAllBoughtCost; }
+      set { _totalProfitAllBoughtCost = value; }
+    }
+
+    public decimal TotalCurrentValueBTC
+    {
+      get { return _totalCurrentValueBTC; }
+      set { _totalCurrentValueBTC = value; }
+    }
+
+    public decimal TotalBoughtCostBTC
+    {
+      get { return _totalBoughtCostBTC; }
+      set { _totalBoughtCostBTC = value; }
+    }
+
+    public decimal TotalProfitBTC
+    {
+      get { return _totalProfitBTC; }
+      set { _totalProfitBTC = value; }
+    }
+
+    public decimal TotalProfitTodayBTC
+    {
+      get { return _totalProfitTodayBTC; }
+      set { _totalProfitTodayBTC = value; }
+    }
+
+    public decimal TotalProfitYesterdayBTC
+    {
+      get { return _totalProfitYesterdayBTC; }
+      set { _totalProfitYesterdayBTC = value; }
+    }
+
+    public decimal TotalProfit7DaysBTC
+    {
+      get { return _totalProfit7DaysBTC; }
+      set { _totalProfit7DaysBTC = value; }
+    }
+
+    public decimal TotalProfit30DaysBTC
+    {
+      get { return _totalProfit30DaysBTC; }
+      set { _totalProfit30DaysBTC = value; }
+    }
+
+    public decimal TotalProfit365DaysBTC
+    {
+      get { return _totalProfit365DaysBTC; }
+      set { _totalProfit365DaysBTC = value; }
+    }
+
+    public decimal TotalProfitAllBTC
+    {
+      get { return _totalProfitAllBTC; }
+      set { _totalProfitAllBTC = value; }
+    }
+
+    public decimal TotalProfitTodayBoughtCostBTC
+    {
+      get { return _totalProfitTodayBoughtCostBTC; }
+      set { _totalProfitTodayBoughtCostBTC = value; }
+    }
+
+    public decimal TotalProfitYesterdayBoughtCostBTC
+    {
+      get { return _totalProfitYesterdayBoughtCostBTC; }
+      set { _totalProfitYesterdayBoughtCostBTC = value; }
+    }
+
+    public decimal TotalProfit7DaysBoughtCostBTC
+    {
+      get { return _totalProfit7DaysBoughtCostBTC; }
+      set { _totalProfit7DaysBoughtCostBTC = value; }
+    }
+
+    public decimal TotalProfit30DaysBoughtCostBTC
+    {
+      get { return _totalProfit30DaysBoughtCostBTC; }
+      set { _totalProfit30DaysBoughtCostBTC = value; }
+    }
+
+    public decimal TotalProfit365DaysBoughtCostBTC
+    {
+      get { return _totalProfit365DaysBoughtCostBTC; }
+      set { _totalProfit365DaysBoughtCostBTC = value; }
+    }
+
+    public decimal TotalProfitAllBoughtCostBTC
+    {
+      get { return _totalProfitAllBoughtCostBTC; }
+      set { _totalProfitAllBoughtCostBTC = value; }
+    }
+
+    public decimal TotalCurrentValueUSD
+    {
+      get { return _totalCurrentValueUSD; }
+      set { _totalCurrentValueUSD = value; }
+    }
+
+    public decimal TotalBoughtCostUSD
+    {
+      get { return _totalBoughtCostUSD; }
+      set { _totalBoughtCostUSD = value; }
+    }
+
+    public decimal TotalProfitUSD
+    {
+      get { return _totalProfitUSD; }
+      set { _totalProfitUSD = value; }
+    }
+
+    public decimal TotalProfitTodayUSD
+    {
+      get { return _totalProfitTodayUSD; }
+      set { _totalProfitTodayUSD = value; }
+    }
+
+    public decimal TotalProfitYesterdayUSD
+    {
+      get { return _totalProfitYesterdayUSD; }
+      set { _totalProfitYesterdayUSD = value; }
+    }
+
+    public decimal TotalProfit7DaysUSD
+    {
+      get { return _totalProfit7DaysUSD; }
+      set { _totalProfit7DaysUSD = value; }
+    }
+
+    public decimal TotalProfit30DaysUSD
+    {
+      get { return _totalProfit30DaysUSD; }
+      set { _totalProfit30DaysUSD = value; }
+    }
+
+    public decimal TotalProfit365DaysUSD
+    {
+      get { return _totalProfit365DaysUSD; }
+      set { _totalProfit365DaysUSD = value; }
+    }
+
+    public decimal TotalProfitAllUSD
+    {
+      get { return _totalProfitAllUSD; }
+      set { _totalProfitAllUSD = value; }
+    }
+
+    public decimal TotalProfitTodayBoughtCostUSD
+    {
+      get { return _totalProfitTodayBoughtCostUSD; }
+      set { _totalProfitTodayBoughtCostUSD = value; }
+    }
+
+    public decimal TotalProfitYesterdayBoughtCostUSD
+    {
+      get { return _totalProfitYesterdayBoughtCostUSD; }
+      set { _totalProfitYesterdayBoughtCostUSD = value; }
+    }
+
+    public decimal TotalProfit7DaysBoughtCostUSD
+    {
+      get { return _totalProfit7DaysBoughtCostUSD; }
+      set { _totalProfit7DaysBoughtCostUSD = value; }
+    }
+
+    public decimal TotalProfit30DaysBoughtCostUSD
+    {
+      get { return _totalProfit30DaysBoughtCostUSD; }
+      set { _totalProfit30DaysBoughtCostUSD = value; }
+    }
+
+    public decimal TotalProfit365DaysBoughtCostUSD
+    {
+      get { return _totalProfit365DaysBoughtCostUSD; }
+      set { _totalProfit365DaysBoughtCostUSD = value; }
+    }
+
+    public decimal TotalProfitAllBoughtCostUSD
+    {
+      get { return _totalProfitAllBoughtCostUSD; }
+      set { _totalProfitAllBoughtCostUSD = value; }
+    }
+
+    public decimal TotalCurrentValueUSDT
+    {
+      get { return _totalCurrentValueUSDT; }
+      set { _totalCurrentValueUSDT = value; }
+    }
+
+    public decimal TotalBoughtCostUSDT
+    {
+      get { return _totalBoughtCostUSDT; }
+      set { _totalBoughtCostUSDT = value; }
+    }
+
+    public decimal TotalProfitUSDT
+    {
+      get { return _totalProfitUSDT; }
+      set { _totalProfitUSDT = value; }
+    }
+
+    public decimal TotalProfitTodayUSDT
+    {
+      get { return _totalProfitTodayUSDT; }
+      set { _totalProfitTodayUSDT = value; }
+    }
+
+    public decimal TotalProfitYesterdayUSDT
+    {
+      get { return _totalProfitYesterdayUSDT; }
+      set { _totalProfitYesterdayUSDT = value; }
+    }
+
+    public decimal TotalProfit7DaysUSDT
+    {
+      get { return _totalProfit7DaysUSDT; }
+      set { _totalProfit7DaysUSDT = value; }
+    }
+
+    public decimal TotalProfit30DaysUSDT
+    {
+      get { return _totalProfit30DaysUSDT; }
+      set { _totalProfit30DaysUSDT = value; }
+    }
+
+    public decimal TotalProfit365DaysUSDT
+    {
+      get { return _totalProfit365DaysUSDT; }
+      set { _totalProfit365DaysUSDT = value; }
+    }
+
+    public decimal TotalProfitAllUSDT
+    {
+      get { return _totalProfitAllUSDT; }
+      set { _totalProfitAllUSDT = value; }
+    }
+
+    public decimal TotalProfitTodayBoughtCostUSDT
+    {
+      get { return _totalProfitTodayBoughtCostUSDT; }
+      set { _totalProfitTodayBoughtCostUSDT = value; }
+    }
+
+    public decimal TotalProfitYesterdayBoughtCostUSDT
+    {
+      get { return _totalProfitYesterdayBoughtCostUSDT; }
+      set { _totalProfitYesterdayBoughtCostUSDT = value; }
+    }
+
+    public decimal TotalProfit7DaysBoughtCostUSDT
+    {
+      get { return _totalProfit7DaysBoughtCostUSDT; }
+      set { _totalProfit7DaysBoughtCostUSDT = value; }
+    }
+
+    public decimal TotalProfit30DaysBoughtCostUSDT
+    {
+      get { return _totalProfit30DaysBoughtCostUSDT; }
+      set { _totalProfit30DaysBoughtCostUSDT = value; }
+    }
+
+    public decimal TotalProfit365DaysBoughtCostUSDT
+    {
+      get { return _totalProfit365DaysBoughtCostUSDT; }
+      set { _totalProfit365DaysBoughtCostUSDT = value; }
+    }
+
+    public decimal TotalProfitAllBoughtCostUSDT
+    {
+      get { return _totalProfitAllBoughtCostUSDT; }
+      set { _totalProfitAllBoughtCostUSDT = value; }
+    }
+
+    public decimal TotalCurrentValueUSDC
+    {
+      get { return _totalCurrentValueUSDC; }
+      set { _totalCurrentValueUSDC = value; }
+    }
+
+    public decimal TotalBoughtCostUSDC
+    {
+      get { return _totalBoughtCostUSDC; }
+      set { _totalBoughtCostUSDC = value; }
+    }
+
+    public decimal TotalProfitUSDC
+    {
+      get { return _totalProfitUSDC; }
+      set { _totalProfitUSDC = value; }
+    }
+
+    public decimal TotalProfitTodayUSDC
+    {
+      get { return _totalProfitTodayUSDC; }
+      set { _totalProfitTodayUSDC = value; }
+    }
+
+    public decimal TotalProfitYesterdayUSDC
+    {
+      get { return _totalProfitYesterdayUSDC; }
+      set { _totalProfitYesterdayUSDC = value; }
+    }
+
+    public decimal TotalProfit7DaysUSDC
+    {
+      get { return _totalProfit7DaysUSDC; }
+      set { _totalProfit7DaysUSDC = value; }
+    }
+
+    public decimal TotalProfit30DaysUSDC
+    {
+      get { return _totalProfit30DaysUSDC; }
+      set { _totalProfit30DaysUSDC = value; }
+    }
+
+    public decimal TotalProfit365DaysUSDC
+    {
+      get { return _totalProfit365DaysUSDC; }
+      set { _totalProfit365DaysUSDC = value; }
+    }
+
+    public decimal TotalProfitAllUSDC
+    {
+      get { return _totalProfitAllUSDC; }
+      set { _totalProfitAllUSDC = value; }
+    }
+
+    public decimal TotalProfitTodayBoughtCostUSDC
+    {
+      get { return _totalProfitTodayBoughtCostUSDC; }
+      set { _totalProfitTodayBoughtCostUSDC = value; }
+    }
+
+    public decimal TotalProfitYesterdayBoughtCostUSDC
+    {
+      get { return _totalProfitYesterdayBoughtCostUSDC; }
+      set { _totalProfitYesterdayBoughtCostUSDC = value; }
+    }
+
+    public decimal TotalProfit7DaysBoughtCostUSDC
+    {
+      get { return _totalProfit7DaysBoughtCostUSDC; }
+      set { _totalProfit7DaysBoughtCostUSDC = value; }
+    }
+
+    public decimal TotalProfit30DaysBoughtCostUSDC
+    {
+      get { return _totalProfit30DaysBoughtCostUSDC; }
+      set { _totalProfit30DaysBoughtCostUSDC = value; }
+    }
+
+    public decimal TotalProfit365DaysBoughtCostUSDC
+    {
+      get { return _totalProfit365DaysBoughtCostUSDC; }
+      set { _totalProfit365DaysBoughtCostUSDC = value; }
+    }
+
+    public decimal TotalProfitAllBoughtCostUSDC
+    {
+      get { return _totalProfitAllBoughtCostUSDC; }
+      set { _totalProfitAllBoughtCostUSDC = value; }
+    }
+
+    public decimal TotalCurrentValueBNB
+    {
+      get { return _totalCurrentValueBNB; }
+      set { _totalCurrentValueBNB = value; }
+    }
+
+    public decimal TotalBoughtCostBNB
+    {
+      get { return _totalBoughtCostBNB; }
+      set { _totalBoughtCostBNB = value; }
+    }
+
+    public decimal TotalProfitBNB
+    {
+      get { return _totalProfitBNB; }
+      set { _totalProfitBNB = value; }
+    }
+
+    public decimal TotalProfitTodayBNB
+    {
+      get { return _totalProfitTodayBNB; }
+      set { _totalProfitTodayBNB = value; }
+    }
+
+    public decimal TotalProfitYesterdayBNB
+    {
+      get { return _totalProfitYesterdayBNB; }
+      set { _totalProfitYesterdayBNB = value; }
+    }
+
+    public decimal TotalProfit7DaysBNB
+    {
+      get { return _totalProfit7DaysBNB; }
+      set { _totalProfit7DaysBNB = value; }
+    }
+
+    public decimal TotalProfit30DaysBNB
+    {
+      get { return _totalProfit30DaysBNB; }
+      set { _totalProfit30DaysBNB = value; }
+    }
+
+    public decimal TotalProfit365DaysBNB
+    {
+      get { return _totalProfit365DaysBNB; }
+      set { _totalProfit365DaysBNB = value; }
+    }
+
+    public decimal TotalProfitAllBNB
+    {
+      get { return _totalProfitAllBNB; }
+      set { _totalProfitAllBNB = value; }
+    }
+
+    public decimal TotalProfitTodayBoughtCostBNB
+    {
+      get { return _totalProfitTodayBoughtCostBNB; }
+      set { _totalProfitTodayBoughtCostBNB = value; }
+    }
+
+    public decimal TotalProfitYesterdayBoughtCostBNB
+    {
+      get { return _totalProfitYesterdayBoughtCostBNB; }
+      set { _totalProfitYesterdayBoughtCostBNB = value; }
+    }
+
+    public decimal TotalProfit7DaysBoughtCostBNB
+    {
+      get { return _totalProfit7DaysBoughtCostBNB; }
+      set { _totalProfit7DaysBoughtCostBNB = value; }
+    }
+
+    public decimal TotalProfit30DaysBoughtCostBNB
+    {
+      get { return _totalProfit30DaysBoughtCostBNB; }
+      set { _totalProfit30DaysBoughtCostBNB = value; }
+    }
+
+    public decimal TotalProfit365DaysBoughtCostBNB
+    {
+      get { return _totalProfit365DaysBoughtCostBNB; }
+      set { _totalProfit365DaysBoughtCostBNB = value; }
+    }
+
+    public decimal TotalProfitAllBoughtCostBNB
+    {
+      get { return _totalProfitAllBoughtCostBNB; }
+      set { _totalProfitAllBoughtCostBNB = value; }
+    }
+
+    public decimal TotalCurrentValueETH
+    {
+      get { return _totalCurrentValueETH; }
+      set { _totalCurrentValueETH = value; }
+    }
+
+    public decimal TotalBoughtCostETH
+    {
+      get { return _totalBoughtCostETH; }
+      set { _totalBoughtCostETH = value; }
+    }
+
+    public decimal TotalProfitETH
+    {
+      get { return _totalProfitETH; }
+      set { _totalProfitETH = value; }
+    }
+
+    public decimal TotalProfitTodayETH
+    {
+      get { return _totalProfitTodayETH; }
+      set { _totalProfitTodayETH = value; }
+    }
+
+    public decimal TotalProfitYesterdayETH
+    {
+      get { return _totalProfitYesterdayETH; }
+      set { _totalProfitYesterdayETH = value; }
+    }
+
+    public decimal TotalProfit7DaysETH
+    {
+      get { return _totalProfit7DaysETH; }
+      set { _totalProfit7DaysETH = value; }
+    }
+
+    public decimal TotalProfit30DaysETH
+    {
+      get { return _totalProfit30DaysETH; }
+      set { _totalProfit30DaysETH = value; }
+    }
+
+    public decimal TotalProfit365DaysETH
+    {
+      get { return _totalProfit365DaysETH; }
+      set { _totalProfit365DaysETH = value; }
+    }
+
+    public decimal TotalProfitAllETH
+    {
+      get { return _totalProfitAllETH; }
+      set { _totalProfitAllETH = value; }
+    }
+
+    public decimal TotalProfitTodayBoughtCostETH
+    {
+      get { return _totalProfitTodayBoughtCostETH; }
+      set { _totalProfitTodayBoughtCostETH = value; }
+    }
+
+    public decimal TotalProfitYesterdayBoughtCostETH
+    {
+      get { return _totalProfitYesterdayBoughtCostETH; }
+      set { _totalProfitYesterdayBoughtCostETH = value; }
+    }
+
+    public decimal TotalProfit7DaysBoughtCostETH
+    {
+      get { return _totalProfit7DaysBoughtCostETH; }
+      set { _totalProfit7DaysBoughtCostETH = value; }
+    }
+
+    public decimal TotalProfit30DaysBoughtCostETH
+    {
+      get { return _totalProfit30DaysBoughtCostETH; }
+      set { _totalProfit30DaysBoughtCostETH = value; }
+    }
+
+    public decimal TotalProfit365DaysBoughtCostETH
+    {
+      get { return _totalProfit365DaysBoughtCostETH; }
+      set { _totalProfit365DaysBoughtCostETH = value; }
+    }
+
+    public decimal TotalProfitAllBoughtCostETH
+    {
+      get { return _totalProfitAllBoughtCostETH; }
+      set { _totalProfitAllBoughtCostETH = value; }
+    }
+
+    public decimal Balance
+    {
+      get { return _balance; }
+      set { _balance = value; }
+    }
+
+    public decimal BalanceUSD
+    {
+      get { return _balanceUSD; }
+      set { _balanceUSD = value; }
+    }
+
+    public decimal BalanceUSDT
+    {
+      get { return _balanceUSDT; }
+      set { _balanceUSDT = value; }
+    }
+
+    public decimal BalanceUSDC
+    {
+      get { return _balanceUSDC; }
+      set { _balanceUSDC = value; }
+    }
+
+    public decimal BalanceBTC
+    {
+      get { return _balanceBTC; }
+      set { _balanceBTC = value; }
+    }
+
+    public decimal BalanceBNB
+    {
+      get { return _balanceBNB; }
+      set { _balanceBNB = value; }
+    }
+
+    public decimal BalanceETH
+    {
+      get { return _balanceETH; }
+      set { _balanceETH = value; }
+    }
+
+    public decimal AvailableBalance
+    {
+      get { return _availableBalance; }
+      set { _availableBalance = value; }
+    }
+
+    public decimal AvailableBalanceUSD
+    {
+      get { return _availableBalanceUSD; }
+      set { _availableBalanceUSD = value; }
+    }
+
+    public decimal AvailableBalanceUSDT
+    {
+      get { return _availableBalanceUSDT; }
+      set { _availableBalanceUSDT = value; }
+    }
+
+    public decimal AvailableBalanceUSDC
+    {
+      get { return _availableBalanceUSDC; }
+      set { _availableBalanceUSDC = value; }
+    }
+
+    public decimal AvailableBalanceBTC
+    {
+      get { return _availableBalanceBTC; }
+      set { _availableBalanceBTC = value; }
+    }
+
+    public decimal AvailableBalanceBNB
+    {
+      get { return _availableBalanceBNB; }
+      set { _availableBalanceBNB = value; }
+    }
+
+    public decimal AvailableBalanceETH
+    {
+      get { return _availableBalanceETH; }
+      set { _availableBalanceETH = value; }
+    }
+
+    public decimal PendingOrderCost
+    {
+      get { return _pendingOrderCost; }
+      set { _pendingOrderCost = value; }
+    }
+
+    public decimal PendingOrderCostUSD
+    {
+      get { return _pendingOrderCostUSD; }
+      set { _pendingOrderCostUSD = value; }
+    }
+
+    public decimal PendingOrderCostUSDT
+    {
+      get { return _pendingOrderCostUSDT; }
+      set { _pendingOrderCostUSDT = value; }
+    }
+
+    public decimal PendingOrderCostUSDC
+    {
+      get { return _pendingOrderCostUSDC; }
+      set { _pendingOrderCostUSDC = value; }
+    }
+
+    public decimal PendingOrderCostBTC
+    {
+      get { return _pendingOrderCostBTC; }
+      set { _pendingOrderCostBTC = value; }
+    }
+
+    public decimal PendingOrderCostBNB
+    {
+      get { return _pendingOrderCostBNB; }
+      set { _pendingOrderCostBNB = value; }
+    }
+
+    public decimal PendingOrderCostETH
+    {
+      get { return _pendingOrderCostETH; }
+      set { _pendingOrderCostETH = value; }
+    }
+
+    public decimal ExchangeFee
+    {
+      get { return _exchangeFee; }
+      set { _exchangeFee = value; }
+    }
+
+    public decimal ExchangeFeeUSD
+    {
+      get { return _exchangeFeeUSD; }
+      set { _exchangeFeeUSD = value; }
+    }
+
+    public decimal ExchangeFeeUSDT
+    {
+      get { return _exchangeFeeUSDT; }
+      set { _exchangeFeeUSDT = value; }
+    }
+
+    public decimal ExchangeFeeUSDC
+    {
+      get { return _exchangeFeeUSDC; }
+      set { _exchangeFeeUSDC = value; }
+    }
+
+    public decimal ExchangeFeeBTC
+    {
+      get { return _exchangeFeeBTC; }
+      set { _exchangeFeeBTC = value; }
+    }
+
+    public decimal ExchangeFeeBNB
+    {
+      get { return _exchangeFeeBNB; }
+      set { _exchangeFeeBNB = value; }
+    }
+
+    public decimal ExchangeFeeETH
+    {
+      get { return _exchangeFeeETH; }
+      set { _exchangeFeeETH = value; }
+    }
+
+    public decimal MarketValue
+    {
+      get { return _marketValue; }
+      set { _marketValue = value; }
+    }
+
+    public decimal MarketValueUSD
+    {
+      get { return _marketValueUSD; }
+      set { _marketValueUSD = value; }
+    }
+
+    public decimal MarketValueUSDT
+    {
+      get { return _marketValueUSDT; }
+      set { _marketValueUSDT = value; }
+    }
+
+    public decimal MarketValueUSDC
+    {
+      get { return _marketValueUSDC; }
+      set { _marketValueUSDC = value; }
+    }
+
+    public decimal MarketValueBTC
+    {
+      get { return _marketValueBTC; }
+      set { _marketValueBTC = value; }
+    }
+
+    public decimal MarketValueBNB
+    {
+      get { return _marketValueBNB; }
+      set { _marketValueBNB = value; }
+    }
+
+    public decimal MarketValueETH
+    {
+      get { return _marketValueETH; }
+      set { _marketValueETH = value; }
+    }
+
+    public void Reset()
+    {
+      _lastDcaLogLoad = DateTime.MinValue;
+      _lastPairsLogLoad = DateTime.MinValue;
+      _lastPendingLogLoad = DateTime.MinValue;
+      _lastBuyLogLoad = DateTime.MinValue;
+      _lastPossibleBuyLogLoad = DateTime.MinValue;
+      _lastSalesLogLoad = DateTime.MinValue;
+      _lastDCALogLoad = DateTime.MinValue;
+    }
+
+    private void LoadBuyLog()
+    {
+      try
       {
-        if (_transactionData == null) _transactionData = new TransactionData(_ptmBasePath);
-        return _transactionData;
+        dynamic rawBuyLogData = GetProfitTrailerData("api/data/buylog");
+        if (rawBuyLogData != null)
+        {
+          _buyLog.Clear();
+          BuildBuyLogData(rawBuyLogData);
+          _lastBuyLogLoad = DateTime.Now;
+        }
       }
-    }
-
-    public double GetCurrentBalance()
-    {
-      return
-      (this.Misc.Balance);
-    }
-    public double GetPairsBalance()
-    {
-      return
-      (this.Misc.PairsValue);
-    }
-    public double GetDCABalance()
-    {
-      return
-      (this.Misc.DCAValue);
-    }
-    public double GetPendingBalance()
-    {
-      return
-      (this.Misc.PendingValue);
-    }
-    public double GetDustBalance()
-    {
-      return
-      (this.Misc.DustValue);
-    }
-    
-    
-    // public double GetSnapshotBalance(DateTime snapshotDateTime)
-    // {
-    //   double result = _misc.StartBalance;
-      
-    //   result += this.SellLog.FindAll(sl => sl.SoldDate.Date < snapshotDateTime.Date).Sum(sl => sl.Profit);
-    //   result += this.TransactionData.Transactions.FindAll(t => t.UTCDateTime < snapshotDateTime).Sum(t => t.Amount);
-      
-    //   // Calculate holdings for snapshot date
-    //   result += this.DCALog.FindAll(pairs => pairs.FirstBoughtDate <= snapshotDateTime).Sum(pairs => pairs.CurrentValue);
-     
-    //   return result;
-    // }
-    
-    private dynamic GetDataFromProfitTrailer(string callPath, bool arrayReturned = false)
-    {
-      string rawBody = "";
-      string url = string.Format("{0}{1}{2}token={3}", _systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL, 
-      callPath,
-      callPath.Contains("?") ? "&" : "?", 
-      _systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken);
-      
-      // Get the data from PT
-      Debug.WriteLine(String.Format("{0} - Calling '{1}'", DateTime.UtcNow, url));
-      HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-      request.AutomaticDecompression = DecompressionMethods.GZip;
-      request.KeepAlive = true;
-      
-      WebResponse response = request.GetResponse();
-      
-      using (Stream dataStream = response.GetResponseStream())
+      catch (Exception ex)
       {
-        StreamReader reader = new StreamReader(dataStream);
-        rawBody = reader.ReadToEnd();
-        reader.Close();
+        _log.DoLogError("Error loading BuyLog", ex);
+      }
+    }
+
+    private void LoadPossibleBuyLog()
+    {
+      try
+      {
+        dynamic rawBuyLogData = GetProfitTrailerData("api/data/possiblebuylog");
+        if (rawBuyLogData != null)
+        {
+          _possibleBuyLog.Clear();
+          BuildBuyLogData(rawBuyLogData);
+          _lastPossibleBuyLogLoad = DateTime.Now;
+        }
+      }
+      catch (Exception ex)
+      {
+        _log.DoLogError("Error loading PossibleBuyLog", ex);
+      }
+    }
+
+    private void LoadPairsLog()
+    {
+      try
+      {
+        dynamic rawPairsLogData = GetProfitTrailerData("api/data/pairslog");
+        if (rawPairsLogData != null)
+        {
+          _pairsLog.Clear();
+          BuildPairsLogData(rawPairsLogData);
+          _lastPairsLogLoad = DateTime.Now;
+        }
+      }
+      catch (Exception ex)
+      {
+        _log.DoLogError("Error loading PairsLog", ex);
+      }
+    }
+
+    private void LoadPendingLog()
+    {
+      try
+      {
+        dynamic rawPendingLogData = GetProfitTrailerData("api/data/pendinglog");
+        if (rawPendingLogData != null)
+        {
+          _pendingLog.Clear();
+          BuildPendingLogData(rawPendingLogData);
+          _lastPendingLogLoad = DateTime.Now;
+        }
+      }
+      catch (Exception ex)
+      {
+        _log.DoLogError("Error loading PendingLog", ex);
+      }
+    }
+
+    private void LoadSalesLog()
+    {
+      try
+      {
+        dynamic rawSalesLogData = GetProfitTrailerData("api/data/saleslog");
+        if (rawSalesLogData != null)
+        {
+          _salesLog.Clear();
+          BuildSalesLogData(rawSalesLogData);
+          _lastSalesLogLoad = DateTime.Now;
+        }
+      }
+      catch (Exception ex)
+      {
+        _log.DoLogError("Error loading SalesLog", ex);
+      }
+    }
+
+    private void LoadDCALog()
+    {
+      try
+      {
+        dynamic rawDCALogData = GetProfitTrailerData("api/data/dcalog");
+        if (rawDCALogData != null)
+        {
+          _dcaLog.Clear();
+          BuildDCALogData(rawDCALogData);
+          _lastDCALogLoad = DateTime.Now;
+        }
+      }
+      catch (Exception ex)
+      {
+        _log.DoLogError("Error loading DCALog", ex);
+      }
+    }
+
+    private dynamic GetProfitTrailerData(string apiPath)
+    {
+      try
+      {
+        string apiUrl = _ptMagic.PTConnectionUrl + "/" + apiPath;
+        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(apiUrl);
+        request.Method = "GET";
+        request.Timeout = 10000;
+        request.ReadWriteTimeout = 10000;
+        request.ContentType = "application/json";
+
+        using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+        using (Stream responseStream = response.GetResponseStream())
+        using (StreamReader reader = new StreamReader(responseStream))
+        {
+          string responseText = reader.ReadToEnd();
+          if (!string.IsNullOrWhiteSpace(responseText))
+          {
+            return JsonConvert.DeserializeObject(responseText);
+          }
+        }
+      }
+      catch (Exception ex)
+      {
+        _log.DoLogError("Error loading ProfitTrailer data from " + apiPath, ex);
       }
 
-      response.Close();
-      
-      
-      if (!arrayReturned)
-        {
-            return JObject.Parse(rawBody);
-        }
-        else
-        {
-            return JArray.Parse(rawBody);
-        }
+      return null;
     }
-    private Stream GetDataFromProfitTrailerAsStream(string callPath)
+
+    private void BuildPairsLogData(dynamic rawPairsLogData)
     {
-        string url = string.Format("{0}{1}{2}token={3}", _systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL, 
-        callPath,
-        callPath.Contains("?") ? "&" : "?", 
-        _systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken);
-        
-        // Get the data from PT
-        Debug.WriteLine(String.Format("{0} - Calling '{1}'", DateTime.UtcNow, url));
-        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-        request.AutomaticDecompression = DecompressionMethods.GZip;
-        request.KeepAlive = true;
-        
-        WebResponse response = request.GetResponse();
-        
-        return response.GetResponseStream();
+      List<PairLogData> pairs = new List<PairLogData>();
+
+      foreach (var pair in rawPairsLogData)
+      {
+        PairLogData pairLogData = new PairLogData();
+        pairLogData.Market = pair.market;
+        pairLogData.AverageBoughtPrice = pair.avgBoughtPrice;
+        pairLogData.CurrentPrice = pair.currentPrice;
+        pairLogData.ProfitPercent = pair.profit;
+        pairLogData.PercChange = pair.percChange;
+        pairLogData.Volume24h = pair.volume;
+        pairLogData.TotalCost = pair.totalCost;
+        pairLogData.DCACount = pair.dcaCount;
+        pairLogData.FirstBoughtDate = pair.firstBoughtDate;
+
+        pairs.Add(pairLogData);
+      }
+
+      _pairsLog = pairs;
     }
 
-    
-    // private void BuildSellLogData(dynamic rawSellLogData)
-    // {
-    //   foreach (var rsld in rawSellLogData.data)
-    //   {
-    //     SellLogData sellLogData = new SellLogData();
-    //     sellLogData.SoldAmount = rsld.soldAmount;
-    //     sellLogData.BoughtTimes = rsld.boughtTimes;
-    //     sellLogData.Market = rsld.market;
-    //     sellLogData.ProfitPercent = rsld.profit;
-    //     sellLogData.SoldPrice = rsld.currentPrice;
-    //     sellLogData.AverageBuyPrice = rsld.avgPrice;
-    //     sellLogData.TotalCost = rsld.totalCost;
-    //     sellLogData.Profit = rsld.profitCurrency;
-        
-        
-    //     //Convert Unix Timestamp to Datetime
-    //     System.DateTime dtDateTime = new DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
-    //     dtDateTime = dtDateTime.AddSeconds((double)rsld.soldDate).ToUniversalTime();
-        
-        
-    //     // Profit Trailer sales are saved in UTC
-    //     DateTimeOffset ptSoldDate = DateTimeOffset.Parse(dtDateTime.Year.ToString() + "-" + dtDateTime.Month.ToString("00") + "-" + dtDateTime.Day.ToString("00") + "T" + dtDateTime.Hour.ToString("00") + ":" + dtDateTime.Minute.ToString("00") + ":" + dtDateTime.Second.ToString("00"), CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal);
-        
-        
-    //     // Convert UTC sales time to local offset time
-       
-    //     ptSoldDate = ptSoldDate.ToOffset(OffsetTimeSpan);
-        
-    //     sellLogData.SoldDate = ptSoldDate.DateTime;
-       
-    //     _sellLog.Add(sellLogData);
-    //   }
-    // }
-
-    private void BuildDCALogData(dynamic rawDCALogData, dynamic rawPairsLogData, dynamic rawPendingLogData, dynamic rawWatchModeLogData)
+    private void BuildPendingLogData(dynamic rawPendingLogData)
     {
-      // Parse DCA data
-      _dcaLog.AddRange(ParsePairsData(rawDCALogData, true));
-      
-      // Parse Pairs data
-      _dcaLog.AddRange(ParsePairsData(rawPairsLogData, false));
-      
-      // Parse pending pairs data
-      _dcaLog.AddRange(ParsePairsData(rawPendingLogData, false));
-      
-      // Parse watch only pairs data
-      _dcaLog.AddRange(ParsePairsData(rawWatchModeLogData, false));
+      List<PendingLogData> pending = new List<PendingLogData>();
+
+      foreach (var pair in rawPendingLogData)
+      {
+        PendingLogData pendingLogData = new PendingLogData();
+        pendingLogData.Market = pair.market;
+        pendingLogData.AverageBoughtPrice = pair.avgBoughtPrice;
+        pendingLogData.CurrentPrice = pair.currentPrice;
+        pendingLogData.ProfitPercent = pair.profit;
+        pendingLogData.PercChange = pair.percChange;
+        pendingLogData.Volume24h = pair.volume;
+        pendingLogData.TotalCost = pair.totalCost;
+        pendingLogData.DCACount = pair.dcaCount;
+
+        pending.Add(pendingLogData);
+      }
+
+      _pendingLog = pending;
     }
 
-    // Parse the pairs data from PT to our own common data structure.
-    private List<DCALogData> ParsePairsData(dynamic pairsData, bool processBuyStrategies)
+    private void BuildSalesLogData(dynamic rawSalesLogData)
+    {
+      List<SalesLogData> sales = new List<SalesLogData>();
+
+      foreach (var pair in rawSalesLogData)
+      {
+        SalesLogData salesLogData = new SalesLogData();
+        salesLogData.Market = pair.market;
+        salesLogData.SoldPrice = pair.soldPrice;
+        salesLogData.BoughtPrice = pair.boughtPrice;
+        salesLogData.ProfitPercent = pair.profit;
+        salesLogData.SoldDate = pair.soldDate;
+        salesLogData.BoughtDate = pair.boughtDate;
+        salesLogData.BuyStrategy = pair.buyStrategy;
+        salesLogData.SellStrategy = pair.sellStrategy;
+        salesLogData.TriggerValue = pair.triggerValue;
+        salesLogData.CurrentValue = pair.currentValue;
+
+        sales.Add(salesLogData);
+      }
+
+      _salesLog = sales;
+    }
+
+    private void BuildDCALogData(dynamic rawDCALogData)
     {
       List<DCALogData> pairs = new List<DCALogData>();
-      
-      foreach (var pair in pairsData)
+
+      foreach (var pair in rawDCALogData)
       {
         DCALogData dcaLogData = new DCALogData();
-        dcaLogData.Amount = pair.totalAmount;
-        dcaLogData.BoughtTimes = pair.boughtTimes;
         dcaLogData.Market = pair.market;
-        dcaLogData.ProfitPercent = pair.profit;
-        dcaLogData.AverageBuyPrice = pair.avgPrice;
-        dcaLogData.TotalCost = pair.totalCost;
-        dcaLogData.BuyTriggerPercent = pair.buyProfit;
-        dcaLogData.CurrentLowBBValue = pair.bbLow == null ? 0 : pair.bbLow;
-        dcaLogData.CurrentHighBBValue = pair.highBb == null ? 0 : pair.highBb;
-        dcaLogData.BBTrigger = pair.bbTrigger == null ? 0 : pair.bbTrigger;
+        dcaLogData.AverageBoughtPrice = pair.avgBoughtPrice;
         dcaLogData.CurrentPrice = pair.currentPrice;
-        dcaLogData.SellTrigger = pair.triggerValue == null ? 0 : pair.triggerValue;
+        dcaLogData.ProfitPercent = pair.profit;
         dcaLogData.PercChange = pair.percChange;
-        dcaLogData.Leverage = pair.leverage == null ? 0 : pair.leverage;
-        dcaLogData.BuyStrategy = pair.buyStrategy == null ? "" : pair.buyStrategy;
-        dcaLogData.SellStrategy = pair.sellStrategy == null ? "" : pair.sellStrategy;
-        dcaLogData.IsTrailing = false;
-        
-        // See if they are using PT 2.5 (buyStrategiesData) or 2.4 (buyStrategies)
-        var buyStrats = pair.buyStrategies != null ? pair.buyStrategies : pair.buyStrategiesData.data;
-        if (buyStrats != null && processBuyStrategies)
-        {
-          foreach (var bs in buyStrats)
-          {
-            Strategy buyStrategy = new Strategy();
-            buyStrategy.Type = bs.type;
-            buyStrategy.Name = bs.name;
-            buyStrategy.EntryValue = bs.entryValue;
-            buyStrategy.EntryValueLimit = bs.entryValueLimit;
-            buyStrategy.TriggerValue = bs.triggerValue;
-            buyStrategy.CurrentValue = bs.currentValue;
-            buyStrategy.CurrentValuePercentage = bs.currentValuePercentage;
-            buyStrategy.Decimals = bs.decimals;
-            buyStrategy.IsTrailing = bs.trailing;
-            buyStrategy.IsTrue = bs.strategyResult;
-           
-            dcaLogData.BuyStrategies.Add(buyStrategy);
-          }
-        }
+        dcaLogData.Volume24h = pair.volume;
+        dcaLogData.TotalCost = pair.totalCost;
+        dcaLogData.DCACount = pair.dcaCount;
 
-        // See if they are using PT 2.5 (sellStrategiesData) or 2.4 (sellStrategies)
-        var sellStrats = pair.sellStrategies != null ? pair.sellStrategies : pair.sellStrategiesData.data;
-        if (sellStrats != null)
-        {
-          foreach (var ss in sellStrats)
-          {
-            Strategy sellStrategy = new Strategy();
-            sellStrategy.Type = ss.type;
-            sellStrategy.Name = ss.name;
-            sellStrategy.EntryValue = ss.entryValue;
-            sellStrategy.EntryValueLimit = ss.entryValueLimit;
-            sellStrategy.TriggerValue = ss.triggerValue;
-            sellStrategy.CurrentValue = ss.currentValue;
-            sellStrategy.CurrentValuePercentage = ss.currentValuePercentage;
-            sellStrategy.Decimals = ss.decimals;
-            sellStrategy.IsTrailing = ss.trailing;
-            sellStrategy.IsTrue = ss.strategyResult;
-            
-            dcaLogData.SellStrategies.Add(sellStrategy);
-            
-            // Find the target percentage gain to sell.
-            if (sellStrategy.Name.Contains("GAIN", StringComparison.InvariantCultureIgnoreCase))
-            {
-              if (!dcaLogData.TargetGainValue.HasValue || dcaLogData.TargetGainValue.Value > sellStrategy.EntryValue)
-              {
-                // Set the target sell percentage
-                dcaLogData.TargetGainValue = sellStrategy.EntryValue;
-              }
-            }
-          }
-        }
-        
-        // Calculate current value
-        dcaLogData.CurrentValue = dcaLogData.CurrentPrice * dcaLogData.Amount;
-        
-        // Convert Unix Timestamp to Datetime
         System.DateTime rdldDateTime = new DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc);
         rdldDateTime = rdldDateTime.AddSeconds((double)pair.firstBoughtDate).ToUniversalTime();
         
@@ -950,7 +1473,7 @@ namespace Core.Main.DataObjects
             {
               Strategy buyStrategy = new Strategy();
               buyStrategy.Type = bs.type;
-              buyStrategy.Name = bs.name;
+              buyStrategy.Name = bs.letter != null ? bs.letter : "";
               buyStrategy.EntryValue = bs.entryValue;
               buyStrategy.EntryValueLimit = bs.entryValueLimit;
               buyStrategy.TriggerValue = bs.triggerValue;
