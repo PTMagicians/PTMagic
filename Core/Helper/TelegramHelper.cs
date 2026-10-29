@@ -15,7 +15,7 @@ namespace Core.Helper
         try
         {
           TelegramBotClient botClient = new TelegramBotClient(botToken);
-          await botClient.SendTextMessageAsync(chatId: chatId, text: message, parseMode: ParseMode.Markdown,disableNotification: useSilentMode);
+          await botClient.SendMessage(chatId: chatId, text: message, parseMode: ParseMode.Markdown, disableNotification: useSilentMode);
           log.DoLogDebug("Telegram message sent to ChatId " + chatId.ToString() + " on Bot Token '" + botToken + "'");
         }
         catch (Exception ex)
