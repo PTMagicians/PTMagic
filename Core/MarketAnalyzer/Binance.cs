@@ -72,62 +72,6 @@ namespace Core.MarketAnalyzer
       return result;
     }
 
-    public static List<string> GetMarketData(string mainMarket, ConcurrentDictionary<string, MarketInfo> marketInfos, PTMagicConfiguration systemConfiguration, LogHelper log)
-    {
-      List<string> result = new List<string>();
-      string lastMarket = "";
-
-      try
-      {
-        string baseUrl = "https://api.binance.com/api/v1/ticker/24hr";
-
-        log.DoLogInfo("Binance - Getting market data...");
-        Newtonsoft.Json.Linq.JArray jsonArray = GetSimpleJsonArrayFromURL(baseUrl, log);
-        if (jsonArray.Count > 0)
-        {
-          double mainCurrencyPrice = 1;
-          if (!mainMarket.Equals("USDT", StringComparison.InvariantCultureIgnoreCase))
-          {
-            mainCurrencyPrice = Binance.GetMainCurrencyPrice(mainMarket, systemConfiguration, log);
-          }
-
-          log.DoLogInfo("Binance - Market data received for " + jsonArray.Count.ToString() + " currencies");
-
-          if (mainCurrencyPrice > 0)
-          {
-            Dictionary<string, Market> markets = BuildMarkets(mainMarket, mainCurrencyPrice, jsonArray, result, log, ref lastMarket);
-            Binance.CheckFirstSeenDates(markets, ref marketInfos, systemConfiguration, log);
-            BaseAnalyzer.SaveMarketInfosToFile(marketInfos, systemConfiguration, log);
-            Binance.CheckForMarketDataRecreation(mainMarket, markets, systemConfiguration, log);
-            SaveCurrentMarketData(mainMarket, markets, systemConfiguration, log);
-          }
-          else
-          {
-            log.DoLogError("Binance - Failed to get main market price for " + mainMarket + ".");
-            result = null;
-          }
-        }
-      }
-      catch (OperationCanceledException ex)
-      {
-        log.DoLogError("Binance - Market data request timed out or was cancelled: " + ex.Message);
-        result = null;
-      }
-      catch (HttpRequestException ex)
-      {
-        string status = ex.StatusCode.HasValue ? " HTTP " + (int)ex.StatusCode.Value + " (" + ex.StatusCode.Value + ")" : "";
-        log.DoLogError("Binance - HTTP request failed while getting market data." + status + " " + ex.Message);
-        result = null;
-      }
-      catch (Exception ex)
-      {
-        log.DoLogCritical("Exception while getting data for '" + lastMarket + "': " + ex.Message, ex);
-        result = null;
-      }
-
-      return result;
-    }
-
     public static async Task<List<string>> GetMarketDataAsync(string mainMarket, ConcurrentDictionary<string, MarketInfo> marketInfos, PTMagicConfiguration systemConfiguration, LogHelper log, CancellationToken cancellationToken = default)
     {
       List<string> result = new List<string>();
@@ -453,11 +397,6 @@ namespace Core.MarketAnalyzer
         tick.Time = Constants.Epoch.AddMilliseconds((Int64)marketTick[0]);
         result.Add(tick);
       }
-    }
-
-    public static void CheckForMarketDataRecreation(string mainMarket, Dictionary<string, Market> markets, PTMagicConfiguration systemConfiguration, LogHelper log)
-    {
-      CheckForMarketDataRecreationAsync(mainMarket, markets, systemConfiguration, log).GetAwaiter().GetResult();
     }
 
     public static async Task CheckForMarketDataRecreationAsync(string mainMarket, Dictionary<string, Market> markets, PTMagicConfiguration systemConfiguration, LogHelper log, CancellationToken cancellationToken = default)
