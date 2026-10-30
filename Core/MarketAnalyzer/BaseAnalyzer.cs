@@ -395,23 +395,6 @@ namespace Core.MarketAnalyzer
       return result;
     }
 
-    public static async Task<double> GetMainFiatCurrencyRateAsync(string currency, string FreeCurrencyAPI, LogHelper log, CancellationToken cancellationToken = default)
-    {
-      double result = 1;
-      string baseUrl = "http://free.currencyconverterapi.com/api/v5/convert?q=USD_" + currency + "&compact=y&apiKey=" + FreeCurrencyAPI;
-
-      log.DoLogDebug("http://free.currencyconverterapi.com - Getting latest exchange rates...");
-      Newtonsoft.Json.Linq.JObject jsonObject = await GetSimpleJsonObjectFromURLAsync(baseUrl, log, null, cancellationToken).ConfigureAwait(false);
-      if (jsonObject != null)
-      {
-        log.DoLogDebug("http://free.currencyconverterapi.com - Received latest exchange rates.");
-
-        result = (double)jsonObject["USD_" + currency]["val"];
-        log.DoLogInfo("http://free.currencyconverterapi.com - Latest exchange rate for USD to " + currency + " is " + result);
-      }
-      return result;
-    }
-
     public static ConcurrentDictionary<string, MarketInfo> GetMarketInfosFromFile(PTMagicConfiguration systemConfiguration, LogHelper log)
     {
       ConcurrentDictionary<string, MarketInfo> result = new ConcurrentDictionary<string, MarketInfo>();
