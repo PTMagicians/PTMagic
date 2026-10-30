@@ -5,7 +5,7 @@ using Core.Helper;
 using Microsoft.Extensions.DependencyInjection;
 
 
-[assembly: AssemblyVersion("2.8.5")]
+[assembly: AssemblyVersion("2.9.0")]
 [assembly: AssemblyProduct("PT Magic")]
 
 namespace PTMagic
