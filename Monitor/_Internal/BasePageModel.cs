@@ -90,7 +90,7 @@ namespace Monitor._Internal
                     Summary = JsonConvert.DeserializeObject<Summary>(System.IO.File.ReadAllText(PTMagicBasePath + Constants.PTMagicPathData + Path.DirectorySeparatorChar + "LastRuntimeSummary.json"));
                     exitLoop = true;
                 }
-                catch (IOException e)
+                catch (IOException)
                 {
                     // Squash exception and try again, as file was locked.
                     Thread.Sleep(250);

@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
-using System.Net.Security;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
+using System.Threading.Tasks;
 using Core.Main;
 using Core.Helper;
 
@@ -49,69 +50,70 @@ namespace Core.ProfitTrailer
         {
           try
           {
-            ServicePointManager.Expect100Continue = true;
-            ServicePointManager.DefaultConnectionLimit = 9999;
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
-            ServicePointManager.ServerCertificateValidationCallback += new RemoteCertificateValidationCallback(CertificateHelper.AllwaysGoodCertificate);
-            HttpWebRequest httpWebRequest = (HttpWebRequest)WebRequest.Create(urlList[i] + "settingsapi/settings/saveAll");
-            httpWebRequest.ContentType = "application/x-www-form-urlencoded";
-            httpWebRequest.Method = "POST";
-            httpWebRequest.Proxy = null;
-            httpWebRequest.Timeout = 30000;
+            using (HttpClientHandler handler = new HttpClientHandler())
+            {
+              handler.UseProxy = false;
+              handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
 
-            // PT is using ordinary POST data, not JSON
-            string query = "configName=" + systemConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName;
-            query = query + "&license=" + licenseList[i];
-            string pairsPropertiesString = SystemHelper.ConvertListToTokenString(pairsLines, Environment.NewLine, false);
-            string dcaPropertiesString = SystemHelper.ConvertListToTokenString(dcaLines, Environment.NewLine, false);
-            string indicatorsPropertiesString = SystemHelper.ConvertListToTokenString(indicatorsLines, Environment.NewLine, false);
-            query += "&pairsData=" + WebUtility.UrlEncode(pairsPropertiesString) + "&dcaData=" + WebUtility.UrlEncode(dcaPropertiesString) + "&indicatorsData=" + WebUtility.UrlEncode(indicatorsPropertiesString);
-            byte[] formData = Encoding.ASCII.GetBytes(query);
-            httpWebRequest.ContentLength = formData.Length;
-            using (Stream stream = httpWebRequest.GetRequestStream())
-            {
-              stream.Write(formData, 0, formData.Length);
+              using (HttpClient httpClient = new HttpClient(handler))
+              {
+                httpClient.Timeout = TimeSpan.FromSeconds(30);
+
+                // PT is using ordinary POST data, not JSON
+                string query = "configName=" + systemConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName;
+                query = query + "&license=" + licenseList[i];
+                string pairsPropertiesString = SystemHelper.ConvertListToTokenString(pairsLines, Environment.NewLine, false);
+                string dcaPropertiesString = SystemHelper.ConvertListToTokenString(dcaLines, Environment.NewLine, false);
+                string indicatorsPropertiesString = SystemHelper.ConvertListToTokenString(indicatorsLines, Environment.NewLine, false);
+                query += "&pairsData=" + WebUtility.UrlEncode(pairsPropertiesString) + "&dcaData=" + WebUtility.UrlEncode(dcaPropertiesString) + "&indicatorsData=" + WebUtility.UrlEncode(indicatorsPropertiesString);
+
+                byte[] formData = Encoding.ASCII.GetBytes(query);
+                using (ByteArrayContent content = new ByteArrayContent(formData))
+                {
+                  content.Headers.ContentType = new MediaTypeHeaderValue("application/x-www-form-urlencoded");
+
+                  log.DoLogDebug("Built POST request for Properties");
+                  int adjustedCount = i + 1;
+                  log.DoLogInfo("Sending Properties to license " + adjustedCount + " at " + urlList[i]);
+
+                  using (HttpResponseMessage response = httpClient.PostAsync(urlList[i] + "settingsapi/settings/saveAll", content).GetAwaiter().GetResult())
+                  {
+                    response.EnsureSuccessStatusCode();
+                    log.DoLogInfo("Properties sent!");
+                    log.DoLogDebug("Properties response object closed.");
+                  }
+                }
+              }
             }
-            log.DoLogDebug("Built POST request for Properties");
-            int adjustedCount = i+1;
-            log.DoLogInfo("Sending Properties to license " + adjustedCount + " at " + urlList[i]);
-            using (HttpWebResponse httpResponse = (HttpWebResponse)httpWebRequest.GetResponse())
-            {
-              log.DoLogInfo("Properties sent!");
-              httpResponse.Close();
-              log.DoLogDebug("Properties response object closed.");
-            }
-            
+
             transferCompleted = true;
           }
-          catch (WebException ex)
+          catch (HttpRequestException ex)
           {
             // Manual error handling as PT doesn't seem to provide a proper error response...
-            if (ex.Message.IndexOf("401") > -1)
+            if (ex.StatusCode == HttpStatusCode.Unauthorized || ex.Message.IndexOf("401") > -1)
             {
               log.DoLogError("Saving Properties failed for setting '" + systemConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName + "': Unauthorized! The specified Profit Trailer license key '" + systemConfiguration.GetProfitTrailerLicenseKeyMasked() + "' is invalid!");
               transferCanceled = true;
-            }
-            else if (ex.Message.IndexOf("timed out") > -1)
-            {
-              // Handle timeout seperately
-              retryCount++;
-              if (retryCount <= maxRetries)
-              {
-                log.DoLogError("Saving Properties failed for setting '" + systemConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName + "': Timeout! Starting retry number " + retryCount + "/" + maxRetries.ToString() + "!");
-              }
-              else
-              {
-                transferCanceled = true;
-                log.DoLogError("Saving Properties failed for setting '" + systemConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName + "': Timeout! Canceling transfer after " + maxRetries.ToString() + " failed retries.");
-              }
             }
             else
             {
               log.DoLogCritical("Saving Properties failed for setting '" + systemConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName + "': " + ex.Message, ex);
               transferCanceled = true;
             }
-
+          }
+          catch (TaskCanceledException ex)
+          {
+            retryCount++;
+            if (retryCount <= maxRetries)
+            {
+              log.DoLogError("Saving Properties failed for setting '" + systemConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName + "': Timeout (" + ex.Message + ")! Starting retry number " + retryCount + "/" + maxRetries.ToString() + "!");
+            }
+            else
+            {
+              transferCanceled = true;
+              log.DoLogError("Saving Properties failed for setting '" + systemConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName + "': Timeout (" + ex.Message + ")! Canceling transfer after " + maxRetries.ToString() + " failed retries.");
+            }
           }
           catch (TimeoutException ex)
           {
@@ -133,8 +135,6 @@ namespace Core.ProfitTrailer
           }
         }
       }
-
-
     }
   }
 }

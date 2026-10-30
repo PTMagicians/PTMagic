@@ -73,11 +73,7 @@ namespace Core.Helper
 
     private static byte[] PBKDF2(string password, byte[] salt, int iterations, int outputBytes)
     {
-      using (Rfc2898DeriveBytes pbkdf2 = new Rfc2898DeriveBytes(password, salt))
-      {
-        pbkdf2.IterationCount = iterations;
-        return pbkdf2.GetBytes(outputBytes);
-      }
+      return Rfc2898DeriveBytes.Pbkdf2(password, salt, iterations, HashAlgorithmName.SHA1, outputBytes);
     }
 
 
@@ -168,12 +164,13 @@ namespace Core.Helper
       // key. Specify the size of the key in bytes (instead of bits).
       byte[] keyBytes = password.GetBytes(keySize / 8);
 
-      // Create uninitialized Rijndael encryption object.
-      RijndaelManaged symmetricKey = new RijndaelManaged();
-
-      // It is reasonable to set encryption mode to Cipher Block Chaining
-      // (CBC). Use default options for other symmetric key parameters.
+      // Create an AES encryption object. RijndaelManaged used a 128-bit block
+      // size here, so AES is byte-for-byte compatible with the existing data.
+      using Aes symmetricKey = Aes.Create();
+      symmetricKey.KeySize = keySize;
+      symmetricKey.BlockSize = 128;
       symmetricKey.Mode = CipherMode.CBC;
+      symmetricKey.Padding = PaddingMode.PKCS7;
 
       // Generate encryptor from the existing key bytes and initialization 
       // vector. Key size will be defined based on the number of the key 
@@ -278,12 +275,13 @@ namespace Core.Helper
         // key. Specify the size of the key in bytes (instead of bits).
         byte[] keyBytes = password.GetBytes(keySize / 8);
 
-        // Create uninitialized Rijndael encryption object.
-        RijndaelManaged symmetricKey = new RijndaelManaged();
-
-        // It is reasonable to set encryption mode to Cipher Block Chaining
-        // (CBC). Use default options for other symmetric key parameters.
+        // Create an AES encryption object. RijndaelManaged used a 128-bit block
+        // size here, so AES is byte-for-byte compatible with the existing data.
+        using Aes symmetricKey = Aes.Create();
+        symmetricKey.KeySize = keySize;
+        symmetricKey.BlockSize = 128;
         symmetricKey.Mode = CipherMode.CBC;
+        symmetricKey.Padding = PaddingMode.PKCS7;
 
         // Generate decryptor from the existing key bytes and initialization 
         // vector. Key size will be defined based on the number of the key 

@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Threading;
 using System.Reflection;
-using System.Security.Permissions;
 using Core.Helper;
 using Microsoft.Extensions.DependencyInjection;
 
 
-[assembly: AssemblyVersion("2.8.5")]
+[assembly: AssemblyVersion("2.9.0")]
 [assembly: AssemblyProduct("PT Magic")]
 
 namespace PTMagic
@@ -17,7 +16,6 @@ namespace PTMagic
     private static LogHelper _log = ServiceHelper.BuildLoggerService().GetRequiredService<LogHelper>();
 
     // Main class entry
-    [SecurityPermission(SecurityAction.Demand, Flags = SecurityPermissionFlag.ControlAppDomain)]
     public static void Main(string[] args)
     {
       // Register a global exception handler

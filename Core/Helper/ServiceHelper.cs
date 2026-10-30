@@ -19,19 +19,14 @@ namespace Core.Helper
 
       services.AddTransient<LogHelper>();
 
-      services.AddSingleton<ILoggerFactory, LoggerFactory>();
-      services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
-      services.AddLogging((builder) => builder.SetMinimumLevel(LogLevel.Trace));
+      NLog.LogManager.LoadConfiguration(basePath + "nlog.config");
+      services.AddLogging(builder =>
+      {
+        builder.SetMinimumLevel(LogLevel.Trace);
+        builder.AddNLog(new NLogProviderOptions { CaptureMessageTemplates = true, CaptureMessageProperties = true });
+      });
 
-      ServiceProvider serviceProvider = services.BuildServiceProvider();
-
-      ILoggerFactory loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
-
-      //configure NLog
-      loggerFactory.AddNLog(new NLogProviderOptions { CaptureMessageTemplates = true, CaptureMessageProperties = true });
-      loggerFactory.ConfigureNLog(basePath + "nlog.config");
-
-      return serviceProvider;
+      return services.BuildServiceProvider();
     }
   }
 }
