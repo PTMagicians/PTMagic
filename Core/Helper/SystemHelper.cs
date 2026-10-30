@@ -2,8 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Net;
-using System.Net.Security;
-using System.Security.Cryptography.X509Certificates;
+using System.Net.Http;
 using System.Linq;
 using System.Text;
 using System.Globalization;
@@ -14,11 +13,6 @@ namespace Core.Helper
 
   public class SystemHelper
   {
-    private static bool AllwaysGoodCertificate(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors policyErrors)
-    {
-      return true;
-    }
-
     /// <summary>
     /// Checks, if a string is numeric.
     /// </summary>
@@ -511,23 +505,23 @@ namespace Core.Helper
 
     public static bool UrlIsReachable(string url)
     {
-      ServicePointManager.Expect100Continue = true;
-      ServicePointManager.DefaultConnectionLimit = 9999;
-      ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
-      ServicePointManager.ServerCertificateValidationCallback += new RemoteCertificateValidationCallback(AllwaysGoodCertificate);
-
-      HttpWebRequest request = WebRequest.Create(url) as HttpWebRequest;
-      request.Timeout = 10000;
-      request.Method = "GET";
-
       try
       {
-        using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
+        using (HttpClientHandler handler = new HttpClientHandler())
         {
-          return response.StatusCode == HttpStatusCode.OK;
+          handler.ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;
+
+          using (HttpClient client = new HttpClient(handler))
+          {
+            client.Timeout = TimeSpan.FromSeconds(10);
+            using (HttpResponseMessage response = client.GetAsync(url).GetAwaiter().GetResult())
+            {
+              return response.StatusCode == HttpStatusCode.OK;
+            }
+          }
         }
       }
-      catch (WebException)
+      catch (Exception)
       {
         return false;
       }

@@ -23,7 +23,6 @@ namespace Monitor.Pages {
 
     }
 
-    [HttpPost]
     public ActionResult OnPost() {
       base.Init();
 

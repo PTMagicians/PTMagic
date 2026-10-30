@@ -25,11 +25,7 @@ namespace Core.Helper
 
         foreach (string filePath in filePaths)
         {
-          FileStream fs = File.OpenRead(filePath);
-
-          // allocate buffer
-          byte[] buffer = new byte[fs.Length];
-          fs.Read(buffer, 0, buffer.Length);
+          byte[] buffer = File.ReadAllBytes(filePath);
 
           // write the zip entry and its data 
           ZipEntry entry = new ZipEntry(filePath.Substring(filePath.LastIndexOf(Path.DirectorySeparatorChar) + 1));

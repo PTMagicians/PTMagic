@@ -499,7 +499,7 @@ namespace Core.ProfitTrailer
       catch (Exception ex)
       {
         ptmagicInstance.Log.DoLogCritical("Critical error while writing settings!", ex);
-        throw (ex);
+        throw;
       }
     }
 

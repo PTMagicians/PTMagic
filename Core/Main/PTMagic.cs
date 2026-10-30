@@ -87,10 +87,6 @@ namespace Core.Main
         _systemConfiguration = value;
       }
     }
-    public class IsAnalzyerRunning
-    {
-      private string _isAnalyzerRunning;
-    }
     public System.Timers.Timer Timer
     {
       get
@@ -133,7 +129,7 @@ namespace Core.Main
         mutex.WaitOne(); // Acquire the mutex
 
         string dirPath = "_data";
-        string filePath = Path.Combine(dirPath, "AnalyzerState.");
+        string filePath = Path.Combine(dirPath, "AnalyzerState");
 
         // Ensure the directory exists
         Directory.CreateDirectory(dirPath);
