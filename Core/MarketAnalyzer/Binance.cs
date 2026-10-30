@@ -7,7 +7,8 @@ using Core.Main;
 using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
 using Newtonsoft.Json;
-using System.Net;
+using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Core.MarketAnalyzer
@@ -45,7 +46,6 @@ namespace Core.MarketAnalyzer
       List<string> result = new List<string>();
 
       string lastMarket = "";
-      Newtonsoft.Json.Linq.JObject lastTicker = null;
       try
       {
         string baseUrl = "https://api.binance.com/api/v1/ticker/24hr";
@@ -78,7 +78,6 @@ namespace Core.MarketAnalyzer
 
                   // Set last values in case any error occurs
                   lastMarket = marketName;
-                  lastTicker = currencyTicker;
 
                   Market market = new Market();
                   market.Position = markets.Count + 1;
@@ -122,33 +121,15 @@ namespace Core.MarketAnalyzer
           }
         }
       }
-      catch (WebException ex)
+      catch (OperationCanceledException ex)
       {
-        if (ex.Response != null)
-        {
-          using (HttpWebResponse errorResponse = (HttpWebResponse)ex.Response)
-          {
-            using (StreamReader reader = new StreamReader(errorResponse.GetResponseStream()))
-            {
-              Dictionary<string, string> errorData = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.ReadToEnd());
-              if (errorData != null)
-              {
-                string errorMessage = "Unable to get data from Binance with URL '" + errorResponse.ResponseUri + "'!";
-                if (errorData.ContainsKey("code"))
-                {
-                  errorMessage += " - Code: " + errorData["code"];
-                }
-
-                if (errorData.ContainsKey("msg"))
-                {
-                  errorMessage += " - Message: " + errorData["msg"];
-                }
-
-                log.DoLogError(errorMessage);
-              }
-            }
-          }
-        }
+        log.DoLogError("Binance - Market data request timed out or was cancelled: " + ex.Message);
+        result = null;
+      }
+      catch (HttpRequestException ex)
+      {
+        string status = ex.StatusCode.HasValue ? " HTTP " + (int)ex.StatusCode.Value + " (" + ex.StatusCode.Value + ")" : "";
+        log.DoLogError("Binance - HTTP request failed while getting market data." + status + " " + ex.Message);
         result = null;
       }
       catch (Exception ex)
@@ -220,6 +201,11 @@ namespace Core.MarketAnalyzer
 
     public static List<MarketTick> GetMarketTicks(string marketName, int ticksNeeded, PTMagicConfiguration systemConfiguration, LogHelper log)
     {
+      return GetMarketTicksAsync(marketName, ticksNeeded, systemConfiguration, log).GetAwaiter().GetResult();
+    }
+
+    public static async Task<List<MarketTick>> GetMarketTicksAsync(string marketName, int ticksNeeded, PTMagicConfiguration systemConfiguration, LogHelper log, CancellationToken cancellationToken = default)
+    {
       List<MarketTick> result = new List<MarketTick>();
 
       try
@@ -240,7 +226,7 @@ namespace Core.MarketAnalyzer
           baseUrl = "https://api.binance.com/api/v1/klines?interval=1m&symbol=" + marketName + "&endTime=" + endTime.ToString() + "&limit=" + ticksLimit.ToString();
 
           log.DoLogDebug("Binance - Getting " + ticksLimit.ToString() + " ticks for '" + marketName + "'...");
-          Newtonsoft.Json.Linq.JArray jsonArray = GetSimpleJsonArrayFromURL(baseUrl, log);
+          Newtonsoft.Json.Linq.JArray jsonArray = await GetSimpleJsonArrayFromURLAsync(baseUrl, log, cancellationToken).ConfigureAwait(false);
           if (jsonArray.Count > 0)
           {
             log.DoLogDebug("Binance - " + jsonArray.Count.ToString() + " ticks received.");
@@ -270,33 +256,19 @@ namespace Core.MarketAnalyzer
           }
         }
       }
-      catch (WebException ex)
+      catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
       {
-        if (ex.Response != null)
-        {
-          using (HttpWebResponse errorResponse = (HttpWebResponse)ex.Response)
-          {
-            using (StreamReader reader = new StreamReader(errorResponse.GetResponseStream()))
-            {
-              Dictionary<string, string> errorData = JsonConvert.DeserializeObject<Dictionary<string, string>>(reader.ReadToEnd());
-              if (errorData != null)
-              {
-                string errorMessage = "Unable to get data from Binance with URL '" + errorResponse.ResponseUri + "'!";
-                if (errorData.ContainsKey("code"))
-                {
-                  errorMessage += " - Code: " + errorData["code"];
-                }
-
-                if (errorData.ContainsKey("msg"))
-                {
-                  errorMessage += " - Message: " + errorData["msg"];
-                }
-
-                log.DoLogError(errorMessage);
-              }
-            }
-          }
-        }
+        throw;
+      }
+      catch (OperationCanceledException ex)
+      {
+        log.DoLogError("Binance - Tick request timed out for '" + marketName + "': " + ex.Message);
+        result = null;
+      }
+      catch (HttpRequestException ex)
+      {
+        string status = ex.StatusCode.HasValue ? " HTTP " + (int)ex.StatusCode.Value + " (" + ex.StatusCode.Value + ")" : "";
+        log.DoLogError("Binance - HTTP request failed while getting ticks for '" + marketName + "'." + status + " " + ex.Message);
         result = null;
       }
       catch (Exception ex)
@@ -308,6 +280,11 @@ namespace Core.MarketAnalyzer
     }
 
     public static void CheckForMarketDataRecreation(string mainMarket, Dictionary<string, Market> markets, PTMagicConfiguration systemConfiguration, LogHelper log)
+    {
+      CheckForMarketDataRecreationAsync(mainMarket, markets, systemConfiguration, log).GetAwaiter().GetResult();
+    }
+
+    public static async Task CheckForMarketDataRecreationAsync(string mainMarket, Dictionary<string, Market> markets, PTMagicConfiguration systemConfiguration, LogHelper log)
     {
       string binanceDataDirectoryPath = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathExchange + Path.DirectorySeparatorChar;
 
@@ -353,17 +330,17 @@ namespace Core.MarketAnalyzer
         List<MarketTick> mainMarketTicks = new List<MarketTick>();
         if (!mainMarket.Equals("USDT", StringComparison.InvariantCultureIgnoreCase))
         {
-          mainMarketTicks = Binance.GetMarketTicks(mainMarket + "USDT", totalTicks, systemConfiguration, log);
+          mainMarketTicks = await Binance.GetMarketTicksAsync(mainMarket + "USDT", totalTicks, systemConfiguration, log).ConfigureAwait(false);
         }
 
         // Get Ticks for all markets
         log.DoLogDebug("Binance - Getting ticks for '" + markets.Count + "' markets");
         ConcurrentDictionary<string, List<MarketTick>> marketTicks = new ConcurrentDictionary<string, List<MarketTick>>();
 
-        int ParallelThrottle = 2;
+        int parallelThrottle = 2;
         if (systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours > 6)
         {
-          ParallelThrottle = 1;
+          parallelThrottle = 1;
           log.DoLogInfo("----------------------------------------------------------------------------");
           log.DoLogInfo("StoreDataMaxHours is greater than 6.  Historical data requests will be");
           log.DoLogInfo("throttled to avoid exceeding exchange request limits.  This initial ");
@@ -371,21 +348,24 @@ namespace Core.MarketAnalyzer
           log.DoLogInfo("----------------------------------------------------------------------------");
         }
 
-        Parallel.ForEach(markets.Keys,
-                          new ParallelOptions { MaxDegreeOfParallelism = ParallelThrottle },
-                          (key) =>
+        int marketsCompleted = 0;
+        await Parallel.ForEachAsync(markets.Keys,
+                                    new ParallelOptions { MaxDegreeOfParallelism = parallelThrottle },
+                                    async (key, cancellationToken) =>
         {
-          if (!marketTicks.TryAdd(key, GetMarketTicks(key, totalTicks, systemConfiguration, log)))
+          List<MarketTick> ticks = await GetMarketTicksAsync(key, totalTicks, systemConfiguration, log, cancellationToken).ConfigureAwait(false);
+          if (!marketTicks.TryAdd(key, ticks))
           {
             // Failed to add ticks to dictionary
             throw new Exception("Failed to add ticks for " + key + " to the memory dictionary, results may be incorrectly calculated!");
           }
 
-          if ((marketTicks.Count % 10) == 0)
+          int completed = Interlocked.Increment(ref marketsCompleted);
+          if ((completed % 10) == 0)
           {
-            log.DoLogInfo("Binance - No worries, I am still alive... " + marketTicks.Count + "/" + markets.Count + " markets done...");
+            log.DoLogInfo("Binance - No worries, I am still alive... " + completed + "/" + markets.Count + " markets done...");
           }
-        });
+        }).ConfigureAwait(false);
 
         log.DoLogInfo("Binance - Ticks completed.");
 
@@ -400,7 +380,7 @@ namespace Core.MarketAnalyzer
             completedTicks++;
 
             double mainCurrencyPrice = 1;
-            if (mainMarketTicks.Count > 0)
+            if (mainMarketTicks != null && mainMarketTicks.Count > 0)
             {
               List<MarketTick> mainCurrencyTickRange = mainMarketTicks.FindAll(t => t.Time <= tickTime);
               if (mainCurrencyTickRange.Count > 0)
