@@ -677,7 +677,7 @@ namespace Core.Main
       {
         result = false;
         this.Log.DoLogCritical("Error loading configuration!", ex);
-        throw (ex);
+        throw;
       }
 
       return result;
@@ -1439,7 +1439,7 @@ namespace Core.Main
                                 break;
                             }
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
                             this.Log.DoLogError($"ERROR: Trigger Connection for global setting {globalSetting.SettingName} is invalid or missing. Program halted.");
                             Environment.Exit(1); // Stop the program
@@ -2061,7 +2061,7 @@ namespace Core.Main
                     // Evaluate the expression using ParseLambda
                     settingTriggered = (bool)DynamicExpressionParser.ParseLambda(ParsingConfig.Default, new ParameterExpression[0], typeof(bool), triggerConnection).Compile().DynamicInvoke();
                   }
-                  catch (Exception ex)
+                  catch (Exception)
                   {
                       this.Log.DoLogError($"ERROR: Trigger Connection for global setting {marketSetting.SettingName} is invalid or missing. Program halted.");
                       Environment.Exit(1); // Stop the program
