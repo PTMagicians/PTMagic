@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
-using System.Security.Permissions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Core.Main;
 
 namespace Monitor
@@ -10,7 +10,6 @@ namespace Monitor
   public class Program
   {
     // Main entry point
-    //[SecurityPermission(SecurityAction.Demand, Flags = SecurityPermissionFlag.ControlAppDomain)]
     public static void Main(string[] args)
     {
       // Register a global exception handler
@@ -84,15 +83,7 @@ namespace Monitor
             {
               Logger.WriteLine("INFO: LastRuntimeSummary.json found at " + lastRuntimeSummaryJson);
 
-              PTMagicConfiguration ptMagicConfiguration = null;
-              try
-              {
-                ptMagicConfiguration = new PTMagicConfiguration(ptMagicBasePath);
-              }
-              catch (Exception ex)
-              {
-                throw ex;
-              }
+              PTMagicConfiguration ptMagicConfiguration = new PTMagicConfiguration(ptMagicBasePath);
 
               string wwwrootPath = monitorBasePath + Path.DirectorySeparatorChar + "wwwroot";
               if (!Directory.Exists(wwwrootPath))
@@ -131,13 +122,16 @@ namespace Monitor
       }
     }
 
-    public static IWebHost BuildWebHost(string[] args, string contentRoot, string webroot, int port) =>
-       new WebHostBuilder()
-        .UseUrls("http://0.0.0.0:" + port.ToString())
-        .UseStartup<Startup>()
-        .UseKestrel()
-        .UseContentRoot(contentRoot)
-        .UseWebRoot(webroot)
+    public static IHost BuildWebHost(string[] args, string contentRoot, string webroot, int port) =>
+      Host.CreateDefaultBuilder(args)
+        .ConfigureWebHostDefaults(webBuilder =>
+        {
+          webBuilder
+            .UseUrls("http://0.0.0.0:" + port.ToString())
+            .UseStartup<Startup>()
+            .UseContentRoot(contentRoot)
+            .UseWebRoot(webroot);
+        })
         .Build();
 
     // Global unhandled exception handler
