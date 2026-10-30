@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Core.Main;
@@ -16,97 +17,325 @@ namespace Core.MarketAnalyzer
 {
   public class BaseAnalyzer
   {
-    public static string GetJsonStringFromURL(string url, LogHelper log, (string header, string value)[] headers = null)
+    private const int MaxHttpRetries = 3;
+    private static readonly HttpClient HttpClient = CreateHttpClient();
+
+    private static HttpClient CreateHttpClient()
     {
-      HttpClient webClient = null;
-      if (webClient == null)
+      SocketsHttpHandler handler = new SocketsHttpHandler
       {
-        webClient = new HttpClient();
+        PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+        PooledConnectionIdleTimeout = TimeSpan.FromMinutes(2),
+        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli
+      };
 
-        // Setup the one time conneciton characteristics
-        webClient.Timeout = new TimeSpan(0, 0, 30); // 30 second call timeout
-        webClient.DefaultRequestHeaders.ConnectionClose = false; // Keep alives        
-      }
-      else
+      HttpClient client = new HttpClient(handler)
       {
-        webClient.DefaultRequestHeaders.Clear();
-      }
+        Timeout = TimeSpan.FromSeconds(30)
+      };
 
-      // Accept JSON and Text
-      webClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-      webClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/plain"));
+      client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+      client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/plain"));
 
-      // Add any custom headers     
+      return client;
+    }
+
+    private static HttpRequestMessage CreateRequest(string url, (string header, string value)[] headers = null)
+    {
+      HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, url);
+
       if (headers != null)
       {
         foreach (var header in headers)
         {
-          webClient.DefaultRequestHeaders.Add(header.header, header.value);
+          if (!request.Headers.TryAddWithoutValidation(header.header, header.value))
+          {
+            request.Dispose();
+            throw new InvalidOperationException($"Unable to add HTTP header '{header.header}' whilst calling {url}.");
+          }
         }
       }
 
-      try
+      return request;
+    }
+
+    private static bool IsRetryableStatusCode(HttpStatusCode statusCode)
+    {
+      int status = (int)statusCode;
+      return status == 408 || status == 429 || status == 500 || status == 502 || status == 503 || status == 504;
+    }
+
+    private static bool IsBinanceIpBan(HttpStatusCode statusCode)
+    {
+      return (int)statusCode == 418;
+    }
+
+    private static TimeSpan GetRetryDelay(HttpResponseMessage response, int retryNumber)
+    {
+      if (response?.Headers?.RetryAfter != null)
       {
-        // log.DoLogInfo("Calling URL: " + url);
-        var response = webClient.GetAsync(url).Result;
-        string repsonseString = response.Content.ReadAsStringAsync().Result;
-        if (response.IsSuccessStatusCode)
+        if (response.Headers.RetryAfter.Delta.HasValue)
         {
-          return repsonseString;
+          return response.Headers.RetryAfter.Delta.Value > TimeSpan.Zero ? response.Headers.RetryAfter.Delta.Value : TimeSpan.Zero;
         }
-        else
+
+        if (response.Headers.RetryAfter.Date.HasValue)
         {
-          // Error
-          var message = string.Format("Error whilst calling {0} - {1}", url, repsonseString);
-          log.DoLogError(message);
-          throw new Exception(message);
+          TimeSpan delay = response.Headers.RetryAfter.Date.Value - DateTimeOffset.UtcNow;
+          return delay > TimeSpan.Zero ? delay : TimeSpan.Zero;
         }
       }
-      catch (TaskCanceledException tcEx)
+
+      return TimeSpan.FromSeconds(Math.Min(8, Math.Pow(2, retryNumber - 1)));
+    }
+
+    private static string GetResponseContext(HttpResponseMessage response)
+    {
+      List<string> context = new List<string>();
+
+      if (response?.Headers?.RetryAfter != null)
       {
-        // Conneciton timeout
-        log.DoLogError(string.Format("Timeout whilst calling {0} - {1}", url, tcEx.Message));
-        throw;
+        if (response.Headers.RetryAfter.Delta.HasValue)
+        {
+          context.Add("Retry-After=" + response.Headers.RetryAfter.Delta.Value.TotalSeconds.ToString("0.###") + "s");
+        }
+        else if (response.Headers.RetryAfter.Date.HasValue)
+        {
+          context.Add("Retry-After=" + response.Headers.RetryAfter.Date.Value.ToString("O"));
+        }
       }
-      catch (Exception ex)
+
+      if (response != null)
       {
-        log.DoLogError(string.Format("Error whilst calling {0} \nError: {1}", url, ex.Message));
-        throw;
+        foreach (var header in response.Headers.Where(h => h.Key.StartsWith("X-MBX-", StringComparison.OrdinalIgnoreCase) || h.Key.StartsWith("X-SAPI-", StringComparison.OrdinalIgnoreCase)))
+        {
+          context.Add(header.Key + "=" + String.Join(",", header.Value));
+        }
+      }
+
+      return context.Count > 0 ? String.Join("; ", context) : "";
+    }
+
+    private static void ValidateResponse(HttpResponseMessage response, string url, string responseString)
+    {
+      if (response.IsSuccessStatusCode)
+      {
+        return;
+      }
+
+      string context = GetResponseContext(response);
+      string message = $"Error whilst calling {url} - HTTP {(int)response.StatusCode} {response.ReasonPhrase}";
+      if (!String.IsNullOrEmpty(context))
+      {
+        message += " - " + context;
+      }
+      if (!String.IsNullOrEmpty(responseString))
+      {
+        message += " - " + responseString;
+      }
+
+      throw new HttpRequestException(message, null, response.StatusCode);
+    }
+
+    private static void LogRetry(LogHelper log, string url, int retryNumber, TimeSpan delay, HttpStatusCode? statusCode = null, string reason = null)
+    {
+      string status = statusCode.HasValue ? $"HTTP {(int)statusCode.Value} {statusCode.Value}" : reason;
+      log.DoLogWarn($"HTTP GET retry {retryNumber}/{MaxHttpRetries} for {url} after {delay.TotalSeconds:0.###} seconds" + (!String.IsNullOrEmpty(status) ? $" ({status})." : "."));
+    }
+
+    public static string GetJsonStringFromURL(string url, LogHelper log, (string header, string value)[] headers = null)
+    {
+      int attempt = 0;
+      while (true)
+      {
+        try
+        {
+          using HttpRequestMessage request = CreateRequest(url, headers);
+          BinanceRateLimiter.WaitIfNeeded(request.RequestUri, log);
+          using HttpResponseMessage response = HttpClient.Send(request, HttpCompletionOption.ResponseHeadersRead);
+          BinanceRateLimiter.ObserveResponse(request.RequestUri, response);
+          using Stream responseStream = response.Content.ReadAsStream();
+          using StreamReader reader = new StreamReader(responseStream);
+
+          string responseString = reader.ReadToEnd();
+          if (response.IsSuccessStatusCode)
+          {
+            return responseString;
+          }
+
+          if (IsBinanceIpBan(response.StatusCode))
+          {
+            ValidateResponse(response, url, responseString);
+          }
+
+          if (IsRetryableStatusCode(response.StatusCode) && attempt < MaxHttpRetries)
+          {
+            attempt++;
+            TimeSpan delay = GetRetryDelay(response, attempt);
+            LogRetry(log, url, attempt, delay, response.StatusCode);
+            Thread.Sleep(delay);
+            continue;
+          }
+
+          ValidateResponse(response, url, responseString);
+        }
+        catch (OperationCanceledException ex)
+        {
+          if (attempt < MaxHttpRetries)
+          {
+            attempt++;
+            TimeSpan delay = GetRetryDelay(null, attempt);
+            LogRetry(log, url, attempt, delay, null, "timeout");
+            Thread.Sleep(delay);
+            continue;
+          }
+
+          log.DoLogError($"Timeout whilst calling {url} - {ex.Message}");
+          throw;
+        }
+        catch (HttpRequestException ex)
+        {
+          if (!ex.StatusCode.HasValue && attempt < MaxHttpRetries)
+          {
+            attempt++;
+            TimeSpan delay = GetRetryDelay(null, attempt);
+            LogRetry(log, url, attempt, delay, null, "network error");
+            Thread.Sleep(delay);
+            continue;
+          }
+
+          log.DoLogError($"HTTP error whilst calling {url}\nError: {ex.Message}");
+          throw;
+        }
+        catch (Exception ex)
+        {
+          log.DoLogError($"Error whilst calling {url}\nError: {ex.Message}");
+          throw;
+        }
+      }
+    }
+
+    public static async Task<string> GetJsonStringFromURLAsync(string url, LogHelper log, (string header, string value)[] headers = null, CancellationToken cancellationToken = default)
+    {
+      int attempt = 0;
+      while (true)
+      {
+        try
+        {
+          using HttpRequestMessage request = CreateRequest(url, headers);
+          await BinanceRateLimiter.WaitIfNeededAsync(request.RequestUri, log, cancellationToken).ConfigureAwait(false);
+          using HttpResponseMessage response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+          BinanceRateLimiter.ObserveResponse(request.RequestUri, response);
+          string responseString = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+
+          if (response.IsSuccessStatusCode)
+          {
+            return responseString;
+          }
+
+          if (IsBinanceIpBan(response.StatusCode))
+          {
+            ValidateResponse(response, url, responseString);
+          }
+
+          if (IsRetryableStatusCode(response.StatusCode) && attempt < MaxHttpRetries)
+          {
+            attempt++;
+            TimeSpan delay = GetRetryDelay(response, attempt);
+            LogRetry(log, url, attempt, delay, response.StatusCode);
+            await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+            continue;
+          }
+
+          ValidateResponse(response, url, responseString);
+        }
+        catch (OperationCanceledException ex) when (cancellationToken.IsCancellationRequested)
+        {
+          log.DoLogError($"Request cancelled whilst calling {url} - {ex.Message}");
+          throw;
+        }
+        catch (OperationCanceledException ex)
+        {
+          if (attempt < MaxHttpRetries)
+          {
+            attempt++;
+            TimeSpan delay = GetRetryDelay(null, attempt);
+            LogRetry(log, url, attempt, delay, null, "timeout");
+            await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+            continue;
+          }
+
+          log.DoLogError($"Timeout whilst calling {url} - {ex.Message}");
+          throw;
+        }
+        catch (HttpRequestException ex)
+        {
+          if (!ex.StatusCode.HasValue && attempt < MaxHttpRetries)
+          {
+            attempt++;
+            TimeSpan delay = GetRetryDelay(null, attempt);
+            LogRetry(log, url, attempt, delay, null, "network error");
+            await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+            continue;
+          }
+
+          log.DoLogError($"HTTP error whilst calling {url}\nError: {ex.Message}");
+          throw;
+        }
+        catch (Exception ex)
+        {
+          log.DoLogError($"Error whilst calling {url}\nError: {ex.Message}");
+          throw;
+        }
       }
     }
 
     public static Dictionary<string, dynamic> GetJsonFromURL(string url, LogHelper log, (string header, string value)[] headers = null)
     {
-      Dictionary<string, dynamic> jsonObject = null;
       string jsonString = GetJsonStringFromURL(url, log, headers);
+      return JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(jsonString);
+    }
 
-      // Convert the response to JSON
-      jsonObject = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(jsonString);
-      return jsonObject;
+    public static async Task<Dictionary<string, dynamic>> GetJsonFromURLAsync(string url, LogHelper log, (string header, string value)[] headers = null, CancellationToken cancellationToken = default)
+    {
+      string jsonString = await GetJsonStringFromURLAsync(url, log, headers, cancellationToken).ConfigureAwait(false);
+      return JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(jsonString);
     }
 
     public static Newtonsoft.Json.Linq.JObject GetSimpleJsonObjectFromURL(string url, LogHelper log, (string header, string value)[] headers = null)
     {
-      Newtonsoft.Json.Linq.JObject jsonObject = null;
       string jsonString = GetJsonStringFromURL(url, log, headers);
-      jsonObject = JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JObject>(jsonString);
-      return jsonObject;
+      return JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JObject>(jsonString);
+    }
+
+    public static async Task<Newtonsoft.Json.Linq.JObject> GetSimpleJsonObjectFromURLAsync(string url, LogHelper log, (string header, string value)[] headers = null, CancellationToken cancellationToken = default)
+    {
+      string jsonString = await GetJsonStringFromURLAsync(url, log, headers, cancellationToken).ConfigureAwait(false);
+      return JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JObject>(jsonString);
     }
 
     public static List<dynamic> GetSimpleJsonListFromURL(string url, LogHelper log)
     {
-      List<dynamic> jsonObject = null;
       string jsonString = GetJsonStringFromURL(url, log, null);
-      jsonObject = JsonConvert.DeserializeObject<List<dynamic>>(jsonString);
-      return jsonObject;
+      return JsonConvert.DeserializeObject<List<dynamic>>(jsonString);
+    }
+
+    public static async Task<List<dynamic>> GetSimpleJsonListFromURLAsync(string url, LogHelper log, CancellationToken cancellationToken = default)
+    {
+      string jsonString = await GetJsonStringFromURLAsync(url, log, null, cancellationToken).ConfigureAwait(false);
+      return JsonConvert.DeserializeObject<List<dynamic>>(jsonString);
     }
 
     public static Newtonsoft.Json.Linq.JArray GetSimpleJsonArrayFromURL(string url, LogHelper log)
     {
-      Newtonsoft.Json.Linq.JArray jsonObject = null;
       string jsonString = GetJsonStringFromURL(url, log, null);
-      jsonObject = JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JArray>(jsonString);
-      return jsonObject;
+      return JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JArray>(jsonString);
+    }
+
+    public static async Task<Newtonsoft.Json.Linq.JArray> GetSimpleJsonArrayFromURLAsync(string url, LogHelper log, CancellationToken cancellationToken = default)
+    {
+      string jsonString = await GetJsonStringFromURLAsync(url, log, null, cancellationToken).ConfigureAwait(false);
+      return JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JArray>(jsonString);
     }
 
     public static string GetLatestGitHubRelease(LogHelper log, string defaultVersion)
@@ -123,9 +352,26 @@ namespace Core.MarketAnalyzer
           result = jsonObject.GetValue("tag_name").ToString();
         }
       }
-      catch (WebException ex)
+      catch (Exception ex)
       {
         log.DoLogDebug("GitHub version check error: " + ex.Message);
+      }
+      return result;
+    }
+
+    public static async Task<string> GetLatestGitHubReleaseAsync(LogHelper log, string defaultVersion, CancellationToken cancellationToken = default)
+    {
+      string result = defaultVersion;
+
+      try
+      {
+        string baseUrl = "https://api.github.com/repos/PTMagicians/PTMagic/releases/latest";
+
+        Newtonsoft.Json.Linq.JObject jsonObject = await GetSimpleJsonObjectFromURLAsync(baseUrl, log, new (string header, string value)[] { ("User-Agent", "PTMagic.Import") }, cancellationToken).ConfigureAwait(false);
+        if (jsonObject != null)
+        {
+          result = jsonObject.GetValue("tag_name").ToString();
+        }
       }
       catch (Exception ex)
       {
@@ -137,16 +383,16 @@ namespace Core.MarketAnalyzer
     public static double GetMainFiatCurrencyRate(string currency, string FreeCurrencyAPI, LogHelper log)
     {
       double result = 1;
-      string baseUrl = "http://free.currencyconverterapi.com/api/v5/convert?q=USD_" + currency + "&compact=y&apiKey=" + FreeCurrencyAPI;
+      string baseUrl = "https://free.currencyconverterapi.com/api/v5/convert?q=USD_" + currency + "&compact=y&apiKey=" + FreeCurrencyAPI;
 
-      log.DoLogDebug("http://free.currencyconverterapi.com - Getting latest exchange rates...");
+      log.DoLogDebug("https://free.currencyconverterapi.com - Getting latest exchange rates...");
       Newtonsoft.Json.Linq.JObject jsonObject = GetSimpleJsonObjectFromURL(baseUrl, log, null);
       if (jsonObject != null)
       {
-        log.DoLogDebug("http://free.currencyconverterapi.com - Received latest exchange rates.");
+        log.DoLogDebug("https://free.currencyconverterapi.com - Received latest exchange rates.");
 
         result = (double)jsonObject["USD_" + currency]["val"];
-        log.DoLogInfo("http://free.currencyconverterapi.com - Latest exchange rate for USD to " + currency + " is " + result);
+        log.DoLogInfo("https://free.currencyconverterapi.com - Latest exchange rate for USD to " + currency + " is " + result);
       }
       return result;
     }

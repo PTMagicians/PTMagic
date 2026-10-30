@@ -3,6 +3,7 @@ using System.Data;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Threading;
+using System.Threading.Tasks;
 using System.IO;
 using System.Linq;
 using System.Linq.Dynamic.Core;
@@ -61,7 +62,7 @@ namespace Core.Main
     private Dictionary<string, List<MarketTrendChange>> _globalMarketTrendChanges = new Dictionary<string, List<MarketTrendChange>>();
     private Dictionary<string, int> _singleMarketSettingsCount = new Dictionary<string, int>();
     Dictionary<string, List<SingleMarketSetting>> _triggeredSingleMarketSettings = new Dictionary<string, List<SingleMarketSetting>>();
-    private static volatile object _lockObj = new object();
+    private readonly SemaphoreSlim _raidSemaphore = new SemaphoreSlim(1, 1);
     private Mutex mutex = new Mutex(false, "analyzerStateMutex");
 
     public LogHelper Log
@@ -677,7 +678,7 @@ namespace Core.Main
       {
         result = false;
         this.Log.DoLogCritical("Error loading configuration!", ex);
-        throw (ex);
+        throw;
       }
 
       return result;
@@ -851,13 +852,17 @@ namespace Core.Main
 
 
 
-    public void PTMagicIntervalTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+    public async void PTMagicIntervalTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
     {
       // Check if the bot is idle
       if (this.State == Constants.PTMagicBotState_Idle)
       {
-        // Only let one thread change the settings at once
-        lock (_lockObj)
+        if (!await _raidSemaphore.WaitAsync(0).ConfigureAwait(false))
+        {
+          return;
+        }
+
+        try
         {
           try
           {
@@ -886,7 +891,7 @@ namespace Core.Main
               this.LastRuntimeSummary.Version = this.CurrentVersion.Major.ToString() + "." + this.CurrentVersion.Minor.ToString() + "." + this.CurrentVersion.Build.ToString();
 
               // Check for latest GitHub version
-              this.CheckLatestGitHubVersion(this.LastRuntimeSummary.Version);
+              await this.CheckLatestGitHubVersionAsync(this.LastRuntimeSummary.Version).ConfigureAwait(false);
 
               // Load current PT files
               this.LoadCurrentProfitTrailerProperties();
@@ -898,7 +903,7 @@ namespace Core.Main
               this.MarketInfos = BaseAnalyzer.GetMarketInfosFromFile(this.PTMagicConfiguration, this.Log);
 
               // Build exchange market data
-              this.BuildMarketData();
+              await this.BuildMarketDataAsync().ConfigureAwait(false);
 
               // Get markets from PT properties
               this.BuildMarketList();
@@ -1001,6 +1006,10 @@ namespace Core.Main
             this.State = Constants.PTMagicBotState_Idle;
             this.WriteStateToFile();
           }
+        }
+        finally
+        {
+          _raidSemaphore.Release();
         }
       }
       else
@@ -1130,12 +1139,12 @@ namespace Core.Main
       }
     }
 
-    private void CheckLatestGitHubVersion(string currentVersion)
+    private async Task CheckLatestGitHubVersionAsync(string currentVersion, CancellationToken cancellationToken = default)
     {
       // Get latest version number
       if (this.LastVersionCheck < DateTime.UtcNow.AddMinutes(-30))
       {
-        this.LatestVersion = BaseAnalyzer.GetLatestGitHubRelease(this.Log, currentVersion);
+        this.LatestVersion = await BaseAnalyzer.GetLatestGitHubReleaseAsync(this.Log, currentVersion, cancellationToken).ConfigureAwait(false);
         this.LastVersionCheck = DateTime.UtcNow;
         if (!SystemHelper.IsRecentVersion(currentVersion, this.LatestVersion))
         {
@@ -1213,13 +1222,13 @@ namespace Core.Main
       }
     }
 
-    private void BuildMarketData()
+    private async Task BuildMarketDataAsync(CancellationToken cancellationToken = default)
     {
 
       if (!String.IsNullOrEmpty(this.PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey))
       {
         // Get most recent market data from CMC
-        string cmcMarketDataResult = CoinMarketCap.GetMarketData(this.PTMagicConfiguration, this.Log);
+        string cmcMarketDataResult = await CoinMarketCap.GetMarketDataAsync(this.PTMagicConfiguration, this.Log, cancellationToken).ConfigureAwait(false);
       }
       else
       {
@@ -1235,17 +1244,17 @@ namespace Core.Main
       else if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Binance", StringComparison.InvariantCultureIgnoreCase))
       {
         // Get most recent market data from Binance
-        this.ExchangeMarketList = Binance.GetMarketData(this.LastRuntimeSummary.MainMarket, this.MarketInfos, this.PTMagicConfiguration, this.Log);
+        this.ExchangeMarketList = await Binance.GetMarketDataAsync(this.LastRuntimeSummary.MainMarket, this.MarketInfos, this.PTMagicConfiguration, this.Log, cancellationToken).ConfigureAwait(false);
       }
       else if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceUS", StringComparison.InvariantCultureIgnoreCase))
       {
         // Get most recent market data from BinanceUS
-        this.ExchangeMarketList = BinanceUS.GetMarketData(this.LastRuntimeSummary.MainMarket, this.MarketInfos, this.PTMagicConfiguration, this.Log);
+        this.ExchangeMarketList = await BinanceUS.GetMarketDataAsync(this.LastRuntimeSummary.MainMarket, this.MarketInfos, this.PTMagicConfiguration, this.Log, cancellationToken).ConfigureAwait(false);
       }
       else if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceFutures", StringComparison.InvariantCultureIgnoreCase))
       {
         // Get most recent market data from BinanceFutures
-        this.ExchangeMarketList = BinanceFutures.GetMarketData(this.LastRuntimeSummary.MainMarket, this.MarketInfos, this.PTMagicConfiguration, this.Log);
+        this.ExchangeMarketList = await BinanceFutures.GetMarketDataAsync(this.LastRuntimeSummary.MainMarket, this.MarketInfos, this.PTMagicConfiguration, this.Log, cancellationToken).ConfigureAwait(false);
       }
       else if (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("Poloniex", StringComparison.InvariantCultureIgnoreCase))
       {
@@ -1439,7 +1448,7 @@ namespace Core.Main
                                 break;
                             }
                         }
-                        catch (Exception ex)
+                        catch (Exception)
                         {
                             this.Log.DoLogError($"ERROR: Trigger Connection for global setting {globalSetting.SettingName} is invalid or missing. Program halted.");
                             Environment.Exit(1); // Stop the program
@@ -2061,7 +2070,7 @@ namespace Core.Main
                     // Evaluate the expression using ParseLambda
                     settingTriggered = (bool)DynamicExpressionParser.ParseLambda(ParsingConfig.Default, new ParameterExpression[0], typeof(bool), triggerConnection).Compile().DynamicInvoke();
                   }
-                  catch (Exception ex)
+                  catch (Exception)
                   {
                       this.Log.DoLogError($"ERROR: Trigger Connection for global setting {marketSetting.SettingName} is invalid or missing. Program halted.");
                       Environment.Exit(1); // Stop the program
