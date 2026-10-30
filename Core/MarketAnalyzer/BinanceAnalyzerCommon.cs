@@ -23,7 +23,7 @@ namespace Core.MarketAnalyzer
     private const string QuoteVolumeField = "quoteVolume";
     private const string SymbolField = "symbol";
 
-    internal static async Task<List<string>> GetMarketDataAsync(string exchangeName, string apiBase, string mainMarket, ConcurrentDictionary<string, MarketInfo> marketInfos, PTMagicConfiguration systemConfiguration, LogHelper log, bool supportsUsdMainMarket, bool logIncorrectBaseCurrency, CancellationToken cancellationToken = default)
+    internal static async Task<List<string>> GetMarketDataAsync(string exchangeName, string apiBase, string mainMarket, ConcurrentDictionary<string, MarketInfo> marketInfos, PTMagicConfiguration systemConfiguration, LogHelper log, bool supportsUsdMainMarket, bool logIncorrectBaseCurrency, bool caseSensitiveBaseMatch, bool parallelHistoricalBuild, CancellationToken cancellationToken = default)
     {
       List<string> result = new List<string>();
       string lastMarket = "";
@@ -50,10 +50,10 @@ namespace Core.MarketAnalyzer
           return null;
         }
 
-        Dictionary<string, Market> markets = BuildMarkets(exchangeName, mainMarket, mainCurrencyPrice, jsonArray, result, log, logIncorrectBaseCurrency, ref lastMarket);
+        Dictionary<string, Market> markets = BuildMarkets(exchangeName, mainMarket, mainCurrencyPrice, jsonArray, result, log, logIncorrectBaseCurrency, caseSensitiveBaseMatch, ref lastMarket);
         await CheckFirstSeenDatesAsync(exchangeName, apiBase, markets, marketInfos, systemConfiguration, log, cancellationToken).ConfigureAwait(false);
         BaseAnalyzer.SaveMarketInfosToFile(marketInfos, systemConfiguration, log);
-        await CheckForMarketDataRecreationAsync(exchangeName, apiBase, mainMarket, markets, systemConfiguration, log, supportsUsdMainMarket, cancellationToken).ConfigureAwait(false);
+        await CheckForMarketDataRecreationAsync(exchangeName, apiBase, mainMarket, markets, systemConfiguration, log, supportsUsdMainMarket, parallelHistoricalBuild, cancellationToken).ConfigureAwait(false);
         SaveCurrentMarketData(exchangeName, mainMarket, markets, systemConfiguration, log);
       }
       catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -130,7 +130,7 @@ namespace Core.MarketAnalyzer
     internal static async Task<List<MarketTick>> GetMarketTicksAsync(string exchangeName, string apiBase, string marketName, int ticksNeeded, LogHelper log, bool supportsUsdMainMarket, CancellationToken cancellationToken = default)
     {
       List<MarketTick> result = new List<MarketTick>();
-      if (supportsUsdMainMarket && marketName.Equals("USDUSDT", StringComparison.InvariantCultureIgnoreCase))
+      if (supportsUsdMainMarket && marketName == "USDUSDT")
       {
         return result;
       }
@@ -217,7 +217,7 @@ namespace Core.MarketAnalyzer
       }).ConfigureAwait(false);
     }
 
-    internal static async Task CheckForMarketDataRecreationAsync(string exchangeName, string apiBase, string mainMarket, Dictionary<string, Market> markets, PTMagicConfiguration systemConfiguration, LogHelper log, bool supportsUsdMainMarket, CancellationToken cancellationToken = default)
+    internal static async Task CheckForMarketDataRecreationAsync(string exchangeName, string apiBase, string mainMarket, Dictionary<string, Market> markets, PTMagicConfiguration systemConfiguration, LogHelper log, bool supportsUsdMainMarket, bool parallelHistoricalBuild, CancellationToken cancellationToken = default)
     {
       string dataDirectoryPath = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathExchange + Path.DirectorySeparatorChar;
       Directory.CreateDirectory(dataDirectoryPath);
@@ -270,17 +270,17 @@ namespace Core.MarketAnalyzer
 
       log.DoLogInfo(exchangeName + " - Ticks completed.");
       log.DoLogInfo(exchangeName + " - Creating initial market data ticks. This may take another while...");
-      CreateHistoricalMarketFiles(exchangeName, dataDirectoryPath, mainMarketTicks, marketTicks, markets, startDateTime, endDateTime, totalTicks, log, cancellationToken);
+      CreateHistoricalMarketFiles(exchangeName, dataDirectoryPath, mainMarketTicks, marketTicks, markets, startDateTime, endDateTime, totalTicks, log, parallelHistoricalBuild, cancellationToken);
       log.DoLogInfo(exchangeName + " - Initial market data created. Ready to go!");
     }
 
-    private static Dictionary<string, Market> BuildMarkets(string exchangeName, string mainMarket, double mainCurrencyPrice, JArray jsonArray, List<string> result, LogHelper log, bool logIncorrectBaseCurrency, ref string lastMarket)
+    private static Dictionary<string, Market> BuildMarkets(string exchangeName, string mainMarket, double mainCurrencyPrice, JArray jsonArray, List<string> result, LogHelper log, bool logIncorrectBaseCurrency, bool caseSensitiveBaseMatch, ref string lastMarket)
     {
       Dictionary<string, Market> markets = new Dictionary<string, Market>();
       foreach (JObject currencyTicker in jsonArray)
       {
         string marketName = currencyTicker[SymbolField].ToString();
-        bool correctBase = marketName.EndsWith(mainMarket, StringComparison.InvariantCultureIgnoreCase);
+        bool correctBase = caseSensitiveBaseMatch ? marketName.EndsWith(mainMarket) : marketName.EndsWith(mainMarket, StringComparison.InvariantCultureIgnoreCase);
         float marketLastPrice = currencyTicker[LastPriceField].ToObject<float>();
         float marketVolume = currencyTicker[VolumeField].ToObject<float>();
 
@@ -335,7 +335,7 @@ namespace Core.MarketAnalyzer
       log.DoLogInfo(exchangeName + " - Market data cleaned.");
     }
 
-    private static void CreateHistoricalMarketFiles(string exchangeName, string dataDirectoryPath, List<MarketTick> mainMarketTicks, ConcurrentDictionary<string, List<MarketTick>> marketTicks, Dictionary<string, Market> markets, DateTime startDateTime, DateTime endDateTime, int totalTicks, LogHelper log, CancellationToken cancellationToken)
+    private static void CreateHistoricalMarketFiles(string exchangeName, string dataDirectoryPath, List<MarketTick> mainMarketTicks, ConcurrentDictionary<string, List<MarketTick>> marketTicks, Dictionary<string, Market> markets, DateTime startDateTime, DateTime endDateTime, int totalTicks, LogHelper log, bool parallelHistoricalBuild, CancellationToken cancellationToken)
     {
       int completedTicks = 0;
       for (DateTime tickTime = startDateTime; tickTime >= endDateTime; tickTime = tickTime.AddMinutes(-1))
@@ -353,26 +353,37 @@ namespace Core.MarketAnalyzer
           }
         }
 
-        ConcurrentDictionary<string, Market> tickMarkets = new ConcurrentDictionary<string, Market>();
-        Parallel.ForEach(markets.Keys, key =>
+        string tickMarketsJson;
+        if (parallelHistoricalBuild)
         {
-          MarketTick marketTick = marketTicks[key]?.Where(t => t.Time <= tickTime).OrderByDescending(t => t.Time).FirstOrDefault();
-          if (marketTick != null)
+          ConcurrentDictionary<string, Market> tickMarkets = new ConcurrentDictionary<string, Market>();
+          Parallel.ForEach(markets.Keys, key =>
           {
-            tickMarkets.TryAdd(key, new Market
+            MarketTick marketTick = marketTicks[key]?.Where(t => t.Time <= tickTime).OrderByDescending(t => t.Time).FirstOrDefault();
+            if (marketTick != null)
             {
-              Position = markets.Count + 1,
-              Name = key,
-              Symbol = key,
-              Price = marketTick.Price,
-              MainCurrencyPriceUSD = mainCurrencyPrice
-            });
+              tickMarkets.TryAdd(key, CreateHistoricalMarket(key, marketTick, markets.Count, mainCurrencyPrice));
+            }
+          });
+          tickMarketsJson = JsonConvert.SerializeObject(tickMarkets);
+        }
+        else
+        {
+          Dictionary<string, Market> tickMarkets = new Dictionary<string, Market>();
+          foreach (string key in markets.Keys)
+          {
+            MarketTick marketTick = marketTicks[key]?.Where(t => t.Time <= tickTime).OrderByDescending(t => t.Time).FirstOrDefault();
+            if (marketTick != null)
+            {
+              tickMarkets.Add(key, CreateHistoricalMarket(key, marketTick, markets.Count, mainCurrencyPrice));
+            }
           }
-        });
+          tickMarketsJson = JsonConvert.SerializeObject(tickMarkets);
+        }
 
         DateTime localTickTime = tickTime.ToLocalTime();
         DateTime fileDateTime = new DateTime(localTickTime.Year, localTickTime.Month, localTickTime.Day, localTickTime.Hour, localTickTime.Minute, 0).ToUniversalTime();
-        FileHelper.WriteTextToFile(dataDirectoryPath, "MarketData_" + fileDateTime.ToString("yyyy-MM-dd_HH.mm") + ".json", JsonConvert.SerializeObject(tickMarkets), fileDateTime, fileDateTime);
+        FileHelper.WriteTextToFile(dataDirectoryPath, "MarketData_" + fileDateTime.ToString("yyyy-MM-dd_HH.mm") + ".json", tickMarketsJson, fileDateTime, fileDateTime);
 
         log.DoLogDebug(exchangeName + " - Market data saved for tick " + fileDateTime.ToString() + " - MainCurrencyPrice=" + mainCurrencyPrice.ToString("#,#0.00") + " USD.");
         if ((completedTicks % 100) == 0)
@@ -380,6 +391,18 @@ namespace Core.MarketAnalyzer
           log.DoLogInfo(exchangeName + " - Our magicbots are still at work, hang on... " + completedTicks + "/" + totalTicks + " ticks done...");
         }
       }
+    }
+
+    private static Market CreateHistoricalMarket(string key, MarketTick marketTick, int marketCount, double mainCurrencyPrice)
+    {
+      return new Market
+      {
+        Position = marketCount + 1,
+        Name = key,
+        Symbol = key,
+        Price = marketTick.Price,
+        MainCurrencyPriceUSD = mainCurrencyPrice
+      };
     }
   }
 }
