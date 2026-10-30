@@ -16,6 +16,7 @@ namespace Core.MarketAnalyzer
   public class BinanceFutures : BaseAnalyzer
   {
     private const int MetadataConcurrency = 2;
+    private const int HistoricalConcurrency = 2;
 
     public static double GetMainCurrencyPrice(string mainMarket, PTMagicConfiguration systemConfiguration, LogHelper log)
     {
@@ -512,19 +513,8 @@ namespace Core.MarketAnalyzer
         log.DoLogDebug("BinanceFutures - Getting ticks for '" + markets.Count + "' markets");
         ConcurrentDictionary<string, List<MarketTick>> marketTicks = new ConcurrentDictionary<string, List<MarketTick>>();
 
-        int parallelThrottle = 2;
-        if (systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours > 6)
-        {
-          parallelThrottle = 1;
-          log.DoLogInfo("----------------------------------------------------------------------------");
-          log.DoLogInfo("StoreDataMaxHours is greater than 6.  Historical data requests will be");
-          log.DoLogInfo("throttled to avoid exceeding exchange data request limits.  This initial ");
-          log.DoLogInfo("run could take more than 30 minutes.  Please go outside for a walk...");
-          log.DoLogInfo("----------------------------------------------------------------------------");
-        }
-
         int marketsCompleted = 0;
-        await Parallel.ForEachAsync(markets.Keys, new ParallelOptions { MaxDegreeOfParallelism = parallelThrottle, CancellationToken = cancellationToken }, async (key, ct) =>
+        await Parallel.ForEachAsync(markets.Keys, new ParallelOptions { MaxDegreeOfParallelism = HistoricalConcurrency, CancellationToken = cancellationToken }, async (key, ct) =>
         {
           List<MarketTick> ticks = await GetMarketTicksAsync(key, totalTicks, systemConfiguration, log, ct).ConfigureAwait(false);
           if (!marketTicks.TryAdd(key, ticks))
