@@ -15,7 +15,20 @@ namespace Core.MarketAnalyzer
   {
     public static string GetMarketData(PTMagicConfiguration systemConfiguration, LogHelper log)
     {
-      return ProcessMarketData(GetJsonFromURL("https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=200", log, new (string header, string value)[] { ("X-CMC_PRO_API_KEY", systemConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey) }), systemConfiguration, log);
+      try
+      {
+        string baseUrl = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=200";
+        string cmcAPI = systemConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey;
+
+        log.DoLogInfo("CoinMarketCap - Getting market data...");
+        Dictionary<string, dynamic> jsonObject = GetJsonFromURL(baseUrl, log, new (string header, string value)[] { ("X-CMC_PRO_API_KEY", cmcAPI) });
+        return ProcessMarketData(jsonObject, systemConfiguration, log);
+      }
+      catch (Exception ex)
+      {
+        log.DoLogCritical(ex.Message, ex);
+        return ex.Message;
+      }
     }
 
     public static async Task<string> GetMarketDataAsync(PTMagicConfiguration systemConfiguration, LogHelper log, CancellationToken cancellationToken = default)
@@ -27,7 +40,7 @@ namespace Core.MarketAnalyzer
 
         log.DoLogInfo("CoinMarketCap - Getting market data...");
         Dictionary<string, dynamic> jsonObject = await GetJsonFromURLAsync(baseUrl, log, new (string header, string value)[] { ("X-CMC_PRO_API_KEY", cmcAPI) }, cancellationToken).ConfigureAwait(false);
-        return ProcessMarketData(jsonObject, systemConfiguration, log, false);
+        return ProcessMarketData(jsonObject, systemConfiguration, log);
       }
       catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
       {
@@ -40,16 +53,11 @@ namespace Core.MarketAnalyzer
       }
     }
 
-    private static string ProcessMarketData(Dictionary<string, dynamic> jsonObject, PTMagicConfiguration systemConfiguration, LogHelper log, bool logRequest = true)
+    private static string ProcessMarketData(Dictionary<string, dynamic> jsonObject, PTMagicConfiguration systemConfiguration, LogHelper log)
     {
       string result = "";
       try
       {
-        if (logRequest)
-        {
-          log.DoLogInfo("CoinMarketCap - Getting market data...");
-        }
-
         if (jsonObject != null && jsonObject.Count > 0 && jsonObject["data"] != null)
         {
           log.DoLogInfo("CoinMarketCap - Market data received for " + jsonObject["data"].Count + " currencies");
