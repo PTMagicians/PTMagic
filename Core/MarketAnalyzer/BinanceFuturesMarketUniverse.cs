@@ -14,7 +14,6 @@ namespace Core.MarketAnalyzer
 {
   public static class BinanceFuturesMarketUniverse
   {
-    private const string TradFiContractType = "TRADIFI_PERPETUAL";
     private const int MetadataRefreshMinutes = 15;
     private const string MetadataFileName = "BinanceFuturesMarketMetadata.json";
 
@@ -24,8 +23,9 @@ namespace Core.MarketAnalyzer
     private static DateTime _lastRefreshUtc = Constants.confMinDate;
     private static bool _metadataFileLoaded = false;
 
-    public static readonly string[] KnownTradFiUnderlyingTypes = new string[]
+    public static readonly string[] KnownUnderlyingTypes = new string[]
     {
+      "COIN",
       "EQUITY",
       "KR_EQUITY",
       "HK_EQUITY",
@@ -91,8 +91,11 @@ namespace Core.MarketAnalyzer
 
         SaveMetadataToFile(metadata, log);
 
-        int tradFiCount = metadata.Values.Count(m => IsTradFi(m));
-        log.DoLogInfo("BinanceFutures - Loaded market classification metadata for " + metadata.Count + " symbols (" + tradFiCount + " TradFi perpetuals).");
+        string typeCounts = String.Join(", ", metadata.Values
+          .GroupBy(item => String.IsNullOrWhiteSpace(item.UnderlyingType) ? "(blank)" : item.UnderlyingType, StringComparer.InvariantCultureIgnoreCase)
+          .OrderBy(group => group.Key)
+          .Select(group => group.Key + "=" + group.Count()));
+        log.DoLogInfo("BinanceFutures - Loaded market classification metadata for " + metadata.Count + " symbols. Underlying types: " + typeCounts);
       }
       catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
       {
@@ -123,30 +126,20 @@ namespace Core.MarketAnalyzer
       {
         if (!_metadata.TryGetValue(symbol, out metadata))
         {
-          // Preserve existing PTMagic behavior when Binance introduces a symbol that
-          // is not yet present in the cached exchangeInfo metadata.
-          return true;
+          // Fail closed: an explicit analyzer universe should never silently admit an
+          // unclassified Binance Futures symbol.
+          return false;
         }
       }
 
-      if (!IsTradFi(metadata))
-      {
-        return true;
-      }
-
       MarketAnalyzer settings = systemConfiguration?.AnalyzerSettings?.MarketAnalyzer;
-      if (settings == null || !settings.IncludeTradFi)
-      {
-        return false;
-      }
-
-      List<string> includedTypes = settings.IncludedTradFiUnderlyingTypes;
+      List<string> includedTypes = settings?.IncludedUnderlyingTypes;
       if (includedTypes == null)
       {
-        includedTypes = KnownTradFiUnderlyingTypes.ToList();
+        includedTypes = new List<string> { "COIN" };
       }
 
-      if (includedTypes.Count == 0)
+      if (includedTypes.Count == 0 || String.IsNullOrWhiteSpace(metadata.UnderlyingType))
       {
         return false;
       }
@@ -174,11 +167,6 @@ namespace Core.MarketAnalyzer
       return markets
         .Where(market => IsMarketIncluded(market.Key, systemConfiguration))
         .ToDictionary(market => market.Key, market => market.Value, StringComparer.InvariantCultureIgnoreCase);
-    }
-
-    private static bool IsTradFi(BinanceFuturesMarketMetadata metadata)
-    {
-      return metadata != null && metadata.ContractType.Equals(TradFiContractType, StringComparison.InvariantCultureIgnoreCase);
     }
 
     private static bool HasFreshMetadata()
