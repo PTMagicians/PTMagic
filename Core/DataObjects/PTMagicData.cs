@@ -117,6 +117,22 @@ namespace Core.Main.DataObjects.PTMagicData
     public int StoreDataMaxHours { get; set; }
     public int IntervalMinutes { get; set; } = 5;
     public bool ExcludeMainCurrency { get; set; } = true;
+
+    [DefaultValue(false)]
+    public bool IncludeTradFi { get; set; } = false;
+
+    public List<string> IncludedTradFiUnderlyingTypes { get; set; } = new List<string>
+    {
+      "EQUITY",
+      "KR_EQUITY",
+      "HK_EQUITY",
+      "CN_EQUITY",
+      "COMMODITY",
+      "INDEX",
+      "PREMARKET",
+      "FX"
+    };
+
     public List<MarketTrend> MarketTrends { get; set; }
   }
 
