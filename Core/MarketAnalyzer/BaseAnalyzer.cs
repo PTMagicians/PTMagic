@@ -36,9 +36,6 @@ namespace Core.MarketAnalyzer
       webClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
       webClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/plain"));
 
-      // Setup the keep alive timeout
-      ServicePointManager.FindServicePoint(new Uri(url)).ConnectionLeaseTimeout = 300000; // 5 mins for keep alives     
-
       // Add any custom headers     
       if (headers != null)
       {
