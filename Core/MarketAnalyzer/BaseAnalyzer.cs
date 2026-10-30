@@ -150,7 +150,9 @@ namespace Core.MarketAnalyzer
         try
         {
           using HttpRequestMessage request = CreateRequest(url, headers);
+          BinanceRateLimiter.WaitIfNeeded(request.RequestUri, log);
           using HttpResponseMessage response = HttpClient.Send(request, HttpCompletionOption.ResponseHeadersRead);
+          BinanceRateLimiter.ObserveResponse(request.RequestUri, response);
           using Stream responseStream = response.Content.ReadAsStream();
           using StreamReader reader = new StreamReader(responseStream);
 
@@ -219,7 +221,9 @@ namespace Core.MarketAnalyzer
         try
         {
           using HttpRequestMessage request = CreateRequest(url, headers);
+          await BinanceRateLimiter.WaitIfNeededAsync(request.RequestUri, log, cancellationToken).ConfigureAwait(false);
           using HttpResponseMessage response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+          BinanceRateLimiter.ObserveResponse(request.RequestUri, response);
           string responseString = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 
           if (response.IsSuccessStatusCode)
