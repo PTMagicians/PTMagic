@@ -17,6 +17,7 @@ namespace Core.MarketAnalyzer
 {
   public class BaseAnalyzer
   {
+    private const int MaxHttpRetries = 3;
     private static readonly HttpClient HttpClient = CreateHttpClient();
 
     private static HttpClient CreateHttpClient()
@@ -58,6 +59,63 @@ namespace Core.MarketAnalyzer
       return request;
     }
 
+    private static bool IsRetryableStatusCode(HttpStatusCode statusCode)
+    {
+      int status = (int)statusCode;
+      return status == 408 || status == 429 || status == 500 || status == 502 || status == 503 || status == 504;
+    }
+
+    private static bool IsBinanceIpBan(HttpStatusCode statusCode)
+    {
+      return (int)statusCode == 418;
+    }
+
+    private static TimeSpan GetRetryDelay(HttpResponseMessage response, int retryNumber)
+    {
+      if (response?.Headers?.RetryAfter != null)
+      {
+        if (response.Headers.RetryAfter.Delta.HasValue)
+        {
+          return response.Headers.RetryAfter.Delta.Value > TimeSpan.Zero ? response.Headers.RetryAfter.Delta.Value : TimeSpan.Zero;
+        }
+
+        if (response.Headers.RetryAfter.Date.HasValue)
+        {
+          TimeSpan delay = response.Headers.RetryAfter.Date.Value - DateTimeOffset.UtcNow;
+          return delay > TimeSpan.Zero ? delay : TimeSpan.Zero;
+        }
+      }
+
+      return TimeSpan.FromSeconds(Math.Min(8, Math.Pow(2, retryNumber - 1)));
+    }
+
+    private static string GetResponseContext(HttpResponseMessage response)
+    {
+      List<string> context = new List<string>();
+
+      if (response?.Headers?.RetryAfter != null)
+      {
+        if (response.Headers.RetryAfter.Delta.HasValue)
+        {
+          context.Add("Retry-After=" + response.Headers.RetryAfter.Delta.Value.TotalSeconds.ToString("0.###") + "s");
+        }
+        else if (response.Headers.RetryAfter.Date.HasValue)
+        {
+          context.Add("Retry-After=" + response.Headers.RetryAfter.Date.Value.ToString("O"));
+        }
+      }
+
+      if (response != null)
+      {
+        foreach (var header in response.Headers.Where(h => h.Key.StartsWith("X-MBX-", StringComparison.OrdinalIgnoreCase) || h.Key.StartsWith("X-SAPI-", StringComparison.OrdinalIgnoreCase)))
+        {
+          context.Add(header.Key + "=" + String.Join(",", header.Value));
+        }
+      }
+
+      return context.Count > 0 ? String.Join("; ", context) : "";
+    }
+
     private static void ValidateResponse(HttpResponseMessage response, string url, string responseString)
     {
       if (response.IsSuccessStatusCode)
@@ -65,70 +123,164 @@ namespace Core.MarketAnalyzer
         return;
       }
 
-      string message = $"Error whilst calling {url} - HTTP {(int)response.StatusCode} {response.ReasonPhrase} - {responseString}";
+      string context = GetResponseContext(response);
+      string message = $"Error whilst calling {url} - HTTP {(int)response.StatusCode} {response.ReasonPhrase}";
+      if (!String.IsNullOrEmpty(context))
+      {
+        message += " - " + context;
+      }
+      if (!String.IsNullOrEmpty(responseString))
+      {
+        message += " - " + responseString;
+      }
+
       throw new HttpRequestException(message, null, response.StatusCode);
+    }
+
+    private static void LogRetry(LogHelper log, string url, int retryNumber, TimeSpan delay, HttpStatusCode? statusCode = null, string reason = null)
+    {
+      string status = statusCode.HasValue ? $"HTTP {(int)statusCode.Value} {statusCode.Value}" : reason;
+      log.DoLogWarn($"HTTP GET retry {retryNumber}/{MaxHttpRetries} for {url} after {delay.TotalSeconds:0.###} seconds" + (!String.IsNullOrEmpty(status) ? $" ({status})." : "."));
     }
 
     public static string GetJsonStringFromURL(string url, LogHelper log, (string header, string value)[] headers = null)
     {
-      try
+      for (int attempt = 0; ; attempt++)
       {
-        using HttpRequestMessage request = CreateRequest(url, headers);
-        using HttpResponseMessage response = HttpClient.Send(request, HttpCompletionOption.ResponseHeadersRead);
-        using Stream responseStream = response.Content.ReadAsStream();
-        using StreamReader reader = new StreamReader(responseStream);
+        try
+        {
+          using HttpRequestMessage request = CreateRequest(url, headers);
+          using HttpResponseMessage response = HttpClient.Send(request, HttpCompletionOption.ResponseHeadersRead);
+          using Stream responseStream = response.Content.ReadAsStream();
+          using StreamReader reader = new StreamReader(responseStream);
 
-        string responseString = reader.ReadToEnd();
-        ValidateResponse(response, url, responseString);
-        return responseString;
-      }
-      catch (OperationCanceledException ex)
-      {
-        log.DoLogError($"Timeout whilst calling {url} - {ex.Message}");
-        throw;
-      }
-      catch (HttpRequestException ex)
-      {
-        log.DoLogError($"HTTP error whilst calling {url}\nError: {ex.Message}");
-        throw;
-      }
-      catch (Exception ex)
-      {
-        log.DoLogError($"Error whilst calling {url}\nError: {ex.Message}");
-        throw;
+          string responseString = reader.ReadToEnd();
+          if (response.IsSuccessStatusCode)
+          {
+            return responseString;
+          }
+
+          if (IsBinanceIpBan(response.StatusCode))
+          {
+            ValidateResponse(response, url, responseString);
+          }
+
+          if (IsRetryableStatusCode(response.StatusCode) && attempt < MaxHttpRetries)
+          {
+            int retryNumber = attempt + 1;
+            TimeSpan delay = GetRetryDelay(response, retryNumber);
+            LogRetry(log, url, retryNumber, delay, response.StatusCode);
+            Thread.Sleep(delay);
+            continue;
+          }
+
+          ValidateResponse(response, url, responseString);
+        }
+        catch (OperationCanceledException ex)
+        {
+          if (attempt < MaxHttpRetries)
+          {
+            int retryNumber = attempt + 1;
+            TimeSpan delay = GetRetryDelay(null, retryNumber);
+            LogRetry(log, url, retryNumber, delay, null, "timeout");
+            Thread.Sleep(delay);
+            continue;
+          }
+
+          log.DoLogError($"Timeout whilst calling {url} - {ex.Message}");
+          throw;
+        }
+        catch (HttpRequestException ex)
+        {
+          if (!ex.StatusCode.HasValue && attempt < MaxHttpRetries)
+          {
+            int retryNumber = attempt + 1;
+            TimeSpan delay = GetRetryDelay(null, retryNumber);
+            LogRetry(log, url, retryNumber, delay, null, "network error");
+            Thread.Sleep(delay);
+            continue;
+          }
+
+          log.DoLogError($"HTTP error whilst calling {url}\nError: {ex.Message}");
+          throw;
+        }
+        catch (Exception ex)
+        {
+          log.DoLogError($"Error whilst calling {url}\nError: {ex.Message}");
+          throw;
+        }
       }
     }
 
     public static async Task<string> GetJsonStringFromURLAsync(string url, LogHelper log, (string header, string value)[] headers = null, CancellationToken cancellationToken = default)
     {
-      try
+      for (int attempt = 0; ; attempt++)
       {
-        using HttpRequestMessage request = CreateRequest(url, headers);
-        using HttpResponseMessage response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-        string responseString = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+          using HttpRequestMessage request = CreateRequest(url, headers);
+          using HttpResponseMessage response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+          string responseString = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 
-        ValidateResponse(response, url, responseString);
-        return responseString;
-      }
-      catch (OperationCanceledException ex) when (cancellationToken.IsCancellationRequested)
-      {
-        log.DoLogError($"Request cancelled whilst calling {url} - {ex.Message}");
-        throw;
-      }
-      catch (OperationCanceledException ex)
-      {
-        log.DoLogError($"Timeout whilst calling {url} - {ex.Message}");
-        throw;
-      }
-      catch (HttpRequestException ex)
-      {
-        log.DoLogError($"HTTP error whilst calling {url}\nError: {ex.Message}");
-        throw;
-      }
-      catch (Exception ex)
-      {
-        log.DoLogError($"Error whilst calling {url}\nError: {ex.Message}");
-        throw;
+          if (response.IsSuccessStatusCode)
+          {
+            return responseString;
+          }
+
+          if (IsBinanceIpBan(response.StatusCode))
+          {
+            ValidateResponse(response, url, responseString);
+          }
+
+          if (IsRetryableStatusCode(response.StatusCode) && attempt < MaxHttpRetries)
+          {
+            int retryNumber = attempt + 1;
+            TimeSpan delay = GetRetryDelay(response, retryNumber);
+            LogRetry(log, url, retryNumber, delay, response.StatusCode);
+            await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+            continue;
+          }
+
+          ValidateResponse(response, url, responseString);
+        }
+        catch (OperationCanceledException ex) when (cancellationToken.IsCancellationRequested)
+        {
+          log.DoLogError($"Request cancelled whilst calling {url} - {ex.Message}");
+          throw;
+        }
+        catch (OperationCanceledException ex)
+        {
+          if (attempt < MaxHttpRetries)
+          {
+            int retryNumber = attempt + 1;
+            TimeSpan delay = GetRetryDelay(null, retryNumber);
+            LogRetry(log, url, retryNumber, delay, null, "timeout");
+            await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+            continue;
+          }
+
+          log.DoLogError($"Timeout whilst calling {url} - {ex.Message}");
+          throw;
+        }
+        catch (HttpRequestException ex)
+        {
+          if (!ex.StatusCode.HasValue && attempt < MaxHttpRetries)
+          {
+            int retryNumber = attempt + 1;
+            TimeSpan delay = GetRetryDelay(null, retryNumber);
+            LogRetry(log, url, retryNumber, delay, null, "network error");
+            await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+            continue;
+          }
+
+          log.DoLogError($"HTTP error whilst calling {url}\nError: {ex.Message}");
+          throw;
+        }
+        catch (Exception ex)
+        {
+          log.DoLogError($"Error whilst calling {url}\nError: {ex.Message}");
+          throw;
+        }
       }
     }
 
@@ -194,9 +346,26 @@ namespace Core.MarketAnalyzer
           result = jsonObject.GetValue("tag_name").ToString();
         }
       }
-      catch (WebException ex)
+      catch (Exception ex)
       {
         log.DoLogDebug("GitHub version check error: " + ex.Message);
+      }
+      return result;
+    }
+
+    public static async Task<string> GetLatestGitHubReleaseAsync(LogHelper log, string defaultVersion, CancellationToken cancellationToken = default)
+    {
+      string result = defaultVersion;
+
+      try
+      {
+        string baseUrl = "https://api.github.com/repos/PTMagicians/PTMagic/releases/latest";
+
+        Newtonsoft.Json.Linq.JObject jsonObject = await GetSimpleJsonObjectFromURLAsync(baseUrl, log, new (string header, string value)[] { ("User-Agent", "PTMagic.Import") }, cancellationToken).ConfigureAwait(false);
+        if (jsonObject != null)
+        {
+          result = jsonObject.GetValue("tag_name").ToString();
+        }
       }
       catch (Exception ex)
       {
@@ -212,6 +381,23 @@ namespace Core.MarketAnalyzer
 
       log.DoLogDebug("http://free.currencyconverterapi.com - Getting latest exchange rates...");
       Newtonsoft.Json.Linq.JObject jsonObject = GetSimpleJsonObjectFromURL(baseUrl, log, null);
+      if (jsonObject != null)
+      {
+        log.DoLogDebug("http://free.currencyconverterapi.com - Received latest exchange rates.");
+
+        result = (double)jsonObject["USD_" + currency]["val"];
+        log.DoLogInfo("http://free.currencyconverterapi.com - Latest exchange rate for USD to " + currency + " is " + result);
+      }
+      return result;
+    }
+
+    public static async Task<double> GetMainFiatCurrencyRateAsync(string currency, string FreeCurrencyAPI, LogHelper log, CancellationToken cancellationToken = default)
+    {
+      double result = 1;
+      string baseUrl = "http://free.currencyconverterapi.com/api/v5/convert?q=USD_" + currency + "&compact=y&apiKey=" + FreeCurrencyAPI;
+
+      log.DoLogDebug("http://free.currencyconverterapi.com - Getting latest exchange rates...");
+      Newtonsoft.Json.Linq.JObject jsonObject = await GetSimpleJsonObjectFromURLAsync(baseUrl, log, null, cancellationToken).ConfigureAwait(false);
       if (jsonObject != null)
       {
         log.DoLogDebug("http://free.currencyconverterapi.com - Received latest exchange rates.");
