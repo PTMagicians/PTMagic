@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Core.Main;
@@ -16,97 +17,167 @@ namespace Core.MarketAnalyzer
 {
   public class BaseAnalyzer
   {
-    public static string GetJsonStringFromURL(string url, LogHelper log, (string header, string value)[] headers = null)
+    private static readonly HttpClient HttpClient = CreateHttpClient();
+
+    private static HttpClient CreateHttpClient()
     {
-      HttpClient webClient = null;
-      if (webClient == null)
+      SocketsHttpHandler handler = new SocketsHttpHandler
       {
-        webClient = new HttpClient();
+        PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+        PooledConnectionIdleTimeout = TimeSpan.FromMinutes(2),
+        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli
+      };
 
-        // Setup the one time conneciton characteristics
-        webClient.Timeout = new TimeSpan(0, 0, 30); // 30 second call timeout
-        webClient.DefaultRequestHeaders.ConnectionClose = false; // Keep alives        
-      }
-      else
+      HttpClient client = new HttpClient(handler)
       {
-        webClient.DefaultRequestHeaders.Clear();
-      }
+        Timeout = TimeSpan.FromSeconds(30)
+      };
 
-      // Accept JSON and Text
-      webClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-      webClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/plain"));
+      client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+      client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/plain"));
 
-      // Add any custom headers     
+      return client;
+    }
+
+    private static HttpRequestMessage CreateRequest(string url, (string header, string value)[] headers = null)
+    {
+      HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, url);
+
       if (headers != null)
       {
         foreach (var header in headers)
         {
-          webClient.DefaultRequestHeaders.Add(header.header, header.value);
+          if (!request.Headers.TryAddWithoutValidation(header.header, header.value))
+          {
+            request.Dispose();
+            throw new InvalidOperationException($"Unable to add HTTP header '{header.header}' whilst calling {url}.");
+          }
         }
       }
 
+      return request;
+    }
+
+    private static void ValidateResponse(HttpResponseMessage response, string url, string responseString)
+    {
+      if (response.IsSuccessStatusCode)
+      {
+        return;
+      }
+
+      string message = $"Error whilst calling {url} - HTTP {(int)response.StatusCode} {response.ReasonPhrase} - {responseString}";
+      throw new HttpRequestException(message, null, response.StatusCode);
+    }
+
+    public static string GetJsonStringFromURL(string url, LogHelper log, (string header, string value)[] headers = null)
+    {
       try
       {
-        // log.DoLogInfo("Calling URL: " + url);
-        var response = webClient.GetAsync(url).Result;
-        string repsonseString = response.Content.ReadAsStringAsync().Result;
-        if (response.IsSuccessStatusCode)
-        {
-          return repsonseString;
-        }
-        else
-        {
-          // Error
-          var message = string.Format("Error whilst calling {0} - {1}", url, repsonseString);
-          log.DoLogError(message);
-          throw new Exception(message);
-        }
+        using HttpRequestMessage request = CreateRequest(url, headers);
+        using HttpResponseMessage response = HttpClient.Send(request, HttpCompletionOption.ResponseHeadersRead);
+        using Stream responseStream = response.Content.ReadAsStream();
+        using StreamReader reader = new StreamReader(responseStream);
+
+        string responseString = reader.ReadToEnd();
+        ValidateResponse(response, url, responseString);
+        return responseString;
       }
-      catch (TaskCanceledException tcEx)
+      catch (OperationCanceledException ex)
       {
-        // Conneciton timeout
-        log.DoLogError(string.Format("Timeout whilst calling {0} - {1}", url, tcEx.Message));
+        log.DoLogError($"Timeout whilst calling {url} - {ex.Message}");
+        throw;
+      }
+      catch (HttpRequestException ex)
+      {
+        log.DoLogError($"HTTP error whilst calling {url}\nError: {ex.Message}");
         throw;
       }
       catch (Exception ex)
       {
-        log.DoLogError(string.Format("Error whilst calling {0} \nError: {1}", url, ex.Message));
+        log.DoLogError($"Error whilst calling {url}\nError: {ex.Message}");
+        throw;
+      }
+    }
+
+    public static async Task<string> GetJsonStringFromURLAsync(string url, LogHelper log, (string header, string value)[] headers = null, CancellationToken cancellationToken = default)
+    {
+      try
+      {
+        using HttpRequestMessage request = CreateRequest(url, headers);
+        using HttpResponseMessage response = await HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+        string responseString = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+
+        ValidateResponse(response, url, responseString);
+        return responseString;
+      }
+      catch (OperationCanceledException ex) when (cancellationToken.IsCancellationRequested)
+      {
+        log.DoLogError($"Request cancelled whilst calling {url} - {ex.Message}");
+        throw;
+      }
+      catch (OperationCanceledException ex)
+      {
+        log.DoLogError($"Timeout whilst calling {url} - {ex.Message}");
+        throw;
+      }
+      catch (HttpRequestException ex)
+      {
+        log.DoLogError($"HTTP error whilst calling {url}\nError: {ex.Message}");
+        throw;
+      }
+      catch (Exception ex)
+      {
+        log.DoLogError($"Error whilst calling {url}\nError: {ex.Message}");
         throw;
       }
     }
 
     public static Dictionary<string, dynamic> GetJsonFromURL(string url, LogHelper log, (string header, string value)[] headers = null)
     {
-      Dictionary<string, dynamic> jsonObject = null;
       string jsonString = GetJsonStringFromURL(url, log, headers);
+      return JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(jsonString);
+    }
 
-      // Convert the response to JSON
-      jsonObject = JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(jsonString);
-      return jsonObject;
+    public static async Task<Dictionary<string, dynamic>> GetJsonFromURLAsync(string url, LogHelper log, (string header, string value)[] headers = null, CancellationToken cancellationToken = default)
+    {
+      string jsonString = await GetJsonStringFromURLAsync(url, log, headers, cancellationToken).ConfigureAwait(false);
+      return JsonConvert.DeserializeObject<Dictionary<string, dynamic>>(jsonString);
     }
 
     public static Newtonsoft.Json.Linq.JObject GetSimpleJsonObjectFromURL(string url, LogHelper log, (string header, string value)[] headers = null)
     {
-      Newtonsoft.Json.Linq.JObject jsonObject = null;
       string jsonString = GetJsonStringFromURL(url, log, headers);
-      jsonObject = JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JObject>(jsonString);
-      return jsonObject;
+      return JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JObject>(jsonString);
+    }
+
+    public static async Task<Newtonsoft.Json.Linq.JObject> GetSimpleJsonObjectFromURLAsync(string url, LogHelper log, (string header, string value)[] headers = null, CancellationToken cancellationToken = default)
+    {
+      string jsonString = await GetJsonStringFromURLAsync(url, log, headers, cancellationToken).ConfigureAwait(false);
+      return JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JObject>(jsonString);
     }
 
     public static List<dynamic> GetSimpleJsonListFromURL(string url, LogHelper log)
     {
-      List<dynamic> jsonObject = null;
       string jsonString = GetJsonStringFromURL(url, log, null);
-      jsonObject = JsonConvert.DeserializeObject<List<dynamic>>(jsonString);
-      return jsonObject;
+      return JsonConvert.DeserializeObject<List<dynamic>>(jsonString);
+    }
+
+    public static async Task<List<dynamic>> GetSimpleJsonListFromURLAsync(string url, LogHelper log, CancellationToken cancellationToken = default)
+    {
+      string jsonString = await GetJsonStringFromURLAsync(url, log, null, cancellationToken).ConfigureAwait(false);
+      return JsonConvert.DeserializeObject<List<dynamic>>(jsonString);
     }
 
     public static Newtonsoft.Json.Linq.JArray GetSimpleJsonArrayFromURL(string url, LogHelper log)
     {
-      Newtonsoft.Json.Linq.JArray jsonObject = null;
       string jsonString = GetJsonStringFromURL(url, log, null);
-      jsonObject = JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JArray>(jsonString);
-      return jsonObject;
+      return JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JArray>(jsonString);
+    }
+
+    public static async Task<Newtonsoft.Json.Linq.JArray> GetSimpleJsonArrayFromURLAsync(string url, LogHelper log, CancellationToken cancellationToken = default)
+    {
+      string jsonString = await GetJsonStringFromURLAsync(url, log, null, cancellationToken).ConfigureAwait(false);
+      return JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JArray>(jsonString);
     }
 
     public static string GetLatestGitHubRelease(LogHelper log, string defaultVersion)
