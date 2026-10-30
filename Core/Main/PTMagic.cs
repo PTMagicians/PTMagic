@@ -681,7 +681,7 @@ namespace Core.Main
       {
         result = false;
         this.Log.DoLogCritical("Error loading configuration!", ex);
-        throw;
+        throw (ex);
       }
 
       return result;
@@ -1443,7 +1443,7 @@ namespace Core.Main
                                 break;
                             }
                         }
-                        catch (Exception)
+                        catch (Exception ex)
                         {
                             this.Log.DoLogError($"ERROR: Trigger Connection for global setting {globalSetting.SettingName} is invalid or missing. Program halted.");
                             Environment.Exit(1); // Stop the program
@@ -2065,7 +2065,7 @@ namespace Core.Main
                     // Evaluate the expression using ParseLambda
                     settingTriggered = (bool)DynamicExpressionParser.ParseLambda(ParsingConfig.Default, new ParameterExpression[0], typeof(bool), triggerConnection).Compile().DynamicInvoke();
                   }
-                  catch (Exception)
+                  catch (Exception ex)
                   {
                       this.Log.DoLogError($"ERROR: Trigger Connection for global setting {marketSetting.SettingName} is invalid or missing. Program halted.");
                       Environment.Exit(1); // Stop the program
@@ -2217,7 +2217,7 @@ namespace Core.Main
         // Did we trigger any SMS?
         if (this.TriggeredSingleMarketSettings.Count > 0)
         {
-          this.Log.DoLogInfo("Building single market settings for '" + this.TriggeredSingleMarketSettings.Count.ToString() + " markets...");
+          this.Log.DoLogInfo("Building single market settings for '" + this.TriggeredSingleMarketSettings.Count.ToString() + "' markets...");
 
           // Write single market settings
           var newSingleMarketSettings = SettingsHandler.CompileSingleMarketProperties(this, matchedMarketTriggers);
@@ -2617,6 +2617,7 @@ namespace Core.Main
 
       this.Log.DoLogInfo("Summary: Current global properties saved.");
 
+      // Get current single market settings from PAIRS.PROPERTIES for each configured market
       this.Log.DoLogInfo("Summary: Getting current single market properties...");
 
       foreach (string marketPair in this.MarketList)
@@ -2632,6 +2633,8 @@ namespace Core.Main
 
         if (this.MarketList.Contains(marketPair))
         {
+
+          // Pair is allowed for trading, check for individual values
           mpSummary.IsTradingEnabled = true;
 
           if (this.TriggeredSingleMarketSettings.Count > 0)
@@ -2644,6 +2647,7 @@ namespace Core.Main
 
           string marketPairSimple = marketPair.Replace(this.LastRuntimeSummary.MainMarket, "").Replace("_", "").Replace("-", "");
 
+          // Get configured Buy Strategies
           for (char c = 'A'; c <= 'Z'; c++)
           {
             string buyStrategyName = SettingsHandler.GetCurrentPropertyValue(pairsProperties, marketPairSimple + "_" + c + "_buy_strategy", "");
@@ -2662,6 +2666,7 @@ namespace Core.Main
           }
           if (mpSummary.BuyStrategies.Count == 0) mpSummary.BuyStrategies = this.LastRuntimeSummary.BuyStrategies;
 
+          // Get configured Sell Strategies
           for (char c = 'A'; c <= 'Z'; c++)
           {
             string sellStrategyName = SettingsHandler.GetCurrentPropertyValue(pairsProperties, marketPairSimple + "_" + c + "_sell_strategy", "");
@@ -2706,6 +2711,7 @@ namespace Core.Main
           mpSummary.IsSOMActive = (pairSOMActiveString.Equals("true", StringComparison.InvariantCultureIgnoreCase)) ? true : false;
         }
 
+        // Get market trend values for each market pair
         foreach (string marketTrendName in this.SingleMarketTrendChanges.Keys)
         {
           if (this.SingleMarketTrendChanges.ContainsKey(marketTrendName))
@@ -2729,6 +2735,7 @@ namespace Core.Main
 
       string serialziedJson = JsonConvert.SerializeObject(this.LastRuntimeSummary);
 
+      // Save the summary JSON file
       try
       {
         FileHelper.WriteTextToFile(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar, "LastRuntimeSummary.json", serialziedJson);
