@@ -13,6 +13,9 @@
       "StoreDataMaxHours": 48, // Number of hours to store market data
       "IntervalMinutes": 2, // Interval in minutes for PTMagic to check market trends and triggers
       "ExcludeMainCurrency": true, // Excludes the main currency (for example BTC, if you are trading against BTC) from market trend analysis
+      "IncludedUnderlyingTypes": [
+        "COIN", // current options for BinanceFutures: "EQUITY", "KR_EQUITY", "HK_EQUITY", "CN_EQUITY", "COMMODITY", "INDEX", "PREMARKET", "FX"         
+      ],
       "MarketTrends": [
         {
           "Name": "1h",  // UNIQUE market trend name (to be referenced by your triggers below)
