@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using Newtonsoft.Json;
@@ -690,36 +691,29 @@ namespace Core.Main.DataObjects
     
     private dynamic GetDataFromProfitTrailer(string callPath, bool arrayReturned = false)
     {
-      string rawBody = "";
       string url = string.Format("{0}{1}{2}token={3}", _systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL, 
       callPath,
       callPath.Contains("?") ? "&" : "?", 
       _systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken);
       
       Debug.WriteLine(String.Format("{0} - Calling '{1}'", DateTime.UtcNow, url));
-      HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-      request.AutomaticDecompression = DecompressionMethods.GZip;
-      request.KeepAlive = true;
-      
-      WebResponse response = request.GetResponse();
-      
-      using (Stream dataStream = response.GetResponseStream())
-      {
-        StreamReader reader = new StreamReader(dataStream);
-        rawBody = reader.ReadToEnd();
-        reader.Close();
-      }
 
-      response.Close();
-      
-      if (!arrayReturned)
+      using (HttpClientHandler handler = new HttpClientHandler())
+      {
+        handler.AutomaticDecompression = DecompressionMethods.GZip;
+        using (HttpClient client = new HttpClient(handler))
         {
+          string rawBody = client.GetStringAsync(url).GetAwaiter().GetResult();
+          if (!arrayReturned)
+          {
             return JObject.Parse(rawBody);
-        }
-        else
-        {
+          }
+          else
+          {
             return JArray.Parse(rawBody);
+          }
         }
+      }
     }
     private Stream GetDataFromProfitTrailerAsStream(string callPath)
     {
@@ -729,13 +723,16 @@ namespace Core.Main.DataObjects
         _systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken);
         
         Debug.WriteLine(String.Format("{0} - Calling '{1}'", DateTime.UtcNow, url));
-        HttpWebRequest request = (HttpWebRequest)WebRequest.Create(url);
-        request.AutomaticDecompression = DecompressionMethods.GZip;
-        request.KeepAlive = true;
-        
-        WebResponse response = request.GetResponse();
-        
-        return response.GetResponseStream();
+
+        using (HttpClientHandler handler = new HttpClientHandler())
+        {
+          handler.AutomaticDecompression = DecompressionMethods.GZip;
+          using (HttpClient client = new HttpClient(handler))
+          {
+            byte[] responseBytes = client.GetByteArrayAsync(url).GetAwaiter().GetResult();
+            return new MemoryStream(responseBytes, writable: false);
+          }
+        }
     }
 
     private void BuildDCALogData(dynamic rawDCALogData, dynamic rawPairsLogData, dynamic rawPendingLogData, dynamic rawWatchModeLogData)
