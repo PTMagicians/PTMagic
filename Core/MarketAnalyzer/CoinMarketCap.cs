@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Core.Main;
 using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
@@ -14,54 +15,73 @@ namespace Core.MarketAnalyzer
   {
     public static string GetMarketData(PTMagicConfiguration systemConfiguration, LogHelper log)
     {
-      string result = "";
+      return ProcessMarketData(GetJsonFromURL("https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=200", log, new (string header, string value)[] { ("X-CMC_PRO_API_KEY", systemConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey) }), systemConfiguration, log);
+    }
+
+    public static async Task<string> GetMarketDataAsync(PTMagicConfiguration systemConfiguration, LogHelper log, CancellationToken cancellationToken = default)
+    {
       try
       {
         string baseUrl = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=200";
         string cmcAPI = systemConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey;
 
         log.DoLogInfo("CoinMarketCap - Getting market data...");
+        Dictionary<string, dynamic> jsonObject = await GetJsonFromURLAsync(baseUrl, log, new (string header, string value)[] { ("X-CMC_PRO_API_KEY", cmcAPI) }, cancellationToken).ConfigureAwait(false);
+        return ProcessMarketData(jsonObject, systemConfiguration, log, false);
+      }
+      catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+      {
+        throw;
+      }
+      catch (Exception ex)
+      {
+        log.DoLogCritical(ex.Message, ex);
+        return ex.Message;
+      }
+    }
 
-        Dictionary<string, dynamic> jsonObject = GetJsonFromURL(baseUrl, log, new (string header, string value)[] { ("X-CMC_PRO_API_KEY", cmcAPI) });
-
-        if (jsonObject.Count > 0)
+    private static string ProcessMarketData(Dictionary<string, dynamic> jsonObject, PTMagicConfiguration systemConfiguration, LogHelper log, bool logRequest = true)
+    {
+      string result = "";
+      try
+      {
+        if (logRequest)
         {
-          if (jsonObject["data"] != null)
+          log.DoLogInfo("CoinMarketCap - Getting market data...");
+        }
+
+        if (jsonObject != null && jsonObject.Count > 0 && jsonObject["data"] != null)
+        {
+          log.DoLogInfo("CoinMarketCap - Market data received for " + jsonObject["data"].Count + " currencies");
+
+          Dictionary<string, Market> markets = new Dictionary<string, Market>();
+          for (int i = 0; i < jsonObject["data"].Count; i++)
           {
-            log.DoLogInfo("CoinMarketCap - Market data received for " + jsonObject["data"].Count + " currencies");
-
-            Dictionary<string, Market> markets = new Dictionary<string, Market>();
-
-            for (int i = 0; i < jsonObject["data"].Count; i++)
+            if (jsonObject["data"][i]["quote"]["USD"] != null)
             {
-              if (jsonObject["data"][i]["quote"]["USD"] != null)
+              Market market = new Market();
+              market.Position = markets.Count + 1;
+              market.Name = jsonObject["data"][i]["name"].ToString();
+              market.Symbol = jsonObject["data"][i]["symbol"].ToString();
+              market.Price = (double)jsonObject["data"][i]["quote"]["USD"]["price"];
+              market.Volume24h = (double)jsonObject["data"][i]["quote"]["USD"]["volume_24h"];
+              if (!String.IsNullOrEmpty(jsonObject["data"][i]["quote"]["USD"]["percent_change_24h"].ToString()))
               {
-                Market market = new Market();
-                market.Position = markets.Count + 1;
-                market.Name = jsonObject["data"][i]["name"].ToString();
-                market.Symbol = jsonObject["data"][i]["symbol"].ToString();
-                market.Price = (double)jsonObject["data"][i]["quote"]["USD"]["price"];
-                market.Volume24h = (double)jsonObject["data"][i]["quote"]["USD"]["volume_24h"];
-                if (!String.IsNullOrEmpty(jsonObject["data"][i]["quote"]["USD"]["percent_change_24h"].ToString()))
-                {
-                  market.TrendChange24h = (double)jsonObject["data"][i]["quote"]["USD"]["percent_change_24h"];
-                }
-
-                markets.Add(market.Name, market);
+                market.TrendChange24h = (double)jsonObject["data"][i]["quote"]["USD"]["percent_change_24h"];
               }
+
+              markets.Add(market.Name, market);
             }
-
-            CoinMarketCap.CheckForMarketDataRecreation(markets, systemConfiguration, log);
-
-            // Save the data
-            DateTime fileDateTime = DateTime.UtcNow;
-            FileHelper.WriteTextToFile(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathCoinMarketCap + Path.DirectorySeparatorChar, "MarketData_" + fileDateTime.ToString("yyyy-MM-dd_HH.mm") + ".json", JsonConvert.SerializeObject(markets), fileDateTime, fileDateTime);
-
-            log.DoLogInfo("CoinMarketCap - Market data saved.");
-
-            FileHelper.CleanupFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathCoinMarketCap + Path.DirectorySeparatorChar, systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours);
-            log.DoLogInfo("CoinMarketCap - Market data cleaned.");
           }
+
+          CoinMarketCap.CheckForMarketDataRecreation(markets, systemConfiguration, log);
+
+          DateTime fileDateTime = DateTime.UtcNow;
+          FileHelper.WriteTextToFile(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathCoinMarketCap + Path.DirectorySeparatorChar, "MarketData_" + fileDateTime.ToString("yyyy-MM-dd_HH.mm") + ".json", JsonConvert.SerializeObject(markets), fileDateTime, fileDateTime);
+
+          log.DoLogInfo("CoinMarketCap - Market data saved.");
+          FileHelper.CleanupFiles(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathCoinMarketCap + Path.DirectorySeparatorChar, systemConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours);
+          log.DoLogInfo("CoinMarketCap - Market data cleaned.");
         }
       }
       catch (Exception ex)
@@ -138,7 +158,6 @@ namespace Core.MarketAnalyzer
           markets24h.Add(markets[key].Name, market24h);
         }
 
-        // Save the 24hr market data
         DateTime fileDateTime = DateTime.UtcNow.AddHours(-24);
         FileHelper.WriteTextToFile(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathCoinMarketCap + Path.DirectorySeparatorChar, "MarketData_" + fileDateTime.ToString("yyyy-MM-dd_HH.mm") + ".json", JsonConvert.SerializeObject(markets24h), fileDateTime, fileDateTime);
 
