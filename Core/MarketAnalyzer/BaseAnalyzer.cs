@@ -145,7 +145,8 @@ namespace Core.MarketAnalyzer
 
     public static string GetJsonStringFromURL(string url, LogHelper log, (string header, string value)[] headers = null)
     {
-      for (int attempt = 0; ; attempt++)
+      int attempt = 0;
+      while (true)
       {
         try
         {
@@ -169,9 +170,9 @@ namespace Core.MarketAnalyzer
 
           if (IsRetryableStatusCode(response.StatusCode) && attempt < MaxHttpRetries)
           {
-            int retryNumber = attempt + 1;
-            TimeSpan delay = GetRetryDelay(response, retryNumber);
-            LogRetry(log, url, retryNumber, delay, response.StatusCode);
+            attempt++;
+            TimeSpan delay = GetRetryDelay(response, attempt);
+            LogRetry(log, url, attempt, delay, response.StatusCode);
             Thread.Sleep(delay);
             continue;
           }
@@ -182,9 +183,9 @@ namespace Core.MarketAnalyzer
         {
           if (attempt < MaxHttpRetries)
           {
-            int retryNumber = attempt + 1;
-            TimeSpan delay = GetRetryDelay(null, retryNumber);
-            LogRetry(log, url, retryNumber, delay, null, "timeout");
+            attempt++;
+            TimeSpan delay = GetRetryDelay(null, attempt);
+            LogRetry(log, url, attempt, delay, null, "timeout");
             Thread.Sleep(delay);
             continue;
           }
@@ -196,9 +197,9 @@ namespace Core.MarketAnalyzer
         {
           if (!ex.StatusCode.HasValue && attempt < MaxHttpRetries)
           {
-            int retryNumber = attempt + 1;
-            TimeSpan delay = GetRetryDelay(null, retryNumber);
-            LogRetry(log, url, retryNumber, delay, null, "network error");
+            attempt++;
+            TimeSpan delay = GetRetryDelay(null, attempt);
+            LogRetry(log, url, attempt, delay, null, "network error");
             Thread.Sleep(delay);
             continue;
           }
@@ -216,7 +217,8 @@ namespace Core.MarketAnalyzer
 
     public static async Task<string> GetJsonStringFromURLAsync(string url, LogHelper log, (string header, string value)[] headers = null, CancellationToken cancellationToken = default)
     {
-      for (int attempt = 0; ; attempt++)
+      int attempt = 0;
+      while (true)
       {
         try
         {
@@ -238,9 +240,9 @@ namespace Core.MarketAnalyzer
 
           if (IsRetryableStatusCode(response.StatusCode) && attempt < MaxHttpRetries)
           {
-            int retryNumber = attempt + 1;
-            TimeSpan delay = GetRetryDelay(response, retryNumber);
-            LogRetry(log, url, retryNumber, delay, response.StatusCode);
+            attempt++;
+            TimeSpan delay = GetRetryDelay(response, attempt);
+            LogRetry(log, url, attempt, delay, response.StatusCode);
             await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
             continue;
           }
@@ -256,9 +258,9 @@ namespace Core.MarketAnalyzer
         {
           if (attempt < MaxHttpRetries)
           {
-            int retryNumber = attempt + 1;
-            TimeSpan delay = GetRetryDelay(null, retryNumber);
-            LogRetry(log, url, retryNumber, delay, null, "timeout");
+            attempt++;
+            TimeSpan delay = GetRetryDelay(null, attempt);
+            LogRetry(log, url, attempt, delay, null, "timeout");
             await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
             continue;
           }
@@ -270,9 +272,9 @@ namespace Core.MarketAnalyzer
         {
           if (!ex.StatusCode.HasValue && attempt < MaxHttpRetries)
           {
-            int retryNumber = attempt + 1;
-            TimeSpan delay = GetRetryDelay(null, retryNumber);
-            LogRetry(log, url, retryNumber, delay, null, "network error");
+            attempt++;
+            TimeSpan delay = GetRetryDelay(null, attempt);
+            LogRetry(log, url, attempt, delay, null, "network error");
             await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
             continue;
           }
@@ -381,16 +383,16 @@ namespace Core.MarketAnalyzer
     public static double GetMainFiatCurrencyRate(string currency, string FreeCurrencyAPI, LogHelper log)
     {
       double result = 1;
-      string baseUrl = "http://free.currencyconverterapi.com/api/v5/convert?q=USD_" + currency + "&compact=y&apiKey=" + FreeCurrencyAPI;
+      string baseUrl = "https://free.currencyconverterapi.com/api/v5/convert?q=USD_" + currency + "&compact=y&apiKey=" + FreeCurrencyAPI;
 
-      log.DoLogDebug("http://free.currencyconverterapi.com - Getting latest exchange rates...");
+      log.DoLogDebug("https://free.currencyconverterapi.com - Getting latest exchange rates...");
       Newtonsoft.Json.Linq.JObject jsonObject = GetSimpleJsonObjectFromURL(baseUrl, log, null);
       if (jsonObject != null)
       {
-        log.DoLogDebug("http://free.currencyconverterapi.com - Received latest exchange rates.");
+        log.DoLogDebug("https://free.currencyconverterapi.com - Received latest exchange rates.");
 
         result = (double)jsonObject["USD_" + currency]["val"];
-        log.DoLogInfo("http://free.currencyconverterapi.com - Latest exchange rate for USD to " + currency + " is " + result);
+        log.DoLogInfo("https://free.currencyconverterapi.com - Latest exchange rate for USD to " + currency + " is " + result);
       }
       return result;
     }
