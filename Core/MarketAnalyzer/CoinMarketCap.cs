@@ -13,24 +13,6 @@ namespace Core.MarketAnalyzer
 {
   public class CoinMarketCap : BaseAnalyzer
   {
-    public static string GetMarketData(PTMagicConfiguration systemConfiguration, LogHelper log)
-    {
-      try
-      {
-        string baseUrl = "https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=200";
-        string cmcAPI = systemConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey;
-
-        log.DoLogInfo("CoinMarketCap - Getting market data...");
-        Dictionary<string, dynamic> jsonObject = GetJsonFromURL(baseUrl, log, new (string header, string value)[] { ("X-CMC_PRO_API_KEY", cmcAPI) });
-        return ProcessMarketData(jsonObject, systemConfiguration, log);
-      }
-      catch (Exception ex)
-      {
-        log.DoLogCritical(ex.Message, ex);
-        return ex.Message;
-      }
-    }
-
     public static async Task<string> GetMarketDataAsync(PTMagicConfiguration systemConfiguration, LogHelper log, CancellationToken cancellationToken = default)
     {
       try
@@ -56,9 +38,14 @@ namespace Core.MarketAnalyzer
     private static string ProcessMarketData(Dictionary<string, dynamic> jsonObject, PTMagicConfiguration systemConfiguration, LogHelper log)
     {
       string result = "";
+      if (jsonObject == null)
+      {
+        return result;
+      }
+
       try
       {
-        if (jsonObject != null && jsonObject.Count > 0 && jsonObject["data"] != null)
+        if (jsonObject.Count > 0 && jsonObject["data"] != null)
         {
           log.DoLogInfo("CoinMarketCap - Market data received for " + jsonObject["data"].Count + " currencies");
 
@@ -110,7 +97,7 @@ namespace Core.MarketAnalyzer
         Directory.CreateDirectory(coinMarketCapDataDirectoryPath);
       }
 
-      DirectoryInfo dataDirectory = new DirectoryInfo(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathCoinMarketCap + Path.DirectorySeparatorChar);
+      DirectoryInfo dataDirectory = new DirectoryInfo(coinMarketCapDataDirectoryPath);
 
       List<FileInfo> marketFiles = dataDirectory.EnumerateFiles("MarketData*")
                          .Select(x => { x.Refresh(); return x; })
@@ -167,7 +154,7 @@ namespace Core.MarketAnalyzer
         }
 
         DateTime fileDateTime = DateTime.UtcNow.AddHours(-24);
-        FileHelper.WriteTextToFile(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathCoinMarketCap + Path.DirectorySeparatorChar, "MarketData_" + fileDateTime.ToString("yyyy-MM-dd_HH.mm") + ".json", JsonConvert.SerializeObject(markets24h), fileDateTime, fileDateTime);
+        FileHelper.WriteTextToFile(coinMarketCapDataDirectoryPath, "MarketData_" + fileDateTime.ToString("yyyy-MM-dd_HH.mm") + ".json", JsonConvert.SerializeObject(markets24h), fileDateTime, fileDateTime);
 
         log.DoLogInfo("CoinMarketCap - 24h market data rebuilt.");
       }
