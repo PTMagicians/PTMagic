@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Reflection;
-using System.Security.Permissions;
 using Core.Helper;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -17,7 +16,6 @@ namespace PTMagic
     private static LogHelper _log = ServiceHelper.BuildLoggerService().GetRequiredService<LogHelper>();
 
     // Main class entry
-    [SecurityPermission(SecurityAction.Demand, Flags = SecurityPermissionFlag.ControlAppDomain)]
     public static void Main(string[] args)
     {
       // Register a global exception handler
