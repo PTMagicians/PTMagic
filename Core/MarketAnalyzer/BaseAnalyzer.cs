@@ -542,7 +542,9 @@ namespace Core.MarketAnalyzer
       foreach (KeyValuePair<string, Market> recentMarketPair in sortedMarkets)
       {
         bool isTradingMarket = marketList.Count == 0 || marketList.Contains(recentMarketPair.Key);
-        bool isAnalyzerMarket = useBinanceFuturesAnalyzerUniverse && BinanceFuturesMarketUniverse.IsMarketIncluded(recentMarketPair.Key, systemConfiguration);
+        bool isAnalyzerMarket = useBinanceFuturesAnalyzerUniverse
+          && !systemConfiguration.AnalyzerSettings.MarketAnalyzer.UseProfitTrailerEnabledPairs
+          && BinanceFuturesMarketUniverse.IsMarketIncluded(recentMarketPair.Key, systemConfiguration);
         if (isTradingMarket || isAnalyzerMarket)
         {
           bool excludeMainCurrency = systemConfiguration.AnalyzerSettings.MarketAnalyzer.ExcludeMainCurrency;
