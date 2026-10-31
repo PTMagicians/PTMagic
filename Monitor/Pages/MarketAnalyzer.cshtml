@@ -218,14 +218,15 @@ else
         string analyzerUnderlyingTypesSuffix = "";
         if (Model.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceFutures", StringComparison.InvariantCultureIgnoreCase))
         {
-          List<string> includedUnderlyingTypes = Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IncludedUnderlyingTypes;
-          if (includedUnderlyingTypes == null)
+          List<string> includedUnderlyingTypes = Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IncludedUnderlyingTypes?
+            .Where(type => !String.IsNullOrWhiteSpace(type))
+            .Select(type => type.Trim().ToUpperInvariant())
+            .Distinct(StringComparer.InvariantCultureIgnoreCase)
+            .ToList();
+
+          if (includedUnderlyingTypes == null || includedUnderlyingTypes.Count == 0)
           {
-            analyzerUnderlyingTypesSuffix = " (COIN)";
-          }
-          else if (includedUnderlyingTypes.Count == 0)
-          {
-            analyzerUnderlyingTypesSuffix = " (NONE)";
+            analyzerUnderlyingTypesSuffix = " (ALL)";
           }
           else
           {
