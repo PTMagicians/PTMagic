@@ -249,15 +249,12 @@ namespace Core.MarketAnalyzer
       if (includedTypes == null)
       {
         includedTypes = settings?.IncludedUnderlyingTypes;
-        if (includedTypes == null)
-        {
-          includedTypes = new List<string> { "COIN" };
-        }
       }
 
-      if (includedTypes.Count == 0)
+      // Missing, null, or empty means no underlying-type restriction.
+      if (includedTypes == null || includedTypes.Count == 0)
       {
-        return false;
+        return true;
       }
 
       return includedTypes.Any(type => type.Equals(metadata.UnderlyingType, StringComparison.InvariantCultureIgnoreCase));
