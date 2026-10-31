@@ -209,13 +209,13 @@ namespace Monitor.Pages
 
           for (int f = 0; f < HttpContext.Request.Form[tFormKey + "MarketTrendName"].Count; f++)
           {
-            if (originalTriggerNameSimplified.Equals(""))
+            if (originalNameSimplified.Equals(""))
             {
               trigger = new Trigger();
             }
             else
             {
-              trigger = sms.Triggers.Find(t => SystemHelper.StripBadCode(t.MarketTrendName, Constants.WhiteListNames).Equals(originalTriggerNameSimplified));
+              trigger = sms.Triggers.Find(t => SystemHelper.StripBadCode(t.MarketTrendName, Constants.WhiteListNames).Equals(originalNameSimplified));
             }
 
             trigger.MarketTrendName = HttpContext.Request.Form[tFormKey + "MarketTrendName"][f];
@@ -321,7 +321,7 @@ namespace Monitor.Pages
           OffTrigger offTrigger = null;
 
           string originalOffTriggerIndex = singleMarketSetting24hVolumeOffTriggerFormKey.Replace(smsFormKey + "OffTrigger_24hVolume", "").Replace("|Min24hVolume", "");
-          string tFormKey = smsFormKey + "OffTrigger_24hVolume" + originalTriggerIndex + "|";
+          string tFormKey = smsFormKey + "OffTrigger_24hVolume" + originalOffTriggerIndex + "|";
 
           for (int f = 0; f < HttpContext.Request.Form[tFormKey + "Min24hVolume"].Count; f++)
           {
