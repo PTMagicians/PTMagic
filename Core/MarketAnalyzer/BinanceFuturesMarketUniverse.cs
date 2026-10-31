@@ -16,13 +16,18 @@ namespace Core.MarketAnalyzer
   {
     private const int MetadataRefreshMinutes = 15;
     private const string MetadataFileName = "BinanceFuturesMarketMetadata.json";
+    private const string EffectiveUnderlyingTypesFileName = "BinanceFuturesAnalyzerUnderlyingTypes.json";
 
     private static readonly SemaphoreSlim RefreshLock = new SemaphoreSlim(1, 1);
     private static readonly object MetadataLock = new object();
+    private static readonly object UnderlyingTypesLock = new object();
     private static Dictionary<string, BinanceFuturesMarketMetadata> _metadata = new Dictionary<string, BinanceFuturesMarketMetadata>(StringComparer.InvariantCultureIgnoreCase);
     private static DateTime _lastRefreshUtc = Constants.confMinDate;
     private static bool _metadataFileLoaded = false;
     private static List<string> _profitTrailerAllowedUnderlyingTypes = null;
+    private static bool _profitTrailerAllowedUnderlyingTypesConfiguredInProcess = false;
+    private static DateTime _effectiveUnderlyingTypesFileWriteUtc = Constants.confMinDate;
+    private static bool _effectiveUnderlyingTypesFileExists = false;
 
     public static readonly string[] KnownUnderlyingTypes = new string[]
     {
@@ -118,7 +123,12 @@ namespace Core.MarketAnalyzer
       Core.Main.DataObjects.PTMagicData.MarketAnalyzer settings = systemConfiguration?.AnalyzerSettings?.MarketAnalyzer;
       if (settings?.UseProfitTrailerAllowedUnderlyingTypes != true)
       {
-        _profitTrailerAllowedUnderlyingTypes = null;
+        lock (UnderlyingTypesLock)
+        {
+          _profitTrailerAllowedUnderlyingTypes = null;
+          _profitTrailerAllowedUnderlyingTypesConfiguredInProcess = false;
+        }
+        ClearEffectiveUnderlyingTypesFile(log);
         return;
       }
 
@@ -154,25 +164,38 @@ namespace Core.MarketAnalyzer
 
       if (!found)
       {
-        _profitTrailerAllowedUnderlyingTypes = null;
+        lock (UnderlyingTypesLock)
+        {
+          _profitTrailerAllowedUnderlyingTypes = null;
+          _profitTrailerAllowedUnderlyingTypesConfiguredInProcess = false;
+        }
+        ClearEffectiveUnderlyingTypesFile(log);
         log.DoLogWarn("BinanceFutures - UseProfitTrailerAllowedUnderlyingTypes is enabled, but allowed_underlying_type was not found in the active PAIRS settings. Falling back to IncludedUnderlyingTypes.");
         return;
       }
 
-      _profitTrailerAllowedUnderlyingTypes = rawValue
+      List<string> configuredTypes = rawValue
         .Split(',', StringSplitOptions.RemoveEmptyEntries)
         .Select(type => type.Trim().ToUpperInvariant())
         .Where(type => !String.IsNullOrWhiteSpace(type))
         .Distinct(StringComparer.InvariantCultureIgnoreCase)
         .ToList();
 
-      if (_profitTrailerAllowedUnderlyingTypes.Count == 0)
+      lock (UnderlyingTypesLock)
+      {
+        _profitTrailerAllowedUnderlyingTypes = configuredTypes;
+        _profitTrailerAllowedUnderlyingTypesConfiguredInProcess = true;
+      }
+
+      SaveEffectiveUnderlyingTypesFile(configuredTypes, log);
+
+      if (configuredTypes.Count == 0)
       {
         log.DoLogInfo("BinanceFutures - Using ProfitTrailer allowed_underlying_type for analyzer universe: blank value (all classified underlying types).");
       }
       else
       {
-        log.DoLogInfo("BinanceFutures - Using ProfitTrailer allowed_underlying_type for analyzer universe: " + String.Join(", ", _profitTrailerAllowedUnderlyingTypes) + ".");
+        log.DoLogInfo("BinanceFutures - Using ProfitTrailer allowed_underlying_type for analyzer universe: " + String.Join(", ", configuredTypes) + ".");
       }
     }
 
@@ -204,17 +227,26 @@ namespace Core.MarketAnalyzer
       Core.Main.DataObjects.PTMagicData.MarketAnalyzer settings = systemConfiguration?.AnalyzerSettings?.MarketAnalyzer;
       List<string> includedTypes = null;
 
-      if (settings?.UseProfitTrailerAllowedUnderlyingTypes == true && _profitTrailerAllowedUnderlyingTypes != null)
+      if (settings?.UseProfitTrailerAllowedUnderlyingTypes == true)
       {
-        // ProfitTrailer treats a present-but-blank allowed_underlying_type as unrestricted.
-        if (_profitTrailerAllowedUnderlyingTypes.Count == 0)
-        {
-          return true;
-        }
+        RefreshEffectiveUnderlyingTypesFromFile();
 
-        includedTypes = _profitTrailerAllowedUnderlyingTypes;
+        lock (UnderlyingTypesLock)
+        {
+          if (_profitTrailerAllowedUnderlyingTypes != null)
+          {
+            // ProfitTrailer treats a present-but-blank allowed_underlying_type as unrestricted.
+            if (_profitTrailerAllowedUnderlyingTypes.Count == 0)
+            {
+              return true;
+            }
+
+            includedTypes = new List<string>(_profitTrailerAllowedUnderlyingTypes);
+          }
+        }
       }
-      else
+
+      if (includedTypes == null)
       {
         includedTypes = settings?.IncludedUnderlyingTypes;
         if (includedTypes == null)
@@ -327,9 +359,95 @@ namespace Core.MarketAnalyzer
       }
     }
 
+    private static void SaveEffectiveUnderlyingTypesFile(List<string> underlyingTypes, LogHelper log)
+    {
+      try
+      {
+        string path = GetEffectiveUnderlyingTypesFilePath();
+        Directory.CreateDirectory(Path.GetDirectoryName(path));
+        File.WriteAllText(path, JsonConvert.SerializeObject(underlyingTypes ?? new List<string>(), Formatting.Indented));
+
+        lock (UnderlyingTypesLock)
+        {
+          _effectiveUnderlyingTypesFileExists = true;
+          _effectiveUnderlyingTypesFileWriteUtc = File.GetLastWriteTimeUtc(path);
+        }
+      }
+      catch (Exception ex)
+      {
+        log.DoLogWarn("BinanceFutures - Unable to save effective analyzer underlying types: " + ex.Message);
+      }
+    }
+
+    private static void ClearEffectiveUnderlyingTypesFile(LogHelper log)
+    {
+      try
+      {
+        string path = GetEffectiveUnderlyingTypesFilePath();
+        if (File.Exists(path))
+        {
+          File.Delete(path);
+        }
+
+        lock (UnderlyingTypesLock)
+        {
+          _effectiveUnderlyingTypesFileExists = false;
+          _effectiveUnderlyingTypesFileWriteUtc = Constants.confMinDate;
+        }
+      }
+      catch (Exception ex)
+      {
+        log.DoLogWarn("BinanceFutures - Unable to clear effective analyzer underlying types: " + ex.Message);
+      }
+    }
+
+    private static void RefreshEffectiveUnderlyingTypesFromFile()
+    {
+      lock (UnderlyingTypesLock)
+      {
+        if (_profitTrailerAllowedUnderlyingTypesConfiguredInProcess)
+        {
+          return;
+        }
+
+        string path = GetEffectiveUnderlyingTypesFilePath();
+        if (!File.Exists(path))
+        {
+          _profitTrailerAllowedUnderlyingTypes = null;
+          _effectiveUnderlyingTypesFileExists = false;
+          _effectiveUnderlyingTypesFileWriteUtc = Constants.confMinDate;
+          return;
+        }
+
+        DateTime fileWriteUtc = File.GetLastWriteTimeUtc(path);
+        if (_effectiveUnderlyingTypesFileExists && fileWriteUtc == _effectiveUnderlyingTypesFileWriteUtc)
+        {
+          return;
+        }
+
+        try
+        {
+          _profitTrailerAllowedUnderlyingTypes = JsonConvert.DeserializeObject<List<string>>(File.ReadAllText(path)) ?? new List<string>();
+          _effectiveUnderlyingTypesFileExists = true;
+          _effectiveUnderlyingTypesFileWriteUtc = fileWriteUtc;
+        }
+        catch
+        {
+          _profitTrailerAllowedUnderlyingTypes = null;
+          _effectiveUnderlyingTypesFileExists = false;
+          _effectiveUnderlyingTypesFileWriteUtc = Constants.confMinDate;
+        }
+      }
+    }
+
     private static string GetMetadataFilePath()
     {
       return Path.Combine(Directory.GetCurrentDirectory(), Constants.PTMagicPathData, Constants.PTMagicPathExchange, MetadataFileName);
+    }
+
+    private static string GetEffectiveUnderlyingTypesFilePath()
+    {
+      return Path.Combine(Directory.GetCurrentDirectory(), Constants.PTMagicPathData, Constants.PTMagicPathExchange, EffectiveUnderlyingTypesFileName);
     }
   }
 
