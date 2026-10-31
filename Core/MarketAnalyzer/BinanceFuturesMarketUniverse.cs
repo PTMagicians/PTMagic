@@ -132,7 +132,7 @@ namespace Core.MarketAnalyzer
         }
       }
 
-      MarketAnalyzer settings = systemConfiguration?.AnalyzerSettings?.MarketAnalyzer;
+      Core.Main.DataObjects.PTMagicData.MarketAnalyzer settings = systemConfiguration?.AnalyzerSettings?.MarketAnalyzer;
       List<string> includedTypes = settings?.IncludedUnderlyingTypes;
       if (includedTypes == null)
       {
