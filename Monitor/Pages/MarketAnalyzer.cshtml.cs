@@ -5,6 +5,7 @@ using Core.Main;
 using Core.Helper;
 using Core.Main.DataObjects;
 using Core.Main.DataObjects.PTMagicData;
+using Core.MarketAnalyzer;
 using System.Globalization;
 
 namespace Monitor.Pages
@@ -28,6 +29,14 @@ namespace Monitor.Pages
       PTData = this.PtDataObject;
       MiscData = this.PTData.Misc;  
       MarketTrends = PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends.OrderBy(mt => mt.TrendMinutes).ThenByDescending(mt => mt.Platform).ToList();
+
+      if (PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceFutures", StringComparison.InvariantCultureIgnoreCase)
+        && Summary?.MarketSummary != null)
+      {
+        Summary.MarketSummary = Summary.MarketSummary
+          .Where(market => BinanceFuturesMarketUniverse.IsMarketIncluded(market.Key, PTMagicConfiguration))
+          .ToDictionary(market => market.Key, market => market.Value, StringComparer.InvariantCultureIgnoreCase);
+      }
 
       BuildMarketTrendChartData();
     }
