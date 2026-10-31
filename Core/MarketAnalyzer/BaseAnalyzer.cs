@@ -680,7 +680,8 @@ namespace Core.MarketAnalyzer
           if (globalMarketTrendChanges.ContainsKey(marketTrend.Name))
           {
             List<MarketTrendChange> marketTrendChanges = globalMarketTrendChanges[marketTrend.Name];
-            if (marketTrend.Platform.Equals("Exchange", StringComparison.InvariantCultureIgnoreCase)
+            if (marketTrendChanges != null
+              && marketTrend.Platform.Equals("Exchange", StringComparison.InvariantCultureIgnoreCase)
               && systemConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceFutures", StringComparison.InvariantCultureIgnoreCase))
             {
               marketTrendChanges = marketTrendChanges
