@@ -209,13 +209,13 @@ namespace Monitor.Pages
 
           for (int f = 0; f < HttpContext.Request.Form[tFormKey + "MarketTrendName"].Count; f++)
           {
-            if (originalNameSimplified.Equals(""))
+            if (originalTriggerNameSimplified.Equals(""))
             {
               trigger = new Trigger();
             }
             else
             {
-              trigger = sms.Triggers.Find(t => SystemHelper.StripBadCode(t.MarketTrendName, Constants.WhiteListNames).Equals(originalNameSimplified));
+              trigger = sms.Triggers.Find(t => SystemHelper.StripBadCode(t.MarketTrendName, Constants.WhiteListNames).Equals(originalTriggerNameSimplified));
             }
 
             trigger.MarketTrendName = HttpContext.Request.Form[tFormKey + "MarketTrendName"][f];
