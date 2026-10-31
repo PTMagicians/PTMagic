@@ -59,14 +59,14 @@ namespace Monitor.Pages
     private void LoadMarketUnderlyingTypes()
     {
       string metadataPath = Path.Combine(Directory.GetCurrentDirectory(), Constants.PTMagicPathData, Constants.PTMagicPathExchange, "BinanceFuturesMarketMetadata.json");
-      if (!File.Exists(metadataPath))
+      if (!System.IO.File.Exists(metadataPath))
       {
         return;
       }
 
       try
       {
-        List<BinanceFuturesMarketMetadata> metadata = JsonConvert.DeserializeObject<List<BinanceFuturesMarketMetadata>>(File.ReadAllText(metadataPath));
+        List<BinanceFuturesMarketMetadata> metadata = JsonConvert.DeserializeObject<List<BinanceFuturesMarketMetadata>>(System.IO.File.ReadAllText(metadataPath));
         if (metadata == null)
         {
           return;
