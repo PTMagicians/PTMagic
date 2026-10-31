@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
@@ -118,6 +118,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public int IntervalMinutes { get; set; } = 5;
     public bool ExcludeMainCurrency { get; set; } = true;
     public bool UseProfitTrailerEnabledPairs { get; set; } = false;
+    public bool UseProfitTrailerAllowedUnderlyingTypes { get; set; } = false;
 
     public List<string> IncludedUnderlyingTypes { get; set; } = new List<string>
     {
@@ -557,7 +558,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public int BoughtTimes { get; set; }
     public double PercChange { get; set; }
     public double Volume24h { get; set; }
-    public List<Strategy> BuyStrategies { get; set; } = new List<Strategy>();
+    public List<StrategySummary> BuyStrategies { get; set; } = new List<StrategySummary>();
   }
 
   public class MiscData
