@@ -34,6 +34,15 @@ namespace Monitor.Pages
       PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours = SystemHelper.TextToInteger(HttpContext.Request.Form["MarketAnalyzer_StoreDataMaxHours"], PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.StoreDataMaxHours);
       PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes = SystemHelper.TextToInteger(HttpContext.Request.Form["MarketAnalyzer_IntervalMinutes"], PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes);
       PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.ExcludeMainCurrency = HttpContext.Request.Form["MarketAnalyzer_ExcludeMainCurrency"].Equals("on");
+      PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.UseProfitTrailerEnabledPairs = HttpContext.Request.Form["MarketAnalyzer_UseProfitTrailerEnabledPairs"].Equals("on");
+      PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.UseProfitTrailerAllowedUnderlyingTypes = HttpContext.Request.Form["MarketAnalyzer_UseProfitTrailerAllowedUnderlyingTypes"].Equals("on");
+      PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IncludedUnderlyingTypes = HttpContext.Request.Form["MarketAnalyzer_IncludedUnderlyingTypes"]
+        .ToString()
+        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+        .Select(type => type.Trim().ToUpperInvariant())
+        .Where(type => !String.IsNullOrWhiteSpace(type))
+        .Distinct(StringComparer.InvariantCultureIgnoreCase)
+        .ToList();
 
       List<string> formKeys = HttpContext.Request.Form.Keys.ToList();
 
@@ -312,7 +321,7 @@ namespace Monitor.Pages
           OffTrigger offTrigger = null;
 
           string originalOffTriggerIndex = singleMarketSetting24hVolumeOffTriggerFormKey.Replace(smsFormKey + "OffTrigger_24hVolume", "").Replace("|Min24hVolume", "");
-          string tFormKey = smsFormKey + "OffTrigger_24hVolume" + originalOffTriggerIndex + "|";
+          string tFormKey = smsFormKey + "OffTrigger_24hVolume" + originalTriggerIndex + "|";
 
           for (int f = 0; f < HttpContext.Request.Form[tFormKey + "Min24hVolume"].Count; f++)
           {
