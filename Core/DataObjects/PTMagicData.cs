@@ -119,12 +119,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public bool ExcludeMainCurrency { get; set; } = true;
     public bool UseProfitTrailerEnabledPairs { get; set; } = false;
     public bool UseProfitTrailerAllowedUnderlyingTypes { get; set; } = false;
-
-    public List<string> IncludedUnderlyingTypes { get; set; } = new List<string>
-    {
-      "COIN"
-    };
-
+    public List<string> IncludedUnderlyingTypes { get; set; } = new List<string>();
     public List<MarketTrend> MarketTrends { get; set; }
   }
 
