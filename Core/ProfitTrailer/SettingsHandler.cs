@@ -140,13 +140,18 @@ namespace Core.ProfitTrailer
 
     public static string GetMarketPairs(PTMagicConfiguration systemConfiguration, List<string> pairsLines, LogHelper log)
     {
+      if (systemConfiguration?.AnalyzerSettings?.MarketAnalyzer?.UseProfitTrailerEnabledPairs != true)
+      {
+        return "all";
+      }
+
       string result = "";
 
       foreach (string line in pairsLines)
       {
         if (line.Replace(" ", "").StartsWith("enabled_pairs", StringComparison.InvariantCultureIgnoreCase))
         {
-          result = result.Replace("enabled_pairs", "", StringComparison.InvariantCultureIgnoreCase);
+          result = line.Replace("enabled_pairs", "", StringComparison.InvariantCultureIgnoreCase);
           result = result.Replace("#", "");
           result = result.Replace("=", "").Trim();
           break;
