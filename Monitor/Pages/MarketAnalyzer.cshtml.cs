@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using Core.Main;
 using Core.Helper;
 using Core.Main.DataObjects;
 using Core.Main.DataObjects.PTMagicData;
 using Core.MarketAnalyzer;
+using Newtonsoft.Json;
 using System.Globalization;
 
 namespace Monitor.Pages
@@ -17,6 +19,7 @@ namespace Monitor.Pages
     public MiscData MiscData { get; set; }
     public string TrendChartDataJSON = "";
     public double DataHours { get; set; }
+    public Dictionary<string, string> MarketUnderlyingTypes { get; set; } = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
     public void OnGet()
     {
@@ -36,9 +39,48 @@ namespace Monitor.Pages
         Summary.MarketSummary = Summary.MarketSummary
           .Where(market => BinanceFuturesMarketUniverse.IsMarketIncluded(market.Key, PTMagicConfiguration))
           .ToDictionary(market => market.Key, market => market.Value, StringComparer.InvariantCultureIgnoreCase);
+
+        LoadMarketUnderlyingTypes();
       }
 
       BuildMarketTrendChartData();
+    }
+
+    public string GetMarketUnderlyingType(string market)
+    {
+      if (String.IsNullOrWhiteSpace(market))
+      {
+        return "";
+      }
+
+      return MarketUnderlyingTypes.TryGetValue(market, out string underlyingType) ? underlyingType : "";
+    }
+
+    private void LoadMarketUnderlyingTypes()
+    {
+      string metadataPath = Path.Combine(Directory.GetCurrentDirectory(), Constants.PTMagicPathData, Constants.PTMagicPathExchange, "BinanceFuturesMarketMetadata.json");
+      if (!File.Exists(metadataPath))
+      {
+        return;
+      }
+
+      try
+      {
+        List<BinanceFuturesMarketMetadata> metadata = JsonConvert.DeserializeObject<List<BinanceFuturesMarketMetadata>>(File.ReadAllText(metadataPath));
+        if (metadata == null)
+        {
+          return;
+        }
+
+        MarketUnderlyingTypes = metadata
+          .Where(item => item != null && !String.IsNullOrWhiteSpace(item.Symbol))
+          .GroupBy(item => item.Symbol, StringComparer.InvariantCultureIgnoreCase)
+          .ToDictionary(group => group.Key, group => group.Last().UnderlyingType ?? "", StringComparer.InvariantCultureIgnoreCase);
+      }
+      catch
+      {
+        MarketUnderlyingTypes = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+      }
     }
 
     private void BuildMarketTrendChartData()
