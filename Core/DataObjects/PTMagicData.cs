@@ -117,6 +117,7 @@ namespace Core.Main.DataObjects.PTMagicData
     public int StoreDataMaxHours { get; set; }
     public int IntervalMinutes { get; set; } = 5;
     public bool ExcludeMainCurrency { get; set; } = true;
+    public bool UseProfitTrailerEnabledPairs { get; set; } = false;
 
     public List<string> IncludedUnderlyingTypes { get; set; } = new List<string>
     {
