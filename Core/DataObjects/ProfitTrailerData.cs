@@ -866,7 +866,7 @@ namespace Core.Main.DataObjects
             {
               Strategy buyStrategy = new Strategy();
               buyStrategy.Type = bs.type;
-              buyStrategy.Name = bs.letter != null ? bs.letter : "";
+              buyStrategy.Name = bs.name;
               buyStrategy.EntryValue = bs.entryValue;
               buyStrategy.EntryValueLimit = bs.entryValueLimit;
               buyStrategy.TriggerValue = bs.triggerValue;

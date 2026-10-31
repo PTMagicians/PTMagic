@@ -277,6 +277,8 @@ namespace Core.MarketAnalyzer
     private static Dictionary<string, Market> BuildMarkets(string exchangeName, string mainMarket, double mainCurrencyPrice, JArray jsonArray, List<string> result, LogHelper log, bool logIncorrectBaseCurrency, bool caseSensitiveBaseMatch, ref string lastMarket)
     {
       Dictionary<string, Market> markets = new Dictionary<string, Market>();
+      bool allowZeroVolume = exchangeName.Equals("BinanceFutures", StringComparison.InvariantCultureIgnoreCase);
+
       foreach (JObject currencyTicker in jsonArray)
       {
         string marketName = currencyTicker[SymbolField].ToString();
@@ -284,7 +286,7 @@ namespace Core.MarketAnalyzer
         float marketLastPrice = currencyTicker[LastPriceField].ToObject<float>();
         float marketVolume = currencyTicker[VolumeField].ToObject<float>();
 
-        if (correctBase && marketLastPrice > 0 && marketVolume > 0)
+        if (correctBase && marketLastPrice > 0 && (marketVolume > 0 || allowZeroVolume))
         {
           lastMarket = marketName;
           Market market = new Market
