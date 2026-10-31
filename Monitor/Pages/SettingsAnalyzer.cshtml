@@ -136,23 +136,23 @@
         </div>
 
         <div class="form-group row">
-          <label class="col-md-4 col-form-label">Use ProfitTrailer Enabled Pairs <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="When enabled, PTMagic restricts market analysis to enabled_pairs from the active ProfitTrailer PAIRS preset. When disabled, PTMagic can analyze all exchange markets matching ProfitTrailer's MARKET setting."></i></label>
+          <label for="MarketAnalyzer_UseProfitTrailerEnabledPairs" class="col-md-4 col-form-label">Use ProfitTrailer Enabled Pairs <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="When enabled, PTMagic restricts market analysis to enabled_pairs from the active ProfitTrailer PAIRS preset. When disabled, PTMagic can analyze all exchange markets matching ProfitTrailer's MARKET setting."></i></label>
           <div class="col-md-8">
-            <input type="checkbox" name="MarketAnalyzer_UseProfitTrailerEnabledPairs" checked="@(Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.UseProfitTrailerEnabledPairs)" data-plugin="switchery" data-color="#81c868" data-size="small" />
+            <input id="MarketAnalyzer_UseProfitTrailerEnabledPairs" type="checkbox" name="MarketAnalyzer_UseProfitTrailerEnabledPairs" checked="@(Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.UseProfitTrailerEnabledPairs)" data-plugin="switchery" data-color="#81c868" data-size="small" />
           </div>
         </div>
 
         <div class="form-group row">
-          <label class="col-md-4 col-form-label">Use ProfitTrailer Allowed Underlying Types <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Binance Futures only. When enabled, PTMagic uses allowed_underlying_type from the active ProfitTrailer PAIRS preset. When disabled, PTMagic uses Included Underlying Types below."></i></label>
+          <label for="MarketAnalyzer_UseProfitTrailerAllowedUnderlyingTypes" class="col-md-4 col-form-label">Use ProfitTrailer Allowed Underlying Types <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Binance Futures only. When enabled, PTMagic uses allowed_underlying_type from the active ProfitTrailer PAIRS preset. When disabled, PTMagic uses Included Underlying Types below."></i></label>
           <div class="col-md-8">
-            <input type="checkbox" name="MarketAnalyzer_UseProfitTrailerAllowedUnderlyingTypes" checked="@(Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.UseProfitTrailerAllowedUnderlyingTypes)" data-plugin="switchery" data-color="#81c868" data-size="small" />
+            <input id="MarketAnalyzer_UseProfitTrailerAllowedUnderlyingTypes" type="checkbox" name="MarketAnalyzer_UseProfitTrailerAllowedUnderlyingTypes" checked="@(Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.UseProfitTrailerAllowedUnderlyingTypes)" data-plugin="switchery" data-color="#81c868" data-size="small" />
           </div>
         </div>
 
         <div class="form-group row">
-          <label class="col-md-4 col-form-label">Included Underlying Types <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Binance Futures only. Comma-separated market types used when ProfitTrailer Allowed Underlying Types is disabled, or as the fallback if allowed_underlying_type is missing. Examples: COIN, EQUITY, KR_EQUITY, HK_EQUITY, CN_EQUITY, COMMODITY, INDEX, PREMARKET, FX."></i></label>
+          <label for="MarketAnalyzer_IncludedUnderlyingTypes" class="col-md-4 col-form-label">Included Underlying Types <i class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" title="Binance Futures only. Comma-separated market types used when ProfitTrailer Allowed Underlying Types is disabled, or as the fallback if allowed_underlying_type is missing. Examples: COIN, EQUITY, KR_EQUITY, HK_EQUITY, CN_EQUITY, COMMODITY, INDEX, PREMARKET, FX."></i></label>
           <div class="col-md-8">
-            <input type="text" class="form-control" name="MarketAnalyzer_IncludedUnderlyingTypes" value="@(Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IncludedUnderlyingTypes == null ? "" : String.Join(", ", Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IncludedUnderlyingTypes))" placeholder="COIN, EQUITY, INDEX">
+            <input id="MarketAnalyzer_IncludedUnderlyingTypes" type="text" class="form-control" name="MarketAnalyzer_IncludedUnderlyingTypes" value="@(Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IncludedUnderlyingTypes == null ? "" : String.Join(", ", Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IncludedUnderlyingTypes))" placeholder="COIN, EQUITY, INDEX">
           </div>
         </div>
       </div>

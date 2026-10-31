@@ -132,37 +132,7 @@ namespace Core.MarketAnalyzer
         return;
       }
 
-      bool found = false;
-      string rawValue = "";
-      if (pairsLines != null)
-      {
-        foreach (string line in pairsLines)
-        {
-          string trimmedLine = line?.Trim() ?? "";
-          if (trimmedLine.StartsWith("#"))
-          {
-            continue;
-          }
-
-          int separatorIndex = trimmedLine.IndexOf('=');
-          if (separatorIndex < 0)
-          {
-            continue;
-          }
-
-          string propertyName = trimmedLine.Substring(0, separatorIndex).Trim();
-          if (!propertyName.Equals("allowed_underlying_type", StringComparison.InvariantCultureIgnoreCase))
-          {
-            continue;
-          }
-
-          rawValue = trimmedLine.Substring(separatorIndex + 1).Trim();
-          found = true;
-          break;
-        }
-      }
-
-      if (!found)
+      if (!TryGetProfitTrailerAllowedUnderlyingType(pairsLines, out string rawValue))
       {
         lock (UnderlyingTypesLock)
         {
@@ -197,6 +167,41 @@ namespace Core.MarketAnalyzer
       {
         log.DoLogInfo("BinanceFutures - Using ProfitTrailer allowed_underlying_type for analyzer universe: " + String.Join(", ", configuredTypes) + ".");
       }
+    }
+
+    private static bool TryGetProfitTrailerAllowedUnderlyingType(List<string> pairsLines, out string rawValue)
+    {
+      rawValue = "";
+      if (pairsLines == null)
+      {
+        return false;
+      }
+
+      foreach (string line in pairsLines)
+      {
+        string trimmedLine = line?.Trim() ?? "";
+        if (trimmedLine.StartsWith('#'))
+        {
+          continue;
+        }
+
+        int separatorIndex = trimmedLine.IndexOf('=');
+        if (separatorIndex < 0)
+        {
+          continue;
+        }
+
+        string propertyName = trimmedLine.Substring(0, separatorIndex).Trim();
+        if (!propertyName.Equals("allowed_underlying_type", StringComparison.InvariantCultureIgnoreCase))
+        {
+          continue;
+        }
+
+        rawValue = trimmedLine.Substring(separatorIndex + 1).Trim();
+        return true;
+      }
+
+      return false;
     }
 
     public static bool IsMarketIncluded(string symbol, PTMagicConfiguration systemConfiguration)

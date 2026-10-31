@@ -78,8 +78,15 @@ namespace Core.ProfitTrailer
 
                   using (HttpResponseMessage response = httpClient.PostAsync(urlList[i] + "settingsapi/settings/saveAll", content).GetAwaiter().GetResult())
                   {
-                    response.EnsureSuccessStatusCode();
-                    log.DoLogInfo("Properties sent!");
+                    if (response.StatusCode == HttpStatusCode.NotModified)
+                    {
+                      log.DoLogInfo("Properties already up to date in ProfitTrailer.");
+                    }
+                    else
+                    {
+                      response.EnsureSuccessStatusCode();
+                      log.DoLogInfo("Properties sent!");
+                    }
                     log.DoLogDebug("Properties response object closed.");
                   }
                 }

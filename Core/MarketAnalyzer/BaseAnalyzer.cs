@@ -526,16 +526,21 @@ namespace Core.MarketAnalyzer
       bool useBinanceFuturesAnalyzerUniverse = platform.Equals("Exchange", StringComparison.InvariantCultureIgnoreCase)
         && systemConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceFutures", StringComparison.InvariantCultureIgnoreCase);
 
-      var sortedMarkets = new SortedDictionary<string, Market>(recentMarkets).OrderBy(m => m.Value.Position);
-      if (sortBy.Equals("Volume"))
-      {
-        sortedMarkets = new SortedDictionary<string, Market>(recentMarkets).OrderByDescending(m => m.Value.Volume24h);
-      }
+      SortedDictionary<string, Market> markets = new SortedDictionary<string, Market>(recentMarkets);
+      IEnumerable<KeyValuePair<string, Market>> sortedMarkets;
       if (useBinanceFuturesAnalyzerUniverse)
       {
-        sortedMarkets = sortedMarkets
+        sortedMarkets = markets
           .OrderByDescending(m => BinanceFuturesMarketUniverse.IsMarketIncluded(m.Key, systemConfiguration))
           .ThenByDescending(m => m.Value.Volume24h);
+      }
+      else if (sortBy.Equals("Volume"))
+      {
+        sortedMarkets = markets.OrderByDescending(m => m.Value.Volume24h);
+      }
+      else
+      {
+        sortedMarkets = markets.OrderBy(m => m.Value.Position);
       }
 
       int marketCount = 1;
