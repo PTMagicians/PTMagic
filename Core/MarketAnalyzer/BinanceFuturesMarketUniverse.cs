@@ -22,6 +22,7 @@ namespace Core.MarketAnalyzer
     private static Dictionary<string, BinanceFuturesMarketMetadata> _metadata = new Dictionary<string, BinanceFuturesMarketMetadata>(StringComparer.InvariantCultureIgnoreCase);
     private static DateTime _lastRefreshUtc = Constants.confMinDate;
     private static bool _metadataFileLoaded = false;
+    private static List<string> _profitTrailerAllowedUnderlyingTypes = null;
 
     public static readonly string[] KnownUnderlyingTypes = new string[]
     {
@@ -112,6 +113,69 @@ namespace Core.MarketAnalyzer
       }
     }
 
+    public static void ConfigureProfitTrailerAllowedUnderlyingTypes(List<string> pairsLines, PTMagicConfiguration systemConfiguration, LogHelper log)
+    {
+      Core.Main.DataObjects.PTMagicData.MarketAnalyzer settings = systemConfiguration?.AnalyzerSettings?.MarketAnalyzer;
+      if (settings?.UseProfitTrailerAllowedUnderlyingTypes != true)
+      {
+        _profitTrailerAllowedUnderlyingTypes = null;
+        return;
+      }
+
+      bool found = false;
+      string rawValue = "";
+      if (pairsLines != null)
+      {
+        foreach (string line in pairsLines)
+        {
+          string trimmedLine = line?.Trim() ?? "";
+          if (trimmedLine.StartsWith("#"))
+          {
+            continue;
+          }
+
+          int separatorIndex = trimmedLine.IndexOf('=');
+          if (separatorIndex < 0)
+          {
+            continue;
+          }
+
+          string propertyName = trimmedLine.Substring(0, separatorIndex).Trim();
+          if (!propertyName.Equals("allowed_underlying_type", StringComparison.InvariantCultureIgnoreCase))
+          {
+            continue;
+          }
+
+          rawValue = trimmedLine.Substring(separatorIndex + 1).Trim();
+          found = true;
+          break;
+        }
+      }
+
+      if (!found)
+      {
+        _profitTrailerAllowedUnderlyingTypes = null;
+        log.DoLogWarn("BinanceFutures - UseProfitTrailerAllowedUnderlyingTypes is enabled, but allowed_underlying_type was not found in the active PAIRS settings. Falling back to IncludedUnderlyingTypes.");
+        return;
+      }
+
+      _profitTrailerAllowedUnderlyingTypes = rawValue
+        .Split(',', StringSplitOptions.RemoveEmptyEntries)
+        .Select(type => type.Trim().ToUpperInvariant())
+        .Where(type => !String.IsNullOrWhiteSpace(type))
+        .Distinct(StringComparer.InvariantCultureIgnoreCase)
+        .ToList();
+
+      if (_profitTrailerAllowedUnderlyingTypes.Count == 0)
+      {
+        log.DoLogInfo("BinanceFutures - Using ProfitTrailer allowed_underlying_type for analyzer universe: blank value (all classified underlying types).");
+      }
+      else
+      {
+        log.DoLogInfo("BinanceFutures - Using ProfitTrailer allowed_underlying_type for analyzer universe: " + String.Join(", ", _profitTrailerAllowedUnderlyingTypes) + ".");
+      }
+    }
+
     public static bool IsMarketIncluded(string symbol, PTMagicConfiguration systemConfiguration)
     {
       if (String.IsNullOrWhiteSpace(symbol))
@@ -132,14 +196,34 @@ namespace Core.MarketAnalyzer
         }
       }
 
-      Core.Main.DataObjects.PTMagicData.MarketAnalyzer settings = systemConfiguration?.AnalyzerSettings?.MarketAnalyzer;
-      List<string> includedTypes = settings?.IncludedUnderlyingTypes;
-      if (includedTypes == null)
+      if (String.IsNullOrWhiteSpace(metadata.UnderlyingType))
       {
-        includedTypes = new List<string> { "COIN" };
+        return false;
       }
 
-      if (includedTypes.Count == 0 || String.IsNullOrWhiteSpace(metadata.UnderlyingType))
+      Core.Main.DataObjects.PTMagicData.MarketAnalyzer settings = systemConfiguration?.AnalyzerSettings?.MarketAnalyzer;
+      List<string> includedTypes = null;
+
+      if (settings?.UseProfitTrailerAllowedUnderlyingTypes == true && _profitTrailerAllowedUnderlyingTypes != null)
+      {
+        // ProfitTrailer treats a present-but-blank allowed_underlying_type as unrestricted.
+        if (_profitTrailerAllowedUnderlyingTypes.Count == 0)
+        {
+          return true;
+        }
+
+        includedTypes = _profitTrailerAllowedUnderlyingTypes;
+      }
+      else
+      {
+        includedTypes = settings?.IncludedUnderlyingTypes;
+        if (includedTypes == null)
+        {
+          includedTypes = new List<string> { "COIN" };
+        }
+      }
+
+      if (includedTypes.Count == 0)
       {
         return false;
       }
