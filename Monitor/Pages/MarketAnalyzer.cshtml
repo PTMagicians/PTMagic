@@ -214,7 +214,27 @@ else
   <div class="col-sm-12">
     <div class="card-box">
 
-      <h4 class="m-t-0 header-title"><b>Trend Overview for @Model.Summary.MarketSummary.Keys.Count markets on @Model.PTMagicConfiguration.GeneralSettings.Application.Exchange</b></h4>
+      @{
+        string analyzerUnderlyingTypesSuffix = "";
+        if (Model.PTMagicConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceFutures", StringComparison.InvariantCultureIgnoreCase))
+        {
+          List<string> includedUnderlyingTypes = Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IncludedUnderlyingTypes?
+            .Where(type => !String.IsNullOrWhiteSpace(type))
+            .Select(type => type.Trim().ToUpperInvariant())
+            .Distinct(StringComparer.InvariantCultureIgnoreCase)
+            .ToList();
+
+          if (includedUnderlyingTypes == null || includedUnderlyingTypes.Count == 0)
+          {
+            analyzerUnderlyingTypesSuffix = " (ALL)";
+          }
+          else
+          {
+            analyzerUnderlyingTypesSuffix = " (" + String.Join(", ", includedUnderlyingTypes) + ")";
+          }
+        }
+      }
+      <h4 class="m-t-0 header-title"><b>Trend Overview for @Model.Summary.MarketSummary.Keys.Count markets on @Model.PTMagicConfiguration.GeneralSettings.Application.Exchange@analyzerUnderlyingTypesSuffix</b></h4>
 
       <div class="row m-b-20">
         <div class="col-md-6"><button type="button" class="btn btn-block btn-trend-relation btn-lg btn-ptmagic waves-effect waves-light" data-trend-relation="absolute">Absolute Trend Changes</button></div>
@@ -241,6 +261,7 @@ else
             <th scope="col" data-tablesaw-priority="persist" data-toggle="tooltip" data-placement="top" title="Sell Only Mode status">SOM</th>
             <th scope="col" data-tablesaw-priority="persist" data-toggle="tooltip" data-placement="top" title="DCA status">DCA</th>
             <th scope="col" data-tablesaw-sortable-col data-tablesaw-sortable-default-col>Market Name</th>
+            <th scope="col" data-tablesaw-sortable-col>Type</th>
             <th scope="col" data-tablesaw-sortable-col class="text-right">Last Price</th>
             <th scope="col" data-tablesaw-sortable-col class="text-right">Volume</th>
             @foreach (Core.Main.DataObjects.PTMagicData.MarketTrend marketTrend in marketTrends) {
@@ -275,6 +296,7 @@ else
               } else {
                 <th><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, market, Model.Summary.MainMarket, Model.PTMagicConfiguration.GeneralSettings.Monitor.TVCustomLayout)" target="_blank">@market</a> <i class="fa fa-exclamation-triangle text-highlight" data-toggle="tooltip" data-placement="top" data-html="true" title="@await Component.InvokeAsync("PairIcon", mps)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner pair-tooltip'></div></div>"></i></th>
               }
+              <td>@Model.GetMarketUnderlyingType(market)</td>
               <td class="text-right">@mps.LatestPrice.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US")) @Model.Summary.MainMarket</td>
               <td class="text-right">@Math.Round(mps.Latest24hVolume, 0).ToString("#,#0", new System.Globalization.CultureInfo("en-US")) @Model.Summary.MainMarket</td>
               @foreach (Core.Main.DataObjects.PTMagicData.MarketTrend marketTrend in marketTrends) {
@@ -308,6 +330,7 @@ else
             <th scope="col" data-tablesaw-priority="persist" data-toggle="tooltip" data-placement="top" title="Sell Only Mode status">SOM</th>
             <th scope="col" data-tablesaw-priority="persist" data-toggle="tooltip" data-placement="top" title="DCA status">DCA</th>
             <th scope="col" data-tablesaw-sortable-col data-tablesaw-sortable-default-col>Market Name</th>
+            <th scope="col" data-tablesaw-sortable-col>Type</th>
             <th scope="col" data-tablesaw-sortable-col class="text-right">Last Price</th>
             <th scope="col" data-tablesaw-sortable-col class="text-right">Volume</th>
             @foreach (Core.Main.DataObjects.PTMagicData.MarketTrend marketTrend in marketTrends) {
@@ -340,6 +363,7 @@ else
               } else {
                 <th><a href="@Core.Helper.SystemHelper.GetMarketLink(Model.PTMagicConfiguration.GeneralSettings.Monitor.LinkPlatform,Model.PTMagicConfiguration.GeneralSettings.Application.Exchange, market, Model.Summary.MainMarket, Model.PTMagicConfiguration.GeneralSettings.Monitor.TVCustomLayout)" target="_blank">@market</a> <i class="fa fa-exclamation-triangle text-highlight" data-toggle="tooltip" data-placement="top" data-html="true" title="@await Component.InvokeAsync("PairIcon", mps)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner pair-tooltip'></div></div>"></i></th>
               }
+              <td>@Model.GetMarketUnderlyingType(market)</td>
               <td class="text-right">@mps.LatestPrice.ToString("#,#0.00000000", new System.Globalization.CultureInfo("en-US"))</td>
               <td class="text-right">@Math.Round(mps.Latest24hVolume, 0).ToString("#,#0", new System.Globalization.CultureInfo("en-US"))</td>
               @foreach (Core.Main.DataObjects.PTMagicData.MarketTrend marketTrend in marketTrends) {

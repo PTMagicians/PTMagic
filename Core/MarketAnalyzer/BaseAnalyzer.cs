@@ -523,16 +523,29 @@ namespace Core.MarketAnalyzer
       LogHelper log)
     {
       List<MarketTrendChange> result = new List<MarketTrendChange>();
+      bool useBinanceFuturesAnalyzerUniverse = platform.Equals("Exchange", StringComparison.InvariantCultureIgnoreCase)
+        && systemConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceFutures", StringComparison.InvariantCultureIgnoreCase);
 
       var sortedMarkets = new SortedDictionary<string, Market>(recentMarkets).OrderBy(m => m.Value.Position);
       if (sortBy.Equals("Volume"))
       {
         sortedMarkets = new SortedDictionary<string, Market>(recentMarkets).OrderByDescending(m => m.Value.Volume24h);
       }
+      if (useBinanceFuturesAnalyzerUniverse)
+      {
+        sortedMarkets = sortedMarkets
+          .OrderByDescending(m => BinanceFuturesMarketUniverse.IsMarketIncluded(m.Key, systemConfiguration))
+          .ThenByDescending(m => m.Value.Volume24h);
+      }
+
       int marketCount = 1;
       foreach (KeyValuePair<string, Market> recentMarketPair in sortedMarkets)
       {
-        if (marketList.Count == 0 || marketList.Contains(recentMarketPair.Key))
+        bool isTradingMarket = marketList.Count == 0 || marketList.Contains(recentMarketPair.Key);
+        bool isAnalyzerMarket = useBinanceFuturesAnalyzerUniverse
+          && !systemConfiguration.AnalyzerSettings.MarketAnalyzer.UseProfitTrailerEnabledPairs
+          && BinanceFuturesMarketUniverse.IsMarketIncluded(recentMarketPair.Key, systemConfiguration);
+        if (isTradingMarket || isAnalyzerMarket)
         {
           bool excludeMainCurrency = systemConfiguration.AnalyzerSettings.MarketAnalyzer.ExcludeMainCurrency;
           if (!marketTrend.ExcludeMainCurrency)
@@ -667,6 +680,14 @@ namespace Core.MarketAnalyzer
           if (globalMarketTrendChanges.ContainsKey(marketTrend.Name))
           {
             List<MarketTrendChange> marketTrendChanges = globalMarketTrendChanges[marketTrend.Name];
+            if (marketTrend.Platform.Equals("Exchange", StringComparison.InvariantCultureIgnoreCase)
+              && systemConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceFutures", StringComparison.InvariantCultureIgnoreCase))
+            {
+              marketTrendChanges = marketTrendChanges
+                .Where(mtc => BinanceFuturesMarketUniverse.IsMarketIncluded(mtc.Market, systemConfiguration))
+                .ToList();
+            }
+
             if (marketTrendChanges != null && marketTrendChanges.Count > 0)
             {
             double totalTrendChange = 0;

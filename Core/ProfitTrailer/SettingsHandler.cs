@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Core.Main;
 using Core.Helper;
 using Core.Main.DataObjects.PTMagicData;
+using Core.MarketAnalyzer;
 using Newtonsoft.Json;
 
 namespace Core.ProfitTrailer
@@ -32,7 +33,6 @@ namespace Core.ProfitTrailer
       configPropertyKey = settingProperty.Trim();
       string result = null;
 
-      // Determine the mode for changing the value
       if (configPropertyKey.IndexOf("_OFFSETPERCENT") > -1)
       {
         valueMode = Constants.ValueModeOffsetPercent;
@@ -44,18 +44,15 @@ namespace Core.ProfitTrailer
         configPropertyKey = configPropertyKey.Replace("_OFFSET", "");
       }
 
-      // Boolean value, fix case
       if (newValueString.ToLower().Equals("true") || newValueString.ToLower().Equals("false"))
       {
         result = newValueString.ToLower();
       }
       else
       {
-        // Value, calculate new value
         switch (valueMode)
         {
           case Constants.ValueModeOffset:
-            // Offset value by a fixed amount
             double offsetValue = SystemHelper.TextToDouble(newValueString, 0, "en-US");
             if (offsetValue != 0)
             {
@@ -73,7 +70,6 @@ namespace Core.ProfitTrailer
             break;
 
           case Constants.ValueModeOffsetPercent:
-            // Offset value by percentage
             double offsetValuePercent = SystemHelper.TextToDouble(newValueString, 0, "en-US");
             if (offsetValuePercent != 0)
             {
@@ -81,13 +77,12 @@ namespace Core.ProfitTrailer
               if (oldValueString.Contains("%")) {
                 ContainsPercent = true;
                 oldValueString = oldValueString.Substring(0, oldValueString.Length - 1);
-              } 
+              }
               double oldValue = SystemHelper.TextToDouble(oldValueString, 0, "en-US");
               if (oldValue < 0) offsetValuePercent = offsetValuePercent * -1;
               double oldValueOffset = (oldValue * (offsetValuePercent / 100));
 
-              // Ensure integers for timeout and pairs properties, otherwise double
-              if (configPropertyKey.Contains("timeout", StringComparison.InvariantCultureIgnoreCase) 
+              if (configPropertyKey.Contains("timeout", StringComparison.InvariantCultureIgnoreCase)
                 || configPropertyKey.Contains("trading_pairs", StringComparison.InvariantCultureIgnoreCase)
                 || configPropertyKey.Contains("buy_volume", StringComparison.InvariantCultureIgnoreCase)
                 || configPropertyKey.Contains("listed_days", StringComparison.InvariantCultureIgnoreCase)
@@ -99,16 +94,14 @@ namespace Core.ProfitTrailer
               }
               else
               {
-                // Use double to calculate
                 result = Math.Round((oldValue + oldValueOffset), 8).ToString(new System.Globalization.CultureInfo("en-US"));
               }
               if (ContainsPercent){
                 result = result +"%";
-              } 
+              }
             }
             break;
           default:
-            // Raw value no processing required
             result = newValueString;
             break;
         }
@@ -140,13 +133,23 @@ namespace Core.ProfitTrailer
 
     public static string GetMarketPairs(PTMagicConfiguration systemConfiguration, List<string> pairsLines, LogHelper log)
     {
+      if (systemConfiguration?.GeneralSettings?.Application?.Exchange?.Equals("BinanceFutures", StringComparison.InvariantCultureIgnoreCase) == true)
+      {
+        BinanceFuturesMarketUniverse.ConfigureProfitTrailerAllowedUnderlyingTypes(pairsLines, systemConfiguration, log);
+      }
+
+      if (systemConfiguration?.AnalyzerSettings?.MarketAnalyzer?.UseProfitTrailerEnabledPairs != true)
+      {
+        return "all";
+      }
+
       string result = "";
 
       foreach (string line in pairsLines)
       {
         if (line.Replace(" ", "").StartsWith("enabled_pairs", StringComparison.InvariantCultureIgnoreCase))
         {
-          result = result.Replace("enabled_pairs", "", StringComparison.InvariantCultureIgnoreCase);
+          result = line.Replace("enabled_pairs", "", StringComparison.InvariantCultureIgnoreCase);
           result = result.Replace("#", "");
           result = result.Replace("=", "").Trim();
           break;
@@ -158,7 +161,6 @@ namespace Core.ProfitTrailer
 
     public static void WriteHeaderLines(string settingsName, DateTime settingsChangeTimestamp, List<string> lines)
     {
-      // Writing Header lines
       lines.Insert(0, "#");
       lines.Insert(0, "# ####################################");
       lines.Insert(0, "# PTMagic_LastChanged = " + settingsChangeTimestamp.ToShortDateString() + " " + settingsChangeTimestamp.ToShortTimeString());
@@ -221,56 +223,44 @@ namespace Core.ProfitTrailer
       List<string> result = new List<string>();
       List<string> fileLines = null;
 
-      // Analsye the properties for the setting and apply
       Dictionary<string, object> properties = (Dictionary<string, object>)setting.GetType().GetProperty(fileType + "Properties").GetValue(setting, null);
 
-      // Building Properties
       if (properties == null || !properties.ContainsKey("File"))
       {
-        // Load default settings as basis for the switch
         GlobalSetting defaultSetting = ptmagicInstance.PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Find(a => a.SettingName.Equals(ptmagicInstance.DefaultSettingName, StringComparison.InvariantCultureIgnoreCase));
         Dictionary<string, object> defaultProperties = (Dictionary<string, object>)defaultSetting.GetType().GetProperty(fileType + "Properties").GetValue(defaultSetting, null);
 
         if (defaultProperties.ContainsKey("File"))
         {
-          // Load the default settings file lines
           fileLines = SettingsFiles.GetPresetFileLinesAsList(defaultSetting.SettingName, defaultProperties["File"].ToString(), ptmagicInstance.PTMagicConfiguration);
         }
         else
         {
-          // No preset file defined, this is a bad settings file!
           throw new ApplicationException(string.Format("No 'File' setting found in the '{0}Properties' of the 'Default' setting section in the 'settings.analyzer.json' file; this must be defined!", fileType));
         }
       }
       else
       {
-        // Settings are configured in a seperate file
         fileLines = SettingsFiles.GetPresetFileLinesAsList(setting.SettingName, properties["File"].ToString(), ptmagicInstance.PTMagicConfiguration);
       }
 
-      // Check for PTM header in preset file
-      // Loop through config line by line reprocessing where required.
       foreach (string line in fileLines)
       {
         if (line.IndexOf("PTMagic_ActiveSetting", StringComparison.InvariantCultureIgnoreCase) > -1)
         {
-          // Setting current active setting
           result.Add("# PTMagic_ActiveSetting = " + setting.SettingName);
           headerLinesExist = true;
         }
         else if (line.IndexOf("PTMagic_LastChanged", StringComparison.InvariantCultureIgnoreCase) > -1)
         {
-          // Setting last change datetime
           result.Add("# PTMagic_LastChanged = " + settingLastChanged.ToShortDateString() + " " + settingLastChanged.ToShortTimeString());
         }
         else if (line.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
         {
-          // Single Market Settings will get overwritten every single run => crop the lines
           break;
         }
         else if (IsPropertyLine(line))
         {
-          // We have got a property line
           if (properties != null)
           {
             bool madeSubstitution = false;
@@ -279,7 +269,6 @@ namespace Core.ProfitTrailer
             {
               if (madeSubstitution)
               {
-                // We've made a substitution so no need to process the rest of the properties
                 break;
               }
               else
@@ -290,25 +279,21 @@ namespace Core.ProfitTrailer
 
             if (!madeSubstitution)
             {
-              // No substitution made, so simply copy the line
               result.Add(line);
             }
           }
         }
         else
         {
-          // Non property line, just copy it
           result.Add(line);
         }
       }
 
-      // Write header lines if required
       if (!headerLinesExist)
       {
         WriteHeaderLines(setting.SettingName, settingLastChanged, result);
       }
 
-      // Save lines to current context for the file type
       ptmagicInstance.GetType().GetProperty(fileType + "Lines").SetValue(ptmagicInstance, result);
     }
 
@@ -359,63 +344,49 @@ namespace Core.ProfitTrailer
         List<string> newDCALines = new List<string>();
         List<string> newIndicatorsLines = new List<string>();
 
-        // Find the previous single market settings section in the pairs file
         foreach (string pairsLine in ptmagicInstance.PairsLines)
         {
           if (pairsLine.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
           {
-            // Single Market Settings will get overwritten every single run => crop the lines
             break;
           }
           else
           {
-            // Copy the line into the new pairs file and keep searching
             string globalPairsLine = pairsLine;
-
             globalPairsLines.Add(globalPairsLine);
           }
         }
-
 
         newPairsLines.Add("# PTMagic_SingleMarketSettings - Written on " + DateTime.Now.ToString());
         newPairsLines.Add("# ########################################################################");
         newPairsLines.Add("#");
 
-        // Find the previous single market settings section in the DCA file
         foreach (string dcaLine in ptmagicInstance.DCALines)
         {
           if (dcaLine.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
           {
-            // Single Market Settings will get overwritten every single run => crop the lines
             break;
           }
           else
           {
-            // Copy the line into the new pairs file and keep searching
             string globalDCALine = dcaLine;
-
             globalDCALines.Add(globalDCALine);
           }
         }
-
 
         newDCALines.Add("# PTMagic_SingleMarketSettings - Written on " + DateTime.Now.ToString());
         newDCALines.Add("# ########################################################################");
         newDCALines.Add("#");
 
-        // Find the previous single market settings section in the Indicators file
         foreach (string indicatorsLine in ptmagicInstance.IndicatorsLines)
         {
           if (indicatorsLine.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
           {
-            // Single Market Settings will get overwritten every single run => crop the lines
             break;
           }
           else
           {
-            // Copy the line into the new pairs file and keep searching
             string globalIndicatorsLine = indicatorsLine;
-
             globalIndicatorsLines.Add(globalIndicatorsLine);
           }
         }
@@ -423,7 +394,6 @@ namespace Core.ProfitTrailer
         Dictionary<string, string> globalPairsProperties = SettingsHandler.GetPropertiesAsDictionary(globalPairsLines);
         Dictionary<string, string> globalDCAProperties = SettingsHandler.GetPropertiesAsDictionary(globalDCALines);
         Dictionary<string, string> globalIndicatorsProperties = SettingsHandler.GetPropertiesAsDictionary(globalIndicatorsLines);
-
 
         newIndicatorsLines.Add("# PTMagic_SingleMarketSettings - Written on " + DateTime.Now.ToString());
         newIndicatorsLines.Add("# ########################################################################");
@@ -435,7 +405,6 @@ namespace Core.ProfitTrailer
           Dictionary<string, object> dcaPropertiesToApply = new Dictionary<string, object>();
           Dictionary<string, object> indicatorsPropertiesToApply = new Dictionary<string, object>();
 
-          // Build Properties as a whole list so that a single coin also has only one block with single market settings applied to it
           foreach (SingleMarketSetting setting in ptmagicInstance.TriggeredSingleMarketSettings[marketPair])
           {
             ptmagicInstance.Log.DoLogInfo("Building single market settings '" + setting.SettingName + "' for '" + marketPair + "'...");
@@ -485,7 +454,6 @@ namespace Core.ProfitTrailer
           newIndicatorsLines = SettingsHandler.BuildPropertyLinesForSingleMarketSetting(ptmagicInstance.LastRuntimeSummary.MainMarket, marketPair, ptmagicInstance.TriggeredSingleMarketSettings[marketPair], indicatorsPropertiesToApply, matchedTriggers, globalIndicatorsProperties, newIndicatorsLines, ptmagicInstance.PTMagicConfiguration, ptmagicInstance.Log);
         }
 
-        // Combine global settings lines with single market settings lines
         globalPairsLines.AddRange(newPairsLines);
         globalDCALines.AddRange(newDCALines);
         globalIndicatorsLines.AddRange(newIndicatorsLines);
@@ -533,8 +501,6 @@ namespace Core.ProfitTrailer
           newValueString = CalculatePropertyValue(settingProperty, oldValueString, newValueString, out propertyKey);
 
           string propertyMarketName = marketPair;
-
-          // Adjust market pair name
           propertyMarketName = propertyMarketName.Replace(mainMarket, "").Replace("_", "").Replace("-", "");
 
           string propertyKeyString = "";
@@ -579,15 +545,12 @@ namespace Core.ProfitTrailer
         {
           if (pairsLine.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
           {
-
-            // Single Market Settings will get overwritten every single run => crop the lines
             removedPairsSingleMarketSettings = true;
             break;
           }
           else
           {
             string newPairsLine = pairsLine;
-
             cleanedUpPairsLines.Add(newPairsLine);
           }
         }
@@ -597,15 +560,12 @@ namespace Core.ProfitTrailer
         {
           if (dcaLine.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
           {
-
-            // Single Market Settings will get overwritten every single run => crop the lines
             removedDCASingleMarketSettings = true;
             break;
           }
           else
           {
             string newDCALine = dcaLine;
-
             cleanedUpDCALines.Add(newDCALine);
           }
         }
@@ -615,15 +575,12 @@ namespace Core.ProfitTrailer
         {
           if (indicatorsLine.IndexOf("PTMagic_SingleMarketSettings", StringComparison.InvariantCultureIgnoreCase) > -1)
           {
-
-            // Single Market Settings will get overwritten every single run => crop the lines
             removedIndicatorsSingleMarketSettings = true;
             break;
           }
           else
           {
             string newIndicatorsLine = indicatorsLine;
-
             cleanedUpIndicatorsLines.Add(newIndicatorsLine);
           }
         }
