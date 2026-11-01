@@ -24,8 +24,8 @@ if (-not $marketDataFile) {
     throw "No MarketData_*.json file found in $exchangeDir"
 }
 
-$marketData = Get-Content $marketDataFile.FullName -Raw | ConvertFrom-Json -AsHashtable
-$exchangeMarkets = @($marketData.Keys | Sort-Object)
+$marketData = Get-Content $marketDataFile.FullName -Raw | ConvertFrom-Json
+$exchangeMarkets = @($marketData.PSObject.Properties.Name | Sort-Object)
 
 $marketTrends = [ordered]@{}
 if ($summary.MarketTrendChanges) {
