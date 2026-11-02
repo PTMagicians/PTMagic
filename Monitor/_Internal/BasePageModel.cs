@@ -55,24 +55,19 @@ namespace Monitor._Internal
         {
             get
             {
-                string generalSettingsPath = PTMagicBasePath + "settings.general.json";
-                DateTime generalSettingsLastWriteUtc = System.IO.File.GetLastWriteTimeUtc(generalSettingsPath);
-
-                if (_ptData == null || generalSettingsLastWriteUtc != _ptDataGeneralSettingsLastWriteUtc)
+                lock (_ptDataLock)
                 {
-                    lock (_ptDataLock)
+                    string generalSettingsPath = PTMagicBasePath + "settings.general.json";
+                    DateTime generalSettingsLastWriteUtc = System.IO.File.GetLastWriteTimeUtc(generalSettingsPath);
+
+                    if (_ptData == null || generalSettingsLastWriteUtc != _ptDataGeneralSettingsLastWriteUtc)
                     {
-                        generalSettingsLastWriteUtc = System.IO.File.GetLastWriteTimeUtc(generalSettingsPath);
-
-                        if (_ptData == null || generalSettingsLastWriteUtc != _ptDataGeneralSettingsLastWriteUtc)
-                        {
-                            _ptData = new ProfitTrailerData(PTMagicConfiguration);
-                            _ptDataGeneralSettingsLastWriteUtc = generalSettingsLastWriteUtc;
-                        }
+                        _ptData = new ProfitTrailerData(PTMagicConfiguration);
+                        _ptDataGeneralSettingsLastWriteUtc = generalSettingsLastWriteUtc;
                     }
-                }
 
-                return _ptData;
+                    return _ptData;
+                }
             }
         }
 
@@ -202,6 +197,15 @@ namespace Monitor._Internal
         public void PreInit()
         {
             LoadSharedMonitorInfrastructure();
+
+            // POST handlers may modify configuration before writing settings files. Give each
+            // POST request its own configuration graph so concurrent readers never observe
+            // partially-mutated shared settings.
+            if (HttpContext.Request.Method.Equals("POST", StringComparison.OrdinalIgnoreCase))
+            {
+                PTMagicConfiguration = new PTMagicConfiguration(PTMagicBasePath);
+            }
+
             Summary = LoadRuntimeSummary();
 
             if (Summary.CurrentGlobalSetting == null) Summary.CurrentGlobalSetting = PTMagicConfiguration.AnalyzerSettings.GlobalSettings.Find(s => s.SettingName.IndexOf("default", StringComparison.InvariantCultureIgnoreCase) > -1);
