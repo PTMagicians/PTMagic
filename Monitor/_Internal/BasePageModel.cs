@@ -43,7 +43,6 @@ namespace Monitor._Internal
         private static DateTime _cachedSecureSettingsLastWriteUtc = DateTime.MinValue;
         private static DateTime _cachedNLogConfigLastWriteUtc = DateTime.MinValue;
         private static PTMagicConfiguration _cachedPTMagicConfiguration = null;
-        private static IServiceProvider _cachedLogProvider = null;
         private static LogHelper _cachedLog = null;
 
         private static readonly object _runtimeSummaryLock = new object();
@@ -145,8 +144,8 @@ namespace Monitor._Internal
                 DateTime nlogConfigLastWriteUtc = System.IO.File.GetLastWriteTimeUtc(nlogConfigPath);
                 if (basePathChanged || _cachedLog == null || nlogConfigLastWriteUtc != _cachedNLogConfigLastWriteUtc)
                 {
-                    _cachedLogProvider = ServiceHelper.BuildLoggerService(_cachedPTMagicBasePath);
-                    _cachedLog = _cachedLogProvider.GetRequiredService<LogHelper>();
+                    IServiceProvider logProvider = ServiceHelper.BuildLoggerService(_cachedPTMagicBasePath);
+                    _cachedLog = logProvider.GetRequiredService<LogHelper>();
                     _cachedNLogConfigLastWriteUtc = nlogConfigLastWriteUtc;
                 }
 
