@@ -466,12 +466,8 @@ namespace Core.MarketAnalyzer
       return marketFiles;
     }
 
-    public static Dictionary<string, Market> GetMarketDataFromFile(PTMagicConfiguration systemConfiguration, LogHelper log, string platform, DateTime maxDateTime, string marketCaption)
+    private static FileInfo FindMarketDataFile(List<FileInfo> marketFiles, DateTime maxDateTime)
     {
-      Dictionary<string, Market> result = new Dictionary<string, Market>();
-      List<FileInfo> marketFiles = GetMarketDataFileIndex(platform);
-
-      // Find the newest market file at or before max datetime.
       FileInfo marketFile = null;
       foreach (FileInfo candidate in marketFiles)
       {
@@ -484,33 +480,40 @@ namespace Core.MarketAnalyzer
 
       if (marketFile != null)
       {
-        log.DoLogDebug(platform + " - " + marketCaption + " market data loaded (" + marketFile.LastWriteTimeUtc.ToString() + ")");
+        return marketFile;
       }
-      else
+
+      foreach (FileInfo candidate in marketFiles)
       {
-        log.DoLogDebug(platform + " - Not able to load " + marketCaption + " market data. Loading next youngest market file instead.");
-
-        // If no older file exists, find the oldest market file after max datetime.
-        foreach (FileInfo candidate in marketFiles)
+        if (candidate.LastWriteTimeUtc >= maxDateTime
+          && (marketFile == null || candidate.LastWriteTimeUtc < marketFile.LastWriteTimeUtc))
         {
-          if (candidate.LastWriteTimeUtc >= maxDateTime
-            && (marketFile == null || candidate.LastWriteTimeUtc < marketFile.LastWriteTimeUtc))
-          {
-            marketFile = candidate;
-          }
-        }
-
-        if (marketFile != null)
-        {
-          log.DoLogDebug(platform + " - " + marketCaption + " market data loaded (" + marketFile.LastWriteTimeUtc.ToString() + ")");
+          marketFile = candidate;
         }
       }
+
+      return marketFile;
+    }
+
+    public static Dictionary<string, Market> GetMarketDataFromFile(PTMagicConfiguration systemConfiguration, LogHelper log, string platform, DateTime maxDateTime, string marketCaption)
+    {
+      Dictionary<string, Market> result = new Dictionary<string, Market>();
+      List<FileInfo> marketFiles = GetMarketDataFileIndex(platform);
+      FileInfo marketFile = FindMarketDataFile(marketFiles, maxDateTime);
 
       if (marketFile == null)
       {
+        log.DoLogDebug(platform + " - Not able to load " + marketCaption + " market data. Loading next youngest market file instead.");
         log.DoLogDebug(platform + " - Not able to load " + marketCaption + " market data. No market data files found.");
         return result;
       }
+
+      if (marketFile.LastWriteTimeUtc > maxDateTime)
+      {
+        log.DoLogDebug(platform + " - Not able to load " + marketCaption + " market data. Loading next youngest market file instead.");
+      }
+
+      log.DoLogDebug(platform + " - " + marketCaption + " market data loaded (" + marketFile.LastWriteTimeUtc.ToString() + ")");
 
       try
       {
