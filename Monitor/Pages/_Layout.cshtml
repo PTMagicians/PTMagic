@@ -171,21 +171,16 @@
     var errCount = [];
     var interval;
     var loadWidgets = function () {
-      // Clear exisitng interval to stop multiple attempts to load at the same time.
+      // Clear existing interval to stop multiple attempts to load at the same time.
       if (interval != null)
       {
         clearInterval(interval);
       }
 
-      // Do not replace ticker markup while one of its tooltip targets is active.
-      var activeElement = document.activeElement;
-      var tickerTooltipTargets = document.querySelectorAll('#ticker-widgets [data-toggle="tooltip"]');
-      for (var i = 0; i < tickerTooltipTargets.length; i++) {
-        var target = tickerTooltipTargets[i];
-        if (target === activeElement || target.contains(activeElement) || target.matches(':hover')) {
-          interval = setInterval(function () { loadWidgets(); }, 500);
-          return;
-        }
+      // Keep any active tooltip visible until its target is no longer hovered/focused.
+      if ($('.tooltip.show').length > 0) {
+        interval = setInterval(function () { loadWidgets(); }, 500);
+        return;
       }
 
       // Load widgets
