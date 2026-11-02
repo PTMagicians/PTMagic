@@ -505,6 +505,13 @@ namespace Core.MarketAnalyzer
           log.DoLogDebug(platform + " - " + marketCaption + " market data loaded (" + marketFile.LastWriteTimeUtc.ToString() + ")");
         }
       }
+
+      if (marketFile == null)
+      {
+        log.DoLogDebug(platform + " - Not able to load " + marketCaption + " market data. No market data files found.");
+        return result;
+      }
+
       try
       {
         string snapshotKey = marketFile.FullName;
