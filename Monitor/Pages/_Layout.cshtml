@@ -14,7 +14,7 @@
   <link href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
   <link href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/css/icons.css" rel="stylesheet" type="text/css" />
   <link href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/css/style.css" rel="stylesheet" type="text/css" />
-  <link href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/css/custom.css?v=@Html.Raw(Model.CurrentBotVersion)-tooltips2" rel="stylesheet" type="text/css" />
+  <link href="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/css/custom.css?v=@Html.Raw(Model.CurrentBotVersion)" rel="stylesheet" type="text/css" />
 
   <script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/js/modernizr.min.js"></script>
 </head>
@@ -160,7 +160,7 @@
   <script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/js/bootstrap.min.js"></script>
   <script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/js/jquery.slimscroll.js"></script>
   <script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/js/jquery.scrollTo.min.js"></script>
-  <script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/js/custom.js?v=@Html.Raw(Model.CurrentBotVersion)-tooltips2"></script>
+  <script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/js/custom.js?v=@Html.Raw(Model.CurrentBotVersion)"></script>
 
   <script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/notifyjs/js/notify.js"></script>
   <script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/notifications/notify-metro.js"></script>
@@ -169,30 +169,16 @@
 
   <script type="text/javascript">
     var errCount = [];
-    var tickerTimer = null;
-    var tickerRequestRunning = false;
-    var tickerRefreshMilliseconds = 3000;
-
-    var scheduleWidgets = function () {
-      clearTimeout(tickerTimer);
-
-      if (!document.hidden) {
-        tickerTimer = setTimeout(loadWidgets, tickerRefreshMilliseconds);
-      }
-    };
-
+    var interval;
     var loadWidgets = function () {
-      if (document.hidden || tickerRequestRunning) {
-        return;
+      // Clear exisitng interval to stop multiple attempts to load at the same time.
+      if (interval != null)
+      {
+        clearInterval(interval);
       }
 
-      if (isMonitorTooltipActive()) {
-        scheduleWidgets();
-        return;
-      }
-
-      tickerRequestRunning = true;
-
+      // Load widgets
+      $('[data-toggle="tooltip"]').tooltip();
       $("#ticker-widgets").load('@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)_get/TickerWidgets', '', function (responseText, textStatus, XMLHttpRequest) {
         if (textStatus == 'error') {
           errCount["TickerWidgets"]++;
@@ -201,32 +187,22 @@
           }
         } else if (responseText == 'returntologin') {
           window.location.replace("@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)Login");
-          return;
         } else {
           errCount["TickerWidgets"] = 0;
-          initializeMonitorTooltips(document.getElementById('ticker-widgets'));
         }
 
-        tickerRequestRunning = false;
-        scheduleWidgets();
+        // Reinstate the interval.
+        interval = setInterval(function () { loadWidgets(); }, 3000);
       });
     };
 
     $(document).ready(function () {
       errCount["TickerWidgets"] = 0;
-      initializeMonitorTooltips(document);
       loadWidgets();
 
+      $('[data-toggle="tooltip"]').tooltip()
       $('.text-autocolor').autocolor(false);
       $('.text-autocolor-saw').autocolor(true);
-
-      document.addEventListener("visibilitychange", function () {
-        clearTimeout(tickerTimer);
-
-        if (!document.hidden && !tickerRequestRunning) {
-          loadWidgets();
-        }
-      });
     });
   </script>
 
