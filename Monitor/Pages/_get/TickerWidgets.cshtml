@@ -52,8 +52,55 @@
 <script type="text/javascript">
   (function ($) {
     'use strict';
-    $('[role="tooltip"]').remove();
-    $('[data-toggle="tooltip"]').tooltip();
+
+    var tickerTooltipActive = function () {
+      var activeElement = document.activeElement;
+      var tooltipTargets = document.querySelectorAll('#ticker-widgets [data-toggle="tooltip"]');
+
+      for (var i = 0; i < tooltipTargets.length; i++) {
+        var target = tooltipTargets[i];
+
+        if (target === activeElement || target.contains(activeElement) || target.matches(':hover')) {
+          return true;
+        }
+      }
+
+      return false;
+    };
+
+    var pauseTickerRefresh = function () {
+      if (typeof interval !== 'undefined' && interval != null) {
+        clearInterval(interval);
+        interval = null;
+      }
+    };
+
+    var resumeTickerRefresh = function () {
+      if (typeof interval === 'undefined' || typeof loadWidgets !== 'function' || tickerTooltipActive()) {
+        return;
+      }
+
+      if (interval != null) {
+        clearInterval(interval);
+      }
+
+      interval = setInterval(function () { loadWidgets(); }, 3000);
+    };
+
+    $('#ticker-widgets')
+      .off('.ptmagicTickerTooltip')
+      .on('mouseenter.ptmagicTickerTooltip focusin.ptmagicTickerTooltip', '[data-toggle="tooltip"]', pauseTickerRefresh)
+      .on('mouseleave.ptmagicTickerTooltip focusout.ptmagicTickerTooltip', '[data-toggle="tooltip"]', resumeTickerRefresh);
+
+    $('[role="tooltip"]').each(function () {
+      var tooltipId = this.id;
+
+      if (!tooltipId || $('[aria-describedby="' + tooltipId + '"]').length === 0) {
+        $(this).remove();
+      }
+    });
+
+    $('#ticker-widgets [data-toggle="tooltip"]').tooltip();
     $('.text-autocolor').autocolor(false);
   })(jQuery);
 
