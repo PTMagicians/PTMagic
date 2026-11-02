@@ -3,22 +3,22 @@
 @{
   Layout = null;
 
-  // Single market settings tool tip
   int activeSingleSettings = Model.MarketsWithSingleSettings.Count;
-  string singleSettingInfoIcon = "";
+  string singleSettingsInfoClass = "fa fa-info-circle text-muted";
+  string singleSettingsTooltip = "";
   if (activeSingleSettings > 0) {
-    singleSettingInfoIcon = "<i class=\"fa fa-info-circle text-muted\" data-toggle=\"tooltip\" data-placement=\"top\" data-html=\"true\" title=\"<b>Single Market Settings active for:</b><br />" + Core.Helper.SystemHelper.ConvertListToTokenString(Model.MarketsWithSingleSettings, "<br />", true) + "\" data-template=\"<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner tooltip-200 text-left'></div></div>\"></i>";
+    singleSettingsTooltip = "<b>Single Market Settings active for:</b><br />" + Core.Helper.SystemHelper.ConvertListToTokenString(Model.MarketsWithSingleSettings, "<br />", true);
+  } else {
+    singleSettingsInfoClass += " d-none";
   }
 
-  // Global setting tool tip
-   string globalIconColor = "text-success";
-   string globalSettingInfoIcon = "<i class=\"fa fa-info-circle text-muted\" data-toggle=\"tooltip\" data-placement=\"top\" data-html=\"true\" title=\"<b>Instance: </b>" + Model.PTMagicConfiguration.GeneralSettings.Application.InstanceName + "\" data-template=\"<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner tooltip-100 text-left'></div></div>\"></i>";
-  if (Model.PTData.Properties.Shorting)
-  {
+  string globalIconColor = "text-success";
+  if (Model.PTData.Properties.Shorting) {
     globalIconColor = "text-danger";
   }
 
-  // Health indicator
+  string globalSettingInfoTooltip = "<b>Instance: </b>" + Model.PTMagicConfiguration.GeneralSettings.Application.InstanceName;
+
   DateTime lastRuntime = Model.Summary.LastRuntime;
   double elapsedSecondsSinceRuntime = DateTime.UtcNow.Subtract(lastRuntime).TotalSeconds;
   double intervalSeconds = Model.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.IntervalMinutes * 60.0;
@@ -32,29 +32,18 @@
     healthIconColor = "text-danger";
   }
   if (Model.IsAnalyzerRunning()) {
-  ptMagicHealthIcon = "fa-cog fa-spin";
+    ptMagicHealthIcon = "fa-cog fa-spin";
   }
 }
 
-<div class="card-box card-box-mini card-box-ptmagic-outlined @globalIconColor">
-   <span data-toggle="tooltip" data-placement="bottom" title="Active global setting">
-   @Core.Helper.SystemHelper.SplitCamelCase(Model.Summary.CurrentGlobalSetting.SettingName)</span><span class = "header-title"><a href="StatusSummary">@Html.Raw(" " + globalSettingInfoIcon)</a></span>
+<div class="card-box card-box-mini card-box-ptmagic-outlined @globalIconColor" data-ticker-role="global-card">
+  <span data-ticker-role="global-setting" data-toggle="tooltip" data-placement="bottom" title="Active global setting">@Core.Helper.SystemHelper.SplitCamelCase(Model.Summary.CurrentGlobalSetting.SettingName)</span><span class="header-title"><a href="StatusSummary"> <i data-ticker-role="global-info" class="fa fa-info-circle text-muted" data-toggle="tooltip" data-placement="top" data-html="true" title="@Html.Raw(globalSettingInfoTooltip)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner tooltip-100 text-left'></div></div>"></i></a></span>
 </div>
 
-<div class="card-box card-box-mini card-box-ptmagic-outlined">
-  <span data-toggle="tooltip" data-placement="bottom" title="Active single market settings"><b>SMS: </b></span><span class = "header-title"><a href="ManageSMS">@Html.Raw(activeSingleSettings + " " + singleSettingInfoIcon)</a></span>
+<div class="card-box card-box-mini card-box-ptmagic-outlined" data-ticker-role="sms-card">
+  <span data-toggle="tooltip" data-placement="bottom" title="Active single market settings"><b>SMS: </b></span><span class="header-title"><a href="ManageSMS"><span data-ticker-role="sms-count">@activeSingleSettings</span> <i data-ticker-role="sms-info" class="@singleSettingsInfoClass" data-toggle="tooltip" data-placement="top" data-html="true" title="@Html.Raw(singleSettingsTooltip)" data-template="<div class='tooltip' role='tooltip'><div class='tooltip-arrow'></div><div class='tooltip-inner tooltip-200 text-left'></div></div>"></i></a></span>
 </div>
 
-<div class="card-box card-box-mini card-box-ptmagic-status-outlined @healthIconColor" data-toggle="tooltip" data-placement="bottom" title="@ptMagicHealthTooltip">
-  <i class="fa @ptMagicHealthIcon @healthIconColor"></i>
+<div class="card-box card-box-mini card-box-ptmagic-status-outlined @healthIconColor" data-ticker-role="health-card" data-toggle="tooltip" data-placement="bottom" title="@ptMagicHealthTooltip">
+  <i data-ticker-role="health-icon" class="fa @ptMagicHealthIcon @healthIconColor"></i>
 </div>
-
-<script type="text/javascript">
-  (function ($) {
-    'use strict';
-    $('[role="tooltip"]').remove();
-    $('[data-toggle="tooltip"]').tooltip();
-    $('.text-autocolor').autocolor(false);
-  })(jQuery);
-
-</script>

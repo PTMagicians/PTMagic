@@ -294,10 +294,30 @@
   </div>
 </div>
 
-<script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/d3/d3.min.js"></script>
-<script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/nvd3/nv.d3.min.js"></script>
 <script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/tablesaw/js/tablesaw.js"></script>
 <script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/tablesaw/js/tablesaw-init.js"></script>
+
+<script type="text/javascript">
+  window.dashboardBottomResizeHandles = window.dashboardBottomResizeHandles || [];
+
+  window.registerDashboardBottomResize = function(callback) {
+    var resizeHandle = nv.utils.windowResize(callback);
+    window.dashboardBottomResizeHandles.push(resizeHandle);
+    return resizeHandle;
+  };
+
+  window.cleanupDashboardBottomCharts = function() {
+    for (var i = 0; i < window.dashboardBottomResizeHandles.length; i++) {
+      var resizeHandle = window.dashboardBottomResizeHandles[i];
+      if (resizeHandle && typeof resizeHandle.clear === 'function') {
+        resizeHandle.clear();
+      }
+    }
+
+    window.dashboardBottomResizeHandles = [];
+    $('.nvtooltip').remove();
+  };
+</script>
 
 <script type="text/javascript">
   $(document).ready(function(){
@@ -305,20 +325,18 @@
   });
 </script>
 
-
-
 <script type="text/javascript">
   $(document).ready(function () {
     $(".cdev").circlos();
     $('[data-toggle="tooltip"]').tooltip();
     $('.text-autocolor').autocolor(false);
 
-    var assetDistributionData;  // Keep a reference to the data
+    var assetDistributionData;
 
     @if (!Model.AssetDistributionData.Equals("")) {
     <text>
       nv.addGraph(function() {
-        assetDistributionChart = nv.models.pieChart()
+        var assetDistributionChart = nv.models.pieChart()
           .x(function(d) { return d.label })
           .y(function(d) { return d.value })
           .showLabels(true)
@@ -327,18 +345,18 @@
           .donut(true)
           .donutRatio(0.3)
           .margin({top: 10, bottom: 10})
-          .showLegend(false); // Hide the legend
+          .showLegend(false);
 
         assetDistributionData = @Html.Raw(Model.AssetDistributionData);
 
-        d3.select(".asset-distribution svg")  // Change this line
+        d3.select(".asset-distribution svg")
           .style('height', '90%')
           .style('width', '100%')
           .datum(assetDistributionData)
           .transition().duration(0)
           .call(assetDistributionChart);
             
-        nv.utils.windowResize(assetDistributionChart.update);
+        window.registerDashboardBottomResize(assetDistributionChart.update);
         return assetDistributionChart;
       });
     </text>
@@ -349,21 +367,19 @@
 <script type="text/javascript">
   (function ($) {
     'use strict';
-    // $('head').append('<style>.nv-point { stroke-width: 1px; }</style>');
     $('[role="tooltip"]').remove();
     $('[data-toggle="tooltip"]').tooltip();
     $('.text-autocolor').autocolor(false);
 
-    var trendChart;  // Keep a reference to the chart
-    var trendData;  // Keep a reference to the data
+    var trendChart;
+    var trendData;
 
     @if (!Model.TrendChartDataJSON.Equals("")) {
     <text>
       nv.addGraph(function () {
         trendChart = nv.models.lineChart();
-        var height = 300;
         trendChart.useInteractiveGuideline(true);
-        trendChart.pointSize(0.25);  // Set the point size to a smaller value
+        trendChart.pointSize(0.25);
         trendChart.xAxis.tickFormat(function (d) { return d3.time.format('%H:%M')(new Date(d)); });
         trendChart.yAxis.axisLabel('Trend %').tickFormat(d3.format(',.2f'));
 
@@ -376,28 +392,24 @@
           .call(trendChart);
 
         trendChart.dispatch.on('renderEnd', function() {
-          // Get the chart's container
           var container = d3.select('.trend-chart .nv-wrap.nv-lineChart .nv-linesWrap');
-
-          // Remove any existing y=0 line
           container.selectAll('.zero-line').remove();
 
-          // Get the x-values of the first and last data points
           var xRange = trendChart.xAxis.scale().range();
           var xMin = xRange[0];
           var xMax = xRange[1];
 
-          // Add a line at y=0
           container.insert('line', ':first-child')
-            .attr('class', 'zero-line')  // Add a class to the line for easy selection
-            .attr('x1', xMin)  // x position of the first end of the line
-            .attr('y1', trendChart.yAxis.scale()(0))  // y position of the first end of the line
-            .attr('x2', xMax)  // x position of the second end of the line
-            .attr('y2', trendChart.yAxis.scale()(0))  // y position of the second end of the line
-            .attr('stroke', 'gray')  // color of the line
-            .attr('stroke-width', 2);  // width of the line
+            .attr('class', 'zero-line')
+            .attr('x1', xMin)
+            .attr('y1', trendChart.yAxis.scale()(0))
+            .attr('x2', xMax)
+            .attr('y2', trendChart.yAxis.scale()(0))
+            .attr('stroke', 'gray')
+            .attr('stroke-width', 2);
         });
-        nv.utils.windowResize(trendChart.update);
+
+        window.registerDashboardBottomResize(trendChart.update);
         return trendChart;
       });
     </text>
@@ -412,15 +424,13 @@
     $('[data-toggle="tooltip"]').tooltip();
     $('.text-autocolor').autocolor(false);
 
-    var profitChart;  // Keep a reference to the chart
-    var profitData;  // Keep a reference to the data
+    var profitChart;
+    var profitData;
     
-
     @if (!Model.ProfitChartDataJSON.Equals("")) {
     <text>
       nv.addGraph(function () {
         profitChart = nv.models.lineChart();
-        var height = 300;
         profitChart.useInteractiveGuideline(true);
         profitChart.xAxis.tickFormat(function (d) { return d3.time.format('%m/%d')(new Date(d)); });
         profitChart.yAxis.axisLabel('Daily Profit').tickFormat(d3.format(',.2f'));
@@ -433,33 +443,25 @@
           .call(profitChart);
 
         profitChart.dispatch.on('renderEnd', function() {
-        // Get the chart's container
-        var container = d3.select('.profit-chart .nv-wrap.nv-lineChart .nv-linesWrap');
+          var container = d3.select('.profit-chart .nv-wrap.nv-lineChart .nv-linesWrap');
+          container.selectAll('.zero-line').remove();
 
-        // Remove any existing y=0 line
-        container.selectAll('.zero-line').remove();
+          if (profitData[0].values.length > 0) {
+            var xMin = profitChart.xAxis.scale()(profitData[0].values[0].x);
+            var xMax = profitChart.xAxis.scale()(profitData[0].values[profitData[0].values.length - 1].x);
 
-        // Check if profitData[0].values is not empty
-        if (profitData[0].values.length > 0) {
-          // Get the x-values of the first and last data points
-          var xMin = profitChart.xAxis.scale()(profitData[0].values[0].x);
-          var xMax = profitChart.xAxis.scale()(profitData[0].values[profitData[0].values.length - 1].x);
-
-          // Add a line at y=0
-          container.insert('line', ':first-child')
-            .attr('class', 'zero-line')  // Add a class to the line for easy selection
-            .attr('x1', xMin)  // x position of the first end of the line
-            .attr('y1', profitChart.yAxis.scale()(0))  // y position of the first end of the line
-            .attr('x2', xMax)  // x position of the second end of the line
-            .attr('y2', profitChart.yAxis.scale()(0))  // y position of the second end of the line
-            .attr('stroke', 'gray')  // color of the line
-            .attr('stroke-width', 2);  // width of the line
-          
-          window.profitChartUpdate = nv.utils.windowResize(function() { profitChart.update(); });
-        }
+            container.insert('line', ':first-child')
+              .attr('class', 'zero-line')
+              .attr('x1', xMin)
+              .attr('y1', profitChart.yAxis.scale()(0))
+              .attr('x2', xMax)
+              .attr('y2', profitChart.yAxis.scale()(0))
+              .attr('stroke', 'gray')
+              .attr('stroke-width', 2);
+          }
         });
     
-        nv.utils.windowResize(profitChart.update);
+        window.registerDashboardBottomResize(profitChart.update);
         return profitChart;
       });
     </text>
@@ -468,78 +470,61 @@
 </script>
 
 <script type="text/javascript">
-    (function ($) {
-      'use strict';
-      $('[role="tooltip"]').remove();
-      $('[data-toggle="tooltip"]').tooltip();
-      $('.text-autocolor').autocolor(false);
+  (function ($) {
+    'use strict';
+    $('[role="tooltip"]').remove();
+    $('[data-toggle="tooltip"]').tooltip();
+    $('.text-autocolor').autocolor(false);
 
-      var TCVLiveChart;  // Keep a reference to the chart
-      var TCVLiveData;  // Keep a reference to the data
+    var TCVLiveChart;
+    var TCVLiveData;
 
-      @if (!Model.TotalCurrentValueLiveChartDataJSON.Equals("")) {
-      <text>
-        nv.addGraph(function () {
-          TCVLiveChart = nv.models.lineChart();
-          TCVLiveChart.useInteractiveGuideline(true);
-          TCVLiveChart.xAxis.tickFormat(function (d) { return d3.time.format('%H:%M:%S')(new Date(d)); });
-          TCVLiveChart.yAxis.axisLabel('').tickFormat(d3.format(',.2f'));
+    @if (!Model.TotalCurrentValueLiveChartDataJSON.Equals("")) {
+    <text>
+      nv.addGraph(function () {
+        TCVLiveChart = nv.models.lineChart();
+        TCVLiveChart.useInteractiveGuideline(true);
+        TCVLiveChart.xAxis.tickFormat(function (d) { return d3.time.format('%H:%M:%S')(new Date(d)); });
+        TCVLiveChart.yAxis.axisLabel('').tickFormat(d3.format(',.2f'));
 
-          TCVLiveData = @Html.Raw(Model.TotalCurrentValueLiveChartDataJSON);
+        TCVLiveData = @Html.Raw(Model.TotalCurrentValueLiveChartDataJSON);
 
-          d3.select('.TCVLive-chart svg')
-            .style('width', '100%')
-            .datum(TCVLiveData)
-            .transition().duration(0)
-            .call(TCVLiveChart);
+        d3.select('.TCVLive-chart svg')
+          .style('width', '100%')
+          .datum(TCVLiveData)
+          .transition().duration(0)
+          .call(TCVLiveChart);
             
-            
-          nv.utils.windowResize(TCVLiveChart.update);
-          return TCVLiveChart;
-        });
-      </text>
-      }
-    })(jQuery);
-  </script>
-
-  <script type="text/javascript">
-    function attachTooltipRemoval(chartClass) {
-      d3.selectAll(chartClass).on('mouseleave', function() {
-        var tooltip = d3.select(this).select('.nvtooltip');
-        if (!tooltip.empty()) {
-          tooltip.style('opacity', 0);
-        }
+        window.registerDashboardBottomResize(TCVLiveChart.update);
+        return TCVLiveChart;
       });
-
-      d3.selectAll(chartClass).on('mouseenter', function() {
-        var tooltip = d3.select(this).select('.nvtooltip');
-        if (!tooltip.empty()) {
-          tooltip.style('opacity', 1);
-        }
-      });
+    </text>
     }
-    $(document).ready(function () {
-      // Hide all tooltips when the page is loaded
-      d3.selectAll('.nvtooltip').style('opacity', 0);
-
-      // Call the function for each chart
-      attachTooltipRemoval('.asset-distribution svg');
-      attachTooltipRemoval('.trend-chart svg');
-      attachTooltipRemoval('.profit-chart svg');
-      attachTooltipRemoval('.TCVLive-chart svg');
-      // Add other charts as needed
-    });
+  })(jQuery);
 </script>
 
 <script type="text/javascript">
-  window.cleanupData = function() {
-    TCVLiveChart = null;
-    TCVLiveData = null;
-    assetDistributionChart = null;
-    assetDistributionData = null;
-    trendChart = null;
-    trendData = null;
-    profitChart = null;
-    profitData = null;
-  };
+  function attachTooltipRemoval(chartClass) {
+    d3.selectAll(chartClass).on('mouseleave', function() {
+      var tooltip = d3.select(this).select('.nvtooltip');
+      if (!tooltip.empty()) {
+        tooltip.style('opacity', 0);
+      }
+    });
+
+    d3.selectAll(chartClass).on('mouseenter', function() {
+      var tooltip = d3.select(this).select('.nvtooltip');
+      if (!tooltip.empty()) {
+        tooltip.style('opacity', 1);
+      }
+    });
+  }
+
+  $(document).ready(function () {
+    d3.selectAll('.nvtooltip').style('opacity', 0);
+    attachTooltipRemoval('.asset-distribution svg');
+    attachTooltipRemoval('.trend-chart svg');
+    attachTooltipRemoval('.profit-chart svg');
+    attachTooltipRemoval('.TCVLive-chart svg');
+  });
 </script>

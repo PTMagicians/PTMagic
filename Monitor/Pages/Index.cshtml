@@ -25,27 +25,45 @@
   <script src="@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)assets/plugins/nvd3/nv.d3.min.js"></script>
 
   <script type="text/javascript">
-    var errCountIndex = [];  
-    var counterIndex = []; // Add this line
-    var intervalDashboardTop;
-    var intervalDashboardBottom;
+    var errCountIndex = [];
 
+    var dashboardTopTimer = null;
+    var dashboardBottomTimer = null;
+    var dashboardTopRequestRunning = false;
+    var dashboardBottomRequestRunning = false;
 
+    var dashboardTopRefreshMilliseconds = 5 * 1000;
+    var dashboardBottomRefreshMilliseconds = @Model.PTMagicConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds * 1000;
+
+    var scheduleDashboardTop = function () {
+      clearTimeout(dashboardTopTimer);
+
+      if (!document.hidden) {
+        dashboardTopTimer = setTimeout(loadDashboardTop, dashboardTopRefreshMilliseconds);
+      }
+    };
+
+    var scheduleDashboardBottom = function () {
+      clearTimeout(dashboardBottomTimer);
+
+      if (!document.hidden) {
+        dashboardBottomTimer = setTimeout(loadDashboardBottom, dashboardBottomRefreshMilliseconds);
+      }
+    };
 
     var loadDashboardTop = function () {
+      if (document.hidden || dashboardTopRequestRunning) {
+        return;
+      }
+
+      dashboardTopRequestRunning = true;
       $("#baglist-refresh-icon").html('<i class="fa fa-circle-o-notch fa-spin fa-fw" data-toggle="tooltip" data-placement="top" title="Loading fresh data..."></i>');
       $("#buylist-refresh-icon").html('<i class="fa fa-circle-o-notch fa-spin fa-fw" data-toggle="tooltip" data-placement="top" title="Loading fresh data..."></i>');
-
-      // Clear exisitng interval to stop multiple attempts to load at the same time.
-      if (intervalDashboardTop != null)
-      {
-        clearInterval(intervalDashboardTop);
-      }
 
       $("#dashboardTop").load('@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)_get/DashboardTop', '', function (responseText, textStatus, XMLHttpRequest) {
         $("#baglist-refresh-icon").html('');
         $("#buylist-refresh-icon").html('');
-        $('[role="tooltip"]').remove();
+        cleanupOrphanedTooltips();
         $('[data-toggle="tooltip"]').tooltip();
         $('.text-autocolor').autocolor(false);
 
@@ -56,37 +74,26 @@
           }
         } else if (responseText == 'returntologin') {
           window.location.replace("@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)Login");
+          return;
         } else {
           errCountIndex["DashboardTop"] = 0;
         }
 
-        // Reinstate interval
-        intervalDashboardTop = setInterval(function () { loadDashboardTop(); }, 5 * 1000);
+        dashboardTopRequestRunning = false;
+        scheduleDashboardTop();
       });
     };
 
     var loadDashboardBottom = function () {
-      // Clear existing interval to stop multiple attempts to load at the same time.
-      if (intervalDashboardBottom != null) {
-        clearInterval(intervalDashboardBottom);
+      if (document.hidden || dashboardBottomRequestRunning) {
+        return;
       }
-      console.log(counterIndex["DashboardBottom"]);
 
-    // Destroy all d3 svg graph to avoid memory leak every 10 refreshes of Dashboard Bottom
-          if (counterIndex["DashboardBottom"] >= 10) {
-            $(".nvtooltip").remove();
-            $("svg > *").remove();
-            $("svg").remove();
-            $("svg").off(); // Remove all event listeners from SVG elements
-            nv.charts = {};
-            nv.graphs = [];
-            nv.logs = {};
-            nv.tooltip = {};
-            window.cleanupData();
-            // Reset the counter
-            counterIndex["DashboardBottom"] = 0;
-            console.log("d3 svg graph destroyed");
-          }
+      dashboardBottomRequestRunning = true;
+
+      if (typeof window.cleanupDashboardBottomCharts === 'function') {
+        window.cleanupDashboardBottomCharts();
+      }
 
       // Load dashboard
       $("#dashboardBottom").load('@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)_get/DashboardBottom', '', function (responseText, textStatus, XMLHttpRequest) {
@@ -97,26 +104,37 @@
           }
         } else if (responseText == 'returntologin') {
           window.location.replace("@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)Login");
+          return;
         } else {
           errCountIndex["DashboardBottom"] = 0;
-
-          // Increment the counter
-          counterIndex["DashboardBottom"] = (counterIndex["DashboardBottom"] || 0) + 1;
-
-          
         }
 
-        // Reinstate the interval.
-        intervalDashboardBottom = setInterval(function () { loadDashboardBottom(); }, @Model.PTMagicConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds * 1000);
+        dashboardBottomRequestRunning = false;
+        scheduleDashboardBottom();
       });
     };
 
     $(document).ready(function () {
       errCountIndex["DashboardTop"] = 0;
-      loadDashboardTop();      
+      loadDashboardTop();
 
       errCountIndex["DashboardBottom"] = 0;
       loadDashboardBottom();
+
+      document.addEventListener("visibilitychange", function () {
+        clearTimeout(dashboardTopTimer);
+        clearTimeout(dashboardBottomTimer);
+
+        if (!document.hidden) {
+          if (!dashboardTopRequestRunning) {
+            loadDashboardTop();
+          }
+
+          if (!dashboardBottomRequestRunning) {
+            loadDashboardBottom();
+          }
+        }
+      });
     });
   </script>
 }

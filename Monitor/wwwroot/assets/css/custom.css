@@ -23,6 +23,10 @@ a:active {
   color: #e67e22;
 }
 
+.tooltip {
+  pointer-events: none;
+}
+
 .pair-tooltip {
   min-width : 400px;
   background: none;

@@ -51,6 +51,56 @@ function isFloat(n) {
   return Number(n) === n && n % 1 !== 0;
 }
 
+function cleanupOrphanedTooltips() {
+  $('[role="tooltip"]').each(function () {
+    var tooltipId = this.id;
+
+    if (!tooltipId || $('[aria-describedby="' + tooltipId + '"]').length === 0) {
+      $(this).remove();
+    }
+  });
+}
+
+function initializeMonitorTooltips(context) {
+  if (!$.fn.tooltip) {
+    return;
+  }
+
+  var $context = context ? $(context) : $(document);
+  var $tooltips = $context.find('[data-toggle="tooltip"]');
+
+  if ($context.is('[data-toggle="tooltip"]')) {
+    $tooltips = $tooltips.add($context);
+  }
+
+  $tooltips.each(function () {
+    var $element = $(this);
+
+    if (!$element.data('bs.tooltip')) {
+      $element.tooltip({
+        trigger: 'hover focus',
+        delay: 0,
+        container: 'body'
+      });
+    }
+  });
+}
+
+function isMonitorTooltipActive() {
+  var activeElement = document.activeElement;
+  var tooltipTargets = document.querySelectorAll('[data-toggle="tooltip"]');
+
+  for (var i = 0; i < tooltipTargets.length; i++) {
+    var target = tooltipTargets[i];
+
+    if (target === activeElement || target.matches(':hover')) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 $.fn.autocolor = function (isSawTableCell = false) {
   return this.each(function (index) {
     var element = $(this);

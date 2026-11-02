@@ -65,8 +65,24 @@
 
   <script type="text/javascript">
     var errCountBagList = [];
-    var interval;
+    var bagListTimer = null;
+    var bagListRequestRunning = false;
+    var bagListRefreshMilliseconds = @Model.PTMagicConfiguration.GeneralSettings.Monitor.BagAnalyzerRefreshSeconds * 1000;
+
+    var scheduleBagList = function () {
+      clearTimeout(bagListTimer);
+
+      if (!document.hidden) {
+        bagListTimer = setTimeout(loadBagList, bagListRefreshMilliseconds);
+      }
+    };
+
     var loadBagList = function () {
+      if (document.hidden || bagListRequestRunning) {
+        return;
+      }
+
+      bagListRequestRunning = true;
       $("#baglist-refresh-icon").html('<i class="fa fa-circle-o-notch fa-spin fa-fw" data-toggle="tooltip" data-placement="top" title="Loading fresh data..."></i>');
 
       var sortedField = $("[data-tablesaw-sortable-default-col]");
@@ -84,20 +100,31 @@
           }
         } else if (responseText == 'returntologin') {
           window.location.replace("@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)Login");
+          return;
         } else {
           errCountBagList["BagList"] = 0;
         }
         $("#baglist-refresh-icon").html('');
-        $('[role="tooltip"]').remove();
+        cleanupOrphanedTooltips();
         $('[data-toggle="tooltip"]').tooltip();
         $('.text-autocolor').autocolor(false);
+
+        bagListRequestRunning = false;
+        scheduleBagList();
       });
     };
 
     $(document).ready(function () {
       errCountBagList["BagList"] = 0;
       loadBagList();
-      interval = setInterval(function () { loadBagList(); }, @Model.PTMagicConfiguration.GeneralSettings.Monitor.BagAnalyzerRefreshSeconds * 1000);
+
+      document.addEventListener("visibilitychange", function () {
+        clearTimeout(bagListTimer);
+
+        if (!document.hidden && !bagListRequestRunning) {
+          loadBagList();
+        }
+      });
     });
   </script>
 }

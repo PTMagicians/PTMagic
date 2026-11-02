@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using Newtonsoft.Json;
@@ -16,6 +17,8 @@ namespace Core.Main.DataObjects
 
   public class ProfitTrailerData
   {
+    private static readonly HttpClient SharedHttpClient = CreateHttpClient();
+
     private MiscData _misc = null;
     private PropertiesData _properties = null;
     private StatsData _stats = null;
@@ -64,7 +67,26 @@ namespace Core.Main.DataObjects
     private volatile object _propertiesLock = new object();  
     private volatile object _profitablePairsLock = new object(); 
     private volatile object _dailyStatsLock = new object();    
+    private readonly SemaphoreSlim _statsResponseSemaphore = new SemaphoreSlim(1, 1);
+    private byte[] _statsResponseBytes = null;
+    private DateTime _statsResponseRefresh = DateTime.MinValue;
     private TimeSpan? _offsetTimeSpan = null;
+
+    private static HttpClient CreateHttpClient()
+    {
+      SocketsHttpHandler handler = new SocketsHttpHandler
+      {
+        PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+        PooledConnectionIdleTimeout = TimeSpan.FromMinutes(2),
+        AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli
+      };
+
+      return new HttpClient(handler)
+      {
+        Timeout = TimeSpan.FromSeconds(30)
+      };
+    }
+
     public void DoLog(string message)
     {
         // Implement your logging logic here
@@ -603,27 +625,8 @@ namespace Core.Main.DataObjects
           {
             if (_dcaLog == null || (DateTime.UtcNow > _dcaLogRefresh))
             {
-              dynamic dcaData = null, pairsData = null, pendingData = null, watchData = null;
               _dcaLog.Clear();
-
-              Parallel.Invoke(() =>
-              {
-                dcaData = GetDataFromProfitTrailer("/api/v2/data/dca", true);
-              },
-              () =>
-              {
-                pairsData = GetDataFromProfitTrailer("/api/v2/data/pairs", true);
-              },
-              () =>
-              {
-                pendingData = GetDataFromProfitTrailer("/api/v2/data/pending", true);
-              },
-              () =>
-              {
-                watchData = GetDataFromProfitTrailer("/api/v2/data/watchmode", true);
-              });
-
-              this.BuildDCALogData(dcaData, pairsData, pendingData, watchData);
+              RefreshDCALogAsync().GetAwaiter().GetResult();
               _dcaLogRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.BagAnalyzerRefreshSeconds - 1);
             }
           }
@@ -688,51 +691,85 @@ namespace Core.Main.DataObjects
     {
       return (this.Misc.DustValue);
     }
-    
+
+    private string BuildProfitTrailerUrl(string callPath)
+    {
+      return string.Format("{0}{1}{2}token={3}",
+        _systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL,
+        callPath,
+        callPath.Contains("?") ? "&" : "?",
+        _systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken);
+    }
+
     private dynamic GetDataFromProfitTrailer(string callPath, bool arrayReturned = false)
     {
-      string url = string.Format("{0}{1}{2}token={3}", _systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL, 
-      callPath,
-      callPath.Contains("?") ? "&" : "?", 
-      _systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken);
-      
-      Debug.WriteLine(String.Format("{0} - Calling '{1}'", DateTime.UtcNow, url));
-
-      using (HttpClientHandler handler = new HttpClientHandler())
-      {
-        handler.AutomaticDecompression = DecompressionMethods.GZip;
-        using (HttpClient client = new HttpClient(handler))
-        {
-          string rawBody = client.GetStringAsync(url).GetAwaiter().GetResult();
-          if (!arrayReturned)
-          {
-            return JObject.Parse(rawBody);
-          }
-          else
-          {
-            return JArray.Parse(rawBody);
-          }
-        }
-      }
+      return GetDataFromProfitTrailerAsync(callPath, arrayReturned).GetAwaiter().GetResult();
     }
+
+    private async Task<dynamic> GetDataFromProfitTrailerAsync(string callPath, bool arrayReturned = false, CancellationToken cancellationToken = default)
+    {
+      string url = BuildProfitTrailerUrl(callPath);
+      Debug.WriteLine(String.Format("{0} - Calling ProfitTrailer '{1}'", DateTime.UtcNow, callPath));
+
+      string rawBody = await SharedHttpClient.GetStringAsync(url, cancellationToken).ConfigureAwait(false);
+      if (!arrayReturned)
+      {
+        return JObject.Parse(rawBody);
+      }
+
+      return JArray.Parse(rawBody);
+    }
+
     private Stream GetDataFromProfitTrailerAsStream(string callPath)
     {
-        string url = string.Format("{0}{1}{2}token={3}", _systemConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL, 
-        callPath,
-        callPath.Contains("?") ? "&" : "?", 
-        _systemConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken);
-        
-        Debug.WriteLine(String.Format("{0} - Calling '{1}'", DateTime.UtcNow, url));
+      return GetDataFromProfitTrailerAsStreamAsync(callPath).GetAwaiter().GetResult();
+    }
 
-        using (HttpClientHandler handler = new HttpClientHandler())
+    private async Task<Stream> GetDataFromProfitTrailerAsStreamAsync(string callPath, CancellationToken cancellationToken = default)
+    {
+      if (callPath.Equals("/api/v2/data/stats", StringComparison.Ordinal))
+      {
+        await _statsResponseSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
         {
-          handler.AutomaticDecompression = DecompressionMethods.GZip;
-          using (HttpClient client = new HttpClient(handler))
+          if (_statsResponseBytes == null || DateTime.UtcNow > _statsResponseRefresh)
           {
-            byte[] responseBytes = client.GetByteArrayAsync(url).GetAwaiter().GetResult();
-            return new MemoryStream(responseBytes, writable: false);
+            string statsUrl = BuildProfitTrailerUrl(callPath);
+            Debug.WriteLine(String.Format("{0} - Calling ProfitTrailer '{1}'", DateTime.UtcNow, callPath));
+
+            _statsResponseBytes = await SharedHttpClient.GetByteArrayAsync(statsUrl, cancellationToken).ConfigureAwait(false);
+            _statsResponseRefresh = DateTime.UtcNow.AddSeconds(_systemConfiguration.GeneralSettings.Monitor.DashboardChartsRefreshSeconds - 1);
           }
+
+          return new MemoryStream(_statsResponseBytes, writable: false);
         }
+        finally
+        {
+          _statsResponseSemaphore.Release();
+        }
+      }
+
+      string url = BuildProfitTrailerUrl(callPath);
+      Debug.WriteLine(String.Format("{0} - Calling ProfitTrailer '{1}'", DateTime.UtcNow, callPath));
+
+      byte[] responseBytes = await SharedHttpClient.GetByteArrayAsync(url, cancellationToken).ConfigureAwait(false);
+      return new MemoryStream(responseBytes, writable: false);
+    }
+
+    private async Task RefreshDCALogAsync(CancellationToken cancellationToken = default)
+    {
+      Task<dynamic> dcaTask = GetDataFromProfitTrailerAsync("/api/v2/data/dca", true, cancellationToken);
+      Task<dynamic> pairsTask = GetDataFromProfitTrailerAsync("/api/v2/data/pairs", true, cancellationToken);
+      Task<dynamic> pendingTask = GetDataFromProfitTrailerAsync("/api/v2/data/pending", true, cancellationToken);
+      Task<dynamic> watchTask = GetDataFromProfitTrailerAsync("/api/v2/data/watchmode", true, cancellationToken);
+
+      await Task.WhenAll(dcaTask, pairsTask, pendingTask, watchTask).ConfigureAwait(false);
+
+      this.BuildDCALogData(
+        await dcaTask.ConfigureAwait(false),
+        await pairsTask.ConfigureAwait(false),
+        await pendingTask.ConfigureAwait(false),
+        await watchTask.ConfigureAwait(false));
     }
 
     private void BuildDCALogData(dynamic rawDCALogData, dynamic rawPairsLogData, dynamic rawPendingLogData, dynamic rawWatchModeLogData)

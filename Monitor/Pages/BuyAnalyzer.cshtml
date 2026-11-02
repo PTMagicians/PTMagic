@@ -50,8 +50,24 @@
 
   <script type="text/javascript">
     var errCountBuyList = [];
-    var interval;
+    var buyListTimer = null;
+    var buyListRequestRunning = false;
+    var buyListRefreshMilliseconds = @Model.PTMagicConfiguration.GeneralSettings.Monitor.BuyAnalyzerRefreshSeconds * 1000;
+
+    var scheduleBuyList = function () {
+      clearTimeout(buyListTimer);
+
+      if (!document.hidden) {
+        buyListTimer = setTimeout(loadBuyList, buyListRefreshMilliseconds);
+      }
+    };
+
     var loadBuyList = function () {
+      if (document.hidden || buyListRequestRunning) {
+        return;
+      }
+
+      buyListRequestRunning = true;
       $("#buylist-refresh-icon").html('<i class="fa fa-circle-o-notch fa-spin fa-fw" data-toggle="tooltip" data-placement="top" title="Loading fresh data..."></i>');
 
       var sortedField = $("[data-tablesaw-sortable-default-col]");
@@ -69,20 +85,31 @@
           }
         } else if (responseText == 'returntologin') {
           window.location.replace("@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)Login");
+          return;
         } else {
           errCountBuyList["BuyList"] = 0;
         }
         $("#buylist-refresh-icon").html('');
-        $('[role="tooltip"]').remove();
+        cleanupOrphanedTooltips();
         $('[data-toggle="tooltip"]').tooltip();
         $('.text-autocolor').autocolor(false);
+
+        buyListRequestRunning = false;
+        scheduleBuyList();
       });
     };
 
     $(document).ready(function () {
       errCountBuyList["BuyList"] = 0;
       loadBuyList();
-      interval = setInterval(function () { loadBuyList(); }, @Model.PTMagicConfiguration.GeneralSettings.Monitor.BuyAnalyzerRefreshSeconds * 1000);
+
+      document.addEventListener("visibilitychange", function () {
+        clearTimeout(buyListTimer);
+
+        if (!document.hidden && !buyListRequestRunning) {
+          loadBuyList();
+        }
+      });
     });
   </script>
 }

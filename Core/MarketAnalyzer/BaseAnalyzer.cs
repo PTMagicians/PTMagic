@@ -19,6 +19,15 @@ namespace Core.MarketAnalyzer
   {
     private const int MaxHttpRetries = 3;
     private static readonly HttpClient HttpClient = CreateHttpClient();
+    private static readonly object MarketDataFileIndexLock = new object();
+    private static readonly Dictionary<string, MarketDataFileIndexEntry> MarketDataFileIndexes = new Dictionary<string, MarketDataFileIndexEntry>(StringComparer.OrdinalIgnoreCase);
+    private static readonly Dictionary<string, Dictionary<string, Dictionary<string, Market>>> MarketDataSnapshotCaches = new Dictionary<string, Dictionary<string, Dictionary<string, Market>>>(StringComparer.OrdinalIgnoreCase);
+
+    private sealed class MarketDataFileIndexEntry
+    {
+      public DateTime DirectoryLastWriteTimeUtc { get; set; }
+      public List<FileInfo> Files { get; set; }
+    }
 
     private static HttpClient CreateHttpClient()
     {
@@ -425,43 +434,113 @@ namespace Core.MarketAnalyzer
       FileHelper.WriteTextToFile(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + Constants.PTMagicPathExchange + Path.DirectorySeparatorChar, "MarketInfo.json", JsonConvert.SerializeObject(marketInfos));
     }
 
+    private static List<FileInfo> GetMarketDataFileIndex(string platform)
+    {
+      string dataDirectoryPath = Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + platform + Path.DirectorySeparatorChar;
+      DateTime directoryLastWriteTimeUtc = Directory.GetLastWriteTimeUtc(dataDirectoryPath);
+
+      lock (MarketDataFileIndexLock)
+      {
+        if (MarketDataFileIndexes.TryGetValue(platform, out MarketDataFileIndexEntry cachedIndex)
+          && cachedIndex.DirectoryLastWriteTimeUtc == directoryLastWriteTimeUtc)
+        {
+          return cachedIndex.Files;
+        }
+      }
+
+      DirectoryInfo dataDirectory = new DirectoryInfo(dataDirectoryPath);
+      List<FileInfo> marketFiles = dataDirectory.EnumerateFiles("MarketData*")
+        .Select(x => { x.Refresh(); return x; })
+        .ToList();
+
+      lock (MarketDataFileIndexLock)
+      {
+        MarketDataFileIndexes[platform] = new MarketDataFileIndexEntry
+        {
+          DirectoryLastWriteTimeUtc = directoryLastWriteTimeUtc,
+          Files = marketFiles
+        };
+        MarketDataSnapshotCaches.Remove(platform);
+      }
+
+      return marketFiles;
+    }
+
+    private static FileInfo FindMarketDataFile(List<FileInfo> marketFiles, DateTime maxDateTime)
+    {
+      FileInfo marketFile = null;
+      foreach (FileInfo candidate in marketFiles)
+      {
+        if (candidate.LastWriteTimeUtc <= maxDateTime
+          && (marketFile == null || candidate.LastWriteTimeUtc > marketFile.LastWriteTimeUtc))
+        {
+          marketFile = candidate;
+        }
+      }
+
+      if (marketFile != null)
+      {
+        return marketFile;
+      }
+
+      foreach (FileInfo candidate in marketFiles)
+      {
+        if (candidate.LastWriteTimeUtc >= maxDateTime
+          && (marketFile == null || candidate.LastWriteTimeUtc < marketFile.LastWriteTimeUtc))
+        {
+          marketFile = candidate;
+        }
+      }
+
+      return marketFile;
+    }
+
     public static Dictionary<string, Market> GetMarketDataFromFile(PTMagicConfiguration systemConfiguration, LogHelper log, string platform, DateTime maxDateTime, string marketCaption)
     {
       Dictionary<string, Market> result = new Dictionary<string, Market>();
-      DirectoryInfo dataDirectory = new DirectoryInfo(Directory.GetCurrentDirectory() + Path.DirectorySeparatorChar + Constants.PTMagicPathData + Path.DirectorySeparatorChar + platform + Path.DirectorySeparatorChar);
+      List<FileInfo> marketFiles = GetMarketDataFileIndex(platform);
+      FileInfo marketFile = FindMarketDataFile(marketFiles, maxDateTime);
 
-      // Get market files older than max datetime in descending order (newest file up top)
-      List<FileInfo> marketFiles = dataDirectory.EnumerateFiles("MarketData*")
-                         .Select(x => { x.Refresh(); return x; })
-                         .Where(x => x.LastWriteTimeUtc <= maxDateTime)
-                         .ToArray().OrderByDescending(f => f.LastWriteTimeUtc).ToList();
-
-      FileInfo marketFile = null;
-      if (marketFiles.Count > 0)
-      {
-        marketFile = marketFiles.First();
-
-        log.DoLogDebug(platform + " - " + marketCaption + " market data loaded (" + marketFile.LastWriteTimeUtc.ToString() + ")");
-      }
-      else
+      if (marketFile == null)
       {
         log.DoLogDebug(platform + " - Not able to load " + marketCaption + " market data. Loading next youngest market file instead.");
-
-        // Get market files younger than max datetime in ascending order (oldest file up top)
-        marketFiles = dataDirectory.EnumerateFiles("MarketData*")
-                       .Select(x => { x.Refresh(); return x; })
-                       .Where(x => x.LastWriteTimeUtc >= maxDateTime)
-                       .ToArray().OrderBy(f => f.LastWriteTimeUtc).ToList();
-        if (marketFiles.Count > 0)
-        {
-          marketFile = marketFiles.First();
-          log.DoLogDebug(platform + " - " + marketCaption + " market data loaded (" + marketFile.LastWriteTimeUtc.ToString() + ")");
-        }
+        log.DoLogDebug(platform + " - Not able to load " + marketCaption + " market data. No market data files found.");
+        return result;
       }
+
+      if (marketFile.LastWriteTimeUtc > maxDateTime)
+      {
+        log.DoLogDebug(platform + " - Not able to load " + marketCaption + " market data. Loading next youngest market file instead.");
+      }
+
+      log.DoLogDebug(platform + " - " + marketCaption + " market data loaded (" + marketFile.LastWriteTimeUtc.ToString() + ")");
+
       try
       {
+        string snapshotKey = marketFile.FullName;
+        lock (MarketDataFileIndexLock)
+        {
+          if (MarketDataSnapshotCaches.TryGetValue(platform, out Dictionary<string, Dictionary<string, Market>> platformCache)
+            && platformCache.TryGetValue(snapshotKey, out Dictionary<string, Market> cachedSnapshot))
+          {
+            return cachedSnapshot;
+          }
+        }
+
         // Get JSON object
         result = JsonConvert.DeserializeObject<Dictionary<string, Market>>(marketFile.OpenText().ReadToEnd());
+        if (result != null)
+        {
+          lock (MarketDataFileIndexLock)
+          {
+            if (!MarketDataSnapshotCaches.TryGetValue(platform, out Dictionary<string, Dictionary<string, Market>> platformCache))
+            {
+              platformCache = new Dictionary<string, Dictionary<string, Market>>(StringComparer.OrdinalIgnoreCase);
+              MarketDataSnapshotCaches[platform] = platformCache;
+            }
+            platformCache[snapshotKey] = result;
+          }
+        }
       }
       catch (Exception ex)
       {
@@ -525,39 +604,67 @@ namespace Core.MarketAnalyzer
       List<MarketTrendChange> result = new List<MarketTrendChange>();
       bool useBinanceFuturesAnalyzerUniverse = platform.Equals("Exchange", StringComparison.InvariantCultureIgnoreCase)
         && systemConfiguration.GeneralSettings.Application.Exchange.Equals("BinanceFutures", StringComparison.InvariantCultureIgnoreCase);
+      string exchange = systemConfiguration.GeneralSettings.Application.Exchange.ToLower();
 
-      SortedDictionary<string, Market> markets = new SortedDictionary<string, Market>(recentMarkets);
+      bool excludeMainCurrency = systemConfiguration.AnalyzerSettings.MarketAnalyzer.ExcludeMainCurrency;
+      if (!marketTrend.ExcludeMainCurrency)
+      {
+        excludeMainCurrency = marketTrend.ExcludeMainCurrency;
+      }
+
+      string ignored = marketTrend.IgnoredMarkets.ToUpper();
+      ignored = ignored.Replace(mainMarket, "");
+      switch (exchange)
+      {
+        case "bittrex":
+          ignored = ignored.Replace("-", "");
+          break;
+        case "poloniex":
+          ignored = ignored.Replace("_", "");
+          break;
+      }
+      HashSet<string> ignoredMarkets = new HashSet<string>(SystemHelper.ConvertTokenStringToList(ignored, ","), StringComparer.Ordinal);
+
+      string allowed = marketTrend.AllowedMarkets.ToUpper();
+      allowed = allowed.Replace(mainMarket, "");
+      switch (exchange)
+      {
+        case "bittrex":
+          allowed = allowed.Replace("-", "");
+          break;
+        case "poloniex":
+          allowed = allowed.Replace("_", "");
+          break;
+      }
+      HashSet<string> allowedMarkets = new HashSet<string>(SystemHelper.ConvertTokenStringToList(allowed, ","), StringComparer.Ordinal);
+      HashSet<string> tradingMarkets = new HashSet<string>(marketList, StringComparer.Ordinal);
+      bool useAllTradingMarkets = marketList.Count == 0;
+
       IEnumerable<KeyValuePair<string, Market>> sortedMarkets;
       if (useBinanceFuturesAnalyzerUniverse)
       {
-        sortedMarkets = markets
+        sortedMarkets = recentMarkets
           .OrderByDescending(m => BinanceFuturesMarketUniverse.IsMarketIncluded(m.Key, systemConfiguration))
           .ThenByDescending(m => m.Value.Volume24h);
       }
       else if (sortBy.Equals("Volume"))
       {
-        sortedMarkets = markets.OrderByDescending(m => m.Value.Volume24h);
+        sortedMarkets = recentMarkets.OrderByDescending(m => m.Value.Volume24h);
       }
       else
       {
-        sortedMarkets = markets.OrderBy(m => m.Value.Position);
+        sortedMarkets = recentMarkets.OrderBy(m => m.Value.Position);
       }
 
       int marketCount = 1;
       foreach (KeyValuePair<string, Market> recentMarketPair in sortedMarkets)
       {
-        bool isTradingMarket = marketList.Count == 0 || marketList.Contains(recentMarketPair.Key);
+        bool isTradingMarket = useAllTradingMarkets || tradingMarkets.Contains(recentMarketPair.Key);
         bool isAnalyzerMarket = useBinanceFuturesAnalyzerUniverse
           && !systemConfiguration.AnalyzerSettings.MarketAnalyzer.UseProfitTrailerEnabledPairs
           && BinanceFuturesMarketUniverse.IsMarketIncluded(recentMarketPair.Key, systemConfiguration);
         if (isTradingMarket || isAnalyzerMarket)
         {
-          bool excludeMainCurrency = systemConfiguration.AnalyzerSettings.MarketAnalyzer.ExcludeMainCurrency;
-          if (!marketTrend.ExcludeMainCurrency)
-          {
-            excludeMainCurrency = marketTrend.ExcludeMainCurrency;
-          }
-
           if (platform.Equals("CoinMarketCap", StringComparison.InvariantCulture) && excludeMainCurrency)
           {
             // Check if this is the main currency (only for CoinMarketCap)
@@ -571,49 +678,22 @@ namespace Core.MarketAnalyzer
 
           Market recentMarket;
           string market = recentMarketPair.Value.Symbol.Replace(mainMarket, "");
-          string exchange = systemConfiguration.GeneralSettings.Application.Exchange.ToLower();
           switch (exchange)
-            {
-              case "bittrex":
+          {
+            case "bittrex":
               market = market.Replace("-", "");
               break;
-              case "poloniex":
+            case "poloniex":
               market = market.Replace("_", "");
               break;
-            }
+          }
           if (recentMarkets.TryGetValue(recentMarketPair.Key, out recentMarket))
           {
-            // Strip main markets from lists, if exists
-            string ignored = marketTrend.IgnoredMarkets.ToUpper();
-            ignored = ignored.Replace(mainMarket, "");
-            switch (exchange)
-            {
-              case "bittrex":
-              ignored = ignored.Replace("-", "");
-              break;
-              case "poloniex":
-              ignored = ignored.Replace("_", "");
-              break;
-            }
-            List<string> ignoredMarkets = SystemHelper.ConvertTokenStringToList(ignored, ",");
             if (ignoredMarkets.Contains(market))
             {
               log.DoLogDebug(platform + " - Market trend '" + marketTrend.Name + "' for '" + recentMarketPair.Key + "' is ignored in this trend.");
               continue;
             }
-            // Strip main markets from lists, if exists
-            string allowed = marketTrend.AllowedMarkets.ToUpper();
-            allowed = allowed.Replace(mainMarket, "");
-            switch (exchange)
-            {
-              case "bittrex":
-              allowed = allowed.Replace("-", "");
-              break;
-              case "poloniex":
-              allowed = allowed.Replace("_", "");
-              break;
-            }
-            List<string> allowedMarkets = SystemHelper.ConvertTokenStringToList(allowed, ",");
             if (allowedMarkets.Count > 0 && !allowedMarkets.Contains(market))
             {
               log.DoLogDebug(platform + " - Market trend '" + marketTrend.Name + "' for '" + recentMarketPair.Key + "' is not allowed in this trend.");
