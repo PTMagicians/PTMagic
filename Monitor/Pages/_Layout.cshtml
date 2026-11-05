@@ -170,28 +170,77 @@
   <script type="text/javascript">
     var errCount = [];
     var interval;
+
+    var syncTickerTooltipTitle = function ($target, $source) {
+      var title = $source.attr('title') || $source.attr('data-original-title') || '';
+      $target.attr('data-original-title', title);
+      $target.attr('title', '');
+    };
+
+    var updateTickerWidgets = function (responseText) {
+      var $ticker = $('#ticker-widgets');
+      var parsedNodes = $.parseHTML(responseText, document, false);
+      var $incoming = $('<div></div>').append(parsedNodes);
+
+      if ($ticker.children().length === 0) {
+        $ticker.append($incoming.children());
+        $ticker.find('[data-toggle="tooltip"]').tooltip();
+        $('.text-autocolor', $ticker).autocolor(false);
+        return;
+      }
+
+      var $globalCard = $ticker.find('[data-ticker-role="global-card"]');
+      var $incomingGlobalCard = $incoming.find('[data-ticker-role="global-card"]');
+      var $smsCard = $ticker.find('[data-ticker-role="sms-card"]');
+      var $incomingSmsCard = $incoming.find('[data-ticker-role="sms-card"]');
+      var $healthCard = $ticker.find('[data-ticker-role="health-card"]');
+      var $incomingHealthCard = $incoming.find('[data-ticker-role="health-card"]');
+
+      if ($globalCard.length === 0 || $incomingGlobalCard.length === 0 || $smsCard.length === 0 || $incomingSmsCard.length === 0 || $healthCard.length === 0 || $incomingHealthCard.length === 0) {
+        return;
+      }
+
+      $globalCard.attr('class', $incomingGlobalCard.attr('class'));
+      $ticker.find('[data-ticker-role="global-setting"]').text($incoming.find('[data-ticker-role="global-setting"]').text());
+      syncTickerTooltipTitle($ticker.find('[data-ticker-role="global-info"]'), $incoming.find('[data-ticker-role="global-info"]'));
+
+      $smsCard.attr('class', $incomingSmsCard.attr('class'));
+      $ticker.find('[data-ticker-role="sms-count"]').text($incoming.find('[data-ticker-role="sms-count"]').text());
+      var $smsInfo = $ticker.find('[data-ticker-role="sms-info"]');
+      var $incomingSmsInfo = $incoming.find('[data-ticker-role="sms-info"]');
+      $smsInfo.attr('class', $incomingSmsInfo.attr('class'));
+      syncTickerTooltipTitle($smsInfo, $incomingSmsInfo);
+
+      $healthCard.attr('class', $incomingHealthCard.attr('class'));
+      syncTickerTooltipTitle($healthCard, $incomingHealthCard);
+      $ticker.find('[data-ticker-role="health-icon"]').attr('class', $incoming.find('[data-ticker-role="health-icon"]').attr('class'));
+
+      $('.text-autocolor', $ticker).autocolor(false);
+    };
+
     var loadWidgets = function () {
-      // Clear exisitng interval to stop multiple attempts to load at the same time.
-      if (interval != null)
-      {
+      if (interval != null) {
         clearInterval(interval);
       }
 
-      // Load widgets
-      $('[data-toggle="tooltip"]').tooltip();
-      $("#ticker-widgets").load('@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)_get/TickerWidgets', '', function (responseText, textStatus, XMLHttpRequest) {
-        if (textStatus == 'error') {
-          errCount["TickerWidgets"]++;
-          if (errCount["TickerWidgets"] > 2) {
-            $.Notification.notify('error', 'top left', 'Ticker update failed!', 'PTMagic Monitor failed to update data. If this error does not go away by itself, please check the connection to your hosting PC.')
-          }
-        } else if (responseText == 'returntologin') {
+      $.ajax({
+        url: '@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)_get/TickerWidgets',
+        type: 'GET',
+        dataType: 'html'
+      }).done(function (responseText) {
+        if (responseText == 'returntologin') {
           window.location.replace("@Html.Raw(Model.PTMagicConfiguration.GeneralSettings.Monitor.RootUrl)Login");
-        } else {
-          errCount["TickerWidgets"] = 0;
+          return;
         }
 
-        // Reinstate the interval.
+        errCount["TickerWidgets"] = 0;
+        updateTickerWidgets(responseText);
+      }).fail(function () {
+        errCount["TickerWidgets"]++;
+        if (errCount["TickerWidgets"] > 2) {
+          $.Notification.notify('error', 'top left', 'Ticker update failed!', 'PTMagic Monitor failed to update data. If this error does not go away by itself, please check the connection to your hosting PC.');
+        }
+      }).always(function () {
         interval = setInterval(function () { loadWidgets(); }, 3000);
       });
     };
@@ -200,7 +249,7 @@
       errCount["TickerWidgets"] = 0;
       loadWidgets();
 
-      $('[data-toggle="tooltip"]').tooltip()
+      $('[data-toggle="tooltip"]').tooltip();
       $('.text-autocolor').autocolor(false);
       $('.text-autocolor-saw').autocolor(true);
     });

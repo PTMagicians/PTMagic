@@ -48,9 +48,11 @@ namespace Monitor.Pages
 
       // Read the new settings
       PTMagicConfiguration.GeneralSettings.Application.IsEnabled = HttpContext.Request.Form["Application_IsEnabled"].Equals("on");
+      PTMagicConfiguration.GeneralSettings.Application.TestMode = HttpContext.Request.Form["Application_TestMode"].Equals("on");
       PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerDefaultSettingName = HttpContext.Request.Form["Application_ProfitTrailerDefaultSettingName"];
       PTMagicConfiguration.GeneralSettings.Application.Exchange = HttpContext.Request.Form["Application_Exchange"];
       PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerMonitorURL = HttpContext.Request.Form["Application_ProfitTrailerMonitorURL"];
+      PTMagicConfiguration.GeneralSettings.Application.ProfitTrailerServerAPIToken = HttpContext.Request.Form["Application_ProfitTrailerServerAPIToken"];
       PTMagicConfiguration.GeneralSettings.Application.FloodProtectionMinutes = SystemHelper.TextToInteger(HttpContext.Request.Form["Application_FloodProtectionMinutes"], PTMagicConfiguration.GeneralSettings.Application.FloodProtectionMinutes);
       PTMagicConfiguration.GeneralSettings.Application.InstanceName = HttpContext.Request.Form["Application_InstanceName"];
       PTMagicConfiguration.GeneralSettings.Application.CoinMarketCapAPIKey = HttpContext.Request.Form["Application_CoinMarketCapAPIKey"];

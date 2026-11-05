@@ -27,6 +27,69 @@ namespace Core.ProfitTrailer
       return lineRegex.IsMatch(line);
     }
 
+    private static string GetPropertyValue(List<string> propertyLines, string propertyName)
+    {
+      if (propertyLines == null)
+      {
+        return "";
+      }
+
+      foreach (string line in propertyLines)
+      {
+        string trimmedLine = line?.Trim() ?? "";
+        if (String.IsNullOrEmpty(trimmedLine) || trimmedLine.StartsWith('#'))
+        {
+          continue;
+        }
+
+        int separatorIndex = trimmedLine.IndexOf('=');
+        if (separatorIndex < 0)
+        {
+          continue;
+        }
+
+        string linePropertyName = trimmedLine.Substring(0, separatorIndex).Trim();
+        if (linePropertyName.Equals(propertyName, StringComparison.InvariantCultureIgnoreCase))
+        {
+          return trimmedLine.Substring(separatorIndex + 1).Trim();
+        }
+      }
+
+      return "";
+    }
+
+    private static string NormalizeMarketPair(string market, string mainMarket, string exchange)
+    {
+      string result = market?.Trim() ?? "";
+      if (String.IsNullOrEmpty(result) || String.IsNullOrEmpty(mainMarket))
+      {
+        return result;
+      }
+
+      if (exchange.Equals("Bittrex", StringComparison.InvariantCultureIgnoreCase))
+      {
+        string prefix = mainMarket + "-";
+        if (result.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
+        {
+          result = result.Substring(prefix.Length);
+        }
+      }
+      else if (exchange.Equals("Poloniex", StringComparison.InvariantCultureIgnoreCase))
+      {
+        string prefix = mainMarket + "_";
+        if (result.StartsWith(prefix, StringComparison.InvariantCultureIgnoreCase))
+        {
+          result = result.Substring(prefix.Length);
+        }
+      }
+      else if (result.EndsWith(mainMarket, StringComparison.InvariantCultureIgnoreCase))
+      {
+        result = result.Substring(0, result.Length - mainMarket.Length);
+      }
+
+      return result;
+    }
+
     private static string CalculatePropertyValue(string settingProperty, string oldValueString, string newValueString, out string configPropertyKey)
     {
       int valueMode = Constants.ValueModeDefault;
@@ -143,20 +206,62 @@ namespace Core.ProfitTrailer
         return "all";
       }
 
-      string result = "";
+      string enabledPairs = GetPropertyValue(pairsLines, "enabled_pairs");
+      string disabledPairs = GetPropertyValue(pairsLines, "disabled_pairs");
 
-      foreach (string line in pairsLines)
+      if (String.IsNullOrWhiteSpace(disabledPairs) || disabledPairs.Equals("false", StringComparison.InvariantCultureIgnoreCase))
       {
-        if (line.Replace(" ", "").StartsWith("enabled_pairs", StringComparison.InvariantCultureIgnoreCase))
-        {
-          result = line.Replace("enabled_pairs", "", StringComparison.InvariantCultureIgnoreCase);
-          result = result.Replace("#", "");
-          result = result.Replace("=", "").Trim();
-          break;
-        }
+        return enabledPairs;
       }
 
-      return result;
+      string mainMarket = GetMainMarket(systemConfiguration, pairsLines, log);
+      string exchange = systemConfiguration.GeneralSettings.Application.Exchange;
+      HashSet<string> disabledMarkets = new HashSet<string>(
+        SystemHelper.ConvertTokenStringToList(disabledPairs, ",")
+          .Select(market => NormalizeMarketPair(market, mainMarket, exchange))
+          .Where(market => !String.IsNullOrWhiteSpace(market)),
+        StringComparer.InvariantCultureIgnoreCase);
+
+      if (disabledMarkets.Count == 0)
+      {
+        return enabledPairs;
+      }
+
+      bool allPairsEnabled = String.IsNullOrWhiteSpace(enabledPairs)
+        || enabledPairs.Equals("all", StringComparison.InvariantCultureIgnoreCase)
+        || enabledPairs.Equals("true", StringComparison.InvariantCultureIgnoreCase)
+        || enabledPairs.Equals("false", StringComparison.InvariantCultureIgnoreCase);
+
+      List<string> enabledMarkets;
+      if (allPairsEnabled)
+      {
+        Dictionary<string, Market> recentMarkets = BaseAnalyzer.GetMarketDataFromFile(systemConfiguration, log, "Exchange", DateTime.UtcNow, "Recent");
+        if (recentMarkets == null || recentMarkets.Count == 0)
+        {
+          log.DoLogWarn("UseProfitTrailerEnabledPairs is enabled, but the current exchange market universe could not be resolved while applying disabled_pairs. Falling back to enabled_pairs only.");
+          return enabledPairs;
+        }
+
+        enabledMarkets = recentMarkets.Keys
+          .Select(market => NormalizeMarketPair(market, mainMarket, exchange))
+          .Where(market => !String.IsNullOrWhiteSpace(market))
+          .ToList();
+      }
+      else
+      {
+        enabledMarkets = SystemHelper.ConvertTokenStringToList(enabledPairs, ",")
+          .Select(market => NormalizeMarketPair(market, mainMarket, exchange))
+          .Where(market => !String.IsNullOrWhiteSpace(market))
+          .ToList();
+      }
+
+      List<string> effectiveMarkets = enabledMarkets
+        .Where(market => !disabledMarkets.Contains(market))
+        .Distinct(StringComparer.InvariantCultureIgnoreCase)
+        .ToList();
+
+      log.DoLogInfo("ProfitTrailer pair filters applied for PTMagic analysis: " + effectiveMarkets.Count + " enabled market(s) after disabled_pairs exclusions.");
+      return SystemHelper.ConvertListToTokenString(effectiveMarkets, ",", true);
     }
 
     public static void WriteHeaderLines(string settingsName, DateTime settingsChangeTimestamp, List<string> lines)

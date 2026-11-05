@@ -1294,8 +1294,7 @@ namespace Core.Main
     private void ValidateMarketList()
     {
       // Check if markets are valid for the selected main market
-      List<string> validMarkets = this.MarketList.FindAll(m => m.IndexOf(this.LastRuntimeSummary.MainMarket, StringComparison.InvariantCultureIgnoreCase) > -1);
-      if (validMarkets.Count == 0)
+      if (!this.MarketList.Any(m => m.IndexOf(this.LastRuntimeSummary.MainMarket, StringComparison.InvariantCultureIgnoreCase) > -1))
       {
         Exception ex = new Exception("No valid pairs found for main market '" + this.LastRuntimeSummary.MainMarket + "' in configured pars list (" + SystemHelper.ConvertListToTokenString(this.MarketList, ",", true) + ")! Terminating process...");
         Log.DoLogError(ex.Message);
@@ -1570,81 +1569,90 @@ namespace Core.Main
         int marketPairProcess = 1;
         Dictionary<string, List<string>> matchedMarketTriggers = new Dictionary<string, List<string>>();
         string mainMarket = this.LastRuntimeSummary.MainMarket;
+        string exchange = this.PTMagicConfiguration.GeneralSettings.Application.Exchange.ToLower();
+
+        List<(SingleMarketSetting Setting, HashSet<string> IgnoredMarkets, HashSet<string> AllowedMarkets, HashSet<string> IgnoredGlobalSettings, HashSet<string> AllowedGlobalSettings)> marketSettingFilters =
+          new List<(SingleMarketSetting Setting, HashSet<string> IgnoredMarkets, HashSet<string> AllowedMarkets, HashSet<string> IgnoredGlobalSettings, HashSet<string> AllowedGlobalSettings)>();
+
+        foreach (SingleMarketSetting marketSetting in this.PTMagicConfiguration.AnalyzerSettings.SingleMarketSettings)
+        {
+          string ignored = marketSetting.IgnoredMarkets.ToUpper();
+          ignored = ignored.Replace(mainMarket, "");
+          switch (exchange)
+          {
+            case "bittrex":
+              ignored = ignored.Replace("-", "");
+              break;
+            case "poloniex":
+              ignored = ignored.Replace("_", "");
+              break;
+          }
+
+          string allowed = marketSetting.AllowedMarkets.ToUpper();
+          allowed = allowed.Replace(mainMarket, "");
+          switch (exchange)
+          {
+            case "bittrex":
+              allowed = allowed.Replace("-", "");
+              break;
+            case "poloniex":
+              allowed = allowed.Replace("_", "");
+              break;
+          }
+
+          marketSettingFilters.Add((
+            marketSetting,
+            new HashSet<string>(SystemHelper.ConvertTokenStringToList(ignored, ","), StringComparer.Ordinal),
+            new HashSet<string>(SystemHelper.ConvertTokenStringToList(allowed, ","), StringComparer.Ordinal),
+            new HashSet<string>(SystemHelper.ConvertTokenStringToList(marketSetting.IgnoredGlobalSettings, ","), StringComparer.Ordinal),
+            new HashSet<string>(SystemHelper.ConvertTokenStringToList(marketSetting.AllowedGlobalSettings, ","), StringComparer.Ordinal)));
+        }
 
         // Loop through markets
         foreach (string marketPair in this.MarketList)
         {
           this.Log.DoLogDebug("'" + marketPair + "' - Checking triggers (" + marketPairProcess.ToString() + "/" + this.MarketList.Count.ToString() + ")...");
           string market = marketPair.Replace(mainMarket, "");
-          switch (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.ToLower())
-            {
-              case "bittrex":
+          switch (exchange)
+          {
+            case "bittrex":
               market = market.Replace("-", "");
               break;
-              case "poloniex":
+            case "poloniex":
               market = market.Replace("_", "");
               break;
-            }
+          }
           bool stopTriggers = false;
 
           // Loop through single market settings
-          foreach (SingleMarketSetting marketSetting in this.PTMagicConfiguration.AnalyzerSettings.SingleMarketSettings)
+          foreach (var marketSettingFilter in marketSettingFilters)
           {
+            SingleMarketSetting marketSetting = marketSettingFilter.Setting;
             List<string> matchedSingleMarketTriggers = new List<string>();
 
             // Check ignore markets
-            
-            // Strip main markets from list, if exists
-            string ignored = marketSetting.IgnoredMarkets.ToUpper();
-            ignored = ignored.Replace(mainMarket, "");
-            switch (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.ToLower())
-            {
-              case "bittrex":
-              ignored = ignored.Replace("-", "");
-              break;
-              case "poloniex":
-              ignored = ignored.Replace("_", "");
-              break;
-            }
-            List<string> ignoredMarkets = SystemHelper.ConvertTokenStringToList(ignored, ",");
-            if (ignoredMarkets.Contains(market))
+            if (marketSettingFilter.IgnoredMarkets.Contains(market))
             {
               this.Log.DoLogDebug("'" + marketPair + "' - Is ignored in '" + marketSetting.SettingName + "'.");
               continue;
             }
 
             // Check allowed markets
-            
-            // Strip main markets from list, if exists
-            string allowed = marketSetting.AllowedMarkets.ToUpper();
-            allowed = allowed.Replace(mainMarket, "");
-            switch (this.PTMagicConfiguration.GeneralSettings.Application.Exchange.ToLower())
-            {
-              case "bittrex":
-              allowed = allowed.Replace("-", "");
-              break;
-              case "poloniex":
-              allowed = allowed.Replace("_", "");
-              break;
-            }
-            List<string> allowedMarkets = SystemHelper.ConvertTokenStringToList(allowed, ",");
-            if (allowedMarkets.Count > 0 && !allowedMarkets.Contains(market))
+            if (marketSettingFilter.AllowedMarkets.Count > 0 && !marketSettingFilter.AllowedMarkets.Contains(market))
             {
               this.Log.DoLogDebug("'" + marketPair + "' - Is not allowed in '" + marketSetting.SettingName + "'.");
               continue;
             }
 
             // Check ignore global settings
-            List<string> ignoredGlobalSettings = SystemHelper.ConvertTokenStringToList(marketSetting.IgnoredGlobalSettings, ",");
-            if (ignoredGlobalSettings.Contains(this.ActiveSettingName))
+            if (marketSettingFilter.IgnoredGlobalSettings.Contains(this.ActiveSettingName))
             {
               this.Log.DoLogDebug("'" + marketPair + "' - '" + this.ActiveSettingName + "' - Is ignored in '" + marketSetting.SettingName + "'.");
               continue;
             }
 
             // Check allowed global settings
-            List<string> allowedGlobalSettings = SystemHelper.ConvertTokenStringToList(marketSetting.AllowedGlobalSettings, ",");
-            if (allowedGlobalSettings.Count > 0 && !allowedGlobalSettings.Contains(this.ActiveSettingName))
+            if (marketSettingFilter.AllowedGlobalSettings.Count > 0 && !marketSettingFilter.AllowedGlobalSettings.Contains(this.ActiveSettingName))
             {
               this.Log.DoLogDebug("'" + marketPair + "' - '" + this.ActiveSettingName + "' - Is not allowed in '" + marketSetting.SettingName + "'.");
               continue;
@@ -1716,7 +1724,6 @@ namespace Core.Main
                       if (this.SingleMarketTrendChanges.ContainsKey(offTrigger.MarketTrendName))
                       {
                         List<MarketTrendChange> marketTrendChanges = this.SingleMarketTrendChanges[offTrigger.MarketTrendName];
-                        List<MarketTrend> marketTrends = this.PTMagicConfiguration.AnalyzerSettings.MarketAnalyzer.MarketTrends;
 
                         if (marketTrendChanges.Count > 0)
                         {
@@ -1728,12 +1735,9 @@ namespace Core.Main
                           // Calculate average market change, skip any that are outside the threshold if enabled
                           if (trendThreshold.TrendThreshold != 0)
                           {
-                            var includedMarkets = from m in marketTrendChanges
-                                                  where m.TrendChange <= trendThreshold.TrendThreshold && m.TrendChange >= (trendThreshold.TrendThreshold * -1.0)
-                                                  orderby m.Market
-                                                  select m;
-
-                            averageMarketTrendChange = includedMarkets.Average(m => m.TrendChange);
+                            averageMarketTrendChange = marketTrendChanges
+                              .Where(m => m.TrendChange <= trendThreshold.TrendThreshold && m.TrendChange >= (trendThreshold.TrendThreshold * -1.0))
+                              .Average(m => m.TrendChange);
                           }
                           else
                           {
@@ -1795,10 +1799,10 @@ namespace Core.Main
                   switch (marketSetting.OffTriggerConnection.ToLower())
                   {
                     case "and":
-                      settingOffTriggered = offTriggerResults.FindAll(tr => tr == false).Count == 0;
+                      settingOffTriggered = offTriggerResults.All(tr => tr);
                       break;
                     case "or":
-                      settingOffTriggered = offTriggerResults.FindAll(tr => tr == true).Count > 0;
+                      settingOffTriggered = offTriggerResults.Any(tr => tr);
                       break;
                   }
 
@@ -1941,12 +1945,9 @@ namespace Core.Main
                       // Calculate average market change, skip any that are outside the threshold if enabled
                       if (trendThreshold.TrendThreshold != 0)
                       {
-                        var includedMarkets = from m in marketTrendChanges
-                                              where m.TrendChange <= trendThreshold.TrendThreshold && m.TrendChange >= (trendThreshold.TrendThreshold * -1.0)
-                                              orderby m.Market
-                                              select m;
-
-                        averageMarketTrendChange = includedMarkets.Average(m => m.TrendChange);
+                        averageMarketTrendChange = marketTrendChanges
+                          .Where(m => m.TrendChange <= trendThreshold.TrendThreshold && m.TrendChange >= (trendThreshold.TrendThreshold * -1.0))
+                          .Average(m => m.TrendChange);
                       }
                       else
                       {
@@ -2039,10 +2040,10 @@ namespace Core.Main
                   switch (marketSetting.TriggerConnection.ToLower())
                   {
                       case "and":
-                          settingTriggered = triggerResults.FindAll(tr => tr == false).Count == 0;
+                          settingTriggered = triggerResults.All(tr => tr);
                           break;
                       case "or":
-                          settingTriggered = triggerResults.FindAll(tr => tr == true).Count > 0;
+                          settingTriggered = triggerResults.Any(tr => tr);
                           break;
                   }
               }
