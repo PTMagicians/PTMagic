@@ -1,25 +1,28 @@
-﻿{
+// PTMagic example general settings | Updated: 2026-11-14
+// Configure your ProfitTrailer connection, Monitor, backups, and optional notifications here.
+// Replace placeholder values with your own settings; do not publish API tokens or licenses.
+// Keep TestMode enabled until you have confirmed your configuration behaves as intended.
+{
   "GeneralSettings": {
     "Application": {
-      "IsEnabled": true, // Enables the PTMagic bot (needs restart to take effect)
-      "TestMode": true, // If TestMode is active, no properties files will be changed
-      "ProfitTrailerLicense": "ptlicense1asdf234fljlasdf014325ehm", // Your Profit Trailer license key (needed to change your settings)
-      "ProfitTrailerLicenseXtra": "", // Licenses for additional bots for PTM to update (optional - comma separated list)
-      "ProfitTrailerServerAPIToken": "", //Your Profit Trailer Server API Token
-      "ProfitTrailerMonitorURL": "http://localhost:8081/", // The URL to your profit trailer monitor (needed to change your settings)
-      "ProfitTrailerMonitorURLXtra": "", // URLs for additional bots you want PTM to update (optional  - comma separated list)
-      "ProfitTrailerDefaultSettingName": "default", // Your Profit Trailer default setting name (needed to change your settings)
-      "Exchange": "BinanceFutures", // The exchange your are running Profit Trailer on
-       "FloodProtectionMinutes": 0, // If a price trend is just zig-zagging around its trigger, you may want to protect your settings from 
-                                    // getting switched back and forth every minute
-      "InstanceName": "MyBTCbot", // The name of the instance of this bot. This will be used in your monitor and your Telegram messages. 
-                                  //In case you are running more than one bot, you may set different names to separate them
-      "CoinMarketCapAPIKey": "", //CoinMarketCap Api
+      "IsEnabled": true, // Enable the PTMagic analyzer (restart required after changing this)
+      "TestMode": true, // Evaluate settings without writing changes to ProfitTrailer
+      "EnableBetaFeatures": false, // Allow optional beta features when available; keep false for normal operation
+      "ProfitTrailerLicense": "", // ProfitTrailer license used for settings integration
+      "ProfitTrailerLicenseXtra": "", // Optional comma-separated licenses for additional ProfitTrailer instances
+      "ProfitTrailerServerAPIToken": "", // API token for the PT instance; do not commit real credentials
+      "ProfitTrailerMonitorURL": "http://localhost:8081/", // ProfitTrailer web/API URL; adjust host and port as needed
+      "ProfitTrailerMonitorURLXtra": "", // Optional comma-separated URLs for additional ProfitTrailer instances
+      "ProfitTrailerDefaultSettingName": "default", // Name of the default preset in ProfitTrailer
+      "Exchange": "BinanceFutures", // Exchange configured in ProfitTrailer; change to match your account
+       "FloodProtectionMinutes": 0, // Delay repeated global setting switches when trends fluctuate near thresholds
+      "InstanceName": "PTMagic", // Display name used in the Monitor and messages; choose a unique name for each instance
+      "CoinMarketCapAPIKey": "" // API key for CoinMarketCap data, if that platform is used
     },
     "Monitor": {
-      "IsPasswordProtected": true, // Defines if your monitor will be asking to setup a password on its first start
-      "OpenBrowserOnStart": true, // If active, a browser window will open as soon as you start the monitor
-      "Port": 8080, // The port you want to run your PTMagic monitor on, to connect via browser. The url will be your IP:Port or localhost:Port
+      "IsPasswordProtected": true, // Require a password for Monitor access
+      "OpenBrowserOnStart": false, // Automatically open the Monitor browser window when starting locally
+      "Port": 8080, // Monitor web server port; use a different port for each PTMagic instance
       "AnalyzerChart": "", // By default the chart on the Market Analyzer page will use your market currency against USD.  
                               //You can change that here. (eg., BTCEUR)
       "LiveTCVTimeframeMinutes": 10, // The timeframe for the live TCV chart on the dashboard
@@ -46,13 +49,13 @@
       "TvStudyD": ""
     },
     "Backup": {
-      "IsEnabled": true, // Enables a backup procedure for your properties files. Before every switch PTMagic will backup the current properties
-      "MaxHours": 12 // Max number of hours to keep backup files
+      "IsEnabled": true, // Save copies of the current property files before settings switches
+      "MaxHours": 12 // Number of hours to retain settings backups
     },
     "Telegram": {
-      "IsEnabled": false, // Enables PT Magic to send Telegram messages
-      "BotToken": "", // Your Telegram bot token
-      "ChatId": 0, // Your Telegram Chat ID
+      "IsEnabled": false, // Send optional notifications through Telegram
+      "BotToken": "", // Token provided by the Telegram bot service; keep private
+      "ChatId": 0, // Telegram chat identifier where notifications are sent
       "SilentMode": false // If SilentMode is active, no notification sound or vibration will happen when the bot sends a Telegram message
     }
   }

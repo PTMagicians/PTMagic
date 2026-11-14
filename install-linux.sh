@@ -131,6 +131,25 @@ with tempfile.TemporaryDirectory(prefix='.ptmagic-download-', dir=destination.pa
         ]
         if len({str(rel).lower() for _, rel in selected}) != len(selected):
             sys.exit('Duplicate release paths; installation unchanged')
+        # Release ZIPs place example defaults outside the PTMagic application folder.
+        # Copy their contents to the installation root, never overwriting existing files.
+        default_roots = {
+            p.parts[:idx + 1]
+            for p in paths
+            for idx, part in enumerate(p.parts[:-1])
+            if part == '_default_settings_PT_2.x'
+        }
+        if len(default_roots) != 1:
+            sys.exit('Cannot locate release example defaults; installation unchanged')
+        defaults_root = next(iter(default_roots))
+        default_entries = [
+            (i, Path(*p.parts[len(defaults_root):]))
+            for i, p in zip(entries, paths)
+            if len(p.parts) > len(defaults_root)
+            and p.parts[:len(defaults_root)] == defaults_root
+        ]
+        if not default_entries or len({str(rel).lower() for _, rel in default_entries}) != len(default_entries):
+            sys.exit('Missing or duplicate example default files; installation unchanged')
         # Stage on the same filesystem as the final directory so directory renames are atomic.
         stage = destination.parent / ('.ptmagic-stage-' + uuid.uuid4().hex)
         backup = destination.parent / (destination.name + '.backup-' + uuid.uuid4().hex[:10])
@@ -154,6 +173,19 @@ with tempfile.TemporaryDirectory(prefix='.ptmagic-download-', dir=destination.pa
                 mode = (info.external_attr >> 16) & 0o777
                 os.chmod(target, mode or 0o644)
                 updated += 1
+            default_copied = default_preserved = 0
+            for info, relative in default_entries:
+                target = stage / relative
+                # Existing user files and application files always take precedence.
+                if target.exists():
+                    default_preserved += 1
+                    continue
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with archive.open(info) as source, target.open('wb') as output:
+                    shutil.copyfileobj(source, output)
+                mode = (info.external_attr >> 16) & 0o777
+                os.chmod(target, mode or 0o644)
+                default_copied += 1
             validate_runtime(stage)
             if destination.exists():
                 destination.rename(backup)
@@ -167,6 +199,7 @@ with tempfile.TemporaryDirectory(prefix='.ptmagic-download-', dir=destination.pa
                     previous_moved = False
                 raise
             print('Installed', updated, 'release files; preserved', preserved, 'settings/data files.')
+            print('Example defaults copied:', default_copied, '; existing files preserved:', default_preserved)
             if previous_moved:
                 print('Previous installation backup:', backup)
         finally:
