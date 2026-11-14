@@ -1,16 +1,22 @@
 #!/usr/bin/env bash
 # Install or update the latest OFFICIAL PTMagicians/PTMagic release.
-# Usage: bash install-linux.sh /absolute/installation/directory
+# Usage: bash install-linux.sh [/absolute/installation/directory]
+# Default installation directory: /var/opt/ptmagic
 set -euo pipefail
 
-if [[ $# -ne 1 || "${1:0:1}" != "/" || "$1" == "/" ]]; then
-  echo "Usage: bash install-linux.sh /absolute/installation/directory" >&2
+if [[ $# -gt 1 ]]; then
+  echo "Usage: bash install-linux.sh [/absolute/installation/directory]" >&2
+  exit 2
+fi
+INSTALL_DIR="${1:-/var/opt/ptmagic}"
+if [[ "${INSTALL_DIR:0:1}" != "/" || "$INSTALL_DIR" == "/" ]]; then
+  echo "Installation directory must be an absolute path other than /" >&2
   exit 2
 fi
 command -v python3 >/dev/null || { echo "Python 3 is required" >&2; exit 1; }
 command -v dotnet >/dev/null || { echo "The .NET / ASP.NET Core runtime is required" >&2; exit 1; }
 
-python3 - "$1" <<'PY'
+python3 - "$INSTALL_DIR" <<'PY'
 import hashlib
 import json
 import os
